@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import json
-from dataclasses import dataclass
-from typing import List, Dict, Optional
 import os
-import requests
 import tempfile
-from pprint import pprint
+from dataclasses import dataclass
+from typing import Optional
+from unittest import skip
 from unittest.mock import patch, MagicMock
 
+import requests
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from dt_upload.models import backend_based_upload_models, FileUploadRequest, MultiPartUpload
+from dt_upload.models import backend_based_upload_models, MultiPartUpload
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import (
@@ -29,6 +29,7 @@ from ...models.submission_cloud_upload import SubmissionCloudUpload
 User = get_user_model()
 
 
+@skip("request to real s3 bucket, if settings are set properly")
 class TestRealWorldSubmissionCloudUploadView(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -48,11 +49,10 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
             "brokerage:submissions_cloud_upload",
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
-        print(url)
 
         file_size_mb = 20
         file_size_bytes = file_size_mb * 1024 * 1024
-        part_size = 5 # TODO:  2 zu klein fr s3 ?
+        part_size = 5  # TODO:  2 zu klein fr s3 ?
         total_parts = int(file_size_mb / part_size)
 
         with tempfile.NamedTemporaryFile(
@@ -68,47 +68,12 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
             "part_size": part_size * 1024 * 1024,  # x MB
             "total_parts": total_parts
         }
-        print(data)
-
-        # print('SETTINGS ---------------------------------')
-        # print('settings.DJANGO_UPLOAD_TOOLS_USE_S3', settings.DJANGO_UPLOAD_TOOLS_USE_S3)
-        # print('AWS_ACCESS_KEY_ID',  settings.AWS_ACCESS_KEY_ID)
-        # print('AWS_SECRET_ACCESS_KEY', settings.AWS_SECRET_ACCESS_KEY)
-        # print('AWS_STORAGE_BUCKET_NAME', settings.AWS_STORAGE_BUCKET_NAME)
-        # print('AWS_S3_REGION_NAME', settings.AWS_S3_REGION_NAME)
-        # print('AWS_S3_ENDPOINT_URL', settings.AWS_S3_ENDPOINT_URL)
 
         response = self.client.post(url, data=data, format="json")
-        print('\nRESPONSE ----------------------------------------------------------')
-        print(response.status_code)
-        content = json.loads(response.content)
-        pprint(content)
-        parts = content["parts"]
 
-        # --------------------------------------------------------------------------------------
-        print("\nObjects ---------------------------------------------------------")
         submission_cloud_upload = SubmissionCloudUpload.objects.get(submission=submission)
-        print(submission_cloud_upload)
         file_upload = submission_cloud_upload.file_upload
-        print(file_upload)
         multipart = MultiPartUpload.objects.get(file_upload_request=file_upload)
-        print(multipart)
-
-        # --------------------------------------------------------------------------------------
-
-        print("\nPart urls ---------------------------------------------------------")
-        url = reverse("brokerage:submissions_cloud_upload_part", kwargs={"upload_id": multipart.upload_id})
-        print(url)
-
-        # --------------------------------------------------------------------------------------
-
-        # as are the parts from the response
-        # for part in parts:
-        #     print('\n----------------\n\tget part url for: ', part)
-        #     response = self.client.post(url, part, format="json")
-        #     print('\tstatus code: ', response.status_code)
-        #     part_content = json.loads(response.content)
-        #     pprint(part_content)
 
         # --------------------------------------------------------------------------------------
 
@@ -136,20 +101,14 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
                 end_byte=end_byte
             ))
             f_part_number += 1
-        print("\nfile Parts ---------------------------------------------------------")
-        pprint(f_parts)
 
         completed_parts = []
         with open(tmp_file_path, 'rb') as file:
             for f_part in f_parts:
-                print('\n----------------\n\tget part url for: ', f_part)
                 response = self.client.post(url, {'part_number': f_part.part_number}, format="json")
-                print('\tstatus code: ', response.status_code)
                 f_part_content = json.loads(response.content)
-                pprint(f_part_content)
 
                 presigned_url = f_part_content['presigned_url']
-                print('resigne url: ', presigned_url)
 
                 # Read the part data
                 file.seek(f_part.start_byte)
@@ -157,39 +116,18 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
 
                 # Upload the part
                 s3_response = requests.put(presigned_url, data=part_data)
-                # response.raise_for_status()
-                print('\ts3 response status: ', s3_response.status_code)
-                pprint(s3_response.content)
-                pprint(s3_response.headers)
                 etag = s3_response.headers['ETag'].strip('"')
-                print('etag: ', etag)
                 completed_parts.append({
                     "PartNumber": f_part.part_number,
                     "ETag": etag
                 })
 
         # complete
-        print("\nComplete ---------------------------------------------------------")
-        pprint(completed_parts)
-        print(type(completed_parts))
         data_for_complete = {'parts': completed_parts}
-        pprint(data_for_complete)
-        print(type(data_for_complete))
-        print(type(data_for_complete['parts'][0]))
         url = reverse("brokerage:submissions_cloud_upload_complete", kwargs={"upload_id": multipart.upload_id})
         response = self.client.put(url, data_for_complete, format="json")
-        print('RESPONSE -------------------------------------------------')
-        print(response.status_code)
-        print(response.content)
-        # --------------------------------------------------------------------------------------
         file_upload.refresh_from_db()
-        print('\nFile upload request at end of process')
-        pprint(file_upload.__dict__)
         submission_cloud_upload.refresh_from_db()
-        print('\nscu at end of process')
-        pprint(submission_cloud_upload.__dict__)
-        print('\n file location via scu')
-        print(submission_cloud_upload.file_upload.s3_location)
 
         os.remove(tmp_file_path)
 
@@ -247,26 +185,17 @@ class TestSubmissionCloudUploadView(TestCase):
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
 
-        print(url)
         data = self.test_file_data
         data["attach_to_ticket"] = False
         data["meta_data"] = True
-        print('DATA FOR INITIAL POST -------------------------------------------')
-        pprint(data)
-        print('-----------------------------------------------------------------')
         response = self.client.post(url, data=data, format="json")
         content = json.loads(response.content)
-        print('\nRESPONSE ----------------------------------------------------------')
-        pprint(content)
-        print('-----------------------------------------------------------------')
 
         # SubmissionCloudUpload ------------------------------------------------
         self.assertEqual(201, response.status_code)
         self.assertEqual(str(submission.broker_submission_id),
                          content.get("broker_submission_id", "no-bsi"))
         self.assertEqual(1, len(SubmissionCloudUpload.objects.all()))
-        print('\nSCU OBJ  -----------------------------------------------------')
-        pprint(SubmissionCloudUpload.objects.first().__dict__)
 
         # DTUpload FileUploadRequest -------------------------------------------
         file_upload = backend_based_upload_models.FileUploadRequest.objects.first()
@@ -275,25 +204,18 @@ class TestSubmissionCloudUploadView(TestCase):
         self.assertEqual(file_upload.status, "PENDING")
         # bsi in filekey
         self.assertIn(str(submission.broker_submission_id), file_upload.file_key)
-        print('\nFILE UPLOAD REQUEST OBJ  -----------------------------------------------------')
-        pprint(file_upload.__dict__)
 
         # DTUpload MultiPartUpload -------------------------------------------
         multipart = backend_based_upload_models.MultiPartUpload.objects.first()
         self.assertIsNotNone(multipart)
         self.assertEqual(multipart.upload_id, self.mock_upload_id)
         self.assertEqual(multipart.parts_expected, self.test_file_data["total_parts"])
-        print('\nMULTIPART OBJ  -----------------------------------------------------')
-        pprint(multipart.__dict__)
 
         # DTUpload UploadPart -------------------------------------------
         upload_parts = backend_based_upload_models.UploadPart.objects.all()
         self.assertEqual(multipart.parts_expected, len(upload_parts))
-        print('\nUPLOAD PARTS OBJs  -----------------------------------------------------')
         for u in upload_parts:
             self.assertEqual(multipart, u.multipart_upload)
-            print('\n==================')
-            pprint(u.__dict__)
 
         # Assert S3 client called correctly
         self.s3_client_mock.create_multipart_upload.assert_called_once()
@@ -319,17 +241,14 @@ class TestSubmissionCloudUploadView(TestCase):
             file_upload_request=file_upload,
             parts_expected=self.test_file_data["total_parts"]
         )
-        print(multipart.upload_id)
         # Mock S3 generate_presigned_url response
         mock_url = "https://test-bucket.s3.amazonaws.com/test-presigned-url"
         self.s3_client_mock.generate_presigned_url.return_value = mock_url
 
         # Make request for part URL
         url = reverse("brokerage:submissions_cloud_upload_part", kwargs={"upload_id": self.mock_upload_id})
-        print(url)
         response = self.client.post(url, {"part_number": 1}, format="json")
 
-        pprint(json.loads(response.content))
         # Assert response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["presigned_url"], mock_url)
@@ -370,9 +289,6 @@ class TestSubmissionCloudUploadView(TestCase):
         # Make request to complete upload
         url = reverse("brokerage:submissions_cloud_upload_complete", kwargs={"upload_id": self.mock_upload_id})
         response = self.client.put(url, parts_data, format="json")
-        print('RESPONSE -------------------------------------------------')
-        print(response.status_code)
-        print(response.content)
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -380,12 +296,8 @@ class TestSubmissionCloudUploadView(TestCase):
         self.assertIn("location", response.data)
 
         # Assert database records updated
-        print('\nFILE UPLOAD OBJ -----------------------------------------------------------')
         file_upload.refresh_from_db()
-        pprint(file_upload.__dict__)
-        print('\nMULTIPART OBJ -----------------------------------------------------------')
         multipart.refresh_from_db()
-        pprint(multipart.__dict__)
         self.assertEqual(file_upload.status, "COMPLETED")
         self.assertIsNotNone(multipart.completed_at)
 
@@ -412,7 +324,6 @@ class TestSubmissionCloudUploadView(TestCase):
         # Make request to abort upload
         url = reverse("brokerage:submissions_cloud_upload_abort", kwargs={"upload_id": self.mock_upload_id})
         response = self.client.delete(url)
-        print(response.content)
 
         # Assert response
         self.assertEqual(response.status_code, 204)

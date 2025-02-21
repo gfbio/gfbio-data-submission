@@ -5,8 +5,9 @@ import logging
 import mimetypes
 import os
 from dataclasses import dataclass
-from typing import List, Dict, Optional
 from timeit import default_timer as timer
+from typing import List, Dict, Optional
+
 import math
 import requests
 
@@ -81,7 +82,9 @@ class SubmissionCloudUploadClient:
         return parts
 
     def _upload_single_part(self, file, part: UploadPart, upload_id: str) -> str:
+
         logger.info(f"\t\tuploading part no. {part.part_number}")
+
         response = self.session.post(
             f"{self.config.api_base_url}/api/submissions/cloudupload/{upload_id}/part/",
             json={'part_number': part.part_number}
@@ -91,18 +94,11 @@ class SubmissionCloudUploadClient:
 
         file.seek(part.start_byte)
         part_data = file.read(part.end_byte - part.start_byte)
-
         response = requests.put(presigned_url, data=part_data)
         response.raise_for_status()
 
         logger.info(f"\t\tdone uploading part no. {part.part_number}")
-        # print('responise gheasder ', response.headers)
-        # # TODO: OPTIONAL
-        # update_response = self.session.put(
-        #     f"{self.config.api_base_url}/api/submissions/cloudupload/{upload_id}/update-part/",
-        #     json={'part_number': part.part_number, "etag": response.headers['ETag'].strip('"')}
-        # )
-        # print(update_response.content)
+
         return response.headers['ETag'].strip('"')
 
     def _upload_part_with_retry(self, file, part: UploadPart, upload_id: str) -> str:
@@ -114,7 +110,6 @@ class SubmissionCloudUploadClient:
                     f"{self.config.api_base_url}/api/submissions/cloudupload/{upload_id}/update-part/",
                     json={'part_number': part.part_number, "etag": etag, "completed": True}
                 )
-                print(update_response.content)
                 return etag
             except Exception as e:
                 if attempt == self.config.max_retries - 1:
@@ -152,14 +147,14 @@ class SubmissionCloudUploadClient:
         return sorted(completed_parts, key=lambda x: x['PartNumber'])
 
     def _complete_upload(self, upload_id: str, parts: List[Dict]) -> Dict:
+
         logger.info("\tcomplete upload ...")
-        print('PARTS ', parts)
+
         response = self.session.put(
             f"{self.config.api_base_url}/api/submissions/cloudupload/{upload_id}/complete/",
             json={'parts': parts}
         )
         response.raise_for_status()
-        print('response json ', response.json())
         return response.json()
 
     def _abort_upload(self, upload_id: str):
@@ -196,6 +191,11 @@ class SubmissionCloudUploadClient:
 
 
 # Example usage
+# python3 ./cloud_upload.py --broker-submission-id="72e6ae9d-9fb3-40bb-8a70-be1ce209ba06" --api-url=http://0.0.0.0:8000/ --token=6e9f1d95d5bb666d327b59c16534591250ee4d60 --part-size=5 ./testfile-10M.bin
+
+# generate a binary file with random data
+# head -c 25M /dev/urandom > testfile-25M.bin
+
 if __name__ == "__main__":
 
     start = timer()
@@ -214,8 +214,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     part_size_in_bytes = args.part_size * 1024 ** 2
-    # print(part_size_in_bytes)
-    # print(type(part_size_in_bytes))
     config = UploadConfig(
         api_base_url=args.api_url,
         broker_submission_id=args.broker_submission_id,
@@ -233,8 +231,8 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Upload failed: {str(e)}")
         exit(1)
+
     end = timer()
     seconds = (end - start)
     minutes = math.ceil(seconds / 60)
     logger.info(f'ELAPSED TIME: {seconds} seconds. -> ca. {minutes} minutes')
-    # head -c 25M /dev/urandom > testfile-25M.bin

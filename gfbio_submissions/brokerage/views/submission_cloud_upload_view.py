@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 from uuid import uuid4
 
 from django.db import transaction
-from dt_upload.models import FileUploadRequest
+from dt_upload.serializers import backend_based_upload_serializers
+from dt_upload.views import backend_based_upload_mixins, backend_based_upload_views
 from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
@@ -14,23 +14,17 @@ from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
-from dt_upload.views import backend_based_upload_mixins, backend_based_upload_views
-from dt_upload.serializers import backend_based_upload_serializers
-
 
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
-    # parser_classes = (
-    #     parsers.MultiPartParser,
-    #     parsers.FormParser,
-    # )
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission, file_upload_request):
         return serializer.save(user=self.request.user, submission=submission, file_upload=file_upload_request)
 
+    # TODO: almost the same as in std SubmissionUpload, worker code has to be extracted into dedicated methods
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get("broker_submission_id", uuid4())
 
@@ -54,6 +48,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
             return response
 
+        # TODO: integrate ATAX specific workflows
         # if sub.target == ATAX and sub.status == Submission.SUBMITTED:
         #     return Response(
         #         data={
@@ -78,10 +73,6 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
             upload_serializer,
             file_key_prefix=broker_submission_id
         )
-        print('DT RESPONSE IN VIEW -------------------------------')
-        print(dt_upload_response_status)
-        pprint(dt_upload_data)
-        print('FUR: ', file_upload_request)
 
         obj = self.perform_create(serializer, sub, file_upload_request)
 
@@ -109,8 +100,9 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         return self.create(request, *args, **kwargs)
 
 
+# TODO: this is a test for potential custom code that could be inserted into dt_upload workflows. can be
+#  replaced by the dt_upload view for this via urls.py
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
     def create(self, request, *args, **kwargs):
         response = super(SubmissionCloudUploadPartURLView, self).create(request, *args, **kwargs)
-        # print('CUSTOM add to GetUploadPartURLView')
         return response

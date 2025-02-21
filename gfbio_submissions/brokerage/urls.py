@@ -27,13 +27,11 @@ urlpatterns = [
         view=SubmissionUploadView.as_view(),
         name="submissions_upload",
     ),
-    # TODO: new cloud upload -----------------------------------------------------
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
         view=SubmissionCloudUploadView.as_view(),
         name="submissions_cloud_upload",
     ),
-    # TODO: integrate bsi like above or is this sufficient
     path(
         route="submissions/cloudupload/<str:upload_id>/part/",
         view=SubmissionCloudUploadPartURLView.as_view(),
@@ -53,7 +51,6 @@ urlpatterns = [
          view=backend_based_upload_views.AbortMultiPartUploadView.as_view(),
          name="submissions_cloud_upload_abort"
          ),
-    # TODO: new cloud upload -----------------------------------------------------
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
         view=SubmissionUploadListView.as_view(),
