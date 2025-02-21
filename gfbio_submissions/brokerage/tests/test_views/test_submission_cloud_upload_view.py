@@ -222,8 +222,8 @@ class TestSubmissionCloudUploadView(TestCase):
 
         # DONE: TODO: next : integrate dtuplod viiew into submission urls to complete uload to s3transfer
         # TODO: put more info about nextz step and part upload url into initial response of SCU objkect
-        # tODO: 500 & 400 from s3 views
-        # TODO: custom views via inheritance work, maybe add bsi to views for consistency ? compare SubmissionCloudUploadPartURLView
+        # DONE: tODO: 500 & 400 from s3 views
+        # DONE: TODO: custom views via inheritance work, maybe add bsi to views for consistency ? compare SubmissionCloudUploadPartURLView
         # TODO: clean up Multipart / Parts Objects after success or abort ?
         #   maybe even FileUploadRequest ?
 
