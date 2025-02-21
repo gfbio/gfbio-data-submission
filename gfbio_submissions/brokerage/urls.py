@@ -35,11 +35,14 @@ urlpatterns = [
     ),
     # TODO: integrate bsi like above or is this sufficient
     path(
-        # route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
         route="submissions/cloudupload/<str:upload_id>/part/",
-        # view=backend_based_upload_views.GetUploadPartURLView.as_view(),
         view=SubmissionCloudUploadPartURLView.as_view(),
         name="submissions_cloud_upload_part",
+    ),
+    path(
+        route="submissions/cloudupload/<str:upload_id>/update-part/",
+        view=backend_based_upload_views.UpdateUploadPartView.as_view(),
+        name="submissions_cloud_upload_part_update",
     ),
     path(
         route="submissions/cloudupload/<str:upload_id>/complete/",

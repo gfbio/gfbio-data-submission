@@ -54,6 +54,12 @@ uritemplate==4.1.1
 
 sentry-sdk==1.11.1  # https://github.com/getsentry/sentry-python
 
+# django-reverse-admin (for one-to-one relations in admins)
+# -----------------------------------------------------------------------------------
+django_reverse_admin==2.9.6
+
 # Upload Library
 # ------------------------------------------------------------------------------
 # django-upload-tools @ https://gitlab-pe.gwdg.de/gfbio/django-upload-tools/-/raw/master/dist/django-upload-tools-0.2.15.tar.gz
+
+
