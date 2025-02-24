@@ -40,6 +40,12 @@
 /*  color: #888;*/
 /*}*/
 
+/* Force scrollbar to be always visible to prevent layout shifts */
+body {
+  overflow-y: scroll;
+}
+
+
 .collapsible-selector-container {
   .btn-style {
     &:hover {
@@ -463,6 +469,42 @@
   .model-dialog-body {
     padding-top: 1rem;
     padding-bottom: 3rem;
+  }
+
+  button.blue-button {
+    background-color: #3cace4;
+    color: white;
+    border: solid 1px #3cace4;
+
+    &:hover {
+      background-color: white;
+      color: #3cace4;
+      border: solid 1px #3cace4;
+    }
+  } 
+
+  button.red-button {
+    background-color: #dc3444;
+    color: white;
+    border: solid 1px #dc3444;
+
+    &:hover {
+      background-color: white;
+      color: #dc3444;
+      border: solid 1px #dc3444;
+    }
+  }
+
+  button.green-button {
+    background-color: #80b148;
+    color: white;
+    border: solid 1px #80b148;
+
+    &:hover {
+      background-color: white;
+      color: #80b148;
+      border: solid 1px #80b148;
+    }
   }
 
   button.button-inverted {
