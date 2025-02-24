@@ -82,7 +82,11 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         data_content["id"] = obj.pk
         data_content["broker_submission_id"] = sub.broker_submission_id
 
-        response = Response(data_content | dt_upload_data, status=status.HTTP_201_CREATED, headers=headers)
+        reponse_status = status.HTTP_201_CREATED
+        if dt_upload_response_status > reponse_status:
+            reponse_status = dt_upload_response_status
+
+        response = Response(data_content | dt_upload_data, status=reponse_status, headers=headers)
 
         with transaction.atomic():
             RequestLog.objects.create(

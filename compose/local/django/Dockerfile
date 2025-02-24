@@ -70,8 +70,8 @@ RUN pip install -r /requirements/local.txt
 
 # TODO: when testing as 3rd party library. copy local build of django_upload_tools package to docker
 #
-COPY --chown=django:django ./django-upload-tools-1.0.tar.gz ./django-upload-tools-1.0.tar.gz
-RUN pip install ./django-upload-tools-1.0.tar.gz
+# COPY --chown=django:django ./django-upload-tools-1.0.tar.gz ./django-upload-tools-1.0.tar.gz
+# RUN pip install ./django-upload-tools-1.0.tar.gz
 
 COPY --chown=django:django abcd_converter-0.0.4.tar.gz ./abcd_converter-0.0.4.tar.gz
 RUN pip install ./abcd_converter-0.0.4.tar.gz
