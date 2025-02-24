@@ -4,43 +4,42 @@
  *
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
+import { createStructuredSelector } from 'reselect';
 
-import injectSaga from 'utils/injectSaga';
-import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
-import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
+import Collapse from 'react-bootstrap/Collapse';
 import PulseLoader from 'react-spinners/PulseLoader';
+import injectReducer from 'utils/injectReducer';
+import injectSaga from 'utils/injectSaga';
+import {
+  closeSubmitError,
+  fetchSubmission,
+  resetForm,
+  setLoading,
+  submitForm,
+} from './actions';
 import reducer from './reducer';
 import saga from './saga';
 import {
-  fetchSubmission,
-  resetForm,
-  submitForm,
-  closeSubmitError,
-  setLoading,
-} from './actions';
-import {
-  makeSelectBrokerSubmissionId,
   makeSelectAccessionId,
+  makeSelectBrokerSubmissionId,
   makeSelectFormWrapper,
   makeSelectGeneralError,
   makeSelectInitialValues,
+  makeSelectLoading,
   makeSelectPromptOnLeave,
   makeSelectSaveInProgress,
   makeSelectShowSaveSuccess,
-  makeSelectSubmitError,
-  makeSelectSubmissionErrors,
   makeSelectSubmission,
+  makeSelectSubmissionErrors,
+  makeSelectSubmitError,
   makeSelectSubmitInProgress,
-  makeSelectLoading,
 } from './selectors';
-import { forEach } from 'react-bootstrap/utils/ElementChildren';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {

@@ -1,5 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 
 export const licenseDetailData = {
   CC010: {
@@ -74,9 +74,8 @@ class LicenseModals extends React.PureComponent {
               <h4 className="modal-title" id="exampleModalCenterTitle">
                 {licenseDetailData[licenseKey].name + ' Description'}
               </h4>
-              <button type="button" className="close" data-dismiss="modal"
+              <button type="button" className="btn-close" data-bs-dismiss="modal"
                       aria-label="Close">
-                <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div className="modal-body">
@@ -86,23 +85,20 @@ class LicenseModals extends React.PureComponent {
               </p>
             </div>
             <div className="modal-footer">
-
               <a
-                className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                className="btn btn-secondary btn-sm w-100 btn-light-blue-inverted"
                 href={licenseDetailData[licenseKey].link}
                 target="_blank"
               >Read More
-
               </a>
 
               <a
-                className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted mt-0"
-                data-dismiss="modal"
+                className="btn btn-secondary btn-sm w-100 btn-light-blue-inverted mt-0"
+                data-bs-dismiss="modal"
                 onClick={() => this.props.onClickLicense(
                   licenseDetailData[licenseKey].name)}
               >Choose this License
               </a>
-
             </div>
           </div>
         </div>

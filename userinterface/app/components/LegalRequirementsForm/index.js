@@ -4,9 +4,9 @@
  *
  */
 
+import PropTypes from 'prop-types';
 import React from 'react';
 import { Field } from 'redux-form/lib/immutable';
-import PropTypes from 'prop-types';
 import { LEGAL_REQUIREMENTS_PREFIX } from '../../containers/SubmissionForm/constants';
 // import styled from 'styled-components';
 
@@ -21,35 +21,35 @@ class LegalRequirementsForm extends React.PureComponent {
           <p className="section-subtitle" />
         </header>
         <div className="form-group">
-          <div className="custom-control custom-checkbox">
+          <div className="form-check">
             <Field
-              className="custom-control-input"
+              className="form-check-input custom-form-check-input"
               name={`${LEGAL_REQUIREMENTS_PREFIX}Nagoya Protocol`}
               id="nagoyaProtocol"
               component="input"
               type="checkbox"
               disabled={this.props.readOnly}
             />
-            <label className="custom-control-label" htmlFor="nagoyaProtocol">
+            <label className="form-check-label custom-control-label" htmlFor="nagoyaProtocol">
               Nagoya Protocol
             </label>
           </div>
-          <div className="custom-control custom-checkbox">
+          <div className="form-check">
             <Field
-              className="custom-control-input"
+              className="form-check-input custom-form-check-input"
               name={`${LEGAL_REQUIREMENTS_PREFIX}IUCN Red List of Threatened Species`}
               id="iucnList"
               component="input"
               type="checkbox"
               disabled={this.props.readOnly}
             />
-            <label className="custom-control-label" htmlFor="iucnList">
+            <label className="form-check-label custom-control-label" htmlFor="iucnList">
               IUCN Red List of Threatened Species
             </label>
           </div>
-          <div className="custom-control custom-checkbox">
+          <div className="form-check">
             <Field
-              className="custom-control-input"
+              className="form-check-input custom-form-check-input"
               name={`${LEGAL_REQUIREMENTS_PREFIX}Sensitive Personal Information`}
               id="personalInformation"
               component="input"
@@ -57,22 +57,22 @@ class LegalRequirementsForm extends React.PureComponent {
               disabled={this.props.readOnly}
             />
             <label
-              className="custom-control-label"
+              className="form-check-label custom-control-label"
               htmlFor="personalInformation"
             >
               Sensitive Personal Information
             </label>
           </div>
-          <div className="custom-control custom-checkbox">
+          <div className="form-check">
             <Field
-              className="custom-control-input"
+              className="form-check-input custom-form-check-input"
               name={`${LEGAL_REQUIREMENTS_PREFIX}Uncertain`}
               id="uncertain"
               component="input"
               type="checkbox"
               disabled={this.props.readOnly}
             />
-            <label className="custom-control-label" htmlFor="uncertain">
+            <label className="form-check-label custom-control-label" htmlFor="uncertain">
               Uncertain
             </label>
           </div>

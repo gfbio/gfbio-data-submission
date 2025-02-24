@@ -1,23 +1,23 @@
 import React from 'react';
 
+import filesize from 'filesize';
 import PropTypes from 'prop-types';
-import { createStructuredSelector } from 'reselect';
-import {
-  makeSelectFileUploads,
-  makeSelectFileUploadsFromServer,
-  makeSelectMetaDataIndex,
-} from '../../containers/SubmissionForm/selectors';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { createStructuredSelector } from 'reselect';
 import {
   deleteFile,
   removeFileUpload,
   setMetaDataIndex,
   setMetaDataOnServer,
 } from '../../containers/SubmissionForm/actions';
-import filesize from 'filesize';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
+import {
+  makeSelectFileUploads,
+  makeSelectFileUploadsFromServer,
+  makeSelectMetaDataIndex,
+} from '../../containers/SubmissionForm/selectors';
 
 class FileIndicator extends React.Component {
 
@@ -64,7 +64,7 @@ class FileIndicator extends React.Component {
             {metaDataCheckButton}
           </div>
           <div>
-            <small className="mr-5 file-size">
+            <small className="me-5 file-size">
               {filesize(uploaded.file_size)}
             </small>
             {/*<a className="btn btn-download mr-3" href={uploaded.file}>*/}
@@ -112,10 +112,10 @@ class FileIndicator extends React.Component {
             {metaDataCheckButton}
           </div>
           <div>
-            <small className="mr-5 file-size">
+            <small className="me-5 file-size">
               {filesize(upload.file.size)}
             </small>
-            <span className="pr-4 mr-3"></span>
+            <span className="pe-4 me-3"></span>
             <button className="btn btn-remove" onClick={(e) => {
               e.preventDefault();
               this.props.handleRemove(index);

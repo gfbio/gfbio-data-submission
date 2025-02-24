@@ -29,7 +29,7 @@ class TemplateLinkList extends React.PureComponent {
             >
               <span className="upload-header">
                 <i
-                  className="icon ion-ios-help-circle-outline help align-bottom ml-2"
+                  className="icon ion-ios-help-circle-outline help align-bottom ms-2"
                   aria-hidden="true"
                 />
               </span>
