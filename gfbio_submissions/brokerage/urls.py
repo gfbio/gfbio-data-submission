@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-from django.urls import re_path
+from django.urls import re_path, path
 from django.views.generic import TemplateView
+from dt_upload.views import backend_based_upload_views
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
+from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView
 from .views.submission_comment_view import SubmissionCommentView
 from .views.submission_detail_view import SubmissionDetailView
+from .views.submission_report_view import SubmissionReportView
 from .views.submission_upload_detail_view import SubmissionUploadDetailView
 from .views.submission_upload_list_view import SubmissionUploadListView
 from .views.submission_upload_patch_view import SubmissionUploadPatchView
 from .views.submission_upload_view import SubmissionUploadView
 from .views.submissions_view import SubmissionsView
-from .views.submission_report_view import SubmissionReportView
 
 app_name = "brokerage"
 urlpatterns = [
@@ -25,6 +27,30 @@ urlpatterns = [
         view=SubmissionUploadView.as_view(),
         name="submissions_upload",
     ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
+        view=SubmissionCloudUploadView.as_view(),
+        name="submissions_cloud_upload",
+    ),
+    path(
+        route="submissions/cloudupload/<str:upload_id>/part/",
+        view=SubmissionCloudUploadPartURLView.as_view(),
+        name="submissions_cloud_upload_part",
+    ),
+    path(
+        route="submissions/cloudupload/<str:upload_id>/update-part/",
+        view=backend_based_upload_views.UpdateUploadPartView.as_view(),
+        name="submissions_cloud_upload_part_update",
+    ),
+    path(
+        route="submissions/cloudupload/<str:upload_id>/complete/",
+        view=backend_based_upload_views.CompleteMultiPartUploadView.as_view(),
+        name="submissions_cloud_upload_complete"
+    ),
+    path(route="submissions/cloudupload/<str:upload_id>/abort/",
+         view=backend_based_upload_views.AbortMultiPartUploadView.as_view(),
+         name="submissions_cloud_upload_abort"
+         ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
         view=SubmissionUploadListView.as_view(),

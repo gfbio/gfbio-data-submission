@@ -7,15 +7,16 @@ from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
 from django.utils.encoding import smart_bytes
+from django_reverse_admin import ReverseModelAdmin
 
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
 )
-
 from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
+from .models import SubmissionCloudUpload
+from .models.abcd_conversion_result import AbcdConversionResult
 from .models.additional_reference import AdditionalReference
 from .models.auditable_text_data import AuditableTextData
-from .models.abcd_conversion_result import AbcdConversionResult
 from .models.broker_object import BrokerObject
 from .models.center_name import CenterName
 from .models.ena_report import EnaReport
@@ -247,12 +248,12 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
             | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
             | create_targeted_sequence_ena_manifest_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
             | process_targeted_sequence_results_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         )
         chain()
@@ -273,8 +274,8 @@ def register_study_at_ena(modeladmin, request, queryset):
             | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
         )
         chain()
 
@@ -365,7 +366,9 @@ def combine_csvs_to_abcd(modeladmin, request, queryset):
 
     chain()
 
+
 combine_csvs_to_abcd.short_description = "Combine CSV-Files to ABCD-File"
+
 
 def atax_validate(modeladmin, request, queryset):
     from .tasks.atax_tasks.atax_submission_validate_xml_upload import atax_submission_validate_auditable_atax_xml_task
@@ -373,13 +376,11 @@ def atax_validate(modeladmin, request, queryset):
     for obj in queryset:
         chain = (
             atax_submission_validate_auditable_atax_xml_task.s(
-                auditable_id = obj.pk
+                auditable_id=obj.pk
             ).set(countdown=SUBMISSION_DELAY)
         )
 
         chain()
-
-
 
 
 atax_validate.short_description = "ATAX validate"
@@ -413,7 +414,8 @@ class SubmissionAdmin(admin.ModelAdmin):
         "target",
     )
     # TODO: user username emaial
-    search_fields = ["broker_submission_id", "additionalreference__reference_key", "user__username", "user__email", "user__name"]
+    search_fields = ["broker_submission_id", "additionalreference__reference_key", "user__username", "user__email",
+                     "user__name"]
     inlines = (
         AuditableTextDataInlineAdmin,
         AdditionalReferenceInline,
@@ -479,18 +481,18 @@ def reparse_csv_metadata(modeladmin, request, queryset):
                 submission_upload_id=submission_upload_id,
             ).set(countdown=SUBMISSION_DELAY)
             | parse_csv_to_update_clean_submission_task.s(
-                submission_upload_id=submission_upload_id,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_upload_id=submission_upload_id,
+        ).set(countdown=SUBMISSION_DELAY)
             | create_broker_objects_from_submission_data_task.s(
-                submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
-                use_submitted_submissions=True,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
+            use_submitted_submissions=True,
+        ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
-                submission_upload_id=submission_upload_id,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_upload_id=submission_upload_id,
+        ).set(countdown=SUBMISSION_DELAY)
             | check_for_submittable_data_task.s(
-                submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
+        ).set(countdown=SUBMISSION_DELAY)
         )
         rebuild_from_csv_metadata_chain()
 
@@ -570,6 +572,19 @@ class AbcdConversionResultAdmin(admin.ModelAdmin):
     )
 
 
+class SubmissionCloudUploadAdmin(ReverseModelAdmin):
+    inline_type = 'stacked'
+    date_hierarchy = "created"  # date drill down
+    ordering = ("-modified",)  # ordering in list display
+    inline_reverse = [
+        (
+            'file_upload', {
+                'fields': ['original_filename', 'file_key', 'status', 's3_location']
+            }
+        ),
+    ]
+
+
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
 admin.site.register(PersistentIdentifier, PersistentIdentifierAdmin)
@@ -586,3 +601,5 @@ admin.site.register(EnaReport, EnaReportAdmin)
 admin.site.register(JiraMessage, JiraMessageAdmin)
 
 admin.site.register(AbcdConversionResult, AbcdConversionResultAdmin)
+
+admin.site.register(SubmissionCloudUpload, SubmissionCloudUploadAdmin)

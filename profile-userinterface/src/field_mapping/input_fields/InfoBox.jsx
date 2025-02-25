@@ -1,4 +1,4 @@
-import {JIRA_ROOT} from "../../settings.jsx";
+import { JIRA_ROOT } from "../../settings.jsx";
 
 const InfoBox = (props) => {
     const {title, description, form, options, field_id} = props;
@@ -18,7 +18,7 @@ const InfoBox = (props) => {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
-                        <i className="fa fa-bookmark-o pr-2" aria-hidden="true"/>
+                        <i className="fa fa-bookmark-o pe-2" aria-hidden="true"/>
                         Submission Id: <br/>
                         <div className="data-field">{brokerSubmissionId}</div>
                     </a>
@@ -29,7 +29,7 @@ const InfoBox = (props) => {
         if (submission.accessionId && submission.accessionId.length > 0) {
             items.push(
                 <div className="info-box-header">
-                    <i className="fa fa-archive pr-2" aria-hidden="true"/>
+                    <i className="fa fa-archive pe-2" aria-hidden="true"/>
                     ENA Accession:
                     <br/>
                 </div>,
@@ -61,7 +61,7 @@ const InfoBox = (props) => {
                         className="external"
                         href={JIRA_ROOT + submission.issue}
                     >
-                        <i className="fa fa-tags pr-2" aria-hidden="true"/>
+                        <i className="fa fa-tags pe-2" aria-hidden="true"/>
                         Ticket:
                         <br/>
                         <div className="data-field">{submission.issue}</div>
@@ -75,7 +75,7 @@ const InfoBox = (props) => {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
-                        <i className="fa fa-info-circle pr-2" aria-hidden="true" />
+                        <i className="fa fa-info-circle pe-2" aria-hidden="true" />
                         Status: <br/>
                         <div className="data-field">
                             Your data was already archived and only the embargo date can be
@@ -91,7 +91,7 @@ const InfoBox = (props) => {
         items.push(
             <li key={key} className="list-group-item">
                 <a href={mailToLink} className="external">
-                    <i className="fa fa-comments pr-2" aria-hidden="true"/>
+                    <i className="fa fa-comments pe-2" aria-hidden="true"/>
                     Do you need Help ?
                 </a>
             </li>,

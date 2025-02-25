@@ -4,21 +4,21 @@
  *
  */
 
-import React from 'react';
+import { Multiselect } from 'multiselect-react-dropdown';
 import PropTypes from 'prop-types';
-import { createStructuredSelector } from 'reselect';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
+import React from 'react';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
-import { Multiselect } from 'multiselect-react-dropdown';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
-import RolesInfo from './rolesInfo';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { createStructuredSelector } from 'reselect';
 import {
   setContributors,
   setFormChanged,
 } from '../../containers/SubmissionForm/actions';
+import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
+import RolesInfo from './rolesInfo';
 
 /* eslint-disable react/prefer-stateless-function */
 class ContributorsForm extends React.PureComponent {
@@ -547,10 +547,10 @@ class ContributorsForm extends React.PureComponent {
               {...provided.dragHandleProps}
             >
               <div className="row">
-                <div className="col">
+                <div className="col d-flex align-items-center">
                   <i className="fa fa-bars drag-bars"/>
                   <Button
-                    className="btn btn-primary btn-contributor contributor-draggable-btn"
+                    className="btn btn-primary btn-contributor contributor-draggable-btn flex-grow-1"
                     onClick={() => this.onClickDetailButton(index)}
                     aria-controls="contributorForm"
                     aria-expanded={detailOpen}
@@ -566,10 +566,10 @@ class ContributorsForm extends React.PureComponent {
     });
 
     const editFormButtons = this.props.readOnly ? (
-      <div className="form-row">
+      <div className="row">
         <div className="form-group col-md-2">
           <Button
-            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+            className="btn btn-secondary btn-sm w-100 btn-light-blue-inverted"
             onClick={() => this.closeFormBody()}
             aria-controls="contributorForm"
             aria-expanded={formOpen}
@@ -582,10 +582,10 @@ class ContributorsForm extends React.PureComponent {
         <div className="form-group col-md-4"/>
       </div>
     ) : (
-      <div className="form-row">
+      <div className="row">
         <div className="form-group col-md-2">
           <Button
-            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+            className="btn btn-secondary btn-sm w-100 btn-light-blue-inverted"
             onClick={() => this.closeFormBody()}
             aria-controls="contributorForm"
             aria-expanded={formOpen}
@@ -597,7 +597,7 @@ class ContributorsForm extends React.PureComponent {
         {spaceBetweenButtons}
         <div className="form-group col-md-4">
           <Button
-            className="btn btn-secondary btn-sm btn-block btn-light-blue"
+            className="btn btn-secondary btn-sm w-100 btn-light-blue"
             onClick={this.onSave}
             aria-controls="contributorForm"
             aria-expanded={formOpen}
@@ -647,7 +647,7 @@ class ContributorsForm extends React.PureComponent {
                       ? 'Add Contributor'
                       : 'Edit Contributor'}
                   </h5>
-                  <div className="form-row">
+                  <div className="row">
                     <div className="form-group col-md-3">
                       <label htmlFor="firstName">
                         First Name{' '}
@@ -700,7 +700,7 @@ class ContributorsForm extends React.PureComponent {
                       />
                     </div>
                   </div>
-                  <div className="form-row">
+                  <div className="row">
                     <div className="form-group col-md-12">
                       <label htmlFor="institution">
                         Institution{' '}
@@ -724,8 +724,8 @@ class ContributorsForm extends React.PureComponent {
                         Contributor Role (optional)
                         <a
                           className="align-bottom"
-                          data-toggle="modal"
-                          data-target="#rolesInfo"
+                          data-bs-toggle="modal"
+                          data-bs-target="#rolesInfo"
                         >
                           <i
                             className="icon ion-ios-help-circle-outline question-pointer"

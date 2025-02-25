@@ -851,7 +851,7 @@ form.pagewide-form {
 
 
   .contributor-draggable-btn {
-    margin: 0 0 0 30px;
+    margin: 0;
     text-align: left;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -935,6 +935,21 @@ form.pagewide-form {
       outline-color: $gfbio-green-0-7;
     }
 
+  }
+
+  .custom-form-check-input {
+    font-size: 1rem;
+
+    &:checked {
+      background-color: $gfbio-green; 
+      border-color: $gfbio-green-0-7;
+    }
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
   }
 
   //.upload-checkbox {

@@ -4,15 +4,15 @@
  *
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-import injectReducer from 'utils/injectReducer';
-import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
+import { createStructuredSelector } from 'reselect';
+import injectReducer from 'utils/injectReducer';
+import { changeLicense } from '../../containers/SubmissionForm/actions';
 import reducer from '../../containers/SubmissionForm/reducer';
 import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
-import { changeLicense } from '../../containers/SubmissionForm/actions';
 import LicenseModals, { licenseDetailData } from './licenseDetailsData';
 // import styled from 'styled-components';
 
@@ -23,10 +23,10 @@ class LicenseSelectionForm extends React.PureComponent {
       return (
         <li className="list-group-item" key={licenseKey}>
           <button
-            className="btn btn-primary btn-block btn-license text-left"
+            className="btn btn-primary w-100 btn-license text-start"
             type="button"
-            data-toggle="collapse show"
-            data-target="#collapseLicense"
+            data-bs-toggle="collapse show"
+            data-bs-target="#collapseLicense"
             aria-expanded="false"
             aria-controls="collapseLicense"
             onClick={() =>
@@ -41,10 +41,10 @@ class LicenseSelectionForm extends React.PureComponent {
     return (
       <li className="list-group-item" key={licenseKey}>
         <button
-          className="btn btn-primary btn-block btn-license text-left"
+          className="btn btn-primary w-100 btn-license text-start"
           type="button"
-          data-toggle="collapse show"
-          data-target="#collapseLicense"
+          data-bs-toggle="collapse show"
+          data-bs-target="#collapseLicense"
           aria-expanded="false"
           aria-controls="collapseLicense"
           onClick={() =>
@@ -54,8 +54,8 @@ class LicenseSelectionForm extends React.PureComponent {
           {licenseDetailData[licenseKey].name}
           <a
             className="align-bottom"
-            data-toggle="modal"
-            data-target={`#${licenseKey}`}
+            data-bs-toggle="modal"
+            data-bs-target={`#${licenseKey}`}
           >
             details
           </a>
@@ -79,10 +79,10 @@ class LicenseSelectionForm extends React.PureComponent {
         {/* END MODAL */}
         <div className="form-group accordion-form-content">
           <button
-            className="btn btn-primary btn-block btn-license text-left"
+            className="btn btn-primary w-100 btn-license text-start"
             type="button"
-            data-toggle="collapse"
-            data-target="#collapseLicense"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseLicense"
             aria-expanded="false"
             aria-controls="collapseLicense"
             disabled={this.props.readOnly}
