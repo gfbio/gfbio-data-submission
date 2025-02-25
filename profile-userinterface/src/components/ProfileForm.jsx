@@ -12,10 +12,7 @@ import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 import validateTextFields from "../utils/TextValidation.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
-const ProfileForm = (props) => {
-    const {
-        profileData,
-    } = props;
+const ProfileForm = ({ profileData, submissionData }) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
@@ -23,17 +20,50 @@ const ProfileForm = (props) => {
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState(null);
     const navigate = useNavigate();
-    const submission = JSON.parse(localStorage.getItem("submission"));
+
+    // Initialize form with values from profile and submission data
+    const buildInitialValues = () => {
+        const defaultEmbargoDate = new Date();
+        defaultEmbargoDate.setFullYear(defaultEmbargoDate.getFullYear() + 1);
+        
+        // Start with minimal required values
+        const values = { 
+            files: [],
+            embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split('T')[0],
+            license: submissionData?.license || 'CC BY 4.0'
+        };
+
+        if (!profileData?.form_fields) return values;
+
+        const formFields = profileData.form_fields ? profileData.form_fields : [];
+        
+        formFields.forEach(field => {
+            const fieldId = field.field.field_id;
+            const fieldValue = submissionData?.data?.requirements[fieldId];
+            
+            // Only set a value if we have a submission value
+            if (fieldValue !== undefined) {
+                // Use the value from submission data
+                values[fieldId] = fieldValue;
+            }
+            // Otherwise, don't set any value (undefined)
+        });
+
+        return values;
+    };
 
     const form = useForm({
         mode: "uncontrolled",
         name: "profile-form",
+        initialValues: buildInitialValues(),
         validateInputOnBlur: true,
-        initialValues: {
-            files: [],
-        },
         validate: (values) => {
-            let field_types = profileData.form_fields.map(
+            if (!profileData?.form_fields) return {};
+            
+            // Ensure form_fields is an array
+            const formFields = Array.isArray(profileData.form_fields) ? profileData.form_fields : [];
+            
+            let field_types = formFields.map(
                 (form_field) => form_field.field.field_type.type
             );
             var validations = {}
@@ -44,18 +74,6 @@ const ProfileForm = (props) => {
             return validations
         },
     });
-
-    // Reset form dirty state after initial field loading
-    useEffect(() => {
-        if (!submission) return; // Don't reset if submission isn't loaded yet
-
-        // Wait for next tick to ensure all fields have loaded
-        const timer = setTimeout(() => {
-            form.resetDirty();
-        }, 100);
-
-        return () => clearTimeout(timer);
-    }, []); // Only run once after initial mount
 
     // Block navigation when form is dirty
     useBlocker(
@@ -137,14 +155,35 @@ const ProfileForm = (props) => {
             return;
         }
         setProcessing(true);
+
+        // Extract embargo_date before filtering other values
+        const embargoDate = values.embargo_date;
+
+        // Filter out empty values and embargo_date
+        const filteredValues = Object.entries(values).reduce((acc, [key, value]) => {
+            // Skip embargo_date as it's handled separately
+            if (key === 'embargo_date') return acc;
+            
+            // Keep arrays (for files) even if empty
+            if (Array.isArray(value)) {
+                acc[key] = value;
+                return acc;
+            }
+            // Only include non-empty string values
+            if (value !== '' && value !== null && value !== undefined) {
+                acc[key] = value;
+            }
+            return acc;
+        }, {});
+
         // TODO: fixed token value for local testing only
-        if (submission?.broker_submission_id) {
-            console.log("values: ", values);
+        if (submissionData?.broker_submission_id) {
+            console.log("values: ", filteredValues);
             putSubmission(
-                submission.broker_submission_id,
+                submissionData.broker_submission_id,
                 profileData.target,
-                localStorage.getItem("embargo"),
-                values
+                embargoDate,
+                filteredValues
             )
             .then((result) => {
                 if (result?.broker_submission_id) {
@@ -174,7 +213,7 @@ const ProfileForm = (props) => {
                 setProcessing(false);
             });
         } else {
-            postSubmission(profileData.target, localStorage.getItem("embargo"), values)
+            postSubmission(profileData.target, embargoDate, filteredValues)
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
@@ -213,7 +252,7 @@ const ProfileForm = (props) => {
                 </Button>
             );
         }
-        else if (submission?.broker_submission_id) {
+        else if (submissionData?.broker_submission_id) {
             return (
                 <Button className="submission-button" type="submit">
                     <i className="fa fa-forward me-3"></i> Update Submission
@@ -242,7 +281,7 @@ const ProfileForm = (props) => {
             >
                 <div className="row">
                     <div className="col-md-9 main-col">
-                        {profileData.form_fields
+                        {(Array.isArray(profileData.form_fields) ? profileData.form_fields : [])
                             .filter((form_field) => form_field.field.position === "main")
                             .map((form_field, index) => (
                                 <FormField
@@ -255,7 +294,7 @@ const ProfileForm = (props) => {
                         }
                     </div>
                     <div className="col-md-3 side-col">
-                        {profileData.form_fields
+                        {(Array.isArray(profileData.form_fields) ? profileData.form_fields : [])
                             .filter((form_field) => form_field.field.position === "sidebar")
                             .map((form_field, index) => (
                                 <FormField
@@ -280,6 +319,7 @@ const ProfileForm = (props) => {
 
 ProfileForm.propTypes = {
     profileData: PropTypes.object.isRequired,
+    submissionData: PropTypes.object,
 };
 
 export default ProfileForm;

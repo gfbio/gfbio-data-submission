@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import React from "react";
 import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
 import Contributors from "./input_fields/Contributors.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
@@ -74,7 +73,7 @@ const FormField = ({formField, form, onFilesChange}) => {
 FormField.propTypes = {
     formField: PropTypes.object.isRequired,
     form: PropTypes.object.isRequired,
-    onFilesChange: PropTypes.func.isRequired,
+    onFilesChange: PropTypes.func,
 };
 
 export default FormField;

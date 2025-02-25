@@ -1,166 +1,119 @@
+import { Center, Text } from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { Dropzone } from "@mantine/dropzone";
-import { Center, Text } from "@mantine/core";
-import UploadMessage from "../../utils/UploadMessage.jsx";
-import FileIndicator from "../../utils/FileIndicator.jsx";
-import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
-import getSubmissionUploads from "../../api/getSubmissionUploads";
 import deleteSubmissionUpload from "../../api/deleteSubmissionUpload.jsx";
+import getSubmissionUploads from "../../api/getSubmissionUploads";
 import patchSubmissionUpload from "../../api/patchSubmissionUploadMetadata.jsx";
+import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
+import FileIndicator from "../../utils/FileIndicator.jsx";
+import UploadMessage from "../../utils/UploadMessage.jsx";
 
-const DropzoneUpload = (props) => {
-    const {
-        title,
-        description,
-        form,
-        field_id,
-        onFilesChange,
-        token,
-    } = props;
-
+const DropzoneUpload = ({ title, description, form, field_id, onFilesChange, brokerSubmissionId }) => {
+    const [localFiles, setLocalFiles] = useState([]);
+    const [serverFiles, setServerFiles] = useState([]);
     const [metadataIndex, setMetadataIndex] = useState({ indices: [], source: null });
-    const [localFiles, setLocalFiles] = useState(form.values.files || []);
-    const [filesFromServer, setFilesFromServer] = useState(form.values.serverFiles || []);
+    const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
 
+    // Fetch server files on component mount
     useEffect(() => {
         const fetchServerFiles = async () => {
-            const submission = JSON.parse(localStorage.getItem("submission"));
-            const brokerSubmissionId = submission.broker_submission_id;
-            if (!brokerSubmissionId) {
-
-                return;
-            }
+            if (!brokerSubmissionId) return;
+            
             try {
                 const serverFileData = await getSubmissionUploads(brokerSubmissionId);
-                setFilesFromServer(serverFileData);
-                form.setFieldValue("serverFiles", serverFileData);
-                const metadataFileIndices = serverFileData
-                    .map((file, index) => file.meta_data === true ? index : null)
-                    .filter(index => index !== null);
-                setMetadataIndex({ indices: metadataFileIndices, source: "server" });
+                setServerFiles(serverFileData);
+                // Find metadata files
+                const metadataIndices = serverFileData
+                    .map((file, index) => file.meta_data ? index : -1)
+                    .filter(index => index !== -1);
+                setMetadataIndex({ indices: metadataIndices, source: "server" });
             } catch (error) {
                 console.error("Error fetching server files:", error);
             }
         };
 
         fetchServerFiles();
-    }, [token]);
+    }, [brokerSubmissionId]);
 
-    const handleMetadataSelect = async (index, source) => {
-        const submission = JSON.parse(localStorage.getItem("submission"));
-        const brokerSubmissionId = submission.broker_submission_id || "";
-        if (metadataIndex.indices.includes(index) && metadataIndex.source === source) {
-            const fileKey = source === "server" ? filesFromServer[index]?.pk : null;
-            if (fileKey) {
-                try {
-                    let formData = new FormData();
-                    formData.append("meta_data", false);
-                    await patchSubmissionUpload(brokerSubmissionId, fileKey, formData);
-                } catch (error) {
-                    console.error("Error updating metadata flag on server:", error);
-                }
-            }
-            setMetadataIndex({ indices: [], source: null });
-        } else {
-            if (metadataIndex.source === "server") {
-                for (const idx of metadataIndex.indices) {
-                    const fileKey = filesFromServer[idx]?.pk;
-                    if (fileKey) {
-                        try {
-                            let formData = new FormData();
-                            formData.append("meta_data", false);
-                            await patchSubmissionUpload(brokerSubmissionId, fileKey, formData);
-                        } catch (error) {
-                            console.error("Error updating metadata flag on server:", error);
-                        }
-                    }
-                }
-            }
-            if (source === "server") {
-                const newFileKey = filesFromServer[index]?.pk;
-                if (newFileKey) {
-                    try {
-                        let formData = new FormData();
-                        formData.append("meta_data", true);
-                        await patchSubmissionUpload(brokerSubmissionId, newFileKey, formData);
-                    } catch (error) {
-                        console.error("Error updating metadata flag on server:", error);
-                    }
-                }
-            }
-            setMetadataIndex({ indices: [index], source });
-        }
-        onFilesChange(localFiles, showUploadLimitMessage, index);
+    const checkUploadLimits = (files) => {
+        const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+        return totalSize <= MAX_TOTAL_UPLOAD_SIZE && files.length <= MAX_UPLOAD_ITEMS;
     };
 
-    const matchingUploadLimit = (files) => {
-        let tmpTotalSize = 0;
-        for (let file of files) {
-            tmpTotalSize += file.size;
-        }
-        return (
-            tmpTotalSize <= MAX_TOTAL_UPLOAD_SIZE && files.length <= MAX_UPLOAD_ITEMS
-        );
+    const handleDrop = (droppedFiles) => {
+        const newFiles = [...localFiles, ...droppedFiles];
+        const withinLimits = checkUploadLimits(newFiles);
+        
+        setLocalFiles(newFiles);
+        form.setFieldValue(field_id, newFiles);
+        setUploadLimitExceeded(!withinLimits);
+        onFilesChange(newFiles, !withinLimits, metadataIndex);
     };
 
-    const [showUploadLimitMessage, setShowUploadLimitMessage] = useState(() => {
-        return !matchingUploadLimit(localFiles);
-    });
+    const handleRemoveLocal = (index) => {
+        const newFiles = localFiles.filter((_, i) => i !== index);
+        const withinLimits = checkUploadLimits(newFiles);
 
-    useEffect(() => {
-        setShowUploadLimitMessage(!matchingUploadLimit(localFiles));
-    }, [localFiles]);
-
-    const onDrop = (files) => {
-        const updatedFiles = [...localFiles, ...files];
-        setLocalFiles(updatedFiles);
-        form.setFieldValue("files", updatedFiles);
-        const uploadLimitExceeded = !matchingUploadLimit(updatedFiles);
-        setShowUploadLimitMessage(uploadLimitExceeded);
-        onFilesChange(updatedFiles, uploadLimitExceeded, metadataIndex);
-    };
-
-    const removeFile = (index) => {
-        const updatedFiles = localFiles.filter((_, i) => i !== index);
-        let newMetadataIndex = { indices: [], source: null };
-
+        // Update metadata indices
         if (metadataIndex.source === "local") {
             const newIndices = metadataIndex.indices
-                .map((i) => (i > index ? i - 1 : i))
-                .filter((i) => i >= 0);
-            newMetadataIndex = { indices: newIndices, source: "local" };
+                .map(i => i > index ? i - 1 : i)
+                .filter(i => i !== -1);
+            setMetadataIndex({ indices: newIndices, source: "local" });
         }
-        setLocalFiles(updatedFiles);
-        setMetadataIndex(newMetadataIndex);
-        form.setFieldValue("files", updatedFiles);
-        const uploadLimitExceeded = !matchingUploadLimit(updatedFiles);
-        setShowUploadLimitMessage(uploadLimitExceeded);
-        newMetadataIndex.indices.forEach((i) => {
-            onFilesChange(updatedFiles, uploadLimitExceeded, i);
-        });
+
+        setLocalFiles(newFiles);
+        form.setFieldValue(field_id, newFiles);
+        setUploadLimitExceeded(!withinLimits);
+        onFilesChange(newFiles, !withinLimits, metadataIndex);
     };
 
-    const onDeleteServerFile = async (index, fileKey) => {
-        try {
-            const submission = JSON.parse(localStorage.getItem("submission"));
-            const brokerSubmissionId = submission.broker_submission_id || "";
-            await deleteSubmissionUpload(brokerSubmissionId, fileKey);
-            const updatedFiles = filesFromServer.filter((_, i) => i !== index);
+    const handleRemoveServer = async (index) => {
+        if (!brokerSubmissionId) return;
 
-            let newMetadataIndex = metadataIndex;
-            if (metadataIndex.index === index && metadataIndex.source === "server") {
-                newMetadataIndex = { index: -1, source: null };
-            } else if (metadataIndex.source === "server" && metadataIndex.index > index) {
-                newMetadataIndex = { index: metadataIndex.index - 1, source: "server" };
+        try {
+            const fileToDelete = serverFiles[index];
+            await deleteSubmissionUpload(brokerSubmissionId, fileToDelete.pk);
+            
+            const newServerFiles = serverFiles.filter((_, i) => i !== index);
+            setServerFiles(newServerFiles);
+
+            // Update metadata indices
+            if (metadataIndex.source === "server") {
+                const newIndices = metadataIndex.indices
+                    .map(i => i > index ? i - 1 : i)
+                    .filter(i => i !== -1);
+                setMetadataIndex({ indices: newIndices, source: "server" });
             }
-            setFilesFromServer(updatedFiles);
-            form.setFieldValue("files", updatedFiles);
-            setMetadataIndex(newMetadataIndex);
-            const uploadLimitExceeded = !matchingUploadLimit(updatedFiles);
-            onFilesChange(updatedFiles, uploadLimitExceeded, newMetadataIndex.index);
         } catch (error) {
-            console.error("Error deleting file:", error);
+            console.error("Error deleting server file:", error);
+        }
+    };
+
+    const handleMetadataToggle = async (index, source) => {
+        if (source === "server" && brokerSubmissionId) {
+            try {
+                const file = serverFiles[index];
+                const formData = new FormData();
+                const isCurrentlyMetadata = metadataIndex.indices.includes(index);
+                formData.append("meta_data", !isCurrentlyMetadata);
+
+                await patchSubmissionUpload(brokerSubmissionId, file.pk, formData);
+                
+                const newIndices = isCurrentlyMetadata
+                    ? metadataIndex.indices.filter(i => i !== index)
+                    : [...metadataIndex.indices, index];
+                setMetadataIndex({ indices: newIndices, source: "server" });
+            } catch (error) {
+                console.error("Error updating metadata flag:", error);
+            }
+        } else {
+            const isCurrentlyMetadata = metadataIndex.indices.includes(index);
+            const newIndices = isCurrentlyMetadata
+                ? metadataIndex.indices.filter(i => i !== index)
+                : [...metadataIndex.indices, index];
+            setMetadataIndex({ indices: newIndices, source: "local" });
         }
     };
 
@@ -173,17 +126,16 @@ const DropzoneUpload = (props) => {
 
             <FileIndicator
                 fileUploads={localFiles}
-                fileUploadsFromServer={filesFromServer}
-                handleRemove={removeFile}
-                deleteFile={onDeleteServerFile}
+                fileUploadsFromServer={serverFiles}
+                handleRemove={handleRemoveLocal}
+                deleteFile={handleRemoveServer}
                 metadataIndex={metadataIndex}
-                metadataSource={metadataIndex.source}
-                handleMetadataSelect={handleMetadataSelect}
+                handleMetadataSelect={handleMetadataToggle}
             />
 
-            <UploadMessage showUploadLimitMessage={showUploadLimitMessage} />
+            <UploadMessage showUploadLimitMessage={uploadLimitExceeded} />
 
-            <Dropzone h={120} p={0} multiple onDrop={onDrop}>
+            <Dropzone h={120} p={0} multiple onDrop={handleDrop}>
                 <Center h={120}>
                     <Dropzone.Idle>
                         Try <b>dropping</b> some files here, or <b>click</b> to select files
@@ -203,21 +155,17 @@ const DropzoneUpload = (props) => {
     );
 };
 
-DropzoneUpload.defaultProps = {
-    serverFiles: [],
-};
-
 DropzoneUpload.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     form: PropTypes.object.isRequired,
     field_id: PropTypes.string.isRequired,
     onFilesChange: PropTypes.func.isRequired,
-    token: PropTypes.string.isRequired,
-    brokerSubmissionId: PropTypes.string.isRequired,
-    serverFiles: PropTypes.array,
-    onDeleteServerFile: PropTypes.func.isRequired,
-    onMetadataSelectServerFile: PropTypes.func.isRequired,
+    brokerSubmissionId: PropTypes.string,
+};
+
+DropzoneUpload.defaultProps = {
+    brokerSubmissionId: '',
 };
 
 export default DropzoneUpload;

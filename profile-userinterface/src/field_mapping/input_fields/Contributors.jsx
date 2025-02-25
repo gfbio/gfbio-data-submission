@@ -16,51 +16,33 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import RolesInfo from "../../utils/ContributorsRoles";
-import { mapValueToField } from "../../utils/MapValueToField";
 
-const Contributors = (props) => {
-  const { title, description, form, field_id } = props;
-  const location = useLocation();
+const Contributors = ({ title, description, form, field_id }) => {
+  const [contributors, setContributors] = useState(form?.values?.[field_id] || []);
 
-  const prefillContributors = mapValueToField(field_id);
-  const [contributors, setContributors] = useState([]);
-  const [newContributor, setNewContributor] = useState({
+  useEffect(() => {
+    const currentValue = form?.values?.[field_id];
+    if (currentValue && JSON.stringify(currentValue) !== JSON.stringify(contributors)) {
+      setContributors(currentValue);
+    }
+  }, [form?.values?.[field_id]]);
+
+  const emptyContributor = {
     firstName: "",
     lastName: "",
     emailAddress: "",
     institution: "",
-    role: [],
-  });
+    contribution: "",
+    position: 1
+  };
+
+  const [newContributor, setNewContributor] = useState(emptyContributor);
   const [editingContributor, setEditingContributor] = useState(null);
   const [emailValid, setEmailValid] = useState(false);
 
   const [opened, { toggle }] = useDisclosure(false);
   const [rolesInfoOpened, { open, close }] = useDisclosure(false);
-
-  useEffect(() => {
-    if (prefillContributors !== "") {
-      setContributors(prefillContributors);
-      form.setFieldValue(field_id, prefillContributors);
-      if (!opened && prefillContributors.length > 0) {
-        toggle();
-      }
-    } else {
-      setContributors([]);
-      setNewContributor({
-        firstName: "",
-        lastName: "",
-        emailAddress: "",
-        institution: "",
-        role: [],
-      });
-      form.setFieldValue(field_id, []);
-      if (opened) {
-        toggle();
-      }
-    }
-  }, [location]);
 
   const mainRoles = [
     "Author/Creator",
@@ -77,6 +59,11 @@ const Contributors = (props) => {
     "Data Owner Organisation",
   ];
 
+  const resetContributorForm = (position = 1) => {
+    setNewContributor({ ...emptyContributor, position });
+    setEmailValid(false);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewContributor((prevContributor) => ({
@@ -85,30 +72,30 @@ const Contributors = (props) => {
     }));
     if (name === "emailAddress") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isValidEmail = emailRegex.test(value);
-      setEmailValid(isValidEmail);
+      setEmailValid(emailRegex.test(value));
     }
   };
 
   const handleRoleChange = (value) => {
     setNewContributor((prevContributor) => ({
       ...prevContributor,
-      role: value,
+      contribution: value.join(',')
     }));
+  };
+
+  const updateFormValue = (contributorsList) => {
+    const updatedList = contributorsList.map((contributor, index) => ({
+      ...contributor,
+      position: index + 1
+    }));
+    setContributors(updatedList);
+    form.setFieldValue(field_id, updatedList);
   };
 
   const handleAddContributor = () => {
     const contributorsList = [...contributors, newContributor];
-    setContributors(contributorsList);
-    setNewContributor({
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      institution: "",
-      role: [],
-    });
-    setEmailValid(false);
-    form.setFieldValue(field_id, contributorsList);
+    updateFormValue(contributorsList);
+    resetContributorForm(contributorsList.length + 1);
   };
 
   const handleEditContributor = (contributor) => {
@@ -123,34 +110,28 @@ const Contributors = (props) => {
         ? newContributor
         : contributor
     );
-    setContributors(contributorsList);
+    updateFormValue(contributorsList);
     setEditingContributor(null);
-    setNewContributor({
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      institution: "",
-      role: [],
-    });
-    setEmailValid(false);
-    form.setFieldValue(field_id, contributorsList);
+    resetContributorForm(contributorsList.length + 1);
   };
 
   const handleDeleteContributor = (contributor) => {
     const contributorsList = contributors.filter(
       (c) => c.emailAddress !== contributor.emailAddress
     );
-    setContributors(contributorsList);
+    updateFormValue(contributorsList);
     setEditingContributor(null);
-    setNewContributor({
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      institution: "",
-      role: [],
-    });
-    setEmailValid(false);
-    form.setFieldValue(field_id, contributorsList);
+    resetContributorForm(contributorsList.length + 1);
+  };
+
+  const handleDragEnd = ({ destination, source }) => {
+    if (!destination) return;
+    
+    const contributorsList = [...contributors];
+    const [dragged] = contributorsList.splice(source.index, 1);
+    contributorsList.splice(destination.index, 0, dragged);
+    
+    updateFormValue(contributorsList);
   };
 
   return (
@@ -170,20 +151,7 @@ const Contributors = (props) => {
                 {contributors.length === 0 && <h4>Contributors List</h4>}
                 <DragDropContext
                   className="h-100"
-                  onDragEnd={({ destination, source }) => {
-                    if (!destination) {
-                      return;
-                    }
-                    let contributors_reordered = [...contributors];
-                    let from = source.index;
-                    let dragged = contributors_reordered.splice(from, 1);
-                    contributors_reordered.splice(
-                      destination?.index || 0,
-                      0,
-                      ...dragged
-                    );
-                    setContributors(contributors_reordered);
-                  }}
+                  onDragEnd={handleDragEnd}
                 >
                   <Droppable
                     droppableId="dnd-list"
@@ -202,7 +170,7 @@ const Contributors = (props) => {
                             index={index}
                             draggableId={contributor.emailAddress}
                           >
-                            {(provided, snapshot) => (
+                            {(provided) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
@@ -305,7 +273,7 @@ const Contributors = (props) => {
                     </span>
                     <MultiSelect
                       name="role"
-                      value={newContributor.role}
+                      value={newContributor.contribution ? newContributor.contribution.split(',').filter(Boolean) : []}
                       onChange={handleRoleChange}
                       data={[
                         { group: "Main Roles", items: [...mainRoles] },
@@ -314,7 +282,7 @@ const Contributors = (props) => {
                           items: [...additionalRoles],
                         },
                       ]}
-                      placeholder="Select role"
+                      placeholder="Select roles"
                     />
                   </Grid.Col>
                 </Grid>
@@ -326,14 +294,7 @@ const Contributors = (props) => {
                         className="btn-blue-outline small-button"
                         onClick={() => {
                           setEditingContributor(null);
-                          setNewContributor({
-                            firstName: "",
-                            lastName: "",
-                            emailAddress: "",
-                            institution: "",
-                            role: [],
-                          });
-                          setEmailValid(false);
+                          resetContributorForm();
                         }}
                       >
                         Cancel

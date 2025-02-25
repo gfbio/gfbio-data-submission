@@ -31,7 +31,7 @@ class TargetDataCenterForm extends React.PureComponent {
 
   renderDataCenterSelector = ({ input, meta: { touched, error } }) => (
     <div className="form-group">
-      <select className="form-control" disabled={this.props.readOnly} {...input}>
+      <select className="form-select" disabled={this.props.readOnly} {...input}>
         {this.dataCenterOptions}
       </select>
       {touched && error && <span>{error}</span>}

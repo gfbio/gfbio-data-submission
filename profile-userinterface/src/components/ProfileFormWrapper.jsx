@@ -1,4 +1,3 @@
-import React from "react";
 import { useParams } from "react-router-dom";
 import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
@@ -25,18 +24,22 @@ const ProfileFormWrapper = () => {
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
     // const {data, isLoading, error} = useFetch(PROFILE_URL+profileName);
     const {
-        data1,
-        data2,
+        profileData,
+        submissionData,
         isLoading,
-        error1,
-        error2,
+        error
     } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
     return (
         <div>
-            <ProfileWithErrorHandling profileData={data1} submissionData={data2} isLoading={isLoading}
-                                      profileError={error1} submissionError={error2}/>
+            <ProfileWithErrorHandling 
+                profileData={profileData} 
+                submissionData={submissionData} 
+                isLoading={isLoading}
+                profileError={error} 
+                submissionError={error}
+            />
         </div>
     );
 };
