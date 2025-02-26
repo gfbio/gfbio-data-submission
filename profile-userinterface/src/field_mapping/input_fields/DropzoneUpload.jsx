@@ -29,13 +29,12 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
 
     const handleDrop = (droppedFiles) => {
         const newFiles = [...localFiles, ...droppedFiles];
-        const files = [...serverFiles, ...newFiles];
         const withinLimits = checkUploadLimits(newFiles);
         
         setLocalFiles(newFiles);
-        form.setFieldValue("files", files);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
+        form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
     const handleRemoveLocal = (index) => {
@@ -51,9 +50,9 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
         }
 
         setLocalFiles(newFiles);
-        form.setFieldValue("files", [...serverFiles, ...newFiles]);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
+        form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
     const handleRemoveServer = async (index) => {

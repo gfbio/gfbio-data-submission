@@ -32,7 +32,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
             embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split('T')[0],
             license: submissionData?.license || 'CC BY 4.0'
         };
-        console.log("initial values: ", values);
 
         if (!profileData?.form_fields) return values;
         
@@ -116,7 +115,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     };
 
     const handleFilesChange = (uploadedFiles, isValid, metaIndex) => {
-        form.setFieldValue("files", uploadedFiles);
         setFiles(uploadedFiles);
         setUploadLimitExceeded(isValid);
         setMetadataIndex(metaIndex);
