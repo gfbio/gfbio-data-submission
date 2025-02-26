@@ -23,6 +23,7 @@ class TestProfileListView(TestCase):
         )
 
         Profile.objects.create(name="system-generic", target="GENERIC", system_wide_profile=True)
+        Profile.objects.create(name="system-generic-2", target="GENERIC", system_wide_profile=True)
         Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
         Profile.objects.create(name="user-profile-2", target="GENERIC", user=cls.user)
         Profile.objects.create(name="user-2-profile-1", target="GENERIC", user=cls.user_2)
@@ -39,12 +40,16 @@ class TestProfileListView(TestCase):
         response = self.client.get("/profile/profiles/")
         self.assertEqual(401, response.status_code)
 
+    def test_get_without_credentials_system_wide_only(self):
+        response = self.client.get("/profile/profiles/?system_wide_profile=true")
+        self.assertEqual(401, response.status_code)
+
     def test_get_for_user_1(self):
         response = self.api_client.get("/profile/profiles/")
         data = json.loads(response.content)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(3, len(data))
-        system_profile = Profile.objects.get(system_wide_profile=True)
+        self.assertEqual(4, len(data))
+        system_profile = Profile.objects.filter(system_wide_profile=True).first()
         self.assertIn(
             {'id': system_profile.id, 'name': system_profile.name, 'target': system_profile.target},
             data
@@ -59,8 +64,8 @@ class TestProfileListView(TestCase):
         response = self.api_client_2.get("/profile/profiles/")
         data = json.loads(response.content)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(2, len(data))
-        system_profile = Profile.objects.get(system_wide_profile=True)
+        self.assertEqual(3, len(data))
+        system_profile = Profile.objects.filter(system_wide_profile=True).first()
         self.assertIn(
             {'id': system_profile.id, 'name': system_profile.name, 'target': system_profile.target},
             data
@@ -70,3 +75,30 @@ class TestProfileListView(TestCase):
             {'id': other_users_profile.id, 'name': other_users_profile.name, 'target': other_users_profile.target},
             data
         )
+
+    def test_get_for_user_1_system_wide_only(self):
+        response = self.api_client.get("/profile/profiles/?system_wide_profile=True")
+        data = json.loads(response.content)
+        print(data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, len(data))
+        system_profile = Profile.objects.filter(system_wide_profile=True).first()
+        self.assertIn(
+            {'id': system_profile.id, 'name': system_profile.name, 'target': system_profile.target},
+            data
+        )
+
+        response = self.api_client.get("/profile/profiles/?system_wide_profile=true")
+        data = json.loads(response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, len(data))
+        self.assertIn(
+            {'id': system_profile.id, 'name': system_profile.name, 'target': system_profile.target},
+            data
+        )
+
+    def test_get_for_user_1_system_wide_only_invalid_parameter(self):
+        response = self.api_client.get("/profile/profiles/?system_wide_profile=foo")
+        data = json.loads(response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(4, len(data))

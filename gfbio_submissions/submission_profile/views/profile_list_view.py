@@ -8,10 +8,13 @@ from ..serializers.profile_list_serializer import ProfileListSerializer
 
 
 class ProfileListView(ListAPIView):
-    queryset = Profile.objects.all()
     serializer_class = ProfileListSerializer
     authentication_classes = (BasicAuthentication, TokenAuthentication)
 
     def get_queryset(self):
+        filter_system_wide_profiles = self.request.query_params.get('system_wide_profile', False)
         user = self.request.user
-        return Profile.objects.filter(Q(user=user) | Q(system_wide_profile=True))
+        if filter_system_wide_profiles == 'true' or filter_system_wide_profiles == 'True':
+            return Profile.objects.filter(system_wide_profile=True)
+        else:
+            return Profile.objects.filter(Q(user=user) | Q(system_wide_profile=True))
