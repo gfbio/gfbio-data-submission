@@ -26,6 +26,7 @@ const ProfileFormWrapper = () => {
     const {
         profileData,
         submissionData,
+        submissionFiles,
         isLoading,
         error
     } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
@@ -36,6 +37,7 @@ const ProfileFormWrapper = () => {
             <ProfileWithErrorHandling 
                 profileData={profileData} 
                 submissionData={submissionData} 
+                submissionFiles={submissionFiles}
                 isLoading={isLoading}
                 profileError={error} 
                 submissionError={error}

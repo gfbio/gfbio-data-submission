@@ -3,38 +3,24 @@ import { Dropzone } from "@mantine/dropzone";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import deleteSubmissionUpload from "../../api/deleteSubmissionUpload.jsx";
-import getSubmissionUploads from "../../api/getSubmissionUploads";
 import patchSubmissionUpload from "../../api/patchSubmissionUploadMetadata.jsx";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
 
-const DropzoneUpload = ({ title, description, form, field_id, onFilesChange, brokerSubmissionId }) => {
+const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmissionId }) => {
     const [localFiles, setLocalFiles] = useState([]);
-    const [serverFiles, setServerFiles] = useState([]);
+    const [serverFiles, setServerFiles] = useState(form.values.files || []);
     const [metadataIndex, setMetadataIndex] = useState({ indices: [], source: null });
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
 
-    // Fetch server files on component mount
     useEffect(() => {
-        const fetchServerFiles = async () => {
-            if (!brokerSubmissionId) return;
-            
-            try {
-                const serverFileData = await getSubmissionUploads(brokerSubmissionId);
-                setServerFiles(serverFileData);
-                // Find metadata files
-                const metadataIndices = serverFileData
-                    .map((file, index) => file.meta_data ? index : -1)
-                    .filter(index => index !== -1);
-                setMetadataIndex({ indices: metadataIndices, source: "server" });
-            } catch (error) {
-                console.error("Error fetching server files:", error);
-            }
-        };
-
-        fetchServerFiles();
-    }, [brokerSubmissionId]);
+        // Find metadata files
+        const metadataIndices = serverFiles
+            .map((file, index) => file.meta_data ? index : -1)
+            .filter(index => index !== -1);
+        setMetadataIndex({ indices: metadataIndices, source: "server" });
+    }, [serverFiles]);
 
     const checkUploadLimits = (files) => {
         const totalSize = files.reduce((sum, file) => sum + file.size, 0);
@@ -46,7 +32,7 @@ const DropzoneUpload = ({ title, description, form, field_id, onFilesChange, bro
         const withinLimits = checkUploadLimits(newFiles);
         
         setLocalFiles(newFiles);
-        form.setFieldValue(field_id, newFiles);
+        form.setFieldValue("files", newFiles);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
     };
@@ -64,7 +50,7 @@ const DropzoneUpload = ({ title, description, form, field_id, onFilesChange, bro
         }
 
         setLocalFiles(newFiles);
-        form.setFieldValue(field_id, newFiles);
+        form.setFieldValue("files", newFiles);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
     };
@@ -129,6 +115,7 @@ const DropzoneUpload = ({ title, description, form, field_id, onFilesChange, bro
                 fileUploadsFromServer={serverFiles}
                 handleRemove={handleRemoveLocal}
                 deleteFile={handleRemoveServer}
+                metadataSource={metadataIndex.source}
                 metadataIndex={metadataIndex}
                 handleMetadataSelect={handleMetadataToggle}
             />
@@ -159,7 +146,6 @@ DropzoneUpload.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     form: PropTypes.object.isRequired,
-    field_id: PropTypes.string.isRequired,
     onFilesChange: PropTypes.func.isRequired,
     brokerSubmissionId: PropTypes.string,
 };

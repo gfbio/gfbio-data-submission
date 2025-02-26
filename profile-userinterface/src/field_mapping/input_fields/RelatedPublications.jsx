@@ -1,37 +1,95 @@
-import { TagsInput } from "@mantine/core";
+import {
+    Button,
+    CloseButton,
+    Flex,
+    List,
+    TextInput,
+    ThemeIcon,
+} from "@mantine/core";
 import PropTypes from "prop-types";
+import { useState } from "react";
 
-const RelatedPublications = ({ title, description, mandatory, form, field_id, placeholder }) => {
-    const validateDOI = (value) => {
-        const doiRegex = /^(https:\/doi\.org\/)?10\.\d{4,}(\.\d+)*\/[-._;()/:A-Z0-9]+$/i;
-        return doiRegex.test(value) ? null : 'Please enter a valid DOI';
-    };
+function RelatedPublications(props) {
+  const { title, description, mandatory, form, field_id, placeholder } = props;
 
-    return (
-        <TagsInput
-            label={title}
-            description={description}
-            placeholder={placeholder || "Enter DOI (e.g., 10.1000/xyz123)"}
-            required={mandatory}
-            key={form.key(field_id)}
-            {...form.getInputProps(field_id)}
-            splitChars={[',', ' ', 'Enter']}
-            validateValue={validateDOI}
+  const [publication, setPublication] = useState("");
+  const [publicationsList, setPublicationsList] = useState(form.values[field_id] || []);
+
+  const handlePublicationChange = (event) => {
+    setPublication(event.target.value);
+  };
+
+  const handleAddPublication = () => {
+    if (publication.trim() !== "") {
+      const updatedList = [...publicationsList, publication];
+      setPublicationsList(updatedList);
+      setPublication("");
+      form.setFieldValue(field_id, updatedList);
+    }
+  };
+
+  const handleRemovePublication = (publication) => {
+    const updatedList = publicationsList.filter((item) => item !== publication);
+    setPublicationsList(updatedList);
+    form.setFieldValue(field_id, updatedList);
+  };
+
+  return (
+    <div>
+      <Flex style={{ marginBottom: "8px" }}>
+        <TextInput
+          label={title}
+          description={description}
+          placeholder={placeholder}
+          key={form.key(field_id)}
+          required={mandatory}
+          value={publication}
+          onChange={handlePublicationChange}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleAddPublication();
+            }
+          }}
+          style={{ flex: "1", marginRight: "8px" }}
         />
-    );
-};
-
-RelatedPublications.defaultProps = {
-    placeholder: "",
-};
+        <Button
+          onClick={handleAddPublication}
+          style={{ width: "auto", alignSelf: "flex-end" }}
+        >
+          Add Publication
+        </Button>
+      </Flex>
+      <List
+        spacing="xs"
+        icon={
+          <ThemeIcon color="blue" variant="filled">
+            <i className="fa fa-book"></i>
+          </ThemeIcon>
+        }
+      >
+        {publicationsList.map((item) => (
+          <List.Item key={item}>
+            <Flex>
+              <span>{item}</span>
+              <CloseButton
+                onClick={() => handleRemovePublication(item)}
+                style={{ marginLeft: "12px" }}
+              />
+            </Flex>
+          </List.Item>
+        ))}
+      </List>
+    </div>
+  );
+}
 
 RelatedPublications.propTypes = {
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    mandatory: PropTypes.bool.isRequired,
-    form: PropTypes.object.isRequired,
-    field_id: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  mandatory: PropTypes.bool.isRequired,
+  form: PropTypes.object.isRequired,
+  field_id: PropTypes.string.isRequired,
+  placeholder: PropTypes.string,
 };
 
 export default RelatedPublications;

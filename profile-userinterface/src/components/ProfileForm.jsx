@@ -12,7 +12,7 @@ import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 import validateTextFields from "../utils/TextValidation.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
-const ProfileForm = ({ profileData, submissionData }) => {
+const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
@@ -28,16 +28,15 @@ const ProfileForm = ({ profileData, submissionData }) => {
         
         // Start with minimal required values
         const values = { 
-            files: [],
+            files: submissionFiles || [],
             embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split('T')[0],
             license: submissionData?.license || 'CC BY 4.0'
         };
+        console.log("initial values: ", values);
 
         if (!profileData?.form_fields) return values;
-
-        const formFields = profileData.form_fields ? profileData.form_fields : [];
         
-        formFields.forEach(field => {
+        profileData.form_fields.forEach(field => {
             const fieldId = field.field.field_id;
             const fieldValue = submissionData?.data?.requirements[fieldId];
             
@@ -60,13 +59,10 @@ const ProfileForm = ({ profileData, submissionData }) => {
         validate: (values) => {
             if (!profileData?.form_fields) return {};
             
-            // Ensure form_fields is an array
-            const formFields = Array.isArray(profileData.form_fields) ? profileData.form_fields : [];
-            
-            let field_types = formFields.map(
+            let field_types = profileData.form_fields.map(
                 (form_field) => form_field.field.field_type.type
             );
-            var validations = {}
+            const validations = {}
             validateTextFields(values, profileData, validations);
             if (field_types.includes("data-url-field")) {
                 validateDataUrlField(values, profileData, validations);
@@ -157,14 +153,14 @@ const ProfileForm = ({ profileData, submissionData }) => {
         setProcessing(true);
 
         // Extract embargo_date before filtering other values
-        const embargoDate = values.embargo_date;
+        const embargoDate = values.embargo;
 
         // Filter out empty values and embargo_date
         const filteredValues = Object.entries(values).reduce((acc, [key, value]) => {
-            // Skip embargo_date as it's handled separately
-            if (key === 'embargo_date') return acc;
+            // Skip embargo date and files as they're handled separately
+            if (key === 'embargo' || key === 'files') return acc;
             
-            // Keep arrays (for files) even if empty
+            // Keep arrays even if empty
             if (Array.isArray(value)) {
                 acc[key] = value;
                 return acc;
@@ -281,7 +277,7 @@ const ProfileForm = ({ profileData, submissionData }) => {
             >
                 <div className="row">
                     <div className="col-md-9 main-col">
-                        {(Array.isArray(profileData.form_fields) ? profileData.form_fields : [])
+                        {profileData.form_fields
                             .filter((form_field) => form_field.field.position === "main")
                             .map((form_field, index) => (
                                 <FormField
@@ -289,12 +285,13 @@ const ProfileForm = ({ profileData, submissionData }) => {
                                     formField={form_field}
                                     form={form}
                                     onFilesChange={handleFilesChange}
+                                    brokerSubmissionId={submissionData?.broker_submission_id}
                                 ></FormField>
                             ))
                         }
                     </div>
                     <div className="col-md-3 side-col">
-                        {(Array.isArray(profileData.form_fields) ? profileData.form_fields : [])
+                        {profileData.form_fields
                             .filter((form_field) => form_field.field.position === "sidebar")
                             .map((form_field, index) => (
                                 <FormField
@@ -302,6 +299,7 @@ const ProfileForm = ({ profileData, submissionData }) => {
                                     formField={form_field}
                                     form={form}
                                     onFilesChange={handleFilesChange}
+                                    brokerSubmissionId={submissionData?.broker_submission_id}
                                 ></FormField>
                             ))
                         }
@@ -320,6 +318,7 @@ const ProfileForm = ({ profileData, submissionData }) => {
 ProfileForm.propTypes = {
     profileData: PropTypes.object.isRequired,
     submissionData: PropTypes.object,
+    submissionFiles: PropTypes.array,
 };
 
 export default ProfileForm;
