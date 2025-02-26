@@ -29,10 +29,11 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
 
     const handleDrop = (droppedFiles) => {
         const newFiles = [...localFiles, ...droppedFiles];
+        const files = [...serverFiles, ...newFiles];
         const withinLimits = checkUploadLimits(newFiles);
         
         setLocalFiles(newFiles);
-        form.setFieldValue("files", newFiles);
+        form.setFieldValue("files", files);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
     };
@@ -50,7 +51,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
         }
 
         setLocalFiles(newFiles);
-        form.setFieldValue("files", newFiles);
+        form.setFieldValue("files", [...serverFiles, ...newFiles]);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
     };
@@ -77,30 +78,46 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
         }
     };
 
-    const handleMetadataToggle = async (index, source) => {
-        if (source === "server" && brokerSubmissionId) {
-            try {
-                const file = serverFiles[index];
-                const formData = new FormData();
-                const isCurrentlyMetadata = metadataIndex.indices.includes(index);
-                formData.append("meta_data", !isCurrentlyMetadata);
-
-                await patchSubmissionUpload(brokerSubmissionId, file.pk, formData);
-                
-                const newIndices = isCurrentlyMetadata
-                    ? metadataIndex.indices.filter(i => i !== index)
-                    : [...metadataIndex.indices, index];
-                setMetadataIndex({ indices: newIndices, source: "server" });
-            } catch (error) {
-                console.error("Error updating metadata flag:", error);
-            }
-        } else {
-            const isCurrentlyMetadata = metadataIndex.indices.includes(index);
-            const newIndices = isCurrentlyMetadata
-                ? metadataIndex.indices.filter(i => i !== index)
-                : [...metadataIndex.indices, index];
-            setMetadataIndex({ indices: newIndices, source: "local" });
+    const updateServerMetadata = async (file, isMetadata) => {
+        if (!brokerSubmissionId) return;
+        try {
+            const formData = new FormData();
+            formData.append("meta_data", isMetadata);
+            await patchSubmissionUpload(brokerSubmissionId, file.pk, formData);
+        } catch (error) {
+            console.error("Error updating metadata flag:", error);
         }
+    };
+
+    const deselectServerFile = async (index) => {
+        if (!brokerSubmissionId || !serverFiles[index]) return;
+        await updateServerMetadata(serverFiles[index], false);
+    };
+
+    const handleMetadataToggle = async (index, source) => {
+        const isCurrentlySelected = metadataIndex.indices.includes(index) && metadataIndex.source === source;
+        const isServerSource = source === "server";
+
+        // Deselect current file if it's selected
+        if (isCurrentlySelected) {
+            if (isServerSource) {
+                await deselectServerFile(index);
+            }
+            setMetadataIndex({ indices: [], source: null });
+            return;
+        }
+
+        // Deselect previously selected server file if exists
+        if (metadataIndex.source === "server") {
+            await deselectServerFile(metadataIndex.indices[0]);
+        }
+
+        // Select new file
+        if (isServerSource) {
+            await updateServerMetadata(serverFiles[index], true);
+        }
+        
+        setMetadataIndex({ indices: [index], source });
     };
 
     return (

@@ -1,7 +1,7 @@
-import React from "react";
-import PropTypes from "prop-types";
-import filesize from "filesize";
 import { Checkbox, HoverCard } from "@mantine/core";
+import filesize from "filesize";
+import PropTypes from "prop-types";
+import React from "react";
 
 const FileIndicator = ({
                            fileUploads,
@@ -28,7 +28,7 @@ const FileIndicator = ({
                         <div className="row">
                             <div className="col-md-9">
                                 <div className="container h-100">
-                                    <small className="file-name row h-100 pl-3">
+                                    <small className="file-name row h-100 ps-3">
                                         <div
                                             className="col-1 d-flex justify-content-end align-items-center checkbox-col">
                                             <Checkbox
@@ -41,7 +41,7 @@ const FileIndicator = ({
                                         </div>
                                         <div className="col-11 d-flex align-items-center">
                                             <label htmlFor={`primaryUploaded${index}`} className="metadata mb-0 w-100">
-                                                <i className="icon ion-md-document pub pr-2"></i>
+                                                <i className="icon ion-md-document pub pe-2"></i>
                                                 {uploaded.file_name}
                                             </label>
                                         </div>
@@ -80,7 +80,7 @@ const FileIndicator = ({
                         <div className="row">
                             <div className="col-md-9">
                                 <div className="container h-100">
-                                    <small className="file-name row h-100 pl-3">
+                                    <small className="file-name row h-100 ps-3">
                                         <div
                                             className="col-1 d-flex justify-content-end align-items-center checkbox-col">
                                             <Checkbox
@@ -93,7 +93,7 @@ const FileIndicator = ({
                                         </div>
                                         <div className="col-11 d-flex align-items-center">
                                             <label htmlFor={`primary${index}`} className="metadata mb-0 w-100">
-                                                <i className="icon ion-md-document pub pr-2"></i>
+                                                <i className="icon ion-md-document pub pe-2"></i>
                                                 {upload.name}
                                             </label>
                                         </div>
@@ -136,7 +136,7 @@ const FileIndicator = ({
                         <div className="col-md-8">
                             <div className="container">
                                 <div className="row">
-                <span className="pl-0 py-3 col-6 upload-header list-header">
+                <span className="ps-0 py-3 col-6 upload-header list-header">
                   Metadata
               <HoverCard
                   width={320}
@@ -146,7 +146,7 @@ const FileIndicator = ({
               >
                 <HoverCard.Target>
                   <i
-                      className="fa fa-question-circle-o pl-2"
+                      className="fa fa-question-circle-o ps-2"
                       aria-hidden="true"
                   ></i>
                 </HoverCard.Target>
