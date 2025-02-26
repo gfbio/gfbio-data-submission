@@ -4,12 +4,12 @@ from rest_framework.authentication import TokenAuthentication, BasicAuthenticati
 from rest_framework.generics import ListAPIView
 
 from ..models.profile import Profile
-from ..serializers.profile_serializer import ProfileSerializer
+from ..serializers.profile_list_serializer import ProfileListSerializer
 
 
 class ProfileListView(ListAPIView):
     queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileListSerializer
     authentication_classes = (BasicAuthentication, TokenAuthentication)
 
     def get_queryset(self):
