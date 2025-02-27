@@ -13,7 +13,7 @@ import TagsInputField from "./input_fields/TagsInputField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
 
-const FormField = ({formField, form, onFilesChange, brokerSubmissionId}) => {
+const FormField = ({formField, form, onFilesChange, submissionData}) => {
     const fieldParameters = {
         title: formField.field.title,
         description: formField.field.description,
@@ -24,7 +24,7 @@ const FormField = ({formField, form, onFilesChange, brokerSubmissionId}) => {
         field_id: formField.field.field_id,
         placeholder: formField.field.placeholder,
         form: form,
-        brokerSubmissionId: brokerSubmissionId,
+        submissionData: submissionData,
     };
 
     if (formField.visible) {
@@ -75,7 +75,7 @@ FormField.propTypes = {
     formField: PropTypes.object.isRequired,
     form: PropTypes.object.isRequired,
     onFilesChange: PropTypes.func.isRequired,
-    brokerSubmissionId: PropTypes.string,
+    submissionData: PropTypes.object,
 };
 
 export default FormField;
