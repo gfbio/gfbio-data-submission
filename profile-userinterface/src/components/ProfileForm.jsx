@@ -172,7 +172,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
 
         // TODO: fixed token value for local testing only
         if (submissionData?.broker_submission_id) {
-            console.log("values: ", filteredValues);
             putSubmission(
                 submissionData.broker_submission_id,
                 profileData.target,
@@ -283,7 +282,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                                     formField={form_field}
                                     form={form}
                                     onFilesChange={handleFilesChange}
-                                    brokerSubmissionId={submissionData?.broker_submission_id}
+                                    submissionData={submissionData}
                                 ></FormField>
                             ))
                         }
@@ -297,7 +296,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                                     formField={form_field}
                                     form={form}
                                     onFilesChange={handleFilesChange}
-                                    brokerSubmissionId={submissionData?.broker_submission_id}
+                                    submissionData={submissionData}
                                 ></FormField>
                             ))
                         }

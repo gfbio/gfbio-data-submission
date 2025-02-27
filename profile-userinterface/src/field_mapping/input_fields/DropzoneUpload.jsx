@@ -8,7 +8,7 @@ import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
 
-const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmissionId }) => {
+const DropzoneUpload = ({ title, description, form, onFilesChange, submissionData }) => {
     const [localFiles, setLocalFiles] = useState([]);
     const [serverFiles, setServerFiles] = useState(form.values.files || []);
     const [metadataIndex, setMetadataIndex] = useState({ indices: [], source: null });
@@ -56,7 +56,9 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
     };
 
     const handleRemoveServer = async (index) => {
-        if (!brokerSubmissionId) return;
+        if (!submissionData?.broker_submission_id) return;
+
+        const brokerSubmissionId = submissionData?.broker_submission_id;
 
         try {
             const fileToDelete = serverFiles[index];
@@ -78,7 +80,10 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
     };
 
     const updateServerMetadata = async (file, isMetadata) => {
-        if (!brokerSubmissionId) return;
+        if (!submissionData?.broker_submission_id) return;
+
+        const brokerSubmissionId = submissionData?.broker_submission_id;
+
         try {
             const formData = new FormData();
             formData.append("meta_data", isMetadata);
@@ -89,7 +94,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, brokerSubmiss
     };
 
     const deselectServerFile = async (index) => {
-        if (!brokerSubmissionId || !serverFiles[index]) return;
+        if (!submissionData?.broker_submission_id || !serverFiles[index]) return;
         await updateServerMetadata(serverFiles[index], false);
     };
 
@@ -163,11 +168,7 @@ DropzoneUpload.propTypes = {
     description: PropTypes.string.isRequired,
     form: PropTypes.object.isRequired,
     onFilesChange: PropTypes.func.isRequired,
-    brokerSubmissionId: PropTypes.string,
-};
-
-DropzoneUpload.defaultProps = {
-    brokerSubmissionId: '',
+    submissionData: PropTypes.object.isRequired,
 };
 
 export default DropzoneUpload;
