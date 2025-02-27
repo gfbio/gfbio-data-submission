@@ -210,15 +210,28 @@ body {
   .mantine-Pill-root {
     margin-top: -0.25rem;
     height: auto;
-    background-color: #f8fcfd;
+    color: #f8fcfd;
+    background-color: #3cace4;
     border: 1px #3cace4 solid;
-    color: #3cace4;
 
     .mantine-Pill-label {
-      font-size: 1rem;
-      line-height: 1rem;
+      font-size: 0.8rem;
+      line-height: 0.8rem;
       padding-top: .4rem;
-      padding-bottom: 0.1rem;
+      padding-bottom: .4rem;
+      padding-right: 0.2rem;
+    }
+
+    button {
+      padding-right: 0.2rem;
+
+      svg {
+        border-radius: 50%;
+        background-color: #f8fcfd;
+        border: #f8fcfd 2px solid;
+        stroke: #3cace4;
+        stroke-width: 2px;
+      }
     }
   }
 
@@ -383,6 +396,19 @@ body {
         }
       }
     }
+    
+    .active-text-blue:not([disabled]) {
+      cursor: pointer;
+      color: #3cace4;
+
+      &:hover {
+        color: #ff8362;
+      }
+
+      * {
+        border: none;
+      }
+    }
 
     button{
        &.btn-blue:not([disabled]) {
@@ -437,6 +463,24 @@ body {
         padding: 0;
         height: 2rem;
       }
+    }
+
+    .mantine-InputWrapper-root {
+      &.invalid {
+        .mantine-Input-wrapper {
+          --input-bg: #fceaec;
+        }
+  
+        &:hover {
+          .mantine-Input-wrapper {
+            --input-bg: #f5c2c7;
+          }
+        }
+      }
+    }
+    
+    .mantine-UnstyledButton-root.fa.fa-question-circle-o {
+      color: #345aa2
     }
   }
 }
