@@ -71,7 +71,6 @@ class ContributorsForm extends React.PureComponent {
   }
 
   updateContributorsFromProps() {
-
     let propsContributors = [];
     if (this.props.contributors !== undefined) {
       propsContributors = this.props.contributors;
@@ -498,7 +497,7 @@ class ContributorsForm extends React.PureComponent {
             aria-controls="contributorForm"
             aria-expanded={formOpen}
           >
-            <i className="fa fa-plus"/> add contributor
+            <i className="fa fa-plus" /> add contributor
           </Button>
         )}
       </div>
@@ -519,9 +518,9 @@ class ContributorsForm extends React.PureComponent {
 
     const spaceBetweenButtons =
       this.state.contributorIndex === -1 ? (
-        <div className="form-group col-md-6"/>
+        <div className="form-group col-md-6" />
       ) : (
-        <div className="form-group col-md-4"/>
+        <div className="form-group col-md-4" />
       );
 
     const contributors = this.state.contributorsArray.map((c, index) => {
@@ -548,7 +547,7 @@ class ContributorsForm extends React.PureComponent {
             >
               <div className="row">
                 <div className="col d-flex align-items-center">
-                  <i className="fa fa-bars drag-bars"/>
+                  <i className="fa fa-bars drag-bars" />
                   <Button
                     className="btn btn-primary btn-contributor contributor-draggable-btn flex-grow-1"
                     onClick={() => this.onClickDetailButton(index)}
@@ -577,9 +576,9 @@ class ContributorsForm extends React.PureComponent {
             Close
           </Button>
         </div>
-        <div className="form-group col-md-2"/>
-        <div className="form-group col-md-4"/>
-        <div className="form-group col-md-4"/>
+        <div className="form-group col-md-2" />
+        <div className="form-group col-md-4" />
+        <div className="form-group col-md-4" />
       </div>
     ) : (
       <div className="row">
@@ -615,7 +614,7 @@ class ContributorsForm extends React.PureComponent {
     // TODO: https://react-bootstrap.netlify.com/
     return (
       <div>
-        <RolesInfo/>
+        <RolesInfo />
         <header className="header header-left form-header-top mb-3">
           <h2 className="section-title">Contributors</h2>
           <p className="section-subtitle">(optional)</p>
@@ -641,118 +640,120 @@ class ContributorsForm extends React.PureComponent {
             <div className="col-md-9 add-contributor-col">
               {this.state.showAddDiv ? addContributorDiv : null}
               <Collapse in={this.state.formOpen}>
-                <div className="card card-body">
-                  <h5>
-                    {this.state.contributorIndex === -1
-                      ? 'Add Contributor'
-                      : 'Edit Contributor'}
-                  </h5>
-                  <div className="row">
-                    <div className="form-group col-md-3">
-                      <label htmlFor="firstName">
-                        First Name{' '}
-                        {this.state.organisationRoleSelected
-                          ? '(optional)'
-                          : ''}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="firstName"
-                        onKeyDown={this.preventSubmit}
-                        onChange={this.handleChange}
-                        onClick={this.handleInputClick}
-                        value={this.state.formValues.firstName}
-                        disabled={this.props.readOnly}
-                      />
+                <div>
+                  <div className="card card-body">
+                    <h5>
+                      {this.state.contributorIndex === -1
+                        ? 'Add Contributor'
+                        : 'Edit Contributor'}
+                    </h5>
+                    <div className="row">
+                      <div className="form-group col-md-3">
+                        <label htmlFor="firstName">
+                          First Name{' '}
+                          {this.state.organisationRoleSelected
+                            ? '(optional)'
+                            : ''}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="firstName"
+                          onKeyDown={this.preventSubmit}
+                          onChange={this.handleChange}
+                          onClick={this.handleInputClick}
+                          value={this.state.formValues.firstName}
+                          disabled={this.props.readOnly}
+                        />
+                      </div>
+                      <div className="form-group col-md-3">
+                        <label htmlFor="lastName">
+                          Last Name{' '}
+                          {this.state.organisationRoleSelected
+                            ? '(optional)'
+                            : ''}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="lastName"
+                          onKeyDown={this.preventSubmit}
+                          onChange={this.handleChange}
+                          onClick={this.handleInputClick}
+                          value={this.state.formValues.lastName}
+                          disabled={this.props.readOnly}
+                        />
+                      </div>
+                      <div className="form-group col-md-6">
+                        <label htmlFor="emailAddress">Email Address</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="emailAddress"
+                          onKeyDown={this.preventSubmit}
+                          placeholder="name@example.com"
+                          // defaultValue={emailAddress}
+                          onChange={this.handleChange}
+                          onClick={this.handleInputClick}
+                          value={this.state.formValues.emailAddress}
+                          disabled={this.props.readOnly}
+                        />
+                      </div>
                     </div>
-                    <div className="form-group col-md-3">
-                      <label htmlFor="lastName">
-                        Last Name{' '}
-                        {this.state.organisationRoleSelected
-                          ? '(optional)'
-                          : ''}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="lastName"
-                        onKeyDown={this.preventSubmit}
-                        onChange={this.handleChange}
-                        onClick={this.handleInputClick}
-                        value={this.state.formValues.lastName}
-                        disabled={this.props.readOnly}
-                      />
+                    <div className="row">
+                      <div className="form-group col-md-12">
+                        <label htmlFor="institution">
+                          Institution{' '}
+                          {!this.state.organisationRoleSelected
+                            ? '(optional)'
+                            : ''}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="institution"
+                          onKeyDown={this.preventSubmit}
+                          onChange={this.handleChange}
+                          onClick={this.handleInputClick}
+                          value={this.state.formValues.institution}
+                          disabled={this.props.readOnly}
+                        />
+                      </div>
+                      <div className="form-group col-md-12">
+                        <label htmlFor="contribution">
+                          Contributor Role (optional)
+                          <a
+                            className="align-bottom"
+                            data-bs-toggle="modal"
+                            data-bs-target="#rolesInfo"
+                          >
+                            <i
+                              className="icon ion-ios-help-circle-outline question-pointer"
+                              aria-hidden="true"
+                            />
+                          </a>
+                        </label>
+                        <Multiselect
+                          placeholder="Select Roles"
+                          options={this.roleOptions} // Options to display in the dropdown
+                          selectedValues={this.state.roles} // Preselected value to persist in dropdown
+                          onSelect={this.onSelectChange} // Function will trigger on select event
+                          onRemove={this.onSelectChange} // Function will trigger on remove event
+                          displayValue="role" // Property name to display in the dropdown options
+                          groupBy="category"
+                          // closeOnSelect={false}
+                          closeIcon="circle"
+                          showCheckbox
+                          avoidHighlightFirstOption
+                        />
+                      </div>
                     </div>
-                    <div className="form-group col-md-6">
-                      <label htmlFor="emailAddress">Email Address</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        id="emailAddress"
-                        onKeyDown={this.preventSubmit}
-                        placeholder="name@example.com"
-                        // defaultValue={emailAddress}
-                        onChange={this.handleChange}
-                        onClick={this.handleInputClick}
-                        value={this.state.formValues.emailAddress}
-                        disabled={this.props.readOnly}
-                      />
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="form-group col-md-12">
-                      <label htmlFor="institution">
-                        Institution{' '}
-                        {!this.state.organisationRoleSelected
-                          ? '(optional)'
-                          : ''}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="institution"
-                        onKeyDown={this.preventSubmit}
-                        onChange={this.handleChange}
-                        onClick={this.handleInputClick}
-                        value={this.state.formValues.institution}
-                        disabled={this.props.readOnly}
-                      />
-                    </div>
-                    <div className="form-group col-md-12">
-                      <label htmlFor="contribution">
-                        Contributor Role (optional)
-                        <a
-                          className="align-bottom"
-                          data-bs-toggle="modal"
-                          data-bs-target="#rolesInfo"
-                        >
-                          <i
-                            className="icon ion-ios-help-circle-outline question-pointer"
-                            aria-hidden="true"
-                          />
-                        </a>
-                      </label>
-                      <Multiselect
-                        placeholder="Select Roles"
-                        options={this.roleOptions} // Options to display in the dropdown
-                        selectedValues={this.state.roles} // Preselected value to persist in dropdown
-                        onSelect={this.onSelectChange} // Function will trigger on select event
-                        onRemove={this.onSelectChange} // Function will trigger on remove event
-                        displayValue="role" // Property name to display in the dropdown options
-                        groupBy="category"
-                        // closeOnSelect={false}
-                        closeIcon="circle"
-                        showCheckbox
-                        avoidHighlightFirstOption
-                      />
-                    </div>
-                  </div>
 
-                  <div id="contribErr" className="input-error fade-out">
-                    Pipe character is not allowed
+                    <div id="contribErr" className="input-error fade-out">
+                      Pipe character is not allowed
+                    </div>
+                    {editFormButtons}
                   </div>
-                  {editFormButtons}
                 </div>
               </Collapse>
             </div>

@@ -2,132 +2,120 @@ import { Button, Group, Modal } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 
-const EmbargoDate = (props) => {
-    const {title, description, form, options, field_id, mandatory} = props;
+const EmbargoDate = ({ title, mandatory, form, field_id }) => {
+    // This function creates a date at noon of the given date
+    // This is to ensure that the date is always the same, regardless of the time of day
+    // This is important for the conversion to ISO format
+    const createDateAtNoon = (date) => {
+        const newDate = new Date(date);
+        newDate.setHours(12, 0, 0, 0);
+        return newDate;
+    }
 
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const initialDate = new Date();
-    initialDate.setFullYear(today.getFullYear() + 1);
-    const maxDate = new Date();
-    maxDate.setFullYear(today.getFullYear() + 2);
-
-    const [embargoDate, setEmbargoDate] = useState(initialDate);
-    const [tmpEmbargoDate, setTempEmbargoDate] = useState(embargoDate);
-
-    const [opened, {open, close}] = useDisclosure(false);
-
-    // TODO: since embargo is not send as part of the "requirements" field in the submission request,
-    //  but is send as a dedicated field to the submission (serializer). I decided to store this in localstorage
-    //  for now, to keep the logic of getting form values for the "requirements" field separated.
-    useEffect(() => {
-        localStorage.setItem('embargo', embargoDate.toISOString().split('T')[0]);
-    }, [embargoDate]);
-
-    useEffect(() => {
-        const submission = JSON.parse(localStorage.getItem("submission"));
-        if (submission.embargo) {
-            setEmbargoDate(new Date(submission.embargo));
-        } else {
-            setEmbargoDate(initialDate);
+    const today = createDateAtNoon(new Date());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const defaultDate = createDateAtNoon(new Date());
+    defaultDate.setFullYear(defaultDate.getFullYear() + 1);
+    const maxDate = createDateAtNoon(new Date());
+    maxDate.setFullYear(maxDate.getFullYear() + 2);
+    const [opened, { open, close }] = useDisclosure(false);
+    const [tempDate, setTempDate] = useState(() => {
+        if (form.values[field_id]) {
+            const [year, month, day] = form.values[field_id].split('-');
+            return createDateAtNoon(new Date(year, month - 1, day));
         }
-    }, [location]);
+        return defaultDate;
+    });
+    
+    const [displayDate, setDisplayDate] = useState(
+        form.values[field_id] 
+            ? createDateAtNoon(new Date(form.values[field_id])) 
+            : defaultDate
+    );
 
-    // TODO: add logic for:
-    //  Do not show button if at least one PID has status PUBLIC
-    //  if at least 1 PID has status PUBLIC do not show button
-    const showEmbargoButton = () => {
-        return (
-            <Group>
-                <Button onClick={open} variant="default" className="link-style">
-                    <i className="icon ion-md-calendar align-top me-2"></i>
-                    Change embargo date
-                </Button>
-            </Group>
-        );
+    const addMonthsToDate = (months) => {
+        const newDate = new Date(today);
+        newDate.setMonth(today.getMonth() + months);
+        setTempDate(newDate);
     };
 
-    const addMonthsToInitialEmbargoDate = (months) => {
-        const tmp = new Date(today);
-        tmp.setMonth(today.getMonth() + months);
-        setEmbargoDate(tmp);
+    const formattedDate = (date) => {
+        const d = new Date(date);
+        return d.getDate().toString() + ' ' +
+            d.toLocaleString('default', { month: 'long' }) + ' ' +
+            d.getFullYear().toString();
     };
 
-    const formattedEmbargoDate = () => {
-        return (
-            embargoDate.getDate().toString() + ' ' +
-            embargoDate.toLocaleString('default', {month: 'long'}) + ' ' +
-            embargoDate.getFullYear().toString()
-        );
+    const handleAccept = () => {
+        const formattedValue = tempDate.toISOString().split('T')[0];
+        form.setFieldValue(field_id, formattedValue);
+        console.log('EmbargoDate after accept', formattedValue);
+        setDisplayDate(tempDate);
+        close();
+    };
+
+    const handleCancel = () => {
+        setTempDate(form.values[field_id] ? new Date(form.values[field_id]) : defaultDate);
+        close();
     };
 
     return (
         <div>
-            <header className="">
-                <h2 className="">{title} {mandatory && ( <span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
-                <h4>{formattedEmbargoDate()}</h4>
-                {showEmbargoButton()}
+            <header>
+                <h2>{title} {mandatory && (<span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
+                <h4>{formattedDate(displayDate)}</h4>
+                <Group>
+                    <Button onClick={open} variant="default" className="link-style">
+                        <i className="icon ion-md-calendar align-top me-2"></i>
+                        Change embargo date
+                    </Button>
+                </Group>
             </header>
-            <Modal opened={opened} onClose={close} title="Select embargo date" centered>
+
+            <Modal opened={opened} onClose={handleCancel} title="Select embargo date" centered>
                 <Group justify="center">
-                    <p className='my-3'>New Embargo: <b>{formattedEmbargoDate()}</b></p>
+                    <p className='my-3'>New Embargo: <b>{formattedDate(tempDate)}</b></p>
                 </Group>
                 <Group justify="center">
-                    <Button className='button-inverted blue-button' variant="default" onClick={() => {
-                        addMonthsToInitialEmbargoDate(6)
-                    }}>
+                    <Button className='button-inverted blue-button' variant="default" onClick={() => addMonthsToDate(6)}>
                         6 months
                     </Button>
-                    <Button className='button-inverted blue-button' variant="default" onClick={() => {
-                        addMonthsToInitialEmbargoDate(12)
-                    }}>
+                    <Button className='button-inverted blue-button' variant="default" onClick={() => addMonthsToDate(12)}>
                         12 months
                     </Button>
-                    <Button className='button-inverted blue-button' variant="default" onClick={() => {
-                        addMonthsToInitialEmbargoDate(18)
-                    }}>
+                    <Button className='button-inverted blue-button' variant="default" onClick={() => addMonthsToDate(18)}>
                         18 months
                     </Button>
                 </Group>
                 <Group className='pt-3 pb-5' justify="center">
-                    <DatePicker defaultDate={initialDate} minDate={tomorrow} maxDate={maxDate} value={embargoDate} onChange={setEmbargoDate}/>
+                    <DatePicker
+                        defaultDate={tempDate}
+                        minDate={tomorrow}
+                        maxDate={maxDate}
+                        value={tempDate}
+                        onChange={setTempDate}
+                    />
                 </Group>
                 <Group justify="center">
-                    <Button className='button-inverted green-button' variant="default" onClick={() => {
-                        setTempEmbargoDate(embargoDate);
-                        close();
-                    }}>
+                    <Button className='button-inverted green-button' variant="default" onClick={handleAccept}>
                         Accept
                     </Button>
-                    <Button className='button-inverted red-button' variant="default" onClick={() => {
-                        setEmbargoDate(tmpEmbargoDate);
-                        close();
-                    }}>
+                    <Button className='button-inverted red-button' variant="default" onClick={handleCancel}>
                         Cancel
                     </Button>
                 </Group>
-
             </Modal>
-
         </div>
     );
-
-}
-
-EmbargoDate.defaultProps = {
-    // default: "",
 };
 
 EmbargoDate.propTypes = {
     title: PropTypes.string.isRequired,
-    description: PropTypes.string,
+    mandatory: PropTypes.bool.isRequired,
     form: PropTypes.object.isRequired,
     field_id: PropTypes.string.isRequired,
-    // default: PropTypes.string,
-    options: PropTypes.array,
 };
 
 export default EmbargoDate;

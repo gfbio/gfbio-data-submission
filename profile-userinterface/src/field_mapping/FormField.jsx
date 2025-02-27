@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import React from "react";
 import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
 import Contributors from "./input_fields/Contributors.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
@@ -14,7 +13,7 @@ import TagsInputField from "./input_fields/TagsInputField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
 
-const FormField = ({formField, form, onFilesChange}) => {
+const FormField = ({formField, form, onFilesChange, brokerSubmissionId}) => {
     const fieldParameters = {
         title: formField.field.title,
         description: formField.field.description,
@@ -25,6 +24,7 @@ const FormField = ({formField, form, onFilesChange}) => {
         field_id: formField.field.field_id,
         placeholder: formField.field.placeholder,
         form: form,
+        brokerSubmissionId: brokerSubmissionId,
     };
 
     if (formField.visible) {
@@ -75,6 +75,7 @@ FormField.propTypes = {
     formField: PropTypes.object.isRequired,
     form: PropTypes.object.isRequired,
     onFilesChange: PropTypes.func.isRequired,
+    brokerSubmissionId: PropTypes.string,
 };
 
 export default FormField;
