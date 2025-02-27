@@ -1,32 +1,30 @@
+import PropTypes from "prop-types";
 import { JIRA_ROOT } from "../../settings.jsx";
 
-const InfoBox = (props) => {
-    const {title, description, form, options, field_id} = props;
+const InfoBox = ({title, submissionData}) => {
 
     const infoItems = () => {
-        const submission = JSON.parse(localStorage.getItem('submission'));
-        const brokerSubmissionId = submission.broker_submission_id || ''
 
         const items = [];
         let key = 0;
 
         const mailToLink = `mailto:info@gfbio.org?subject=Help with Submission ${
-            brokerSubmissionId
+            submissionData?.broker_submission_id
         }&body=Dear GFBio Team,`;
 
-        if (brokerSubmissionId.length > 0) {
+        if (submissionData?.broker_submission_id) {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
                         <i className="fa fa-bookmark-o pe-2" aria-hidden="true"/>
                         Submission Id: <br/>
-                        <div className="data-field">{brokerSubmissionId}</div>
+                        <div className="data-field">{submissionData?.broker_submission_id}</div>
                     </a>
                 </li>
             );
             key++;
         }
-        if (submission.accessionId && submission.accessionId.length > 0) {
+        if (submissionData?.accessionId && submissionData?.accessionId.length > 0) {
             items.push(
                 <div className="info-box-header">
                     <i className="fa fa-archive pe-2" aria-hidden="true"/>
@@ -34,7 +32,7 @@ const InfoBox = (props) => {
                     <br/>
                 </div>,
             );
-            submission.accessionId.forEach(accession => {
+            submissionData?.accessionId.forEach(accession => {
                     items.push(
                         <li key={key} className="list-group-item">
                             <div className="data-field">
@@ -52,26 +50,26 @@ const InfoBox = (props) => {
                 }
             );
         }
-        if (submission.issue && submission.issue.length > 0) {
+        if (submissionData?.issue && submissionData?.issue.length > 0) {
             items.push(
                 <li key={key} className="list-group-item">
                     <a
                         target="_blank"
                         rel="noopener noreferrer"
                         className="external"
-                        href={JIRA_ROOT + submission.issue}
+                        href={JIRA_ROOT + submissionData?.issue}
                     >
                         <i className="fa fa-tags pe-2" aria-hidden="true"/>
                         Ticket:
                         <br/>
-                        <div className="data-field">{submission.issue}</div>
+                        <div className="data-field">{submissionData?.issue}</div>
                     </a>
                 </li>
             );
             key++;
         }
 
-        if (submission.readOnly) {
+        if (submissionData?.readOnly) {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
@@ -114,5 +112,10 @@ const InfoBox = (props) => {
         </div>
     );
 }
+
+InfoBox.propTypes = {
+    title: PropTypes.string.isRequired,
+    submissionData: PropTypes.object,
+};
 
 export default InfoBox;

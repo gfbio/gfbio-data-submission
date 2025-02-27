@@ -482,6 +482,15 @@ body {
     .mantine-UnstyledButton-root.fa.fa-question-circle-o {
       color: #345aa2
     }
+
+    .name {
+      .name-text {
+        text-wrap: nowrap;
+        width: 90%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
   }
 }
 
