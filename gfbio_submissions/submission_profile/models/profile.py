@@ -12,7 +12,7 @@ class Profile(TimeStampedModel):
     name = models.SlugField(max_length=128, unique=True)
     target = models.CharField(max_length=16, choices=Submission.TARGETS, default=GENERIC)
 
-    # parent = models.ForeignKey('self', null=True, blank=True, related_name='clones')
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='clones', on_delete=models.SET_NULL)
 
     system_wide_profile = models.BooleanField(default=False)
 
@@ -53,9 +53,10 @@ class Profile(TimeStampedModel):
         else:
             self.name = "user_id_{}_profile".format(user.pk)
         self.system_wide_profile = False
-        self.save()
         # TODO: move to manager with exception checks
         original_profile = Profile.objects.get(pk=pk)
+        self.parent = original_profile
+        self.save()
         for f in original_profile.profilefield_set.all():
             f.clone(profile=self, field=f.field)
 
