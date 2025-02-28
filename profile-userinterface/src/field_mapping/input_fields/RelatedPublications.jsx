@@ -2,6 +2,7 @@ import {
     Button,
     CloseButton,
     Flex,
+    Input,
     List,
     TextInput,
     ThemeIcon,
@@ -35,14 +36,38 @@ function RelatedPublications(props) {
   };
 
   return (
-    <div>
-      <Flex style={{ marginBottom: "8px" }}>
+    <div className="listings-form-field">
+      <Input.Label>{title}</Input.Label>
+      { description && <Input.Description className="mb-3">{description}</Input.Description> }
+      <List
+        spacing="4px"
+        icon={
+          <i className="fa fa-newspaper-o publication-icon pb-2"></i>
+        }
+        className="mb-3"
+      >
+        {publicationsList.map((item) => (
+          <List.Item key={item} className="listing-item">
+            <Flex justify={"space-between"} align={"center"}>
+              <span className="title">{item}</span>
+              <CloseButton
+                onClick={() => handleRemovePublication(item)}
+                className="delete-button"
+                icon={
+                  <i className="fa fa-close"></i>
+                }
+              >                
+                Remove
+              </CloseButton>
+            </Flex>
+          </List.Item>
+        ))}
+      </List>
+      <Flex className="mb-2 flex-column flex-md-row">
         <TextInput
-          label={title}
-          description={description}
+          className="pe-0 pe-md-4"
           placeholder={placeholder}
           key={form.key(field_id)}
-          required={mandatory}
           value={publication}
           onChange={handlePublicationChange}
           onKeyDown={(event) => {
@@ -50,35 +75,16 @@ function RelatedPublications(props) {
               handleAddPublication();
             }
           }}
-          style={{ flex: "1", marginRight: "8px" }}
+          style={{ flex: "1" }}
         />
         <Button
           onClick={handleAddPublication}
-          style={{ width: "auto", alignSelf: "flex-end" }}
+          style={{ width: "auto" }}
+          className="button-inverted blue-button align-self-auto align-self-md-end mt-3 mt-md-0"
         >
-          Add Publication
+          Add
         </Button>
       </Flex>
-      <List
-        spacing="xs"
-        icon={
-          <ThemeIcon color="blue" variant="filled">
-            <i className="fa fa-book"></i>
-          </ThemeIcon>
-        }
-      >
-        {publicationsList.map((item) => (
-          <List.Item key={item}>
-            <Flex>
-              <span>{item}</span>
-              <CloseButton
-                onClick={() => handleRemovePublication(item)}
-                style={{ marginLeft: "12px" }}
-              />
-            </Flex>
-          </List.Item>
-        ))}
-      </List>
     </div>
   );
 }

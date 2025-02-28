@@ -524,74 +524,6 @@ body {
     padding-bottom: 3rem;
   }
 
-  button.blue-button {
-    background-color: #3cace4;
-    color: white;
-    border: solid 1px #3cace4;
-
-    &:hover {
-      background-color: white;
-      color: #3cace4;
-      border: solid 1px #3cace4;
-    }
-  } 
-
-  button.red-button {
-    background-color: #dc3444;
-    color: white;
-    border: solid 1px #dc3444;
-
-    &:hover {
-      background-color: white;
-      color: #dc3444;
-      border: solid 1px #dc3444;
-    }
-  }
-
-  button.green-button {
-    background-color: #80b148;
-    color: white;
-    border: solid 1px #80b148;
-
-    &:hover {
-      background-color: white;
-      color: #80b148;
-      border: solid 1px #80b148;
-    }
-  }
-
-  button.button-inverted {
-    border: 1px solid;
-    font-weight: 400;
-
-    &:not(:hover) {
-      background: none !important;
-    }
-
-    &:hover {
-      color: white !important;
-    }
-
-    &.blue-button {
-      border-color: #3cace4;
-      color: #3cace4;
-      background-color: #3cace4;
-    }
-
-    &.red-button {
-      border-color: #dc3444;
-      color: #dc3444;
-      background-color: #dc3444;
-    }
-
-    &.green-button {
-      border-color: #80b148;
-      color: #80b148;
-      background-color: #80b148;
-
-    }
-  }
-
   .mantine-DatePicker-levelsGroup .mantine-DatePicker-day {
     &:hover {
       background-color: #80b148 !important;
@@ -606,6 +538,74 @@ body {
 
   .use-line-breaks {
     white-space: pre-wrap;
+  }
+}
+
+button.blue-button {
+  background-color: #3cace4;
+  color: white;
+  border: solid 1px #3cace4;
+
+  &:hover {
+    background-color: white;
+    color: #3cace4;
+    border: solid 1px #3cace4;
+  }
+} 
+
+button.red-button {
+  background-color: #dc3444;
+  color: white;
+  border: solid 1px #dc3444;
+
+  &:hover {
+    background-color: white;
+    color: #dc3444;
+    border: solid 1px #dc3444;
+  }
+}
+
+button.green-button {
+  background-color: #80b148;
+  color: white;
+  border: solid 1px #80b148;
+
+  &:hover {
+    background-color: white;
+    color: #80b148;
+    border: solid 1px #80b148;
+  }
+}
+
+button.button-inverted {
+  border: 1px solid;
+  font-weight: 400;
+
+  &:not(:hover) {
+    background: none !important;
+  }
+
+  &:hover {
+    color: white !important;
+  }
+
+  &.blue-button {
+    border-color: #3cace4;
+    color: #3cace4;
+    background-color: #3cace4;
+  }
+
+  &.red-button {
+    border-color: #dc3444;
+    color: #dc3444;
+    background-color: #dc3444;
+  }
+
+  &.green-button {
+    border-color: #80b148;
+    color: #80b148;
+    background-color: #80b148;
+
   }
 }
 
@@ -638,6 +638,54 @@ body {
   margin-left: 10px;
 }
 
+.listings-form-field {
+  .listing-item {
+    background-color: #f8fcfd;
+    border: #3cace4 1px solid;
+    border-radius: 5px;
+    padding: .375rem .75rem .375rem .85rem;
+
+    .mantine-List-itemLabel {
+      flex-grow: 1;
+    }
+
+    .title {
+      color: #3cace4;
+      margin-left: 10px;
+    }
+
+    .delete-button {
+      width: auto !important;  
+      color: #ff6339;
+      font-size: .75rem;
+      padding-left: 4px;
+      padding-right: 4px;
+
+      &:hover {
+        font-weight: 700;
+      }
+
+      &:active {
+        border: #ff6339 1px solid;
+        border-radius: 5px;        
+      }
+      
+      .fa.fa-close {
+        margin-right: 5px;
+      }
+    }
+  }
+
+  .publication-icon {
+    color: #3cace4;
+    font-size: .75rem;
+  }
+
+  .mantine-List-itemWrapper {
+    width: 100%;
+  }
+}
+  
 .success-message {
   border: 1px solid #dee2e6;
   border-radius: .25rem;
