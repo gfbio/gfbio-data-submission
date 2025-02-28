@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+from pprint import pprint
 
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -49,6 +50,7 @@ class TestProfileListView(TestCase):
         data = json.loads(response.content)
         self.assertEqual(200, response.status_code)
         self.assertEqual(4, len(data))
+        pprint(data)
         system_profile = Profile.objects.filter(system_wide_profile=True).first()
         self.assertIn(
             {'id': system_profile.id, 'name': system_profile.name, 'target': system_profile.target},

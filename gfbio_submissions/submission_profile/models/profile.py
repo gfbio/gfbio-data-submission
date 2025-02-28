@@ -12,6 +12,8 @@ class Profile(TimeStampedModel):
     name = models.SlugField(max_length=128, unique=True)
     target = models.CharField(max_length=16, choices=Submission.TARGETS, default=GENERIC)
 
+    # parent = models.ForeignKey('self', null=True, blank=True, related_name='clones')
+
     system_wide_profile = models.BooleanField(default=False)
 
     user = models.ForeignKey(
