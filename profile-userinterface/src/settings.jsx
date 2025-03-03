@@ -5,6 +5,8 @@ export const SERVER_ROOT = 'http://0.0.0.0:8000/';
 // use as base url for router in main.jsx to allow development with hot reload
 //  and "npm run dev"
 export const LOCAL_ROUTER_BASE_URL = "/";
+// local token, if you want to develop locally with hot-reloading in a javascript only environment
+export const LOCAL_API_TOKEN = "6e9f1d95d5bb666d327b59c16534591250ee4d60"
 
 export const PROFILE_URL_PREFIX = "/profile/";
 
@@ -14,6 +16,8 @@ export const DEFAULT_PROFILE_NAME = "gfbio";
 
 //TODO: fix ugly url later
 export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profile/";
+
+export const PROFILE_LIST_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profiles/";
 
 export const SUBMISSIONS_API = SERVER_ROOT + "/api/submissions/";
 

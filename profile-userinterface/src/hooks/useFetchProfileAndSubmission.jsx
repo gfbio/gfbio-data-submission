@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from 'react';
 import getSubmissionUploads from "../api/getSubmissionUploads.jsx";
-import { PROFILE_URL, SUBMISSIONS_API } from "../settings.jsx";
+import {LOCAL_API_TOKEN, PROFILE_URL, SUBMISSIONS_API} from "../settings.jsx";
 
 const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     const [profileData, setProfileData] = useState(null);
@@ -11,7 +11,7 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     const [error, setError] = useState(null);
 
     // TODO: local testing, remove, add global testing solution
-    let token = '6e9f1d95d5bb666d327b59c16534591250ee4d60';
+    let token = LOCAL_API_TOKEN;
     // let token = '';
     if (window.props !== undefined) {
         token = window.props.token || 'no-token-found';

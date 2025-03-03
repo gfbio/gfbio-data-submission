@@ -1,9 +1,10 @@
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
 import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.jsx";
-import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
+import {DEFAULT_PROFILE_NAME} from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
+import ProfileSelector from "./ProfileSelector.jsx";
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
@@ -21,20 +22,25 @@ const ProfileFormWrapper = () => {
         submissionFiles,
         isLoading,
         error
-    } = useFetchProfileAndSubmission("nope", brokerSubmissionId);
+    } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
     return (
-        <div>
-            <ProfileWithErrorHandling
-                profileData={profileData}
-                submissionData={submissionData}
-                submissionFiles={submissionFiles}
-                isLoading={isLoading}
-                profileError={error}
-                submissionError={error}
-            />
-        </div>
+        <>
+            <div id={"profileSelectorWrapper"}>
+                <ProfileSelector></ProfileSelector>
+            </div>
+            <div id={"profileFormWrapper"}>
+                <ProfileWithErrorHandling
+                    profileData={profileData}
+                    submissionData={submissionData}
+                    submissionFiles={submissionFiles}
+                    isLoading={isLoading}
+                    profileError={error}
+                    submissionError={error}
+                />
+            </div>
+        </>
     );
 };
 
