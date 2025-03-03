@@ -10,14 +10,6 @@ const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
     const brokerSubmissionId = useParams().brokerageId;
-    // TODO: add check and warning if necessary parmaters like token are not available
-    // let profileName = 'generic';
-    // if (window.props !== undefined) {
-    //     profileName = window.props.profile_name || 'generic';
-    // }
-
-    // TODO: this is put into localStorage in main.jsx, where it is derived from window.props
-    //  in main.jsx profileName is needed to properly configure the react-router-dom BrowserRouter
     const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
@@ -29,17 +21,17 @@ const ProfileFormWrapper = () => {
         submissionFiles,
         isLoading,
         error
-    } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
+    } = useFetchProfileAndSubmission("nope", brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
     return (
         <div>
-            <ProfileWithErrorHandling 
-                profileData={profileData} 
-                submissionData={submissionData} 
+            <ProfileWithErrorHandling
+                profileData={profileData}
+                submissionData={submissionData}
                 submissionFiles={submissionFiles}
                 isLoading={isLoading}
-                profileError={error} 
+                profileError={error}
                 submissionError={error}
             />
         </div>

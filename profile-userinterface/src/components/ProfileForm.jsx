@@ -1,17 +1,20 @@
-import { Button, Group } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import {Button, Group} from "@mantine/core";
+import {useForm} from "@mantine/form";
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
-import { useBlocker, useNavigate } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useBlocker, useNavigate} from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
+import {ROUTER_BASE_URL} from "../settings.jsx";
+import validateDataUrlField from "../utils/DataUrlValidation.jsx";
+import validateTextFields from "../utils/TextValidation.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
-const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
+const ProfileForm = ({profileData, submissionData, submissionFiles}) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
@@ -25,20 +28,20 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const buildInitialValues = () => {
         const defaultEmbargoDate = new Date();
         defaultEmbargoDate.setFullYear(defaultEmbargoDate.getFullYear() + 1);
-        
+
         // Start with minimal required values
-        const values = { 
+        const values = {
             files: submissionFiles || [],
             embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split('T')[0],
             license: submissionData?.license || 'CC BY 4.0'
         };
 
         if (!profileData?.form_fields) return values;
-        
+
         profileData.form_fields.forEach(field => {
             const fieldId = field.field.field_id;
             const fieldValue = submissionData?.data?.requirements[fieldId];
-            
+
             // Only set a value if we have a submission value
             if (fieldValue !== undefined) {
                 // Use the value from submission data
@@ -80,7 +83,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
 
     // Block navigation when form is dirty
     useBlocker(
-        ({ currentLocation, nextLocation }) => {
+        ({currentLocation, nextLocation}) => {
             if (form.isDirty() && !isProcessing && currentLocation.pathname !== nextLocation.pathname) {
                 setShowLeaveDialog(true);
                 setPendingNavigation(nextLocation.pathname);
@@ -165,7 +168,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         const filteredValues = Object.entries(values).reduce((acc, [key, value]) => {
             // Skip embargo date and files as they're handled separately
             if (key === 'embargo' || key === 'files') return acc;
-            
+
             // Keep arrays even if empty
             if (Array.isArray(value)) {
                 acc[key] = value;
@@ -277,8 +280,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                     <i className="fa fa-gear me-3"></i> Processing...
                 </Button>
             );
-        }
-        else if (submissionData?.broker_submission_id) {
+        } else if (submissionData?.broker_submission_id) {
             return (
                 <Button className="submission-button" type="submit">
                     <i className="fa fa-forward me-3"></i> Update Submission
@@ -293,9 +295,25 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         }
     };
 
+    if (profileData === undefined || profileData === null) {
+        return (
+            <>
+                <div className="row">
+                    {/* TODO: general Error component needed to prevent hardcodes messages all over the place ... */}
+                    <div className="col-md-9 main-col">
+                        <h2 className={"danger"}>Sorry. No Profile could be loaded</h2>
+                    </div>
+                    <div className="col-md-3 side-col">
+
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
-            <LeaveFormDialog 
+            <LeaveFormDialog
                 isOpen={showLeaveDialog}
                 onCancel={handleLeaveCancel}
                 onSave={handleLeaveSave}
