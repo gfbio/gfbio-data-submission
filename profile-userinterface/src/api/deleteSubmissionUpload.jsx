@@ -1,14 +1,11 @@
 import axios from "axios";
-import { SUBMISSIONS_API, UPLOAD } from "../settings.jsx";
+import {SUBMISSIONS_API, UPLOAD} from "../settings.jsx";
+import getToken from "./utils/getToken.jsx";
 
 const deleteSubmissionUpload = (brokerSubmissionId, fileKey) => {
-    let token = "";
-    if (window.props !== undefined) {
-        token = window.props.token || "no-token-found";
-    }
     const config = {
         headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Token ${getToken()}`,
         },
     };
 

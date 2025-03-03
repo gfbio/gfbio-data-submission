@@ -13,6 +13,7 @@ import validateTextFields from "../utils/TextValidation.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
+import getToken from "../api/utils/getToken.jsx";
 
 const ProfileForm = ({profileData, submissionData, submissionFiles}) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -134,17 +135,13 @@ const ProfileForm = ({profileData, submissionData, submissionFiles}) => {
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
-        let token = "";
-        if (window.props !== undefined) {
-            token = window.props.token || "no-token-found";
-        }
         try {
             await createUploadFileChannel(
                 brokerSubmissionId,
                 file,
                 attach_to_ticket,
                 meta_data,
-                token,
+                getToken(),
                 (percentCompleted) => {
                     console.log(`Upload progress: ${percentCompleted}%`);
                 },

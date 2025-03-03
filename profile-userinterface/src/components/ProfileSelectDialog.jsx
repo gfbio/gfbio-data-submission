@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import {useForm} from "@mantine/form";
 
 import {Button, Group, Select} from "@mantine/core";
+import {PROFILE_SELECTION_FORM_KEY} from "../settings.jsx";
 
 const ProfileSelectDialog = ({profileListData}) => {
 
@@ -31,6 +32,25 @@ const ProfileSelectDialog = ({profileListData}) => {
     const handleSubmit = (values) => {
         console.log("ProfileSelectDialog | handleSubmit | values");
         console.log(values);
+        if (values && Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
+            console.log("PROFILE_SELECTION_FORM_KEY present in values; ", values);
+            if (values[PROFILE_SELECTION_FORM_KEY] === null) {
+                // reset to default DEFAULT_PROFILE_NAME
+                console.log("\tPROFILE_SELECTION_FORM_KEY is null .....");
+            }
+            else {
+                // set active user profile to this one
+                console.log("\tPROFILE_SELECTION_FORM_KEY not null: ", values[PROFILE_SELECTION_FORM_KEY]);
+            }
+        }
+        else if (values && !Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
+            // do nothing
+            console.log("fORM_KEY NOT present in values; ", values);
+        }
+        else {
+            // do nothing
+            console.log('....ELSE')
+        }
     };
 
     const prepareSelectOptions = (profileListData) => {
@@ -61,8 +81,8 @@ const ProfileSelectDialog = ({profileListData}) => {
                             placeholder="Select a Profile or return to default by un-selecting the current selection."
                             data={prepareSelectOptions(profileListData)}
                             allowDeselect
-                            key={form.key("profile-selection")}
-                            {...form.getInputProps("profile-selection")}
+                            key={form.key(PROFILE_SELECTION_FORM_KEY)}
+                            {...form.getInputProps(PROFILE_SELECTION_FORM_KEY)}
                             mt="md"
                         />
                         <Group mt="md" className="">

@@ -1,14 +1,11 @@
 import axios from "axios";
-import { SUBMISSIONS_API, UPLOADS } from "../settings.jsx";
+import {SUBMISSIONS_API, UPLOADS} from "../settings.jsx";
+import getToken from "./utils/getToken.jsx";
 
 const getSubmissionUploads = (brokerSubmissionId) => {
-    let token = "";
-    if (window.props !== undefined) {
-        token = window.props.token || "no-token-found";
-    }
     const config = {
         headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Token ${getToken()}`,
         },
     };
 

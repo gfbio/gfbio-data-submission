@@ -32,3 +32,5 @@ export const UPLOADS = "/uploads/";
 export const MAX_UPLOAD_ITEMS = 20;
 
 export const MAX_TOTAL_UPLOAD_SIZE = 10000000000;  // 10 GB = 10000000000 bytes
+
+export const PROFILE_SELECTION_FORM_KEY = "profileSelect";

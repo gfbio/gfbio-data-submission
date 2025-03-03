@@ -1,20 +1,17 @@
 import axios from "axios";
 import {useEffect, useState} from 'react';
-import {LOCAL_API_TOKEN, PROFILE_LIST_URL, PROFILE_URL} from "../settings.jsx";
+import {PROFILE_LIST_URL} from "../settings.jsx";
+import getToken from "../api/utils/getToken.jsx";
 
 const useFetchProfileList = () => {
     const [profileListData, setProfileListData] = useState(null);
     const [isLoading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    let token = LOCAL_API_TOKEN;
-    // let token = '';
-    if (window.props !== undefined) {
-        token = window.props.token || 'no-token-found';
-    }
+
     const config = {
         headers: {
-            'Authorization': 'Token ' + token,
+            'Authorization': 'Token ' + getToken(),
             'Content-Type': 'application/json',
         },
     };
@@ -52,7 +49,7 @@ const useFetchProfileList = () => {
 
     }, []); // Only re-run if these change
 
-    return { profileListData, isLoading, error };
+    return {profileListData, isLoading, error};
 };
 
 export default useFetchProfileList;
