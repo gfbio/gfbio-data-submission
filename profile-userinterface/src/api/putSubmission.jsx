@@ -28,14 +28,13 @@ export default async function putSubmission(
     await axios
         .put(url, requestData, config)
         .then((reponse) => {
-            console.log("RESPONSE: ", reponse);
             result = reponse.data;
         })
         .catch((error) => {
-            console.log("Error: ", error);
+            console.error("Error: ", error);
         })
         .finally(() => {
-            console.log("finally .....");
+            console.log("putSubmission complete");
         });
     return result;
 }

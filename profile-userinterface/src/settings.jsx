@@ -17,7 +17,7 @@ export const DEFAULT_PROFILE_NAME = "gfbio";
 //TODO: fix ugly url later
 export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profile/";
 
-export const PROFILE_LIST_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profiles/";
+export const PROFILE_LIST_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profiles/?system_wide_profile=true";
 
 export const SUBMISSIONS_API = SERVER_ROOT + "/api/submissions/";
 

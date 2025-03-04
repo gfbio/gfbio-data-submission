@@ -3,51 +3,38 @@ import {useForm} from "@mantine/form";
 
 import {Button, Group, Select} from "@mantine/core";
 import {PROFILE_SELECTION_FORM_KEY} from "../settings.jsx";
+import putActiveProfile from "../api/putActiveProfile.jsx";
 
 const ProfileSelectDialog = ({profileListData}) => {
-
-    console.log("ProfileSelectDialog | data");
-    console.log(profileListData);
 
     const form = useForm({
         mode: "uncontrolled",
         name: "profile-form",
-        // initialValues: buildInitialValues(),
-        // validateInputOnBlur: true,
-        // validate: (values) => {
-        //     if (!profileData?.form_fields) return {};
-        //
-        //     let field_types = profileData.form_fields.map(
-        //         (form_field) => form_field.field.field_type.type
-        //     );
-        //     const validations = {}
-        //     validateTextFields(values, profileData, validations);
-        //     if (field_types.includes("data-url-field")) {
-        //         validateDataUrlField(values, profileData, validations);
-        //     }
-        //     return validations
-        // },
     });
 
     const handleSubmit = (values) => {
-        console.log("ProfileSelectDialog | handleSubmit | values");
-        console.log(values);
         if (values && Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
-            console.log("PROFILE_SELECTION_FORM_KEY present in values; ", values);
             if (values[PROFILE_SELECTION_FORM_KEY] === null) {
                 // reset to default DEFAULT_PROFILE_NAME
                 console.log("\tPROFILE_SELECTION_FORM_KEY is null .....");
-            }
-            else {
+                // TODO: get profile id per name or set via name in backend
+                //  better reset for user
+                // putActiveProfile();
+            } else {
                 // set active user profile to this one
                 console.log("\tPROFILE_SELECTION_FORM_KEY not null: ", values[PROFILE_SELECTION_FORM_KEY]);
+                putActiveProfile(values[PROFILE_SELECTION_FORM_KEY]).then((result) => {
+                    console.log('....resuklt');
+                    console.log(result);
+                }).catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                });
             }
-        }
-        else if (values && !Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
+        } else if (values && !Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
             // do nothing
             console.log("fORM_KEY NOT present in values; ", values);
-        }
-        else {
+        } else {
             // do nothing
             console.log('....ELSE')
         }
