@@ -99,6 +99,10 @@ body {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
     --input-bd-focus: #a6c97e !important;
+    
+    &[aria-invalid="true"] {
+      --input-bd: var(--mantine-color-gray-4) !important;
+    }
   }
 
   .mantine-Input-input:focus, .mantine-Input-input[data-expanded], .mantine-Input-input:has([data-expanded])  {
@@ -158,11 +162,13 @@ body {
       font-size: 0;
     }
 
-    &:not(.omit-optional):not(:has(span.mantine-InputWrapper-required))::after {
-      content: "(optional)";
-      display: inline;
-      font-size: .85rem;
-      margin-left: 0.85rem;
+    &:not(.omit-optional):not(.mandatory) {
+      &:not(:has(span.mantine-InputWrapper-required))::after {
+        content: "(optional)";
+        display: inline;
+        font-size: .85rem;
+        margin-left: 0.85rem;
+      }
     }
   }
 
@@ -710,4 +716,28 @@ button.button-inverted {
   color: #81B248 !important;
   border-width: 1px;
   border-color: #81B248;
+}
+
+.error-box {
+  .mantine-Card-root {
+    background-color: #fcfcfd;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+
+    .mantine-List-item {
+      background-color: white;
+      border-bottom: 1px solid #e9ecef;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      font-weight: lighter;
+    }
+
+    .error-helptext {
+      border-bottom: none;
+      
+      .mantine-List-itemIcon {
+        display: none;
+      }
+    }
+  }
 }
