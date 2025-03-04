@@ -8,9 +8,8 @@ import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
-import validateDataUrlField from "../utils/DataUrlValidation.jsx";
-import validateTextFields from "../utils/TextValidation.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
+import ErrorBox from "./ErrorBox.jsx";
 
 const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -19,6 +18,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [metadataIndex, setMetadataIndex] = useState(-1);
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState(null);
+    const [errorList, setErrorList] = useState([]);
     const navigate = useNavigate();
 
     // Initialize form with values from profile and submission data
@@ -50,25 +50,33 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         return values;
     };
 
+    const registeredValidations = [];
+
     const form = useForm({
         mode: "uncontrolled",
         name: "profile-form",
         initialValues: buildInitialValues(),
-        validateInputOnBlur: true,
+        validateInputOnBlur: false,
         validate: (values) => {
             if (!profileData?.form_fields) return {};
-            
-            let field_types = profileData.form_fields.map(
-                (form_field) => form_field.field.field_type.type
-            );
+
             const validations = {}
-            validateTextFields(values, profileData, validations);
-            if (field_types.includes("data-url-field")) {
-                validateDataUrlField(values, profileData, validations);
+            registeredValidations.forEach(validationFunc => {
+                validationFunc(values, profileData, validations);
+            });
+            if (Object.entries(validations).length > 0) {
+                setErrorList(Object.entries(validations).map(([key,val]) => { return { "field": profileData.form_fields.find(f => f.field.field_id == key).field.title, "message": val} }));
+            }
+            else {
+                setErrorList([]);
             }
             return validations
         },
     });
+
+    form.register = (func) => {
+        registeredValidations.push(func);
+    };
 
     // Block navigation when form is dirty
     useBlocker(
@@ -198,9 +206,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                     );
                 }
             })
-            .catch((error) => {
-                console.error("Submission error: ", error);
-            })
+            .catch(handleSubmissionError)
             .finally(async () => {
                 await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                 setProcessing(false);
@@ -227,15 +233,36 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                         );
                     }
                 })
-                .catch((error) => {
-                    console.error("Submission error: ", error);
-                })
+                .catch(handleSubmissionError)
                 .finally(async () => {
                     await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                     setProcessing(false);
                 });
         }
     };
+
+    const handleSubmissionError = (error) => {
+        if (error.response && error.response.data && error.response.data.data) {
+                console.log(error.response.data);
+            if (error.response.data.data && Array.isArray(error.response.data.data)) {
+                setErrorList(
+                    error.response.data.data.map((item) => {
+                        let colonIdx = item.indexOf(" : ");
+                        let field_id = item.substring(0, colonIdx);
+                        let message = item.substring(colonIdx + 3);
+                        if (profileData.form_fields.find(f => f.field.field_id == field_id)) {
+                            field_id = profileData.form_fields.find(f => f.field.field_id == field_id).field.title;
+                        }
+                        return { "field": field_id, "message": message}
+                    })
+                );
+
+            }
+        }
+        else {
+            console.error("Submission error: ", error);
+        }
+    }
 
     const createSubmitButton = () => {
         if (isProcessing) {
@@ -301,6 +328,11 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                             ))
                         }
                     </div>
+                </div>
+                <div className="row">
+                    <Group mt="md" className="mt-5 col-md-9">
+                        <ErrorBox errorList={errorList} />
+                    </Group>
                 </div>
                 <div className="row">
                     <Group mt="md" className="mt-5 col-md-9">

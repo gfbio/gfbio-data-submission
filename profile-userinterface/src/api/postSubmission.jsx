@@ -36,7 +36,7 @@ const postSubmission = async (target, embargo, data) => {
         })
         .catch((error) => {
             console.log("Error: ", error);
-            // setError(error);
+            throw error;
         })
         .finally(() => {
             console.log("finally .....");
