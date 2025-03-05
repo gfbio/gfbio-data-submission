@@ -16,14 +16,12 @@ const deleteSubmission = async (broker_submission_id) => {
     await axios
         .delete(url, config)
         .then((response) => {
-            console.log("RESPONSE: ", response);
             result = response.data;
         })
         .catch((error) => {
-            console.log("Error: ", error);
+            console.error("Error: ", error);
         })
         .finally(() => {
-            console.log("finally .....");
         });
 
     return result;

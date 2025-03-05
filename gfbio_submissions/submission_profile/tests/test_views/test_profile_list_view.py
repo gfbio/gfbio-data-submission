@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
-from pprint import pprint, pp
+from pprint import pprint
 
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -44,11 +44,6 @@ class TestProfileListView(TestCase):
     def test_get_without_credentials_system_wide_only(self):
         response = self.client.get("/profile/profiles/?system_wide_profile=true")
         self.assertEqual(401, response.status_code)
-
-    # def test_get_active_profile(self):
-    #     response = self.api_client.get("/profile/active/")
-    #     data = json.loads(response.content)
-    #     pprint(data)
 
     def test_get_for_user_1(self):
         response = self.api_client.get("/profile/profiles/")

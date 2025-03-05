@@ -2,33 +2,30 @@ import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
 import useFetchProfileList from "../hooks/useFetchProfileList.jsx";
 import ProfileSelectDialog from "./ProfileSelectDialog.jsx";
+import PropTypes from "../../old_node_modules/.vite/deps/prop-types.js";
 
 const ProfileSelectDialogWithLoading = withLoading(ProfileSelectDialog);
 const ProfileSelectDialogWithErrorHandling = withErrorHandling(ProfileSelectDialogWithLoading);
 
-const ProfileSelector = () => {
-    console.log("ProfileSelector");
+const ProfileSelector = ({onProfileChange}) => {
     const {
         profileListData,
         isLoading,
         error
     } = useFetchProfileList();
 
-    console.log("ProfileSelector | data");
-    // console.log(profileListData);
-    console.log(isLoading);
-    console.log(error);
-
-
     return (
         <>
             <ProfileSelectDialogWithErrorHandling
+                onProfileChange={onProfileChange}
                 profileListData={profileListData}
             />
         </>
     );
 };
 
-ProfileSelector.propTypes = {}
+ProfileSelector.propTypes = {
+    onProfileChange: PropTypes.func.isRequired,
+}
 
 export default ProfileSelector;

@@ -14,15 +14,13 @@ const getSubmissionUploads = (brokerSubmissionId) => {
     return axios
         .get(url, config)
         .then((response) => {
-            console.log("RESPONSE: ", response);
             return response.data;
         })
         .catch((error) => {
-            console.log("Error: ", error);
+            console.error("Error: ", error);
             throw new Error(error.message);
         })
         .finally(() => {
-            console.log("Fetch finished");
         });
 };
 

@@ -34,7 +34,6 @@ export default async function putSubmission(
             console.error("Error: ", error);
         })
         .finally(() => {
-            console.log("putSubmission complete");
         });
     return result;
 }

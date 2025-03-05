@@ -12,7 +12,6 @@ const patchSubmissionUpload = (brokerSubmissionId, fileKey, data) => {
 
     return axios.patch(url, data, config)
         .then(response => {
-            console.log("RESPONSE: ", response);
             return response.data;
         })
         .catch(error => {
@@ -20,7 +19,6 @@ const patchSubmissionUpload = (brokerSubmissionId, fileKey, data) => {
             throw new Error(error.message);
         })
         .finally(() => {
-            console.log("Metadata flag update request finished");
         });
 };
 

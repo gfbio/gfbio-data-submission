@@ -14,15 +14,13 @@ const deleteSubmissionUpload = (brokerSubmissionId, fileKey) => {
     return axios
         .delete(url, config)
         .then((response) => {
-            console.log("RESPONSE: ", response);
             return response.data;
         })
         .catch((error) => {
-            console.log("Error: ", error);
+            console.error("Error: ", error);
             throw new Error(error.message);
         })
         .finally(() => {
-            console.log("Delete request finished");
         });
 };
 

@@ -26,15 +26,13 @@ const postSubmission = async (target, embargo, data) => {
     await axios
         .post(url, requestData, config)
         .then((reponse) => {
-            console.log("RESPONSE: ", reponse);
             result = reponse.data;
         })
         .catch((error) => {
-            console.log("Error: ", error);
-            throw error;
+            console.error("Error: ", error);
+            // setError(error);
         })
         .finally(() => {
-            console.log("finally .....");
         });
     return result;
 };

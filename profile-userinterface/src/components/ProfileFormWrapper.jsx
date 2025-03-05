@@ -5,6 +5,7 @@ import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.
 import {DEFAULT_PROFILE_NAME} from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
 import ProfileSelector from "./ProfileSelector.jsx";
+import {useState} from "react";
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
@@ -13,7 +14,12 @@ const ProfileFormWrapper = () => {
     const brokerSubmissionId = useParams().brokerageId;
     const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
 
-    console.log("ProfileFormWrapper | profile name", profileName);
+    const [activeProfile, setActiveProfile] = useState(profileName);
+
+    const handleProfileChange = (data) => {
+        localStorage.setItem("profileName", data);
+        setActiveProfile(data)
+    }
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
@@ -24,7 +30,7 @@ const ProfileFormWrapper = () => {
         submissionFiles,
         isLoading,
         error
-    } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
+    } = useFetchProfileAndSubmission(activeProfile, brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
     return (
@@ -40,7 +46,7 @@ const ProfileFormWrapper = () => {
                 />
             </div>
             <div id={"profileSelectorWrapper"}>
-                <ProfileSelector></ProfileSelector>
+                <ProfileSelector onProfileChange={handleProfileChange}></ProfileSelector>
             </div>
         </>
     );

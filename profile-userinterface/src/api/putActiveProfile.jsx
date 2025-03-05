@@ -15,14 +15,12 @@ export default async function putActiveProfile(profilId) {
     await axios
         .put(url, {}, config)
         .then((reponse) => {
-            console.log(" putActiveProfile RESPONSE: ", reponse);
             result = reponse.data;
         })
         .catch((error) => {
             console.error("Error: ", error);
         })
         .finally(() => {
-            console.log("putActiveProfile complete");
         });
     return result;
 }
