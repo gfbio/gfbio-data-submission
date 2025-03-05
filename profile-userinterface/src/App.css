@@ -657,7 +657,6 @@ button.button-inverted {
 
     .title {
       color: #3cace4;
-      margin-left: 10px;
     }
 
     .delete-button {
@@ -681,10 +680,15 @@ button.button-inverted {
       }
     }
   }
+  .mantine-List-itemIcon {
+    &:not(:has(.items-list-icon)) {
+      display: none;
+    }
 
-  .publication-icon {
-    color: #3cace4;
-    font-size: .75rem;
+    .items-list-icon {
+      color: #3cace4;
+      font-size: .75rem;
+    }
   }
 
   .mantine-List-itemWrapper {
@@ -740,4 +744,12 @@ button.button-inverted {
       }
     }
   }
+}
+
+.tag-hint {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--input-description-size, calc(var(--mantine-font-size-sm) - calc(.125rem * var(--mantine-scale))));
+  width: 100%;
+  text-align: right;
+  display: block;
 }

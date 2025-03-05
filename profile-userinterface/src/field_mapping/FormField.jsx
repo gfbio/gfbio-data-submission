@@ -7,9 +7,9 @@ import InfoBox from "./input_fields/InfoBox.jsx";
 import MetadataTemplate from "./input_fields/MetadataTemplate.jsx";
 import MultiSelectCheckboxes from "./input_fields/MultiSelectCheckboxes.jsx";
 import MultiSelectDropdown from "./input_fields/MultiSelectDropdown.jsx";
-import RelatedPublications from "./input_fields/RelatedPublications.jsx";
+import UniqueStringsList from "./input_fields/UniqueStringsList.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
-import TagsInputField from "./input_fields/TagsInputField.jsx";
+import TagsInputInlineField from "./input_fields/TagsInputInlineField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
 
@@ -60,9 +60,11 @@ const FormField = ({formField, form, onFilesChange, submissionData}) => {
             case "data-url-field":
                 return <TextField {...fieldParameters}></TextField>;
             case "tags-input":
-                return <TagsInputField {...fieldParameters}></TagsInputField>;
+                return <UniqueStringsList {...fieldParameters} fa_icon_tag={"fa-tags"}></UniqueStringsList>;
+            case "tags-input-inline":
+                return <TagsInputInlineField {...fieldParameters}></TagsInputInlineField>;
             case "related-publications":
-                return <RelatedPublications {...fieldParameters}></RelatedPublications>;
+                return <UniqueStringsList {...fieldParameters} fa_icon_tag={"fa-newspaper-o"}></UniqueStringsList>;
             case "contributors":
                 return <Contributors {...fieldParameters}></Contributors>;
             default:
