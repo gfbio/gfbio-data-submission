@@ -1,6 +1,6 @@
 // TODO: add local dev prefix automatically without the need to set this explicitly
-// export const SERVER_ROOT = "";
-export const SERVER_ROOT = 'http://0.0.0.0:8000/';
+export const SERVER_ROOT = "";
+// export const SERVER_ROOT = 'http://0.0.0.0:8000/';
 
 // use as base url for router in main.jsx to allow development with hot reload
 //  and "npm run dev"
