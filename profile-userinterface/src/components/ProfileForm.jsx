@@ -8,8 +8,8 @@ import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
-import LeaveFormDialog from "./LeaveFormDialog.jsx";
 import ErrorBox from "./ErrorBox.jsx";
+import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
 const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -194,7 +194,10 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                     );
                     return Promise.all(fileUploadPromises).then(() => {
                         setShowLeaveDialog(false); // Close dialog after successful submission
-                        navigate(pendingNavigation || ROUTER_BASE_URL);
+                        sessionStorage.removeItem('successMessageShown');
+                        navigate(pendingNavigation || ROUTER_BASE_URL, {
+                            state: { update: true }
+                        });
                     });
                 } else {
                     console.error(
@@ -221,7 +224,10 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                         );
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
-                            navigate(pendingNavigation || ROUTER_BASE_URL);
+                            sessionStorage.removeItem('successMessageShown');
+                            navigate(pendingNavigation || ROUTER_BASE_URL, {
+                                state: { create: true }
+                            });
                         });
                     } else {
                         console.error(
