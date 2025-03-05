@@ -12,12 +12,16 @@ export const PROFILE_URL_PREFIX = "/profile/";
 
 export const ROUTER_BASE_URL = PROFILE_URL_PREFIX + "ui/";
 
+// TODO: handle dynamic, get default from server (global default field there ?)
 export const DEFAULT_PROFILE_NAME = "gfbio";
+export const DEFAULT_PROFILE_ID = "1";
 
 //TODO: fix ugly url later
 export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profile/";
 
 export const PROFILE_LIST_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profiles/?system_wide_profile=true";
+
+export const ACTIVE_PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "active/";
 
 export const SUBMISSIONS_API = SERVER_ROOT + "/api/submissions/";
 

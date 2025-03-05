@@ -20,7 +20,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = (
+            "id",
             "name",
             "form_fields",
             "target",
         )
+
+# class ProfileFlatSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = Profile
+#         fields = (
+#             "id",
+#             "name",
+#             "target",
+#         )

@@ -30,5 +30,5 @@ class ProfileSelectAndActivateView(mixins.UpdateModelMixin, generics.GenericAPIV
             user_profile.save()
 
         return Response(data={"id": user_profile.pk, "name": user_profile.name, "target": user_profile.target,
-                              "parent_id": user_profile.parent.pk},
+                              "parent_id": user_profile.parent.pk, "parent_name": user_profile.parent.name, },
                         status=status.HTTP_200_OK)

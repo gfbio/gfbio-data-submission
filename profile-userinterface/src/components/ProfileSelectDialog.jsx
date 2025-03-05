@@ -1,11 +1,15 @@
 import PropTypes from "prop-types";
 import {useForm} from "@mantine/form";
-
+import {useState} from "react";
 import {Button, Group, Select} from "@mantine/core";
-import {PROFILE_SELECTION_FORM_KEY} from "../settings.jsx";
+import {DEFAULT_PROFILE_ID, DEFAULT_PROFILE_NAME, PROFILE_SELECTION_FORM_KEY} from "../settings.jsx";
 import putActiveProfile from "../api/putActiveProfile.jsx";
 
 const ProfileSelectDialog = ({profileListData}) => {
+
+    const [activeProfile, setActiveProfile] = useState("");
+    const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
+    console.log('ProfileSelectDialog | profileName from storage', profileName);
 
     const form = useForm({
         mode: "uncontrolled",
@@ -13,19 +17,40 @@ const ProfileSelectDialog = ({profileListData}) => {
     });
 
     const handleSubmit = (values) => {
+        console.log("VALUES: ", values);
         if (values && Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
             if (values[PROFILE_SELECTION_FORM_KEY] === null) {
                 // reset to default DEFAULT_PROFILE_NAME
-                console.log("\tPROFILE_SELECTION_FORM_KEY is null .....");
+                // console.log("\tPROFILE_SELECTION_FORM_KEY is null .....");
                 // TODO: get profile id per name or set via name in backend
                 //  better reset for user
                 // putActiveProfile();
+                // setActiveProfile(DEFAULT_PROFILE_NAME);
+
+                // TODO: set profile to use/render back to default on globval level
+                //  if user selects profile, then set profile also globally
+
+
+                // TODO: below is q&dirty
+                putActiveProfile(DEFAULT_PROFILE_ID).then((result) => {
+                    // setActiveProfile(result["parent_name"]);
+                    localStorage.setItem("profileName", result["parent_name"]);
+                }).catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                });
             } else {
+                // console.log(profileListData)
+                // let result = profileListData.filter(obj => {
+                //     return "" + obj.id === "" + values[PROFILE_SELECTION_FORM_KEY]
+                // })
+                // // console.log('result', result);
+                // let res = result[0]["name"] || DEFAULT_PROFILE_NAME
+                // localStorage.setItem("profileName", res);
                 // set active user profile to this one
-                console.log("\tPROFILE_SELECTION_FORM_KEY not null: ", values[PROFILE_SELECTION_FORM_KEY]);
                 putActiveProfile(values[PROFILE_SELECTION_FORM_KEY]).then((result) => {
-                    console.log('....resuklt');
-                    console.log(result);
+                    // setActiveProfile(result["parent_name"]);
+                    localStorage.setItem("profileName", result["parent_name"]);
                 }).catch((error) => {
                     console.error(error);
                 }).finally(() => {
@@ -33,25 +58,35 @@ const ProfileSelectDialog = ({profileListData}) => {
             }
         } else if (values && !Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
             // do nothing
-            console.log("fORM_KEY NOT present in values; ", values);
+            // setActiveProfile(DEFAULT_PROFILE_NAME);
         } else {
             // do nothing
-            console.log('....ELSE')
         }
     };
 
     const prepareSelectOptions = (profileListData) => {
+        let result = [];
         if (!Array.isArray(profileListData)) {
-            return [];
+            return result;
         }
-        return profileListData.flatMap(obj => {
+        result = profileListData.flatMap(obj => {
             if (obj && Object.prototype.hasOwnProperty.call(obj, "name") &&
                 Object.prototype.hasOwnProperty.call(obj, "id")) {
                 return [{"value": "" + obj["id"], "label": obj["name"]}];
             }
             return [];
         });
+        return result;
     }
+
+    const getActiveProfileText = (activeProfile) => {
+        if (activeProfile === "") {
+            return (<></>);
+        }
+        return (
+            <p>{activeProfile}</p>
+        )
+    };
 
     return (
         <>
@@ -65,7 +100,7 @@ const ProfileSelectDialog = ({profileListData}) => {
                             label="Submission Profile Selection"
                             description="Select a new default Profile for your account,
                             or keep the currently used Profile. Reset to default by un-selecting the current selection."
-                            placeholder="Select a Profile or return to default by un-selecting the current selection."
+                            placeholder="Select a Profile. Or reset to default by pressing Confirm."
                             data={prepareSelectOptions(profileListData)}
                             allowDeselect
                             key={form.key(PROFILE_SELECTION_FORM_KEY)}
@@ -73,6 +108,7 @@ const ProfileSelectDialog = ({profileListData}) => {
                             mt="md"
                         />
                         <Group mt="md" className="">
+                            {/*{getActiveProfileText(activeProfile)}*/}
                             <Button className="submission-button" type="submit">
                                 <i className=""></i>Confirm Selection
                             </Button>

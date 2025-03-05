@@ -15,6 +15,11 @@ urlpatterns = [
         view=ProfileListView.as_view(),
         name="profile_list",
     ),
+    # path(
+    #     route=r"active/",
+    #     view=ProfileActiveView.as_view(),
+    #     name="profile_active",
+    # ),
     path(
         route=r"profile/<slug:name>/",
         view=ProfileDetailView.as_view(),

@@ -13,6 +13,8 @@ const ProfileFormWrapper = () => {
     const brokerSubmissionId = useParams().brokerageId;
     const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
 
+    console.log("ProfileFormWrapper | profile name", profileName);
+
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
     // const {data, isLoading, error} = useFetch(PROFILE_URL+profileName);
@@ -27,9 +29,6 @@ const ProfileFormWrapper = () => {
     // TODO: where display errors ? what actions if error ?
     return (
         <>
-            <div id={"profileSelectorWrapper"}>
-                <ProfileSelector></ProfileSelector>
-            </div>
             <div id={"profileFormWrapper"}>
                 <ProfileWithErrorHandling
                     profileData={profileData}
@@ -39,6 +38,9 @@ const ProfileFormWrapper = () => {
                     profileError={error}
                     submissionError={error}
                 />
+            </div>
+            <div id={"profileSelectorWrapper"}>
+                <ProfileSelector></ProfileSelector>
             </div>
         </>
     );
