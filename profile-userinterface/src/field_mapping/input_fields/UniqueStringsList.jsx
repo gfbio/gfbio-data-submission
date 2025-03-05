@@ -5,33 +5,38 @@ import {
     Input,
     List,
     TextInput,
-    ThemeIcon,
 } from "@mantine/core";
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
-function RelatedPublications(props) {
-  const { title, description, mandatory, form, field_id, placeholder } = props;
+function UniqueStringsList(props) {
+  const { title, description, mandatory, form, field_id, placeholder, fa_icon_tag } = props;
 
-  const [publication, setPublication] = useState("");
-  const [publicationsList, setPublicationsList] = useState(form.values[field_id] || []);
+  const [currentlyEdited, setCurrentlyEdited] = useState("");
+  const [itemsList, setItemsList] = useState(form.values[field_id] || []);
 
-  const handlePublicationChange = (event) => {
-    setPublication(event.target.value);
+  const handleChange = (event) => {
+    setCurrentlyEdited(event.target.value);
   };
 
-  const handleAddPublication = () => {
-    if (publication.trim() !== "") {
-      const updatedList = [...publicationsList, publication];
-      setPublicationsList(updatedList);
-      setPublication("");
-      form.setFieldValue(field_id, updatedList);
+  const inputRef = useRef();
+
+  const handleAdd = () => {
+    let value = currentlyEdited.trim();
+    if (value !== "") {
+      if (!itemsList.some(s => s == value)) {
+        const updatedList = [...itemsList, value];
+        setItemsList(updatedList);
+        form.setFieldValue(field_id, updatedList);
+      }
+      setCurrentlyEdited("");
+      const timer = setTimeout(() => { inputRef.current.getElementsByTagName("input")[0].focus(); }, 25);
     }
   };
 
-  const handleRemovePublication = (publication) => {
-    const updatedList = publicationsList.filter((item) => item !== publication);
-    setPublicationsList(updatedList);
+  const handleRemove = (toRemove) => {
+    const updatedList = itemsList.filter((item) => item !== toRemove);
+    setItemsList(updatedList);
     form.setFieldValue(field_id, updatedList);
   };
 
@@ -42,16 +47,18 @@ function RelatedPublications(props) {
       <List
         spacing="4px"
         icon={
-          <i className="fa fa-newspaper-o publication-icon pb-2"></i>
+          fa_icon_tag 
+            ? <i className={"fa items-list-icon pb-2 " + fa_icon_tag }></i>
+            : "<i></i>"
         }
         className="mb-3"
       >
-        {publicationsList.map((item) => (
+        {itemsList.map((item) => (
           <List.Item key={item} className="listing-item">
             <Flex justify={"space-between"} align={"center"}>
               <span className="title">{item}</span>
               <CloseButton
-                onClick={() => handleRemovePublication(item)}
+                onClick={() => handleRemove(item)}
                 className="delete-button"
                 icon={
                   <i className="fa fa-close"></i>
@@ -63,22 +70,22 @@ function RelatedPublications(props) {
           </List.Item>
         ))}
       </List>
-      <Flex className="mb-2 flex-column flex-md-row">
+      <Flex className="mb-2 flex-column flex-md-row" ref={inputRef}>
         <TextInput
           className="pe-0 pe-md-4"
           placeholder={placeholder}
           key={form.key(field_id)}
-          value={publication}
-          onChange={handlePublicationChange}
+          value={currentlyEdited}
+          onChange={handleChange}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              handleAddPublication();
+              handleAdd();
             }
           }}
           style={{ flex: "1" }}
         />
         <Button
-          onClick={handleAddPublication}
+          onClick={handleAdd}
           style={{ width: "auto" }}
           className="button-inverted blue-button align-self-auto align-self-md-end mt-3 mt-md-0"
         >
@@ -89,7 +96,7 @@ function RelatedPublications(props) {
   );
 }
 
-RelatedPublications.propTypes = {
+UniqueStringsList.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   mandatory: PropTypes.bool.isRequired,
@@ -98,4 +105,4 @@ RelatedPublications.propTypes = {
   placeholder: PropTypes.string,
 };
 
-export default RelatedPublications;
+export default UniqueStringsList;
