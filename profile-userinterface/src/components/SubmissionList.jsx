@@ -1,3 +1,5 @@
+import { Collapse } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Link, useLoaderData, useLocation } from "react-router-dom";
@@ -13,9 +15,14 @@ const SubmissionList = (props) => {
   const [submissions, setSubmissions] = useState(initialSubmissions);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [submissionToDelete, setSubmissionToDelete] = useState(null);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successHeader, setSuccessHeader] = useState("");
   const [successText, setSuccessText] = useState("");
+  
+  // Check if message was already shown in this session
+  const hasShownMessage = sessionStorage.getItem('successMessageShown');
+  const [isSuccessVisible, successVisibleHandlers] = useDisclosure(
+    (state?.create || state?.update) && !hasShownMessage
+  );
 
   useEffect(() => {
     if (state?.create) {
@@ -25,13 +32,17 @@ const SubmissionList = (props) => {
           "You will receive a confirmation email from the GFBio Helpdesk Team. " +
           "Please reply to this email if you have questions."
       );
-      setShowSuccessMessage(true);
     } else if (state?.update) {
       setSuccessHeader("Your submission was updated !");
       setSuccessText("The Update of your data was successful.");
-      setShowSuccessMessage(true);
     }
   }, [state]);
+
+  const handleClose = () => {
+    successVisibleHandlers.close();
+    // Mark message as shown in this session
+    sessionStorage.setItem('successMessageShown', 'true');
+  };
 
   const handleDeleteClick = (submission) => {
     setSubmissionToDelete(submission);
@@ -65,7 +76,7 @@ const SubmissionList = (props) => {
 
   return (
     <div>
-      {showSuccessMessage && (
+      <Collapse in={isSuccessVisible}>
         <div className="col-8 mx-auto success-message">
           <div className="row">
             <div className="col-1 mx-auto">
@@ -78,14 +89,14 @@ const SubmissionList = (props) => {
             <div className="col-2">
               <button
                 className="btn btn-sm w-100 btn-green-inverted"
-                onClick={() => setShowSuccessMessage(false)}
+                onClick={handleClose}
               >
                 Close
               </button>
             </div>
           </div>
         </div>
-      )}
+      </Collapse>
 
       {submissions.length === 0 ? (
         <div className="list-start-wrapper d-flex">
@@ -123,7 +134,7 @@ const SubmissionList = (props) => {
                 key={submission.broker_submission_id}
                 className="list-group-item"
               >
-                <div className="row wrapping-row g-0">
+                <div className="row g-0">
                   <div className="col-md-10">
                     <Link
                       to={formUrl + submission.broker_submission_id}

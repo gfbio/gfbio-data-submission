@@ -1,12 +1,9 @@
 export default function validateTextField(field_id, values, profileData, validations) {
-  let fields = profileData.form_fields.filter(
-    ({ field }) => (field.field_type.type === "text-field" || field.field_type.type === "text-area")
-  );
   let field = profileData.form_fields.find(
     ({ field }) => field.field_id === field_id
   );
   let value = values[field_id];
-  if (mandatory && !value) {
+  if (field.mandatory && !value) {
     validations[field_id] = "This field is required";
   }
   else if (field_id == "title" && value && value.length < 5) {
