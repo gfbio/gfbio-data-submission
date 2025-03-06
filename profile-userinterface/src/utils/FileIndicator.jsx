@@ -1,7 +1,8 @@
 import { Checkbox, HoverCard } from "@mantine/core";
-import filesize from "filesize";
+// import filesize from "filesize";
 import PropTypes from "prop-types";
 import React from "react";
+import {filesize} from "filesize";
 
 const FileIndicator = ({
                            fileUploads,

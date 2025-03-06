@@ -13,8 +13,15 @@
         (...)  /profile-userinterface/settings.jsx
                 SERVER_ROOT = 'http://0.0.0.0:8000/'
 
+    replace ROUTER_BASE_URL with   LOCAL_ROUTER_BASE_URL
+
         (...)  /profile-userinterface/src/main.jsx
-               const base = LOCAL_ROUTER_BASE_URL; 
+                  const base = LOCAL_ROUTER_BASE_URL; 
+
+    set a token to access the local host API. e.g. here:
+
+        (...) /profile-userinterface/src/hooks/useFetchProfileAndSubmission.jsx
+                 let token = '6e9f1d95TOKENSOMETHING'; 
 
 2. start local django development server (in submissions root directory)
 
