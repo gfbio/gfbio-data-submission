@@ -4,7 +4,7 @@ from uuid import uuid4
 from django.db import transaction
 from dt_upload.serializers import backend_based_upload_serializers
 from dt_upload.views import backend_based_upload_mixins, backend_based_upload_views
-from rest_framework import mixins, generics, permissions, status
+from rest_framework import mixins, generics, permissions, status, parsers
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
@@ -21,8 +21,9 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
-    def perform_create(self, serializer, submission, file_upload_request):
-        return serializer.save(user=self.request.user, submission=submission, file_upload=file_upload_request)
+    def perform_create(self, serializer, submission, file_upload_request, meta_data, attach_to_ticket):
+        return serializer.save(user=self.request.user, submission=submission, file_upload=file_upload_request,
+                               meta_data=meta_data, attach_to_ticket=attach_to_ticket)
 
     # TODO: almost the same as in std SubmissionUpload, worker code has to be extracted into dedicated methods
     def create(self, request, *args, **kwargs):
@@ -62,6 +63,8 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        meta_data = serializer.validated_data.get("meta_data", False)
+        attach_to_ticket = serializer.validated_data.get("attach_to_ticket", False)
 
         # TODO: try and except block
         # TODO: refactor worker code to dedicated methods
@@ -73,8 +76,9 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
             upload_serializer,
             file_key_prefix=broker_submission_id
         )
-
-        obj = self.perform_create(serializer, sub, file_upload_request)
+        
+        obj = self.perform_create(serializer, sub, file_upload_request, meta_data=meta_data,
+                                  attach_to_ticket=attach_to_ticket)
 
         headers = self.get_success_headers(serializer.data)
         data_content = dict(serializer.data)
@@ -107,6 +111,24 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 # TODO: this is a test for potential custom code that could be inserted into dt_upload workflows. can be
 #  replaced by the dt_upload view for this via urls.py
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+
     def create(self, request, *args, **kwargs):
         response = super(SubmissionCloudUploadPartURLView, self).create(request, *args, **kwargs)
         return response
+
+
+class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploadPartView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+
+
+class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
