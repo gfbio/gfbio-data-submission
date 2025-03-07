@@ -1,24 +1,25 @@
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
 import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.jsx";
-import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
+import {DEFAULT_PROFILE_NAME} from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
+import ProfileSelector from "./ProfileSelector.jsx";
+import {useState} from "react";
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
     const brokerSubmissionId = useParams().brokerageId;
-    // TODO: add check and warning if necessary parmaters like token are not available
-    // let profileName = 'generic';
-    // if (window.props !== undefined) {
-    //     profileName = window.props.profile_name || 'generic';
-    // }
-
-    // TODO: this is put into localStorage in main.jsx, where it is derived from window.props
-    //  in main.jsx profileName is needed to properly configure the react-router-dom BrowserRouter
     const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
+
+    const [activeProfile, setActiveProfile] = useState(profileName);
+
+    const handleProfileChange = (data) => {
+        localStorage.setItem("profileName", data);
+        setActiveProfile(data)
+    }
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
@@ -29,20 +30,25 @@ const ProfileFormWrapper = () => {
         submissionFiles,
         isLoading,
         error
-    } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
+    } = useFetchProfileAndSubmission(activeProfile, brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
     return (
-        <div>
-            <ProfileWithErrorHandling 
-                profileData={profileData} 
-                submissionData={submissionData} 
-                submissionFiles={submissionFiles}
-                isLoading={isLoading}
-                profileError={error} 
-                submissionError={error}
-            />
-        </div>
+        <>
+            <div id={"profileFormWrapper"}>
+                <ProfileWithErrorHandling
+                    profileData={profileData}
+                    submissionData={submissionData}
+                    submissionFiles={submissionFiles}
+                    isLoading={isLoading}
+                    profileError={error}
+                    submissionError={error}
+                />
+            </div>
+            <div id={"profileSelectorWrapper"}>
+                <ProfileSelector onProfileChange={handleProfileChange}></ProfileSelector>
+            </div>
+        </>
     );
 };
 

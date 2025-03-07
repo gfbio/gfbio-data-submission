@@ -1,18 +1,18 @@
-import { Button, Group } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import {Button, Group} from "@mantine/core";
+import {useForm} from "@mantine/form";
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
-import { useBlocker, useNavigate } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useBlocker, useNavigate} from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
-import { ROUTER_BASE_URL } from "../settings.jsx";
+import {ROUTER_BASE_URL} from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
-import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
+import getToken from "../api/utils/getToken.jsx";
 
-const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
+const ProfileForm = ({profileData, submissionData, submissionFiles}) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
@@ -30,8 +30,8 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         // Start with minimal required values
         const values = {
             files: submissionFiles || [],
-            embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split("T")[0],
-            license: submissionData?.license || "CC BY 4.0",
+            embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split('T')[0],
+            license: submissionData?.license || 'CC BY 4.0'
         };
 
         if (!profileData?.form_fields) return values;
@@ -61,21 +61,17 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         validate: (values) => {
             if (!profileData?.form_fields) return {};
 
-            const validations = {};
+            const validations = {}
             registeredValidations.forEach(validationFunc => {
                 validationFunc(values, profileData, validations);
             });
             if (Object.entries(validations).length > 0) {
-                setErrorList(Object.entries(validations).map(([key, val]) => {
-                    return {
-                        "field": profileData.form_fields.find(f => f.field.field_id == key).field.title,
-                        "message": val,
-                    };
-                }));
-            } else {
+                setErrorList(Object.entries(validations).map(([key,val]) => { return { "field": profileData.form_fields.find(f => f.field.field_id == key).field.title, "message": val} }));
+            }
+            else {
                 setErrorList([]);
             }
-            return validations;
+            return validations
         },
     });
 
@@ -85,7 +81,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
 
     // Block navigation when form is dirty
     useBlocker(
-        ({ currentLocation, nextLocation }) => {
+        ({currentLocation, nextLocation}) => {
             if (form.isDirty() && !isProcessing && currentLocation.pathname !== nextLocation.pathname) {
                 setShowLeaveDialog(true);
                 setPendingNavigation(nextLocation.pathname);
@@ -93,7 +89,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
             }
             return false;
         },
-        form.isDirty(),
+        form.isDirty()
     );
 
     // Handle beforeunload
@@ -101,12 +97,12 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         const handleBeforeUnload = (e) => {
             if (form.isDirty()) {
                 e.preventDefault();
-                e.returnValue = "";
+                e.returnValue = '';
             }
         };
 
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [form]);
 
     const handleLeaveCancel = () => {
@@ -136,29 +132,13 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
-        let token = "";
-        if (window.props !== undefined) {
-            token = window.props.token || "no-token-found";
-        }
         try {
-            await uploadFileToS3(
-                file,
-                brokerSubmissionId,
-                attach_to_ticket,
-                meta_data,
-                token,
-                (progressPercent) => {
-                    console.log(`Upload progress for ${file.name}: ${progressPercent}%`);
-                },
-            );
-
-            //TODO: remove after changing entire profile based ui to new models
             await createUploadFileChannel(
                 brokerSubmissionId,
                 file,
                 attach_to_ticket,
                 meta_data,
-                token,
+                getToken(),
                 (percentCompleted) => {
                     console.log(`Upload progress: ${percentCompleted}%`);
                 },
@@ -181,7 +161,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         // Filter out empty values and embargo_date
         const filteredValues = Object.entries(values).reduce((acc, [key, value]) => {
             // Skip embargo date and files as they're handled separately
-            if (key === "embargo" || key === "files") return acc;
+            if (key === 'embargo' || key === 'files') return acc;
 
             // Keep arrays even if empty
             if (Array.isArray(value)) {
@@ -189,7 +169,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                 return acc;
             }
             // Only include non-empty string values
-            if (value !== "" && value !== null && value !== undefined) {
+            if (value !== '' && value !== null && value !== undefined) {
                 acc[key] = value;
             }
             return acc;
@@ -201,36 +181,36 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                 submissionData.broker_submission_id,
                 profileData.target,
                 embargoDate,
-                filteredValues,
+                filteredValues
             )
-                .then((result) => {
-                    if (result?.broker_submission_id) {
-                        const brokerSubmissionId = result.broker_submission_id;
-                        const fileUploadPromises = files.map((file, index) =>
-                            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
-                        );
-                        return Promise.all(fileUploadPromises).then(() => {
-                            setShowLeaveDialog(false); // Close dialog after successful submission
-                            sessionStorage.removeItem("successMessageShown");
-                            navigate(pendingNavigation || ROUTER_BASE_URL, {
-                                state: { update: true },
-                            });
+            .then((result) => {
+                if (result?.broker_submission_id) {
+                    const brokerSubmissionId = result.broker_submission_id;
+                    const fileUploadPromises = files.map((file, index) =>
+                        handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
+                    );
+                    return Promise.all(fileUploadPromises).then(() => {
+                        setShowLeaveDialog(false); // Close dialog after successful submission
+                        sessionStorage.removeItem('successMessageShown');
+                        navigate(pendingNavigation || ROUTER_BASE_URL, {
+                            state: { update: true }
                         });
-                    } else {
-                        console.error(
-                            "broker_submission_id is missing in the response data.",
-                        );
-                        // Throw an error to trigger the catch block
-                        throw new Error(
-                            "broker_submission_id is missing in the response data.",
-                        );
-                    }
-                })
-                .catch(handleSubmissionError)
-                .finally(async () => {
-                    await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
-                    setProcessing(false);
-                });
+                    });
+                } else {
+                    console.error(
+                        "broker_submission_id is missing in the response data.",
+                    );
+                    // Throw an error to trigger the catch block
+                    throw new Error(
+                        "broker_submission_id is missing in the response data.",
+                    );
+                }
+            })
+            .catch(handleSubmissionError)
+            .finally(async () => {
+                await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
+                setProcessing(false);
+            });
         } else {
             postSubmission(profileData.target, embargoDate, filteredValues)
                 .then((result) => {
@@ -241,9 +221,9 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                         );
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
-                            sessionStorage.removeItem("successMessageShown");
+                            sessionStorage.removeItem('successMessageShown');
                             navigate(pendingNavigation || ROUTER_BASE_URL, {
-                                state: { create: true },
+                                state: { create: true }
                             });
                         });
                     } else {
@@ -266,7 +246,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
 
     const handleSubmissionError = (error) => {
         if (error.response && error.response.data && error.response.data.data) {
-            console.log(error.response.data);
+                console.log(error.response.data);
             if (error.response.data.data && Array.isArray(error.response.data.data)) {
                 setErrorList(
                     error.response.data.data.map((item) => {
@@ -276,15 +256,16 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                         if (profileData.form_fields.find(f => f.field.field_id == field_id)) {
                             field_id = profileData.form_fields.find(f => f.field.field_id == field_id).field.title;
                         }
-                        return { "field": field_id, "message": message };
-                    }),
+                        return { "field": field_id, "message": message}
+                    })
                 );
 
             }
-        } else {
+        }
+        else {
             console.error("Submission error: ", error);
         }
-    };
+    }
 
     const createSubmitButton = () => {
         if (isProcessing) {
@@ -307,6 +288,22 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
             );
         }
     };
+
+    if (profileData === undefined || profileData === null) {
+        return (
+            <>
+                <div className="row">
+                    {/* TODO: general Error component needed to prevent hardcodes messages all over the place ... */}
+                    <div className="col-md-9 main-col">
+                        <h2 className={"danger"}>Sorry. No Profile could be loaded</h2>
+                    </div>
+                    <div className="col-md-3 side-col">
+
+                    </div>
+                </div>
+            </>
+        );
+    }
 
     return (
         <>

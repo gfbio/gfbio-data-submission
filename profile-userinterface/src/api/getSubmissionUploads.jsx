@@ -1,14 +1,11 @@
 import axios from "axios";
-import { SUBMISSIONS_API, UPLOADS } from "../settings.jsx";
+import {SUBMISSIONS_API, UPLOADS} from "../settings.jsx";
+import getToken from "./utils/getToken.jsx";
 
 const getSubmissionUploads = (brokerSubmissionId) => {
-    let token = "";
-    if (window.props !== undefined) {
-        token = window.props.token || "no-token-found";
-    }
     const config = {
         headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Token ${getToken()}`,
         },
     };
 
@@ -17,15 +14,13 @@ const getSubmissionUploads = (brokerSubmissionId) => {
     return axios
         .get(url, config)
         .then((response) => {
-            console.log("RESPONSE: ", response);
             return response.data;
         })
         .catch((error) => {
-            console.log("Error: ", error);
+            console.error("Error: ", error);
             throw new Error(error.message);
         })
         .finally(() => {
-            console.log("Fetch finished");
         });
 };
 

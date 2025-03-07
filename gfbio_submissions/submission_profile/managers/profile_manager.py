@@ -25,6 +25,7 @@ class ProfileManager(models.Manager):
         return active
 
     def get_active_user_profile_name(self, user):
+        # TODO: better get via database query and also set profile_id in context
         active = DEFAULT_PROFILE_NAME
         try:
             p = self.filter(user=user).get(active_user_profile=True)

@@ -17,7 +17,7 @@ const SubmissionList = (props) => {
   const [submissionToDelete, setSubmissionToDelete] = useState(null);
   const [successHeader, setSuccessHeader] = useState("");
   const [successText, setSuccessText] = useState("");
-  
+
   // Check if message was already shown in this session
   const hasShownMessage = sessionStorage.getItem('successMessageShown');
   const [isSuccessVisible, successVisibleHandlers] = useDisclosure(

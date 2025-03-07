@@ -1,10 +1,10 @@
-import { Button, Group, Modal } from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
-import { useDisclosure } from "@mantine/hooks";
+import {Button, Group, Modal} from "@mantine/core";
+import {DatePicker} from "@mantine/dates";
+import {useDisclosure} from "@mantine/hooks";
 import PropTypes from "prop-types";
-import { useState } from "react";
+import {useState} from "react";
 
-const EmbargoDate = ({ title, mandatory, form, field_id }) => {
+const EmbargoDate = ({title, mandatory, form, field_id}) => {
     // This function creates a date at noon of the given date
     // This is to ensure that the date is always the same, regardless of the time of day
     // This is important for the conversion to ISO format
@@ -20,7 +20,7 @@ const EmbargoDate = ({ title, mandatory, form, field_id }) => {
     defaultDate.setFullYear(defaultDate.getFullYear() + 1);
     const maxDate = createDateAtNoon(new Date());
     maxDate.setFullYear(maxDate.getFullYear() + 2);
-    const [opened, { open, close }] = useDisclosure(false);
+    const [opened, {open, close}] = useDisclosure(false);
     const [tempDate, setTempDate] = useState(() => {
         if (form.values[field_id]) {
             const [year, month, day] = form.values[field_id].split('-');
@@ -28,10 +28,10 @@ const EmbargoDate = ({ title, mandatory, form, field_id }) => {
         }
         return defaultDate;
     });
-    
+
     const [displayDate, setDisplayDate] = useState(
-        form.values[field_id] 
-            ? createDateAtNoon(new Date(form.values[field_id])) 
+        form.values[field_id]
+            ? createDateAtNoon(new Date(form.values[field_id]))
             : defaultDate
     );
 
@@ -44,14 +44,13 @@ const EmbargoDate = ({ title, mandatory, form, field_id }) => {
     const formattedDate = (date) => {
         const d = new Date(date);
         return d.getDate().toString() + ' ' +
-            d.toLocaleString('default', { month: 'long' }) + ' ' +
+            d.toLocaleString('default', {month: 'long'}) + ' ' +
             d.getFullYear().toString();
     };
 
     const handleAccept = () => {
         const formattedValue = tempDate.toISOString().split('T')[0];
         form.setFieldValue(field_id, formattedValue);
-        console.log('EmbargoDate after accept', formattedValue);
         setDisplayDate(tempDate);
         close();
     };
@@ -64,7 +63,8 @@ const EmbargoDate = ({ title, mandatory, form, field_id }) => {
     return (
         <div>
             <header>
-                <h2>{title} {mandatory && (<span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
+                <h2>{title} {mandatory && (
+                    <span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
                 <h4>{formattedDate(displayDate)}</h4>
                 <Group>
                     <Button onClick={open} variant="default" className="link-style">
@@ -79,13 +79,16 @@ const EmbargoDate = ({ title, mandatory, form, field_id }) => {
                     <p className='my-3'>New Embargo: <b>{formattedDate(tempDate)}</b></p>
                 </Group>
                 <Group justify="center">
-                    <Button className='button-inverted blue-button' variant="default" onClick={() => addMonthsToDate(6)}>
+                    <Button className='button-inverted blue-button' variant="default"
+                            onClick={() => addMonthsToDate(6)}>
                         6 months
                     </Button>
-                    <Button className='button-inverted blue-button' variant="default" onClick={() => addMonthsToDate(12)}>
+                    <Button className='button-inverted blue-button' variant="default"
+                            onClick={() => addMonthsToDate(12)}>
                         12 months
                     </Button>
-                    <Button className='button-inverted blue-button' variant="default" onClick={() => addMonthsToDate(18)}>
+                    <Button className='button-inverted blue-button' variant="default"
+                            onClick={() => addMonthsToDate(18)}>
                         18 months
                     </Button>
                 </Group>
