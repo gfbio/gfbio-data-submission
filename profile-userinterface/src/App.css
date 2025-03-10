@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600&display=swap');
+
 #root {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 0;
   /*text-align: center;*/
 }
 
@@ -752,4 +754,32 @@ button.button-inverted {
   width: 100%;
   text-align: right;
   display: block;
+}
+
+.sub-navi {
+  padding: 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #ccc;
+}
+
+.nav {
+  display: flex;
+}
+
+.nav-link {
+  font-family: 'Raleway', sans-serif;
+  font-size: 1rem;
+  color: #333;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link:hover {
+  color: #000;
+}
+
+.nav-link i {
+  padding-right: 0.5rem;
+  font-size: 1rem;
 }

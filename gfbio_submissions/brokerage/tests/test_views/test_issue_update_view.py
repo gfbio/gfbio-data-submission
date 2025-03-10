@@ -298,6 +298,7 @@ class TestJiraIssueUpdateView(APITestCase):
         payload = json.loads(hook_content)
         payload["user"]["emailAddress"] = "horst@horst.de"
         payload["issue"]["key"] = "SAND-007"
+        payload["issue"]["fields"]["customfield_10200"] = arrow.now().shift(years=1).for_json()
         payload["issue"]["fields"]["customfield_10303"] = "{}".format(submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format="json")
@@ -313,6 +314,7 @@ class TestJiraIssueUpdateView(APITestCase):
         payload = json.loads(hook_content)
         payload["user"]["emailAddress"] = "horst@horst.de"
         payload["issue"]["key"] = "SAND-007"
+        payload["issue"]["fields"]["customfield_10200"] = arrow.now().shift(years=1).for_json()
         payload["issue"]["fields"]["customfield_10303"] = "{}".format(submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format="json")
@@ -452,7 +454,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2025-03-09T00:00:00+00:00",
+                        "customfield_10200": arrow.now().shift(years=1).for_json(),
                         "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
@@ -481,7 +483,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2025-03-09T00:00:00+00:00",
+                        "customfield_10200": arrow.now().shift(years=1).for_json(),
                         "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
@@ -516,7 +518,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2025-03-09T00:00:00+00:00",
+                        "customfield_10200": arrow.now().shift(years=1).for_json(),
                         "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "brokeragent",
@@ -553,7 +555,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2025-03-09T00:00:00+00:00",
+                        "customfield_10200": arrow.now().shift(years=1).for_json(),
                         "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "horst",
@@ -585,7 +587,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2025-03-09T00:00:00+00:00",
+                        "customfield_10200": arrow.now().shift(years=1).for_json(),
                         "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
