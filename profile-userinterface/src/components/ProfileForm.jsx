@@ -138,7 +138,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
         try {
-            console.log("hehehe");
             await uploadFileToS3(
                 file,
                 brokerSubmissionId,
