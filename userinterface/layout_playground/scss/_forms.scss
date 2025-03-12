@@ -500,7 +500,9 @@ section.sub-navi {
 
     li {
 
-      border-color: $form-gray-1;
+      //border-color: $form-gray-1;
+      border: .05rem solid $form-gray-1;
+      border-top-width: .05rem !important;
       background-color: $gray-100;
       margin: .5rem 0 .5rem 0;
       //padding-top: 0;
@@ -941,7 +943,7 @@ form.pagewide-form {
     font-size: 1rem;
 
     &:checked {
-      background-color: $gfbio-green; 
+      background-color: $gfbio-green;
       border-color: $gfbio-green-0-7;
     }
 
