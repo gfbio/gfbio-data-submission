@@ -649,6 +649,8 @@ section.sub-navi {
           //padding: .5rem;
           //color: $gray-800;
           //background-color: $gray-100;
+          border-radius: 0;
+
           &:hover {
             background-color: $color-primary-2;
           }
@@ -846,6 +848,7 @@ form.pagewide-form {
       }
 
     }
+
     span[class^="chip"] {
       background: $gfbio-light-blue;
     }
@@ -1493,12 +1496,14 @@ form.pagewide-form {
 
         a.external {
           color: $gfbio-light-blue;
+
           .bsi {
             border-color: $gfbio-light-blue-0-6;
           }
 
           &:hover {
             color: $contrast-1;
+
             .bsi {
               border-color: $contrast-1;
             }

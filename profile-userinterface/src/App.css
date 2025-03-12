@@ -45,6 +45,7 @@
 /* Force scrollbar to be always visible to prevent layout shifts */
 body {
   overflow-y: scroll;
+  line-height: 1.5;
 }
 
 
@@ -101,7 +102,7 @@ body {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
     --input-bd-focus: #a6c97e !important;
-    
+
     &[aria-invalid="true"] {
       --input-bd: var(--mantine-color-gray-4) !important;
     }
@@ -404,7 +405,7 @@ body {
         }
       }
     }
-    
+
     .active-text-blue:not([disabled]) {
       cursor: pointer;
       color: #3cace4;
@@ -478,7 +479,7 @@ body {
         .mantine-Input-wrapper {
           --input-bg: #fceaec;
         }
-  
+
         &:hover {
           .mantine-Input-wrapper {
             --input-bg: #f5c2c7;
@@ -486,7 +487,7 @@ body {
         }
       }
     }
-    
+
     .mantine-UnstyledButton-root.fa.fa-question-circle-o {
       color: #345aa2
     }
@@ -559,7 +560,7 @@ button.blue-button {
     color: #3cace4;
     border: solid 1px #3cace4;
   }
-} 
+}
 
 button.red-button {
   background-color: #dc3444;
@@ -662,7 +663,7 @@ button.button-inverted {
     }
 
     .delete-button {
-      width: auto !important;  
+      width: auto !important;
       color: #ff6339;
       font-size: .75rem;
       padding-left: 4px;
@@ -674,9 +675,9 @@ button.button-inverted {
 
       &:active {
         border: #ff6339 1px solid;
-        border-radius: 5px;        
+        border-radius: 5px;
       }
-      
+
       .fa.fa-close {
         margin-right: 5px;
       }
@@ -697,7 +698,7 @@ button.button-inverted {
     width: 100%;
   }
 }
-  
+
 .success-message {
   border: 1px solid #dee2e6;
   border-radius: .25rem;
@@ -740,7 +741,7 @@ button.button-inverted {
 
     .error-helptext {
       border-bottom: none;
-      
+
       .mantine-List-itemIcon {
         display: none;
       }
@@ -793,10 +794,10 @@ button.button-inverted {
   &[data-position="top"] {
     transform: translateY(4px);
   }
-  
+
   &[data-position="bottom"] {
     transform: translateY(-4px);
-  }  
+  }
 }
 
 .mantine-Select-dropdown {
@@ -808,5 +809,5 @@ button.button-inverted {
 
   .mantine-Select-option:hover {
     background-color: #bcdef0;
-  }  
+  }
 }
