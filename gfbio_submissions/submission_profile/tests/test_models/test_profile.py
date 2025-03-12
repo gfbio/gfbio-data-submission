@@ -51,6 +51,13 @@ class TestProfile(TestCase):
         self.assertEqual("p2", p2.name)
         self.assertEqual(2, len(Profile.objects.all()))
 
+    def test_clone_with_email_as_name(self):
+        p1 = Profile.objects.create(name="profile-1")
+        self.assertEqual("profile-1", p1.name)
+        p2 = p1.clone_for_user(self.user, "p2@foo.de")
+        self.assertEqual("p2%40foo.de", p2.name)
+        self.assertEqual(2, len(Profile.objects.all()))
+
     def test_clone_related_fields(self):
         p1 = Profile.objects.create(name="profile-1")
         ProfileField.objects.update_or_create(

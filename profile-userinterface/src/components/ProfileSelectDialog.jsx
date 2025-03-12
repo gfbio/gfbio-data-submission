@@ -4,11 +4,12 @@ import {Button, Group, Select} from "@mantine/core";
 import {DEFAULT_PROFILE_ID, DEFAULT_PROFILE_NAME, PROFILE_SELECTION_FORM_KEY} from "../settings.jsx";
 import putActiveProfile from "../api/putActiveProfile.jsx";
 
-const ProfileSelectDialog = ({onProfileChange, profileListData}) => {
+
+const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData}) => {
 
     const form = useForm({
         mode: "uncontrolled",
-        name: "profile-form",
+        name: "profile-select-form",
     });
 
     const handleSubmit = (values) => {
@@ -57,18 +58,20 @@ const ProfileSelectDialog = ({onProfileChange, profileListData}) => {
                 <div className="col-md-12">
                     <div className="">
                         <Select
-                            label="Submission Profile Selection"
-                            description="Select a new default Profile for your account,
-                            or keep the currently used Profile. Reset to default by un-selecting the current selection."
-                            placeholder="Select a Profile. Or reset to default by pressing Confirm."
+                            // label="Submission Profile Selection"
+                            description="Select a new default Profile for your account, or keep the currently used Profile. "
+                            placeholder="Select a Profile."
                             data={prepareSelectOptions(profileListData)}
-                            allowDeselect
+                            // allowDeselect
                             key={form.key(PROFILE_SELECTION_FORM_KEY)}
                             {...form.getInputProps(PROFILE_SELECTION_FORM_KEY)}
                             mt="md"
                         />
-                        <Group mt="md" className="">
-                            <Button className="submission-button" type="submit">
+                        <Group mt="md" className="" justify="center">
+                            <Button className="" type="" onClick={onCancel}>
+                                <i className=""></i>Cancel
+                            </Button>
+                            <Button className="" type="submit">
                                 <i className=""></i>Confirm Selection
                             </Button>
                         </Group>
@@ -82,6 +85,7 @@ const ProfileSelectDialog = ({onProfileChange, profileListData}) => {
 ProfileSelectDialog.propTypes = {
     profileListData: PropTypes.array.isRequired,
     onProfileChange: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
 };
 
 export default ProfileSelectDialog;
