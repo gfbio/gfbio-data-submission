@@ -1,3 +1,5 @@
+from urllib.parse import quote_plus
+
 from django.db import models
 from model_utils.models import TimeStampedModel
 
@@ -49,7 +51,7 @@ class Profile(TimeStampedModel):
         self.pk = None
         self.user = user
         if name:
-            self.name = name
+            self.name = quote_plus(name)
         else:
             self.name = "user_id_{}_profile".format(user.pk)
         self.system_wide_profile = False
