@@ -4,9 +4,7 @@ import withLoading from "../hocs/withLoading";
 import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.jsx";
 import {DEFAULT_PROFILE_NAME} from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
-import ProfileSelector from "./ProfileSelector.jsx";
 import {useState} from "react";
-import {TextInput, Button} from '@mantine/core';
 import {modals} from '@mantine/modals';
 
 const ProfileWithLoading = withLoading(ProfileForm);
@@ -38,26 +36,27 @@ const ProfileFormWrapper = () => {
     // TODO: where display errors ? what actions if error ?
     return (
         <>
-            <Button
-                onClick={() => {
-                    modals.open({
-                        title: "Submission Profile Selection",
-                        size: "xl",
-                        centered: true,
-                        children: (
-                            <>
-                                <ProfileSelector onCancel={modals.closeAll} onProfileChange={handleProfileChange}></ProfileSelector>
-                                {/*<TextInput label="Your email" placeholder="Your email" data-autofocus/>*/}
-                                {/*<Button fullWidth onClick={() => modals.closeAll()} mt="md">*/}
-                                {/*    Submit*/}
-                                {/*</Button>*/}
-                            </>
-                        ),
-                    });
-                }}
-            >
-                Change Profile
-            </Button>
+            {/* TODO: DASS-2455 (12.03.2025): this button opens a modal with a dialog that allows selecting on of the
+                    available system-wide-profile followed by a re-render of the form based on the newly selected
+                    profile. This is de-activated for now, but will be used in the near future. */}
+            {/*<Button*/}
+            {/*    onClick={() => {*/}
+            {/*        modals.open({*/}
+            {/*            title: "Submission Profile Selection",*/}
+            {/*            size: "xl",*/}
+            {/*            centered: true,*/}
+            {/*            children: (*/}
+            {/*                <>*/}
+            {/*                    <ProfileSelector onCancel={modals.closeAll} onProfileChange={handleProfileChange}></ProfileSelector>*/}
+            {/*                </>*/}
+            {/*            ),*/}
+            {/*        });*/}
+            {/*    }}*/}
+            {/*>*/}
+            {/*    Change Profile*/}
+            {/*</Button>*/}
+            {/* -----------------------------------------------------------------------------------------------------*/}
+
             <div id={"profileFormWrapper"}>
                 <ProfileWithErrorHandling
                     profileData={profileData}
@@ -68,9 +67,6 @@ const ProfileFormWrapper = () => {
                     submissionError={error}
                 />
             </div>
-            {/*<div id={"profileSelectorWrapper"}>*/}
-            {/*    <ProfileSelector onProfileChange={handleProfileChange}></ProfileSelector>*/}
-            {/*</div>*/}
         </>
     );
 };
