@@ -1,11 +1,16 @@
 import { Select } from "@mantine/core";
 import PropTypes from "prop-types";
 
-const SelectField = ({ title, description, mandatory, form, options, field_id, placeholder }) => {
+const SelectField = ({ title, description, mandatory, form, options, field_id, placeholder, default_value }) => {
     const data = options.map(opt => ({
         label: opt.option,
         value: opt.option
     }));
+
+    const inputProps = form.getInputProps(field_id)
+    if (!inputProps.defaultValue && default_value) {
+        inputProps.defaultValue = default_value;
+    }
 
     return (
         <Select
@@ -15,7 +20,7 @@ const SelectField = ({ title, description, mandatory, form, options, field_id, p
             required={mandatory}
             data={data}
             key={form.key(field_id)}
-            {...form.getInputProps(field_id)}
+            {...inputProps}
         />
     );
 };
