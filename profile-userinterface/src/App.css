@@ -102,6 +102,7 @@ body {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
     --input-bd-focus: #a6c97e !important;
+    --input-line-height: 1.5rem !important;
 
     &[aria-invalid="true"] {
       --input-bd: var(--mantine-color-gray-4) !important;
