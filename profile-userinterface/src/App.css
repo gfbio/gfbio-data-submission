@@ -783,3 +783,30 @@ button.button-inverted {
   padding-right: 0.5rem;
   font-size: 1rem;
 }
+
+.mantine-Select-dropdown {
+  background-color: #f5f6f7;
+  border-color: #bdc2c7;
+  border-radius: 8px;
+  box-shadow: 0 0 0 .1rem rgba(222,226,230,0.4);
+
+  &[data-position="top"] {
+    transform: translateY(4px);
+  }
+  
+  &[data-position="bottom"] {
+    transform: translateY(-4px);
+  }  
+}
+
+.mantine-Select-dropdown {
+  &:not(:has(:hover)) {
+    .mantine-Select-option[data-checked="true"] {
+      background-color: #bcdef0;
+    }
+  }
+
+  .mantine-Select-option:hover {
+    background-color: #bcdef0;
+  }  
+}
