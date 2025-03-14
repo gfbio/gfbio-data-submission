@@ -14,7 +14,7 @@ const TextArea = ({ title, description, mandatory, form, field_id, placeholder }
             placeholder={placeholder}
             autosize
             resize='vertical'
-            minRows={2}
+            minRows={7}
             classNames={{
                 label: (mandatory ? "mandatory" : "")
             }}

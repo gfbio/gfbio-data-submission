@@ -2,9 +2,9 @@ import { MultiSelect } from '@mantine/core';
 import PropTypes from "prop-types";
 
 const MultiSelectDropdown = ({ title, description, form, options, field_id }) => {
-    const data = options.map(opt => ({ 
-        label: opt.option, 
-        value: opt.option 
+    const data = options.map(opt => ({
+        label: opt.option,
+        value: opt.option
     }));
 
     return (

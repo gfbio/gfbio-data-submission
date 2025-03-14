@@ -103,6 +103,7 @@ body {
     --input-placeholder-color: #666 !important;
     --input-bd-focus: #a6c97e !important;
     --input-line-height: 1.5rem !important;
+    padding: .375rem .75rem;
 
     &[aria-invalid="true"] {
       --input-bd: var(--mantine-color-gray-4) !important;
@@ -198,6 +199,7 @@ body {
 
   a, button.link-style {
     color: #3cace4;
+    text-decoration: none;
 
     &:hover {
       color: #ff8362;
