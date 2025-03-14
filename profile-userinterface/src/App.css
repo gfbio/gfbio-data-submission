@@ -44,7 +44,6 @@
 
 /* Force scrollbar to be always visible to prevent layout shifts */
 body {
-  overflow-y: scroll;
   line-height: 1.5;
 }
 
