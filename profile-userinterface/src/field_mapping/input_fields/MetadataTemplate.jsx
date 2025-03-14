@@ -27,7 +27,7 @@ const MetadataTemplate = () => {
         Metadata Templates{" "}
         <HoverCard width={320} shadow="md" position="right" withArrow>
           <HoverCard.Target>
-            <i className="fa fa-question-circle-o" aria-hidden="true"></i>
+            <i className="icon ion-ios-help-circle-outline help" aria-hidden="true"></i>
           </HoverCard.Target>
           <HoverCard.Dropdown>
             <p>

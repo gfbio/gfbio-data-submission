@@ -65,7 +65,7 @@ const EmbargoDate = ({title, mandatory, form, field_id}) => {
             <header>
                 <h2>{title} {mandatory && (
                     <span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
-                <h4>{formattedDate(displayDate)}</h4>
+                <h4 className={"text-center"}>{formattedDate(displayDate)}</h4>
                 <Group>
                     <Button onClick={open} variant="default" className="link-style">
                         <i className="icon ion-md-calendar align-top me-2"></i>
