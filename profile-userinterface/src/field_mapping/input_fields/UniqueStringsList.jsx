@@ -47,7 +47,7 @@ function UniqueStringsList(props) {
       <List
         spacing="4px"
         icon={
-          fa_icon_tag 
+          fa_icon_tag
             ? <i className={"fa items-list-icon pb-2 " + fa_icon_tag }></i>
             : "<i></i>"
         }
@@ -63,7 +63,7 @@ function UniqueStringsList(props) {
                 icon={
                   <i className="fa fa-close"></i>
                 }
-              >                
+              >
                 Remove
               </CloseButton>
             </Flex>
@@ -86,7 +86,7 @@ function UniqueStringsList(props) {
         />
         <Button
           onClick={handleAdd}
-          style={{ width: "auto" }}
+          style={{ width: "13%" }}
           className="button-inverted blue-button align-self-auto align-self-md-end mt-3 mt-md-0"
         >
           Add
