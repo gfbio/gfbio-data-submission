@@ -1,8 +1,8 @@
-import {Button, Group, Modal} from "@mantine/core";
-import {DatePicker} from "@mantine/dates";
-import {useDisclosure} from "@mantine/hooks";
+import { Button, Group, Modal } from "@mantine/core";
+import { DatePicker } from "@mantine/dates";
+import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
-import {useState} from "react";
+import { useState } from "react";
 
 const EmbargoDate = ({title, mandatory, form, field_id}) => {
     // This function creates a date at noon of the given date
@@ -61,51 +61,58 @@ const EmbargoDate = ({title, mandatory, form, field_id}) => {
     };
 
     return (
-        <div>
-            <header>
-                <h2>{title} {mandatory && (
-                    <span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
-                <h4 className={"text-center"}>{formattedDate(displayDate)}</h4>
-                <Group>
-                    <Button onClick={open} variant="default" className="link-style">
-                        <i className="icon ion-md-calendar align-top me-2"></i>
-                        Change embargo date
-                    </Button>
-                </Group>
-            </header>
+        <div className="embargo-date">
+            <h2>{title} {mandatory && (
+                <span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
+            <h4 className="text-center">{formattedDate(displayDate)}</h4>
+            <Button fullWidth justify="space-between" onClick={open} variant="default" className="link-style">
+                <i className="icon ion-md-calendar align-top"></i>
+                Change embargo date
+            </Button>
 
-            <Modal opened={opened} onClose={handleCancel} title="Select embargo date" centered>
-                <Group justify="center">
-                    <p className='my-3'>New Embargo: <b>{formattedDate(tempDate)}</b></p>
+            <Modal 
+                opened={opened}
+                onClose={handleCancel}
+                title="Select Embargo Date"
+                centered
+                classNames={{
+                    root: 'embargo-modal',
+                }}
+            >
+                <Group justify="center" className="mt-3">
+                    <p>New Embargo: <b>{formattedDate(tempDate)}</b></p>
                 </Group>
-                <Group justify="center">
-                    <Button className='button-inverted blue-button' variant="default"
+                <Group grow justify="center" className="embargo-quick-select">
+                    <Button size="compact-md" className='button-inverted blue-button' variant="default"
                             onClick={() => addMonthsToDate(6)}>
                         6 months
                     </Button>
-                    <Button className='button-inverted blue-button' variant="default"
+                    <Button size="compact-md" className='button-inverted blue-button' variant="default"
                             onClick={() => addMonthsToDate(12)}>
                         12 months
                     </Button>
-                    <Button className='button-inverted blue-button' variant="default"
+                    <Button size="compact-md" className='button-inverted blue-button' variant="default"
                             onClick={() => addMonthsToDate(18)}>
                         18 months
                     </Button>
                 </Group>
-                <Group className='pt-3 pb-5' justify="center">
+                <Group className='embargo-picker' justify="center">
                     <DatePicker
                         defaultDate={tempDate}
                         minDate={tomorrow}
                         maxDate={maxDate}
                         value={tempDate}
                         onChange={setTempDate}
+                        classNames={{
+                            weekday: 'mantine-DatePicker-weekday',
+                        }}
                     />
                 </Group>
-                <Group justify="center">
-                    <Button className='button-inverted green-button' variant="default" onClick={handleAccept}>
+                <Group grow justify="center" className="embargo-footer">
+                    <Button size="compact-md" className='button-inverted green-button' variant="default" onClick={handleAccept}>
                         Accept
                     </Button>
-                    <Button className='button-inverted red-button' variant="default" onClick={handleCancel}>
+                    <Button size="compact-md" className='button-inverted red-button' variant="default" onClick={handleCancel}>
                         Cancel
                     </Button>
                 </Group>
