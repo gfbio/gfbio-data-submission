@@ -44,7 +44,6 @@
 
 /* Force scrollbar to be always visible to prevent layout shifts */
 body {
-  overflow-y: scroll;
   line-height: 1.5;
 }
 
@@ -204,6 +203,12 @@ body {
     &:hover {
       color: #ff8362;
       text-decoration: unset;
+    }
+
+    i {
+      padding-right: 0.5rem;
+      font-size: 1.5rem;
+      vertical-align: middle;
     }
   }
 
@@ -813,4 +818,52 @@ button.button-inverted {
   .mantine-Select-option:hover {
     background-color: #bcdef0;
   }
+}
+
+/* EmbargoDate Component Styles */
+.embargo-date {
+  h4 {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* EmbargoDate Modal Styles */
+.embargo-modal {
+  h2 {
+    font-family: "Raleway", sans-serif;
+    font-weight: 300;
+    color: #495057;
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .embargo-picker {
+    margin: 1.5rem 0;
+    padding: 0 1rem;   
+  }
+
+  .embargo-footer {
+    padding: 1rem 1rem 0;
+
+    button {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* Quick Select Buttons */
+.embargo-quick-select {
+  margin: 0 1rem 1.5rem;
+  
+  button {
+    &.button-inverted.blue-button {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* DatePicker Styles */
+.mantine-DatePicker-weekday {
+  font-family: "Raleway", sans-serif;
+  text-align: center;
 }
