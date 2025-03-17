@@ -86,7 +86,8 @@ function UniqueStringsList(props) {
         />
         <Button
           onClick={handleAdd}
-          style={{ width: "13%" }}
+          classNames="w-100"
+          style={{ "min-width": "13%" }}
           className="button-inverted blue-button align-self-auto align-self-md-end mt-3 mt-md-0"
         >
           Add
