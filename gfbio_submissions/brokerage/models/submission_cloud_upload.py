@@ -86,7 +86,7 @@ class SubmissionCloudUpload(TimeStampedModel):
         #         countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
         #     )
     def trigger_attach_to_issue(self):
-        if self.attach_to_ticket and self.file_upload is not None:
+        if self.attach_to_ticket and self.meta_data and self.file_upload is not None:
             # TODO: change to constant FileUploadRequest.COMPLETED
             if self.file_upload.status == "COMPLETED":
                 # TODO: new task for cloud based upload
