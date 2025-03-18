@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
+from dt_upload.models import FileUploadRequest
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
@@ -84,6 +85,12 @@ class SubmissionCloudUpload(TimeStampedModel):
         #         },
         #         countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
         #     )
+    def trigger_attach_to_issue(self):
+        if self.attach_to_ticket and self.file_upload is not None:
+            # TODO: change to constant FileUploadRequest.COMPLETED
+            if self.file_upload.status == "COMPLETED":
+                # TODO: new task for cloud based upload
+                print("ATTACHT TO TICKET ", self.file_upload.original_filename)
 
     def __str__(self):
         # return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"

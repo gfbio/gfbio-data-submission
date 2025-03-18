@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 from dataclasses import dataclass
+from pprint import pprint
 from typing import Optional
 from unittest import skip
 from unittest.mock import patch, MagicMock
@@ -258,6 +259,7 @@ class TestSubmissionCloudUploadView(TestCase):
         self.s3_client_mock.generate_presigned_url.assert_called_once()
 
     def test_complete_multipart_upload(self):
+
         # Create test records
         file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
             original_filename=self.test_file_data["filename"],
@@ -265,6 +267,13 @@ class TestSubmissionCloudUploadView(TestCase):
             file_type=self.test_file_data["filetype"],
             status="PENDING",
             user=self.user
+        )
+
+        submission = Submission.objects.first()
+        submission_cloud_upload = SubmissionCloudUpload.objects.create(
+            submission=submission,
+            attach_to_ticket=True,
+            file_upload=file_upload
         )
 
         multipart = backend_based_upload_models.MultiPartUpload.objects.create(
@@ -289,6 +298,7 @@ class TestSubmissionCloudUploadView(TestCase):
         # Make request to complete upload
         url = reverse("brokerage:submissions_cloud_upload_complete", kwargs={"upload_id": self.mock_upload_id})
         response = self.client.put(url, parts_data, format="json")
+        pprint(response.data)
 
         # Assert response
         self.assertEqual(response.status_code, 200)

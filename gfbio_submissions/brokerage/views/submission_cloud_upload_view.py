@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 from uuid import uuid4
 
 from django.db import transaction
+from dt_upload.models import MultiPartUpload
 from dt_upload.serializers import backend_based_upload_serializers
 from dt_upload.views import backend_based_upload_mixins, backend_based_upload_views
-from rest_framework import mixins, generics, permissions, status, parsers
+from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
@@ -128,6 +130,32 @@ class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploa
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+
+    def put(self, request, *args, **kwargs):
+        print("OVERRIDE PUT")
+        # instance = self.get_object()
+        # print(instance)
+        # pprint(request.data)
+        # pprint(kwargs)
+
+        response = self.update(request, *args, **kwargs)
+
+        mpu = None
+        try:
+            mpu = MultiPartUpload.objects.get(upload_id=kwargs.get("upload_id"))
+        except MultiPartUpload.DoesNotExist as e:
+            mpu = None
+        if mpu is not None:
+            if hasattr(mpu.file_upload_request, "submissioncloudupload"):
+                print("SCU:", mpu.file_upload_request.submissioncloudupload)
+                mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
+            else:
+                print("NO SCU IN MPUS - FUR")
+        else:
+            print("NO MPU")
+
+        # print(response.data)
+        return response
 
 
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
