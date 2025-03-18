@@ -1,43 +1,73 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
 import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.jsx";
-import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
+import {DEFAULT_PROFILE_NAME} from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
+import {useState} from "react";
+import {modals} from '@mantine/modals';
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
     const brokerSubmissionId = useParams().brokerageId;
-    // TODO: add check and warning if necessary parmaters like token are not available
-    // let profileName = 'generic';
-    // if (window.props !== undefined) {
-    //     profileName = window.props.profile_name || 'generic';
-    // }
-
-    // TODO: this is put into localStorage in main.jsx, where it is derived from window.props
-    //  in main.jsx profileName is needed to properly configure the react-router-dom BrowserRouter
     const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
+
+    const [activeProfile, setActiveProfile] = useState(profileName);
+
+    const handleProfileChange = (data) => {
+        localStorage.setItem("profileName", data);
+        modals.closeAll();
+        setActiveProfile(data)
+    }
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
     // const {data, isLoading, error} = useFetch(PROFILE_URL+profileName);
     const {
-        data1,
-        data2,
+        profileData,
+        submissionData,
+        submissionFiles,
         isLoading,
-        error1,
-        error2,
-    } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
+        error
+    } = useFetchProfileAndSubmission(activeProfile, brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
     return (
-        <div>
-            <ProfileWithErrorHandling profileData={data1} submissionData={data2} isLoading={isLoading}
-                                      profileError={error1} submissionError={error2}/>
-        </div>
+        <>
+            {/* TODO: DASS-2455 (12.03.2025): this button opens a modal with a dialog that allows selecting on of the
+                    available system-wide-profile followed by a re-render of the form based on the newly selected
+                    profile. This is de-activated for now, but will be used in the near future. */}
+            {/*<Button*/}
+            {/*    onClick={() => {*/}
+            {/*        modals.open({*/}
+            {/*            title: "Submission Profile Selection",*/}
+            {/*            size: "xl",*/}
+            {/*            centered: true,*/}
+            {/*            children: (*/}
+            {/*                <>*/}
+            {/*                    <ProfileSelector onCancel={modals.closeAll} onProfileChange={handleProfileChange}></ProfileSelector>*/}
+            {/*                </>*/}
+            {/*            ),*/}
+            {/*        });*/}
+            {/*    }}*/}
+            {/*>*/}
+            {/*    Change Profile*/}
+            {/*</Button>*/}
+            {/* -----------------------------------------------------------------------------------------------------*/}
+
+            <div id={"profileFormWrapper"}>
+                <ProfileWithErrorHandling
+                    profileData={profileData}
+                    submissionData={submissionData}
+                    submissionFiles={submissionFiles}
+                    isLoading={isLoading}
+                    profileError={error}
+                    submissionError={error}
+                />
+            </div>
+        </>
     );
 };
 

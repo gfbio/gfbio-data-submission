@@ -219,4 +219,4 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Matomo Settings
 # ------------------------------------------------------------------------------
-MATOMO_SITE_ID = env("MATOMO_SITE_ID", default="5")
+MATOMO_SITE_ID = env("MATOMO_SITE_ID", default=None)

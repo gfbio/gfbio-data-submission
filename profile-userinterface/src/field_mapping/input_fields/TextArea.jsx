@@ -1,18 +1,11 @@
 import { Textarea } from "@mantine/core";
 import PropTypes from "prop-types";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { mapValueToField } from "../../utils/MapValueToField";
+import validateTextField from "../../utils/TextValidation";
 
-const TextArea = (props) => {
-    const { title, description, form, field_id, placeholder, mandatory } = props;
-    const location = useLocation();
-
-    useEffect(() => {
-        const submissionValue = mapValueToField(field_id);
-        // Always set the field value, even if empty
-        form.setFieldValue(field_id, submissionValue || "");
-    }, [location, field_id, form]);
+const TextArea = ({ title, description, mandatory, form, field_id, placeholder }) => {
+    form.register((values, profileData, validations) => {
+        validateTextField(field_id, values, profileData, validations);
+    });
 
     return (
         <Textarea
@@ -21,8 +14,12 @@ const TextArea = (props) => {
             placeholder={placeholder}
             autosize
             resize='vertical'
-            minRows={2}
-            required={mandatory}
+            minRows={7}
+            classNames={{
+                label: (mandatory ? "mandatory" : "")
+            }}
+            required={false}
+            key={form.key(field_id)}
             {...form.getInputProps(field_id)}
         />
     );
@@ -35,10 +32,10 @@ TextArea.defaultProps = {
 TextArea.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
+    mandatory: PropTypes.bool.isRequired,
     form: PropTypes.object.isRequired,
     field_id: PropTypes.string.isRequired,
     placeholder: PropTypes.string,
-    mandatory: PropTypes.bool.isRequired,
 };
 
 export default TextArea;

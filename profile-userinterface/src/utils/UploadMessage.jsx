@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Collapse, Text, Container } from "@mantine/core";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../settings.jsx";
-import filesize from "filesize";
+import {filesize} from "filesize";
 
 const UploadMessage = ({ showUploadLimitMessage }) => (
   <Collapse in={showUploadLimitMessage}>

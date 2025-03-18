@@ -8,9 +8,7 @@ const LeaveFormDialog = ({ isOpen, onCancel, onSave, onDiscard }) => {
       onClose={onCancel}
       title="Leave this section ?"
       centered
-      scrollbarType="native"
       withOverlay
-      lockScroll={false}
       overlayProps={{
         opacity: 0.55,
         blur: 3

@@ -16,51 +16,36 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import RolesInfo from "../../utils/ContributorsRoles";
-import { mapValueToField } from "../../utils/MapValueToField";
 
-const Contributors = (props) => {
-  const { title, description, form, field_id } = props;
-  const location = useLocation();
+const Contributors = ({ title, description, form, field_id }) => {
+  const [contributors, setContributors] = useState(form?.values?.[field_id] || []);
 
-  const prefillContributors = mapValueToField(field_id);
-  const [contributors, setContributors] = useState([]);
-  const [newContributor, setNewContributor] = useState({
+  useEffect(() => {
+    const currentValue = form?.values?.[field_id];
+    if (currentValue && JSON.stringify(currentValue) !== JSON.stringify(contributors)) {
+      setContributors(currentValue);
+    }
+  }, [form?.values?.[field_id]]);
+
+  const emptyContributor = {
     firstName: "",
     lastName: "",
     emailAddress: "",
     institution: "",
-    role: [],
-  });
+    contribution: "",
+    position: 1
+  };
+
+  const [newContributor, setNewContributor] = useState(emptyContributor);
   const [editingContributor, setEditingContributor] = useState(null);
-  const [emailValid, setEmailValid] = useState(false);
+  const [firstnameValid, setFirstnameValid] = useState(true);
+  const [lastnameValid, setLastnameValid] = useState(true);
+  const [emailValid, setEmailValid] = useState(true);
 
   const [opened, { toggle }] = useDisclosure(false);
   const [rolesInfoOpened, { open, close }] = useDisclosure(false);
-
-  useEffect(() => {
-    if (prefillContributors !== "") {
-      setContributors(prefillContributors);
-      form.setFieldValue(field_id, prefillContributors);
-      if (!opened && prefillContributors.length > 0) {
-        toggle();
-      }
-    } else {
-      setContributors([]);
-      setNewContributor({
-        firstName: "",
-        lastName: "",
-        emailAddress: "",
-        institution: "",
-        role: [],
-      });
-      form.setFieldValue(field_id, []);
-      if (opened) {
-        toggle();
-      }
-    }
-  }, [location]);
+  
 
   const mainRoles = [
     "Author/Creator",
@@ -77,80 +62,106 @@ const Contributors = (props) => {
     "Data Owner Organisation",
   ];
 
+  const resetContributorForm = () => {
+    setEditingContributor(null);
+    setNewContributor({ ...emptyContributor, position: contributors.length + 1 });
+    setEmailValid(true);
+    setFirstnameValid(true);
+    setLastnameValid(true);
+    toggle();
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewContributor((prevContributor) => ({
       ...prevContributor,
       [name]: value,
     }));
-    if (name === "emailAddress") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isValidEmail = emailRegex.test(value);
-      setEmailValid(isValidEmail);
-    }
   };
 
   const handleRoleChange = (value) => {
     setNewContributor((prevContributor) => ({
       ...prevContributor,
-      role: value,
+      contribution: value.join(',')
     }));
   };
 
+  const updateFormValue = (contributorsList) => {
+    const updatedList = contributorsList.map((contributor, index) => ({
+      ...contributor,
+      position: index + 1
+    }));
+    setContributors(updatedList);
+    form.setFieldValue(field_id, updatedList);
+  };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validateContributor = (contributor) => {
+    const isValidEmail = emailRegex.test(contributor.emailAddress);
+    const isValidFirstname = contributor.firstName && contributor.firstName.trim();
+    const isValidLastname = contributor.lastName && contributor.lastName.trim();
+    setEmailValid(isValidEmail);
+    setFirstnameValid(isValidFirstname);
+    setLastnameValid(isValidLastname);
+
+    return isValidEmail && isValidFirstname && isValidLastname;
+  }
+
   const handleAddContributor = () => {
+    if (!validateContributor(newContributor)) {
+      return;
+    }
     const contributorsList = [...contributors, newContributor];
-    setContributors(contributorsList);
-    setNewContributor({
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      institution: "",
-      role: [],
-    });
-    setEmailValid(false);
-    form.setFieldValue(field_id, contributorsList);
+    updateFormValue(contributorsList);
+    resetContributorForm();
+    setEmailValid(true);
+    setFirstnameValid(true);
+    setLastnameValid(true);
   };
 
   const handleEditContributor = (contributor) => {
-    setEditingContributor(contributor);
-    setNewContributor(contributor);
-    setEmailValid(true);
+    if (editingContributor != contributor || !opened) {
+      if (!opened) {
+        toggle();
+      }
+      setEditingContributor(contributor);
+      setNewContributor(contributor);
+      setEmailValid(true);
+    }
+    else {
+      resetContributorForm();
+    }
   };
 
   const handleSaveContributor = () => {
+    if (!validateContributor(newContributor)) {
+      return;
+    }
     const contributorsList = contributors.map((contributor) =>
       contributor.emailAddress === editingContributor.emailAddress
         ? newContributor
         : contributor
     );
-    setContributors(contributorsList);
-    setEditingContributor(null);
-    setNewContributor({
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      institution: "",
-      role: [],
-    });
-    setEmailValid(false);
-    form.setFieldValue(field_id, contributorsList);
+    updateFormValue(contributorsList);
+    resetContributorForm();
   };
 
   const handleDeleteContributor = (contributor) => {
     const contributorsList = contributors.filter(
       (c) => c.emailAddress !== contributor.emailAddress
     );
-    setContributors(contributorsList);
-    setEditingContributor(null);
-    setNewContributor({
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      institution: "",
-      role: [],
-    });
-    setEmailValid(false);
-    form.setFieldValue(field_id, contributorsList);
+    updateFormValue(contributorsList);
+    resetContributorForm();
+  };
+
+  const handleDragEnd = ({ destination, source }) => {
+    if (!destination) return;
+    
+    const contributorsList = [...contributors];
+    const [dragged] = contributorsList.splice(source.index, 1);
+    contributorsList.splice(destination.index, 0, dragged);
+    
+    updateFormValue(contributorsList);
   };
 
   return (
@@ -158,103 +169,96 @@ const Contributors = (props) => {
       <div className="contributors">
         <Input.Label>{title}</Input.Label>
         <Input.Description>{description}</Input.Description>
-        <Group justify="center" display={!opened ? "flex" : "none"}>
-          <Button onClick={toggle} className="btn-blue-outline">
-            <i className="fa fa-plus pe-2"></i> Add Contributor
-          </Button>
-        </Group>
-        <Collapse in={opened}>
-          <Grid gutter="xs">
-            <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
-              <Card shadow="xs" padding="sm" className="h-100">
-                {contributors.length === 0 && <h4>Contributors List</h4>}
-                <DragDropContext
+        <Grid gutter="xs">
+          <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
+            <Card shadow="xs" padding="sm" className="h-100">
+              {
+                contributors.length === 0 && (
+                  <Group justify="center" align="top" className="h-100">
+                    <h4 className="mb-0">Contributors List</h4>
+                  </Group>
+                )
+              }
+              <DragDropContext
+                className="h-100"
+                onDragEnd={handleDragEnd}
+              >
+                <Droppable
+                  droppableId="dnd-list"
+                  direction="vertical"
                   className="h-100"
-                  onDragEnd={({ destination, source }) => {
-                    if (!destination) {
-                      return;
-                    }
-                    let contributors_reordered = [...contributors];
-                    let from = source.index;
-                    let dragged = contributors_reordered.splice(from, 1);
-                    contributors_reordered.splice(
-                      destination?.index || 0,
-                      0,
-                      ...dragged
-                    );
-                    setContributors(contributors_reordered);
-                  }}
                 >
-                  <Droppable
-                    droppableId="dnd-list"
-                    direction="vertical"
-                    className="h-100"
-                  >
-                    {(provided) => (
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className="h-100"
-                      >
-                        {contributors.map((contributor, index) => (
-                          <Draggable
-                            key={contributor.emailAddress}
-                            index={index}
-                            draggableId={contributor.emailAddress}
-                          >
-                            {(provided, snapshot) => (
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="h-100"
+                    >
+                      {contributors.map((contributor, index) => (
+                        <Draggable
+                          key={contributor.emailAddress}
+                          index={index}
+                          draggableId={contributor.emailAddress}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="d-flex contributor px-2 py-1"
+                            >
+                              <div {...provided.dragHandleProps}>
+                                <i className="fa fa-bars pe-2"></i>
+                              </div>
                               <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="d-flex contributor"
+                                key={contributor.emailAddress}
+                                onClick={() =>
+                                  handleEditContributor(contributor)
+                                }
+                                className="name flex-grow-1"
                               >
-                                <div {...provided.dragHandleProps}>
-                                  <i className="fa fa-bars pe-2"></i>
-                                </div>
-                                <div
-                                  key={contributor.emailAddress}
-                                  onClick={() =>
-                                    handleEditContributor(contributor)
-                                  }
-                                  className="name"
-                                >
-                                  <div>
-                                    {index + 1}. {contributor.firstName}{" "}
-                                    {contributor.lastName}
-                                  </div>
+                                <div className="name-text">
+                                  {index + 1}. {contributor.firstName}{" "}
+                                  {contributor.lastName}
                                 </div>
                               </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-                <List
-                  display={"none"}
-                  spacing="sm"
-                  icon={
-                    <ThemeIcon color="blue" variant="filled">
-                      <i className="fa fa-user-circle-o"></i>
-                    </ThemeIcon>
-                  }
-                >
-                  {contributors.map((contributor) => (
-                    <List.Item
-                      key={contributor.emailAddress}
-                      onClick={() => handleEditContributor(contributor)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {contributor.firstName} {contributor.lastName}
-                    </List.Item>
-                  ))}
-                </List>
-              </Card>
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
-              <Card shadow="xs" padding="lg" className="pt-3">
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+              <List
+                display={"none"}
+                spacing="sm"
+                icon={
+                  <ThemeIcon color="blue" variant="filled">
+                    <i className="fa fa-user-circle-o"></i>
+                  </ThemeIcon>
+                }
+              >
+                {contributors.map((contributor) => (
+                  <List.Item
+                    key={contributor.emailAddress}
+                    onClick={() => handleEditContributor(contributor)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {contributor.firstName} {contributor.lastName}
+                  </List.Item>
+                ))}
+              </List>
+            </Card>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
+            <Card shadow="xs" padding="lg" className="pt-3">
+              <Collapse in={!opened} className="flex-grow-1 d-flex flex-column">
+                <Group justify="center" align="center" onClick={toggle} className="active-text-blue h-100 flex-grow-1">
+                  <i className="fa fa-plus pe-2"></i> Add Contributor
+                </Group>
+              </Collapse>
+              <Collapse in={opened}>
                 <h4>
                   {editingContributor ? "Edit Contributor" : "Add Contributor"}
                 </h4>
@@ -264,7 +268,9 @@ const Contributors = (props) => {
                     <TextInput
                       name="firstName"
                       value={newContributor.firstName}
+                      onFocus={() => setFirstnameValid(true)}
                       onChange={handleInputChange}
+                      className={(firstnameValid ? '' : 'invalid')}
                     />
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, xs: 3 }}>
@@ -272,7 +278,9 @@ const Contributors = (props) => {
                     <TextInput
                       name="lastName"
                       value={newContributor.lastName}
+                      onFocus={() => setLastnameValid(true)}
                       onChange={handleInputChange}
+                      className={(lastnameValid ? '' : 'invalid')}
                     />
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, xs: 6 }}>
@@ -281,8 +289,10 @@ const Contributors = (props) => {
                       name="emailAddress"
                       autoComplete="email"
                       value={newContributor.emailAddress}
+                      onFocus={() => setEmailValid(true)}
                       onChange={handleInputChange}
                       placeholder="name@example.org"
+                      className={(emailValid ? '' : 'invalid')}
                     />
                   </Grid.Col>
                   <Grid.Col span={12}>
@@ -305,7 +315,7 @@ const Contributors = (props) => {
                     </span>
                     <MultiSelect
                       name="role"
-                      value={newContributor.role}
+                      value={newContributor.contribution ? newContributor.contribution.split(',').filter(Boolean) : []}
                       onChange={handleRoleChange}
                       data={[
                         { group: "Main Roles", items: [...mainRoles] },
@@ -314,32 +324,25 @@ const Contributors = (props) => {
                           items: [...additionalRoles],
                         },
                       ]}
-                      placeholder="Select role"
+                      placeholder="Select roles"
                     />
                   </Grid.Col>
                 </Grid>
-                {editingContributor ? (
-                  <Grid className="mt-5">
-                    <Grid.Col span={{ base: 12, md: 3 }}>
-                      <Button
-                        fullWidth
-                        className="btn-blue-outline small-button"
-                        onClick={() => {
-                          setEditingContributor(null);
-                          setNewContributor({
-                            firstName: "",
-                            lastName: "",
-                            emailAddress: "",
-                            institution: "",
-                            role: [],
-                          });
-                          setEmailValid(false);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </Grid.Col>
-                    <Grid.Col span={{ base: 12, md: 3 }}>
+                <Grid className="mt-5">
+                  <Grid.Col span={{ base: 12, md: 3, xl: 2 }}>
+                    <Button
+                      fullWidth
+                      className="btn-blue-outline small-button"
+                      onClick={() => {
+                        resetContributorForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 3, xl: 2 }}>
+                    {
+                      editingContributor &&
                       <Button
                         fullWidth
                         className="btn-red-outline small-button"
@@ -349,43 +352,39 @@ const Contributors = (props) => {
                       >
                         Remove
                       </Button>
-                    </Grid.Col>
-                    <Grid.Col
-                      span={{ base: 0, md: 2 }}
-                      className="d-none d-lg-block"
-                    ></Grid.Col>
-                    <Grid.Col span={{ base: 12, md: 4 }}>
-                      <Button
-                        fullWidth
-                        onClick={handleSaveContributor}
-                        className="btn-blue small-button"
-                        disabled={
-                          !newContributor.firstName ||
-                          !newContributor.lastName ||
-                          !emailValid
-                        }
-                      >
-                        Save
-                      </Button>
-                    </Grid.Col>
-                  </Grid>
-                ) : (
-                  <Button
-                    onClick={handleAddContributor}
-                    className="btn-blue mt-5"
-                    disabled={
-                      !newContributor.firstName ||
-                      !newContributor.lastName ||
-                      !emailValid
                     }
-                  >
-                    Add Contributor
-                  </Button>
-                )}
-              </Card>
-            </Grid.Col>
-          </Grid>
-        </Collapse>
+                  </Grid.Col>
+                  <Grid.Col
+                    span={{ base: 0, md: 2, xl: 4 }}
+                    className="d-none d-lg-block"
+                  ></Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 4 }}>
+                    {
+                      editingContributor ? (
+                        <Button
+                          fullWidth
+                          onClick={handleSaveContributor}
+                          className="btn-blue small-button"
+                        >
+                          Save
+                        </Button>
+                      ) :
+                      (
+                        <Button
+                          fullWidth
+                          onClick={handleAddContributor}
+                          className="btn-blue small-button"
+                        >
+                          Add Contributor
+                        </Button>
+                      )
+                    }
+                  </Grid.Col>
+                </Grid>
+              </Collapse>
+            </Card>
+          </Grid.Col>
+        </Grid>
       </div>
 
       <Modal

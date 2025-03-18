@@ -1,3 +1,5 @@
+from urllib.parse import quote_plus
+
 from django.db import models
 from model_utils.models import TimeStampedModel
 
@@ -11,6 +13,8 @@ from ...brokerage.models.submission import Submission
 class Profile(TimeStampedModel):
     name = models.SlugField(max_length=128, unique=True)
     target = models.CharField(max_length=16, choices=Submission.TARGETS, default=GENERIC)
+
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='clones', on_delete=models.SET_NULL)
 
     system_wide_profile = models.BooleanField(default=False)
 
@@ -30,15 +34,15 @@ class Profile(TimeStampedModel):
 
     objects = ProfileManager()
 
-    def save(self, *args, **kwargs):
+    def save(self, omit_system_wide_mandatory_fields=False, *args, **kwargs,):
         super(Profile, self).save(*args, **kwargs)
-        # print('profile save ', self.name)
         if self.active_user_profile:
             Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
         # add system_wide_mandatory fields to this profile
-        system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-        for s in system_wide_mandatories:
-            self.fields.add(s)
+        if not omit_system_wide_mandatory_fields:
+            system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
+            for s in system_wide_mandatories:
+                self.fields.add(s)
 
     def clone_for_user(self, user, name=None):
         # clone returns a  new instance for convenience,
@@ -47,13 +51,14 @@ class Profile(TimeStampedModel):
         self.pk = None
         self.user = user
         if name:
-            self.name = name
+            self.name = quote_plus(name)
         else:
             self.name = "user_id_{}_profile".format(user.pk)
         self.system_wide_profile = False
-        self.save()
         # TODO: move to manager with exception checks
         original_profile = Profile.objects.get(pk=pk)
+        self.parent = original_profile
+        self.save(omit_system_wide_mandatory_fields=True)
         for f in original_profile.profilefield_set.all():
             f.clone(profile=self, field=f.field)
 

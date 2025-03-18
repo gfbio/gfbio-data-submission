@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 
-from .field_serializer import FieldSerializer
 from .profile_field_serializer import ProfileFieldSerializer
-# from .profile_field_extension_serializer import ProfileFieldExtensionSerializer
 from ..configuration.settings import SYSTEM_WIDE_PROFILE_NAME_PREFIX
 from ..models.profile import Profile
 
@@ -22,6 +20,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = (
+            "id",
             "name",
             "form_fields",
             "target",
