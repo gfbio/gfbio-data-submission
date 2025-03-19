@@ -60,9 +60,19 @@ body {
     border-radius: 0.5rem;
   }
 
+  .row-title {
+    font-size: 1rem;
+  }
+
   .clickable-text {
+    font-size: 0.75rem;
+
     &:hover {
       color: #3cace4;
+    }
+
+    p {
+      font-size: 0.75rem;
     }
 
     cursor: pointer;
@@ -86,6 +96,15 @@ body {
 
   .modal-dialog-body {
     min-height: 4lh;
+    padding: 1rem 0;
+  }
+
+  .collapsible-selector-modal-text {
+    margin-bottom: 1.5rem;
+  }
+
+  .collapsible-selector-modal-button {
+    font-size: 0.875rem;
   }
 
   .modal-dialog-footer {
@@ -94,6 +113,14 @@ body {
       margin-bottom: 0.25rem;
       margin-top: 0.25rem;
     }
+  }
+}
+
+.collapsible-selector-modal-header {
+
+  h2 {
+    font-family: "Raleway", Helvetica, sans-serif;
+    font-weight: 300;
   }
 }
 
