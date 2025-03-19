@@ -391,25 +391,25 @@ def combine_csvs_to_abcd(modeladmin, request, queryset):
 combine_csvs_to_abcd.short_description = "Combine CSV-Files to ABCD-File"
 
 
-def atax_validate(modeladmin, request, queryset):
-    from .tasks.atax_tasks.atax_submission_validate_xml_upload import atax_submission_validate_auditable_atax_xml_task
-
-    for obj in queryset:
-        chain = (
-            atax_submission_validate_auditable_atax_xml_task.s(
-                auditable_id=obj.pk
-            ).set(countdown=SUBMISSION_DELAY)
-        )
-
-        chain()
-
-
-atax_validate.short_description = "ATAX validate"
+# FIXME: this seems to trigger code that is no longer used/obsolete, compare file atax_tasks/_atax_submission_validate_xml_upload.py
+# def atax_validate(modeladmin, request, queryset):
+#     from .tasks.atax_tasks.atax_submission_validate_xml_upload import atax_submission_validate_auditable_atax_xml_task
+#
+#     for obj in queryset:
+#         chain = (
+#             atax_submission_validate_auditable_atax_xml_task.s(
+#                 auditable_id=obj.pk
+#             ).set(countdown=SUBMISSION_DELAY)
+#         )
+#
+#         chain()
+#
+#
+# atax_validate.short_description = "ATAX validate"
 
 
 class AuditableTextDataAdmin(admin.ModelAdmin):
     actions = [
-        atax_validate
     ]
 
 

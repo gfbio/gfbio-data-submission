@@ -11,6 +11,7 @@ from rest_framework.authentication import TokenAuthentication, BasicAuthenticati
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models.request_log import RequestLog
+from ..configuration.settings import ATAX
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
@@ -51,17 +52,16 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
             return response
 
-        # TODO: integrate ATAX specific workflows
-        # if sub.target == ATAX and sub.status == Submission.SUBMITTED:
-        #     return Response(
-        #         data={
-        #             "broker_submission_id": sub.broker_submission_id,
-        #             "status": sub.status,
-        #             "embargo": sub.embargo,
-        #             "error": "no uploads allowed with current submission status",
-        #         },
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
+        if sub.target == ATAX and sub.status == Submission.SUBMITTED:
+            return Response(
+                data={
+                    "broker_submission_id": sub.broker_submission_id,
+                    "status": sub.status,
+                    "embargo": sub.embargo,
+                    "error": "no uploads allowed with current submission status",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
