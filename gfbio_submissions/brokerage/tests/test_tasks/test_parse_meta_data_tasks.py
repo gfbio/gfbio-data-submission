@@ -3,6 +3,7 @@ import os
 import shutil
 
 from config.settings.base import MEDIA_ROOT
+from gfbio_submissions.brokerage.admin import reparse_csv_metadata
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
@@ -65,7 +66,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
 
         reparse_chain = (
             clean_submission_for_update_task.s(
-                submission_upload_id=submission_upload.id,
+                submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload.id)
             ).set(countdown=SUBMISSION_DELAY)
             | parse_csv_to_update_clean_submission_task.s(
                 submission_upload_id=submission_upload.id,
@@ -74,7 +75,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
                 submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload.id)
             ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
-                submission_upload_id=submission_upload.id,
+                submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload.id)
             ).set(countdown=SUBMISSION_DELAY)
         )
 
@@ -108,7 +109,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         requirements = submission_upload.submission.data.get("requirements", {})
         self.assertIn("experiments", requirements.keys())
         self.assertIn("samples", requirements.keys())
-        result = clean_submission_for_update_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
+        result = clean_submission_for_update_task.apply_async(kwargs={"submission_id": submission_upload.submission.pk})
         self.assertTrue(result.get())
         expected_data = {
             "requirements": {
@@ -125,7 +126,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         )
 
     def test_clean_submission_for_update_task_invalid_id(self):
-        result = clean_submission_for_update_task.apply_async(kwargs={"submission_upload_id": 9999})
+        result = clean_submission_for_update_task.apply_async(kwargs={"submission_id": 9999})
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     def test_clean_submission_for_update_task_prev_cancelled(self):
@@ -134,23 +135,15 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         result = clean_submission_for_update_task.apply_async(
             kwargs={
                 "previous_task_result": TaskProgressReport.CANCELLED,
-                "submission_upload_id": submission_upload.pk,
+                "submission_id": submission_upload.submission.pk,
             }
         )
-        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-
-    def test_clean_submission_for_update_task_no_submission(self):
-        self._add_submission_upload()
-        submission_upload = SubmissionUpload.objects.first()
-        submission_upload.submission = None
-        submission_upload.save()
-        result = clean_submission_for_update_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     # TODO: add tests, compare TODO above. test for valid / invalid csv
     def test_parse_csv_to_update_clean_submission_task(self):
         submission_upload = self._prepare_submission_upload_task_test_data()
-        clean_submission_for_update_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
+        clean_submission_for_update_task.apply_async(kwargs={"submission_id": submission_upload.submission.pk})
         result = parse_csv_to_update_clean_submission_task.apply_async(
             kwargs={"submission_upload_id": submission_upload.pk}
         )
@@ -191,7 +184,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
 
     def test_update_ena_submission_data_task(self):
         submission_upload = self._prepare_submission_upload_task_test_data()
-        clean_submission_for_update_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
+        clean_submission_for_update_task.apply_async(kwargs={"submission_id": submission_upload.submission.pk})
         parse_csv_to_update_clean_submission_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
         create_broker_objects_from_submission_data_task.apply_async(
             kwargs={"submission_id": SubmissionUpload.objects.get_related_submission_id(submission_upload.id)}
@@ -212,7 +205,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             experiment.text_data,
         )
 
-        result = update_ena_submission_data_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
+        result = update_ena_submission_data_task.apply_async(kwargs={"submission_id": submission_upload.submission.pk})
         self.assertTrue(result.get())
 
         submission_upload = SubmissionUpload.objects.first()
@@ -239,11 +232,11 @@ class TestParseMetaDataForUpdateTask(TestTasks):
 
     def test_update_ena_submission_data_task_only(self):
         submission_upload = self._prepare_submission_upload_task_test_data()
-        result = update_ena_submission_data_task.apply_async(kwargs={"submission_upload_id": submission_upload.pk})
+        result = update_ena_submission_data_task.apply_async(kwargs={"submission_id": submission_upload.submission.pk})
         self.assertTrue(result.get())
 
     def test_update_ena_submission_data_task_invalid_id(self):
-        result = update_ena_submission_data_task.apply_async(kwargs={"submission_upload_id": 9999})
+        result = update_ena_submission_data_task.apply_async(kwargs={"submission_id": 9999})
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     def test_update_ena_submission_data_task_prev_cancelled(self):
@@ -252,7 +245,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         result = update_ena_submission_data_task.apply_async(
             kwargs={
                 "previous_task_result": TaskProgressReport.CANCELLED,
-                "submission_upload_id": submission_upload.pk,
+                "submission_id": submission_upload.submission.pk,
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())

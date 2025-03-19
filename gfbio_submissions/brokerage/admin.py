@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import requests
 import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
@@ -11,6 +12,15 @@ from django_reverse_admin import ReverseModelAdmin
 
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
+)
+from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
+from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+    create_broker_objects_from_submission_data_task,
+)
+from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
+from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
+    parse_csv_to_update_clean_submission_task,
+    parse_csv_to_update_clean_submission_cloud_upload_task,
 )
 from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models import SubmissionCloudUpload
@@ -464,40 +474,59 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
-def reparse_csv_metadata(modeladmin, request, queryset):
-    from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
-    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
-        create_broker_objects_from_submission_data_task,
-    )
-    from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
-    from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
-        parse_csv_to_update_clean_submission_task,
-    )
-
+def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
     for obj in queryset:
         submission_upload_id = obj.id
+        submission_id = get_submission_id(submission_upload_id)
         rebuild_from_csv_metadata_chain = (
             clean_submission_for_update_task.s(
-                submission_upload_id=submission_upload_id,
+                submission_id=submission_id,
             ).set(countdown=SUBMISSION_DELAY)
-            | parse_csv_to_update_clean_submission_task.s(
-            submission_upload_id=submission_upload_id,
-        ).set(countdown=SUBMISSION_DELAY)
+            | task(submission_upload_id)
             | create_broker_objects_from_submission_data_task.s(
-            submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
-            use_submitted_submissions=True,
-        ).set(countdown=SUBMISSION_DELAY)
+                submission_id=submission_id,
+                use_submitted_submissions=True,
+            ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
-            submission_upload_id=submission_upload_id,
-        ).set(countdown=SUBMISSION_DELAY)
+                submission_id=submission_id,
+            ).set(countdown=SUBMISSION_DELAY)
             | check_for_submittable_data_task.s(
-            submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
-        ).set(countdown=SUBMISSION_DELAY)
+                submission_id=submission_id,
+            ).set(countdown=SUBMISSION_DELAY)
         )
         rebuild_from_csv_metadata_chain()
 
 
+
+def reparse_csv_metadata(modeladmin, request, queryset):
+    run_csv_reparse_task_in_reparse_pipeline(
+        queryset,
+        SubmissionUpload.objects.get_related_submission_id,
+        lambda ob_id: parse_csv_to_update_clean_submission_task.s(
+            submission_upload_id=ob_id,
+        ).set(countdown=SUBMISSION_DELAY)
+    )
+
+
 reparse_csv_metadata.short_description = "Re-parse csv metadata to get updated XMLs"
+
+
+def get_submission_id_from_cloud_upload(cloud_upload_id):
+    submission_cloud_upload = SubmissionCloudUpload.objects.get(pk=cloud_upload_id)
+    submission_id = submission_cloud_upload.submission.id
+    return submission_id
+
+
+def reparse_csv_metadata_cloud_uploads(modeladmin, request, queryset):
+    run_csv_reparse_task_in_reparse_pipeline(
+        queryset,
+        get_submission_id_from_cloud_upload,
+        lambda ob_id: parse_csv_to_update_clean_submission_cloud_upload_task.s(
+            submission_cloud_upload_id=ob_id,
+        ).set(countdown=SUBMISSION_DELAY)
+    )
+
+reparse_csv_metadata_cloud_uploads.short_description = "Re-parse csv metadata to get updated XMLs"
 
 
 def download_submission_upload_file(modeladmin, request, queryset):
@@ -572,7 +601,23 @@ class AbcdConversionResultAdmin(admin.ModelAdmin):
     )
 
 
+def download_submission_cloud_upload_file(modeladmin, request, queryset):
+    for obj in queryset:
+        f = obj.file_upload
+        if f:
+            with requests.get(f.s3_location, stream=True) as r:
+                r.raise_for_status()
+                response = HttpResponse(r, content_type="application/force-download")
+                response["Content-Disposition"] = "attachment; filename=%s" % f.original_filename
+                return response
+
+download_submission_cloud_upload_file.short_description = "Download the file of the selected SubmissionCloudUpload."
+
+
 class SubmissionCloudUploadAdmin(ReverseModelAdmin):
+    list_display = ("__str__", "meta_data", "user", "attachment_id", "attach_to_ticket")
+    list_filter = ("user", "meta_data", "attach_to_ticket")
+    search_fields = ["submission__broker_submission_id"]
     inline_type = 'stacked'
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
@@ -582,6 +627,10 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
                 'fields': ['original_filename', 'file_key', 'status', 's3_location']
             }
         ),
+    ]
+    actions = [
+        reparse_csv_metadata_cloud_uploads,
+        download_submission_cloud_upload_file,
     ]
 
 
