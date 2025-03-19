@@ -2,7 +2,9 @@
 from unittest.mock import patch
 
 import responses
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
+from dt_upload.models import FileUploadRequest
 
 from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_ATTACHMENT_SUB_URL,
@@ -14,6 +16,7 @@ from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
 from ..test_utils.test_csv_parsing import TestCSVParsing
 from ..utils import _get_jira_attach_response
+from ...models import SubmissionCloudUpload
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
@@ -96,22 +99,6 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         submission_upload = SubmissionUpload.objects.first()
         self.assertEqual(10814, submission_upload.attachment_id)
 
-    @responses.activate
-    def test_attach_cloud_upload_to_issue_task(self):
-        self._prepare_responses()
-        submission = Submission.objects.first()
-
-        result = attach_cloud_upload_to_submission_issue_task.apply_async(
-            kwargs={
-                "submission_id": submission.pk,
-                "submission_upload_id": SubmissionUpload.objects.first().pk,
-            }
-        )
-
-        self.assertTrue(result.successful())
-        self.assertTrue(result.get())
-        submission_upload = SubmissionUpload.objects.first()
-        self.assertEqual(10814, submission_upload.attachment_id)
 
     @responses.activate
     def test_attach_multiple_files_with_same_name(self):

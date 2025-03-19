@@ -10,20 +10,30 @@ from unittest import skip
 from unittest.mock import patch, MagicMock
 
 import requests
+import responses
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from dt_upload.models import backend_based_upload_models, MultiPartUpload
+from dt_upload.models import MultiPartUpload
+from dt_upload.models import backend_based_upload_models
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_HELPDESK_TICKET,
 )
-from gfbio_submissions.brokerage.tests.utils import (
-    _create_submission_via_serializer,
+from gfbio_submissions.brokerage.configuration.settings import (
+    JIRA_ATTACHMENT_SUB_URL,
+    JIRA_ISSUE_URL,
 )
+from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer, _get_jira_attach_response, _get_jira_issue_response,
+)
+from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.users.models import User
 from ...models.submission import Submission
 from ...models.submission_cloud_upload import SubmissionCloudUpload
 
@@ -136,6 +146,45 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
 class TestSubmissionCloudUploadView(TestCase):
 
     def setUp(self):
+        resource_cred = ResourceCredential.objects.create(
+            title="Resource Title",
+            url="https://www.example.com",
+            authentication_string="letMeIn",
+        )
+        site_config = SiteConfiguration.objects.create(
+            title=HOSTING_SITE,
+            ena_server=resource_cred,
+            ena_report_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment="Default configuration",
+            contact="kevin@horstmeier.de",
+        )
+
+        responses.add(
+            responses.GET,
+            "{0}/rest/api/2/field".format(site_config.helpdesk_server.url),
+            status=200,
+        )
+
+        responses.add(
+            responses.GET,
+            "{0}/rest/api/2/issue/FAKE_KEY".format(site_config.helpdesk_server.url),
+            json=_get_jira_issue_response(),
+        )
+
+        responses.add(
+            responses.POST,
+            "{0}{1}/{2}/{3}".format(
+                site_config.helpdesk_server.url,
+                JIRA_ISSUE_URL,
+                "SAND-1661",
+                JIRA_ATTACHMENT_SUB_URL,
+            ),
+            json=_get_jira_attach_response(),
+            status=200,
+        )
         self.client = APIClient()
         self.user = User.objects.create_user(
             username="testuser",
@@ -147,7 +196,6 @@ class TestSubmissionCloudUploadView(TestCase):
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
         _create_submission_via_serializer()
 
-        # Basic test data
         self.test_file_data = {
             "filename": "test_file.mp4",
             "filetype": "video/mp4",
@@ -162,11 +210,9 @@ class TestSubmissionCloudUploadView(TestCase):
         settings.AWS_S3_REGION_NAME = "us-east-1"
         settings.AWS_S3_ENDPOINT_URL = None
 
-        # Mock S3 responses
         self.mock_upload_id = "test-upload-id-12345"
         self.mock_file_key = "test-file-key-12345"
 
-        # Create mock S3 client
         self.s3_client_mock = MagicMock()
         self.s3_patcher = patch("boto3.client", return_value=self.s3_client_mock)
         self.s3_patcher.start()
@@ -258,8 +304,8 @@ class TestSubmissionCloudUploadView(TestCase):
         # Assert S3 client called correctly
         self.s3_client_mock.generate_presigned_url.assert_called_once()
 
+    @responses.activate
     def test_complete_multipart_upload(self):
-
         # Create test records
         file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
             original_filename=self.test_file_data["filename"],
@@ -273,6 +319,7 @@ class TestSubmissionCloudUploadView(TestCase):
         submission_cloud_upload = SubmissionCloudUpload.objects.create(
             submission=submission,
             attach_to_ticket=True,
+            meta_data=True,
             file_upload=file_upload
         )
 
@@ -311,8 +358,43 @@ class TestSubmissionCloudUploadView(TestCase):
         self.assertEqual(file_upload.status, "COMPLETED")
         self.assertIsNotNone(multipart.completed_at)
 
+
+        # print(submission_cloud_upload.file_upload.uploaded_file)
+        # # with tempfile.TemporaryDirectory() as tmpdir:
+        #
+        # with open("s3-test", "wb") as f:
+        #     res = self.s3_client_mock.download_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        #                                          Key=submission_cloud_upload.file_upload.file_key, Fileobj=f)
+        #     # print(res.read())
+        #     f.close()
+        # with open("s3-test", "rb") as f:
+        #     print(f.name)
+        #     print(f.read())
+        #
+        # local_file_path = 'Datei.txt'
+        # try:
+        #     # s3 = boto3.client('s3')
+        #     self.s3_client_mock.download_file(settings.AWS_STORAGE_BUCKET_NAME, submission_cloud_upload.file_upload.file_key, local_file_path)
+        #     print(f"Datei erfolgreich heruntergeladen nach: {local_file_path}")
+        #     # with open(local_file_path, 'rb') as f_in:
+        #     #     print(f_in.read())
+        # except Exception as e:
+        #     print(f"Fehler beim Herunterladen der Datei: {e}")
+
+        # with default_storage.open(submission_cloud_upload.file_upload.uploaded_file.url, 'rb') as f:
+        #     print(f.read())
+        # with open(submission_cloud_upload.file_upload.uploaded_file.file, "rb") as f:
+        #     print(f.read())
+
+        # with open(temp_path, "wb") as f:
+        # if s3_client is not None:
+        #     s3_client.download_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=s3_key, Fileobj=f)
+        # else:
+        #     raise Exception("S3 client is not configured.")
         # Assert S3 client called correctly
         self.s3_client_mock.complete_multipart_upload.assert_called_once()
+        submission_cloud_upload.refresh_from_db()
+        self.assertEqual(10814, submission_cloud_upload.attachment_id)
 
     def test_abort_multipart_upload(self):
         """Test aborting a multipart upload"""

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import requests
 import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
 
+import requests
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
@@ -12,15 +12,6 @@ from django_reverse_admin import ReverseModelAdmin
 
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
-)
-from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
-from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
-    create_broker_objects_from_submission_data_task,
-)
-from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
-from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
-    parse_csv_to_update_clean_submission_task,
-    parse_csv_to_update_clean_submission_cloud_upload_task,
 )
 from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models import SubmissionCloudUpload
@@ -35,6 +26,15 @@ from .models.persistent_identifier import PersistentIdentifier
 from .models.submission import Submission
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
+from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
+from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+    create_broker_objects_from_submission_data_task,
+)
+from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
+from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
+    parse_csv_to_update_clean_submission_task,
+    parse_csv_to_update_clean_submission_cloud_upload_task,
+)
 from .utils.ena import release_study_on_ena
 from .utils.submission_process import SubmissionProcessHandler
 from .utils.task_utils import jira_cancel_issue
@@ -338,7 +338,8 @@ validate_manifest_at_ena.short_description = "Validate MANIFEST file at ENA"
 
 
 def create_helpdesk_issue_manually(modeladmin, request, queryset):
-    from .tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task
+    from .tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task, \
+        attach_cloud_upload_to_submission_issue_task
     from .tasks.jira_tasks.create_submission_issue import create_submission_issue_task
     from .tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
     from .tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
@@ -353,6 +354,16 @@ def create_helpdesk_issue_manually(modeladmin, request, queryset):
         related_uploads = SubmissionUpload.objects.filter(submission=obj, attach_to_ticket=True)
         for upload in related_uploads:
             attach_to_submission_issue_task.apply_async(
+                kwargs={
+                    "submission_id": "{0}".format(obj.pk),
+                    "submission_upload_id": "{0}".format(upload.pk),
+                },
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
+            )
+        related_cloud_uploads = SubmissionCloudUpload.objects.filter(submission=obj, attach_to_ticket=True,
+                                                                     meta_data=True)
+        for upload in related_cloud_uploads:
+            attach_cloud_upload_to_submission_issue_task.apply_async(
                 kwargs={
                     "submission_id": "{0}".format(obj.pk),
                     "submission_upload_id": "{0}".format(upload.pk),
@@ -484,18 +495,17 @@ def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
             ).set(countdown=SUBMISSION_DELAY)
             | task(submission_upload_id)
             | create_broker_objects_from_submission_data_task.s(
-                submission_id=submission_id,
-                use_submitted_submissions=True,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=submission_id,
+            use_submitted_submissions=True,
+        ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
-                submission_id=submission_id,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=submission_id,
+        ).set(countdown=SUBMISSION_DELAY)
             | check_for_submittable_data_task.s(
-                submission_id=submission_id,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=submission_id,
+        ).set(countdown=SUBMISSION_DELAY)
         )
         rebuild_from_csv_metadata_chain()
-
 
 
 def reparse_csv_metadata(modeladmin, request, queryset):
@@ -525,6 +535,7 @@ def reparse_csv_metadata_cloud_uploads(modeladmin, request, queryset):
             submission_cloud_upload_id=ob_id,
         ).set(countdown=SUBMISSION_DELAY)
     )
+
 
 reparse_csv_metadata_cloud_uploads.short_description = "Re-parse csv metadata to get updated XMLs"
 
@@ -610,6 +621,7 @@ def download_submission_cloud_upload_file(modeladmin, request, queryset):
                 response = HttpResponse(r, content_type="application/force-download")
                 response["Content-Disposition"] = "attachment; filename=%s" % f.original_filename
                 return response
+
 
 download_submission_cloud_upload_file.short_description = "Download the file of the selected SubmissionCloudUpload."
 
