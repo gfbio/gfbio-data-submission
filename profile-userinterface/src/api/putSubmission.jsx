@@ -13,7 +13,7 @@ export default async function putSubmission(
         broker_submission_id: broker_submission_id,
         target: target,
         embargo: embargo,
-        download_url: data.download_url ? data.download_url : "",
+        ...(data.download_url && { download_url: data.download_url }),
         data: {
             requirements: data,
         },

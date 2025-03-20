@@ -8,7 +8,7 @@ const postSubmission = async (target, embargo, data) => {
     const requestData = {
         target: target,
         embargo: embargo,
-        download_url: data.download_url ? data.download_url : "",
+        ...(data.download_url && { download_url: data.download_url }),
         data: {
             requirements: data,
         },
