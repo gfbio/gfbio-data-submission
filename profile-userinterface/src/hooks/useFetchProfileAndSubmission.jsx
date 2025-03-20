@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import getCloudSubmissionUploads from "../api/getSubmissionCloudUploads.jsx";
 import { PROFILE_URL, SUBMISSIONS_API } from "../settings.jsx";
 import getToken from "../api/utils/getToken.jsx";
+import getSubmissionUploads from "../api/getSubmissionUploads.jsx";
 
 const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     const [profileData, setProfileData] = useState(null);
@@ -10,6 +11,7 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     const [submissionFiles, setSubmissionFiles] = useState([]);
     const [isLoading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [localSubmissionFiles, setLocalSubmissionFiles] = useState([]);
 
 
     const config = {
@@ -31,8 +33,12 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
                 if (brokerSubmissionId !== undefined) {
                     const submissionResponse = await axios.get(SUBMISSIONS_API + brokerSubmissionId + "/", config);
                     setSubmissionData(submissionResponse.data);
-                    const filesResponse = await getCloudSubmissionUploads(brokerSubmissionId);
-                    setSubmissionFiles(filesResponse);
+
+                    const cloudFilesResponse = await getCloudSubmissionUploads(brokerSubmissionId);
+                    setSubmissionFiles(cloudFilesResponse);
+
+                    const localFilesResponse = await getSubmissionUploads(brokerSubmissionId);
+                    setLocalSubmissionFiles(localFilesResponse);
                 } else {
                     // Initialize empty submission data
                     setSubmissionData({
@@ -41,6 +47,7 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
                         },
                     });
                     setSubmissionFiles([]);
+                    setLocalSubmissionFiles([]);
                 }
             } catch (error) {
                 setError(error);
@@ -53,7 +60,7 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
 
     }, [profileName, brokerSubmissionId]); // Only re-run if these change
 
-    return { profileData, submissionData, submissionFiles, isLoading, error };
+    return { profileData, submissionData, submissionFiles, localSubmissionFiles, isLoading, error };
 };
 
 export default useFetchProfileAndSubmission;

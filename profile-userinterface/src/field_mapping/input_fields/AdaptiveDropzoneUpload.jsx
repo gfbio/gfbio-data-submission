@@ -1,15 +1,22 @@
-import DropzoneCloudUpload from "./DropzoneCloudUpload.jsx";
+import PropTypes from "prop-types";
 import DropzoneUpload from "./DropzoneUpload.jsx";
+import DropzoneCloudUpload from "./DropzoneCloudUpload.jsx";
 
 const AdaptiveDropzoneUpload = (props) => {
-    const { submissionData, submissionFiles } = props;
-    // For example, use a similar check as in ProfileForm:
-    const useLocalUpload = submissionFiles && submissionFiles.some(file => file.is_local);
+    const { submissionFiles, localSubmissionFiles } = props;
+    const useLocalUpload = localSubmissionFiles && localSubmissionFiles.length > 0;
+    const files = useLocalUpload ? localSubmissionFiles : submissionFiles;
 
     return useLocalUpload ? (
-        <DropzoneUpload {...props} />
+        <DropzoneUpload {...props} submissionFiles={files} />
     ) : (
-        <DropzoneCloudUpload {...props} />
+        <DropzoneCloudUpload {...props} submissionFiles={files} />
     );
 };
+
+AdaptiveDropzoneUpload.propTypes = {
+    submissionFiles: PropTypes.array,
+    localSubmissionFiles: PropTypes.array,
+};
+
 export default AdaptiveDropzoneUpload;
