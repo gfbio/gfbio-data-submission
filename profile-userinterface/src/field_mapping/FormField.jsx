@@ -12,8 +12,9 @@ import SelectField from "./input_fields/SelectField.jsx";
 import TagsInputInlineField from "./input_fields/TagsInputInlineField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
+import AdaptiveDropzoneUpload from "./input_fields/AdaptiveDropzoneUpload.jsx";
 
-const FormField = ({formField, form, onFilesChange, submissionData}) => {
+const FormField = ({ formField, form, onFilesChange, submissionData }) => {
     const fieldParameters = {
         title: formField.field.title,
         description: formField.field.description,
@@ -38,10 +39,12 @@ const FormField = ({formField, form, onFilesChange, submissionData}) => {
             case "file-upload":
                 // TODO: Work in progress...
                 return (
-                    <DropzoneUpload
+                    <AdaptiveDropzoneUpload
                         {...fieldParameters}
                         onFilesChange={onFilesChange}
-                    ></DropzoneUpload>
+                        submissionData={fieldParameters.submissionData}
+                        submissionFiles={form.values.files}
+                    />
                 );
             case "collapsible-selector":
                 return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;

@@ -13,6 +13,7 @@ import LeaveFormDialog from "./LeaveFormDialog.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
 
+
 const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
@@ -22,6 +23,15 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [pendingNavigation, setPendingNavigation] = useState(null);
     const [errorList, setErrorList] = useState([]);
     const navigate = useNavigate();
+    const [uploadType, setUploadType] = useState("cloud");
+
+    useEffect(() => {
+        if (submissionFiles && submissionFiles.some(file => file.is_local)) {
+            setUploadType("local");
+        } else {
+            setUploadType("cloud");
+        }
+    }, [submissionFiles]);
 
     // Initialize form with values from profile and submission data
     const buildInitialValues = () => {
@@ -138,29 +148,32 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
         try {
-            console.log("hehehe");
-            await uploadFileToS3(
-                file,
-                brokerSubmissionId,
-                attach_to_ticket,
-                meta_data,
-                getToken(),
-                (progressPercent) => {
-                    console.log(`Upload progress for ${file.name}: ${progressPercent}%`);
-                },
-            );
+            if (uploadType === "cloud") {
+                // Cloud upload: Use your cloud API functions
+                await uploadFileToS3(
+                    file,
+                    brokerSubmissionId,
+                    attach_to_ticket,
+                    meta_data,
+                    getToken(),
+                    (progressPercent) => {
+                        console.log(`Cloud upload progress for ${file.name}: ${progressPercent}%`);
+                    },
+                );
 
-            //TODO: remove after changing entire profile based ui to new models
-            await createUploadFileChannel(
-                brokerSubmissionId,
-                file,
-                attach_to_ticket,
-                meta_data,
-                getToken(),
-                (percentCompleted) => {
-                    console.log(`Upload progress: ${percentCompleted}%`);
-                },
-            );
+
+            } else {
+                await createUploadFileChannel(
+                    brokerSubmissionId,
+                    file,
+                    attach_to_ticket,
+                    meta_data,
+                    getToken(),
+                    (percentCompleted) => {
+                        console.log(`Upload progress: ${percentCompleted}%`);
+                    },
+                );
+            }
             console.log("Upload complete");
         } catch (error) {
             console.error("Upload error: ", error);

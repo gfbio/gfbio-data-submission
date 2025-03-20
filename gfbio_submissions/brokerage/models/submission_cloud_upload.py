@@ -7,6 +7,13 @@ from .submission import Submission
 
 
 class SubmissionCloudUpload(TimeStampedModel):
+    STATUS_ACTIVE = 'active'
+    STATUS_DELETED = 'deleted'
+    STATUS_CHOICES = (
+        (STATUS_ACTIVE, 'Active'),
+        (STATUS_DELETED, 'Deleted'),
+    )
+
     submission = models.ForeignKey(
         Submission,
         null=True,
@@ -47,6 +54,13 @@ class SubmissionCloudUpload(TimeStampedModel):
         default=False,
         help_text="Checked value means that it is assumed that this file contains the 'meta-data' of the related "
                   "submission. Only one meta-data file per submission is allowed",
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+        help_text="Select the status of the upload."
     )
 
     # TODO: use dt_upload m5 methods ?
