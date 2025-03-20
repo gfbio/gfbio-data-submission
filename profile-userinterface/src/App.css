@@ -44,7 +44,7 @@
 
 /* Force scrollbar to be always visible to prevent layout shifts */
 body {
-  overflow-y: scroll;
+  line-height: 1.5;
 }
 
 
@@ -60,9 +60,19 @@ body {
     border-radius: 0.5rem;
   }
 
+  .row-title {
+    font-size: 1rem;
+  }
+
   .clickable-text {
+    font-size: 0.75rem;
+
     &:hover {
       color: #3cace4;
+    }
+
+    p {
+      font-size: 0.75rem;
     }
 
     cursor: pointer;
@@ -86,6 +96,15 @@ body {
 
   .modal-dialog-body {
     min-height: 4lh;
+    padding: 1rem 0;
+  }
+
+  .collapsible-selector-modal-text {
+    margin-bottom: 1.5rem;
+  }
+
+  .collapsible-selector-modal-button {
+    font-size: 0.875rem;
   }
 
   .modal-dialog-footer {
@@ -97,11 +116,21 @@ body {
   }
 }
 
+.collapsible-selector-modal-header {
+
+  h2 {
+    font-family: "Raleway", Helvetica, sans-serif;
+    font-weight: 300;
+  }
+}
+
 .submission-form {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
     --input-bd-focus: #a6c97e !important;
-    
+    --input-line-height: 1.5rem !important;
+    padding: .375rem .75rem;
+
     &[aria-invalid="true"] {
       --input-bd: var(--mantine-color-gray-4) !important;
     }
@@ -175,11 +204,11 @@ body {
   }
 
   .info-box .list-group-flush {
-    border: 1px #d3d3d3 solid;
-    border-radius: 5px;
 
     > li.list-group-item {
+      padding: 0.375rem 0;
       border: none;
+      color: #495057;
     }
 
     .info-box-header {
@@ -187,19 +216,32 @@ body {
     }
 
     .data-field {
-      margin-left: 0.6rem;
-      padding-left: 1rem;
-      border-left: 2px solid #d3d3d3;
+      margin: 0.5rem 0 0 0.5rem;
+      padding-left: 0.5rem;
+      border-left: 2px solid #ced4da;
       font-size: .7rem;
     }
   }
 
+  .info-box .submission-info {
+    border: 1px #d3d3d3 solid;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+  }
+
   a, button.link-style {
     color: #3cace4;
+    text-decoration: none;
 
     &:hover {
       color: #ff8362;
       text-decoration: unset;
+    }
+
+    i {
+      padding-right: 0.5rem;
+      font-size: 1.5rem;
+      vertical-align: middle;
     }
   }
 
@@ -404,7 +446,7 @@ body {
         }
       }
     }
-    
+
     .active-text-blue:not([disabled]) {
       cursor: pointer;
       color: #3cace4;
@@ -478,7 +520,7 @@ body {
         .mantine-Input-wrapper {
           --input-bg: #fceaec;
         }
-  
+
         &:hover {
           .mantine-Input-wrapper {
             --input-bg: #f5c2c7;
@@ -486,7 +528,7 @@ body {
         }
       }
     }
-    
+
     .mantine-UnstyledButton-root.fa.fa-question-circle-o {
       color: #345aa2
     }
@@ -559,7 +601,7 @@ button.blue-button {
     color: #3cace4;
     border: solid 1px #3cace4;
   }
-} 
+}
 
 button.red-button {
   background-color: #dc3444;
@@ -662,7 +704,7 @@ button.button-inverted {
     }
 
     .delete-button {
-      width: auto !important;  
+      width: auto !important;
       color: #ff6339;
       font-size: .75rem;
       padding-left: 4px;
@@ -674,9 +716,9 @@ button.button-inverted {
 
       &:active {
         border: #ff6339 1px solid;
-        border-radius: 5px;        
+        border-radius: 5px;
       }
-      
+
       .fa.fa-close {
         margin-right: 5px;
       }
@@ -697,7 +739,7 @@ button.button-inverted {
     width: 100%;
   }
 }
-  
+
 .success-message {
   border: 1px solid #dee2e6;
   border-radius: .25rem;
@@ -740,7 +782,7 @@ button.button-inverted {
 
     .error-helptext {
       border-bottom: none;
-      
+
       .mantine-List-itemIcon {
         display: none;
       }
@@ -782,4 +824,79 @@ button.button-inverted {
 .nav-link i {
   padding-right: 0.5rem;
   font-size: 1rem;
+}
+
+.mantine-Select-dropdown {
+  background-color: #f5f6f7;
+  border-color: #bdc2c7;
+  border-radius: 8px;
+  box-shadow: 0 0 0 .1rem rgba(222,226,230,0.4);
+
+  &[data-position="top"] {
+    transform: translateY(4px);
+  }
+
+  &[data-position="bottom"] {
+    transform: translateY(-4px);
+  }
+}
+
+.mantine-Select-dropdown {
+  &:not(:has(:hover)) {
+    .mantine-Select-option[data-checked="true"] {
+      background-color: #bcdef0;
+    }
+  }
+
+  .mantine-Select-option:hover {
+    background-color: #bcdef0;
+  }
+}
+
+/* EmbargoDate Component Styles */
+.embargo-date {
+  h4 {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* EmbargoDate Modal Styles */
+.embargo-modal {
+  h2 {
+    font-family: "Raleway", sans-serif;
+    font-weight: 300;
+    color: #495057;
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .embargo-picker {
+    margin: 1.5rem 0;
+    padding: 0 1rem;   
+  }
+
+  .embargo-footer {
+    padding: 1rem 1rem 0;
+
+    button {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* Quick Select Buttons */
+.embargo-quick-select {
+  margin: 0 1rem 1.5rem;
+  
+  button {
+    &.button-inverted.blue-button {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* DatePicker Styles */
+.mantine-DatePicker-weekday {
+  font-family: "Raleway", sans-serif;
+  text-align: center;
 }

@@ -2,6 +2,7 @@
 
 import datetime
 import json
+from pprint import pprint
 from unittest import skip
 
 import responses
@@ -9,13 +10,12 @@ import responses
 from gfbio_submissions.brokerage.tests.utils import _get_ena_release_xml_response, _get_submission_request_data
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-
-from ....configuration.settings import JIRA_ISSUE_URL
+from .test_submission_view_base import TestSubmissionView
+from ....configuration.settings import JIRA_ISSUE_URL, GENERIC
 from ....models.broker_object import BrokerObject
 from ....models.persistent_identifier import PersistentIdentifier
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
-from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewPutRequests(TestSubmissionView):
@@ -125,6 +125,64 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(400, response.status_code)
         self.assertIn("optional_validation", content.keys())
+
+    @responses.activate
+    def test_put_submission_generic_target(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        submission.target = GENERIC
+        submission.save()
+
+        # first update
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "GENERIC",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description",
+                        "foo": "bar"
+                    }
+                },
+            },
+            format="json",
+        )
+        content = json.loads(response.content.decode("utf-8"))
+        submission = Submission.objects.first()
+
+        self.assertEqual(Submission.OPEN, submission.status)
+        self.assertEqual(200, response.status_code)
+
+        self.assertNotIn("optional_validation", content["data"].keys())
+        self.assertNotIn("optional_validation", submission.data)
+        self.assertIn("foo", content.get("data", {}).get("requirements", {}).keys())
+        self.assertIn("foo", submission.data.get("requirements", {}).keys())
+        self.assertEqual("A Title 0815", submission.data.get("requirements", {}).get("title"))
+
+        # second update
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {"target": "GENERIC", "data": {"requirements": {
+                "title": "A Title 0815 update",
+                "description": "A Description 2",
+
+            }}},
+            format="json",
+        )
+        content = json.loads(response.content.decode("utf-8"))
+        self.assertEqual(200, response.status_code)
+
+        submission.refresh_from_db()
+        self.assertEqual(Submission.OPEN, submission.status)
+
+        self.assertNotIn("optional_validation", content["data"].keys())
+        self.assertNotIn("optional_validation", submission.data)
+        self.assertIn("foo", content.get("data", {}).get("requirements", {}).keys())
+        self.assertIn("foo", submission.data.get("requirements", {}).keys())
+        self.assertEqual("A Title 0815 update", submission.data.get("requirements", {}).get("title"))
 
     @responses.activate
     def test_put_submission_valid_max_validation(self):

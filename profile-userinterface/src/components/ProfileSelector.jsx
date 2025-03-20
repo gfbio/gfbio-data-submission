@@ -7,7 +7,7 @@ import PropTypes from "prop-types";
 const ProfileSelectDialogWithLoading = withLoading(ProfileSelectDialog);
 const ProfileSelectDialogWithErrorHandling = withErrorHandling(ProfileSelectDialogWithLoading);
 
-const ProfileSelector = ({ onProfileChange }) => {
+const ProfileSelector = ({ onCancel, onProfileChange }) => {
     const {
         profileListData,
         isLoading,
@@ -17,6 +17,7 @@ const ProfileSelector = ({ onProfileChange }) => {
     return (
         <>
             <ProfileSelectDialogWithErrorHandling
+                onCancel={onCancel}
                 onProfileChange={onProfileChange}
                 profileListData={profileListData}
             />
@@ -26,6 +27,7 @@ const ProfileSelector = ({ onProfileChange }) => {
 
 ProfileSelector.propTypes = {
     onProfileChange: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
 };
 
 export default ProfileSelector;

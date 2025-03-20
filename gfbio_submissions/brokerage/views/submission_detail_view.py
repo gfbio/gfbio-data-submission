@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
+
 from django.db import transaction
 from django.urls import reverse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
 from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
-
-from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models.submission import Submission
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
+from ...generic.models.request_log import RequestLog
 
 
 class SubmissionDetailView(
@@ -32,6 +32,23 @@ class SubmissionDetailView(
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        merged = instance.data.get('requirements', {}) | serializer.validated_data.get("data", {}).get('requirements',
+                                                                                                       {})
+        serializer.validated_data.get("data", {})["requirements"] = merged
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
     @extend_schema(
         operation_id="get submission by id",

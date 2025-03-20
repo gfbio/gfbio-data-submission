@@ -75,5 +75,7 @@ class SubmissionCloudUpload(TimeStampedModel):
         # return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
         if self.file_upload is None:
             return f"{self.submission.broker_submission_id}-NO-FILE-UPLOAD-REQUEST"
+        elif self.file_upload.original_filename:
+            return f"{self.file_upload.original_filename} / {self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
         else:
             return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"

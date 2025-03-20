@@ -35,7 +35,7 @@ const CollapsibleSelector = (props) => {
             { description && ( <label>{description}</label> ) }
             <div className='container'>
                 <div className='multi-select-row row btn-style' onClick={toggle}>
-                    <p className='col my-2 row-title'><i className="fa fa-balance-scale mr-2"></i>{value}</p>
+                    <p className='col my-2 row-title'><i className="fa fa-balance-scale me-3"></i>{value}</p>
                     <p className='clickable-text col-auto text-right my-2'>change</p>
                 </div>
             </div>
@@ -54,26 +54,34 @@ const CollapsibleSelector = (props) => {
             </Collapse>
 
             {selectedOption && (
-                <Modal opened={dialogOpened} onClose={closeDialog} title={selectedOption.option} centered size="auto">
+                <Modal 
+                    opened={dialogOpened}
+                    onClose={closeDialog}
+                    title={selectedOption.option + " Description"}
+                    centered
+                    size="auto"
+                    classNames={{
+                        header: 'collapsible-selector-modal-header',
+                    }}>
                     <div className='modal-dialog-body'>
                         {selectedOption.description && (
-                            <Text className='use-line-breaks'>{selectedOption.description}</Text>
+                            <Text className='use-line-breaks collapsible-selector-modal-text'>{selectedOption.description}</Text>
                         )}
                     </div>
-                    <div className='modal-dialog-footer container p-0'>
+                    <div className='modal-dialog-footer container p-0 mt-3'>
                         {selectedOption.help_link && (
                             <div className='row'>
                                 <div className='col-12'>
-                                    <a href={selectedOption.help_link} className='btn btn-light-blue-inverted btn-block'>More detail</a>
+                                    <a href={selectedOption.help_link} className='btn btn-light-blue-inverted w-100 collapsible-selector-modal-button'>Read More</a>
                                 </div>
                             </div>
                         )}
                         <div className='row'>
                             <div className='col-12'>
-                                <p className='btn btn-light-blue-inverted btn-block' 
-                                   onClick={() => handleOptionClick(selectedOption)}>
-                                    Choose this
-                                </p>
+                                <button className='btn btn-light-blue-inverted w-100 mt-0 collapsible-selector-modal-button' 
+                                    onClick={() => handleOptionClick(selectedOption)}>
+                                    Choose this License
+                                </button>
                             </div>
                         </div>
                     </div>

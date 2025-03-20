@@ -68,3 +68,9 @@ class SubmissionManager(models.Manager):
         return self.exclude(Q(status=self.model.CANCELLED) | Q(status=self.model.CLOSED)).exclude(
             Q(additionalreference__primary=True) & Q(additionalreference__type="0")
         )
+
+    def get_or_none(self, submission_id):
+        try:
+            return self.get(pk=submission_id)
+        except self.model.DoesNotExist:
+            return None

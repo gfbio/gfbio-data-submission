@@ -22,7 +22,7 @@ class ProfileSelectAndActivateView(mixins.UpdateModelMixin, generics.GenericAPIV
         user = request.user
         user_profile = Profile.objects.filter(user=user).filter(parent=profile).first()
         if user_profile is None:
-            user_profile = profile.clone_for_user(user=user, name=f"{user.username}_{profile.name}")
+            user_profile = profile.clone_for_user(user=user, name=f"cloned_{profile.name}")
             user_profile.active_user_profile = True
             user_profile.save()
         else:

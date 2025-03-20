@@ -104,7 +104,7 @@ const InfoBox = ({title, submissionData}) => {
                 <h2 className="omit-optional">{title}</h2>
                 <p className=""/>
             </header>
-            <div className="">
+            <div className="submission-info">
                 <ul className="list-group list-group-flush">
                     {infoItems()}
                 </ul>
