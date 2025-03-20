@@ -1,5 +1,5 @@
 import axios from "axios";
-import {SUBMISSIONS_API} from "../settings.jsx";
+import { SUBMISSIONS_API } from "../settings.jsx";
 import getToken from "./utils/getToken.jsx";
 
 // TODO: work in progress.
@@ -8,6 +8,7 @@ const postSubmission = async (target, embargo, data) => {
     const requestData = {
         target: target,
         embargo: embargo,
+        download_url: data.download_url ? data.download_url : "",
         data: {
             requirements: data,
         },

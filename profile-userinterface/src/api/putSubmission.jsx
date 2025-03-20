@@ -1,5 +1,5 @@
 import axios from "axios";
-import {SUBMISSIONS_API} from "../settings.jsx";
+import { SUBMISSIONS_API } from "../settings.jsx";
 import getToken from "./utils/getToken.jsx";
 
 export default async function putSubmission(
@@ -13,6 +13,7 @@ export default async function putSubmission(
         broker_submission_id: broker_submission_id,
         target: target,
         embargo: embargo,
+        download_url: data.download_url ? data.download_url : "",
         data: {
             requirements: data,
         },
