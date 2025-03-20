@@ -153,7 +153,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         const meta_data = isMetadata;
         try {
             if (uploadType === "cloud") {
-                // Cloud upload: Use your cloud API functions
                 await uploadFileToS3(
                     file,
                     brokerSubmissionId,
@@ -165,7 +164,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                     },
                 );
             } else {
-                // Local upload: Use your local API function
                 await createUploadFileChannel(
                     brokerSubmissionId,
                     file,

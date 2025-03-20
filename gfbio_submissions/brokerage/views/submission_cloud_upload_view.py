@@ -71,7 +71,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=request.data)
         upload_serializer.is_valid(raise_exception=True)
 
-        prefix_with_folder = f"{broker_submission_id}/{sub.broker_submission_id}"
+        prefix_with_folder = f"{broker_submission_id}/"
         dt_upload_response_status, dt_upload_data, file_upload_request = backend_based_upload_mixins.generate_multipart_upload_objects(
             request,
             upload_serializer,
