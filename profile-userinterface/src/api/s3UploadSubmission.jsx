@@ -1,4 +1,5 @@
 import axios from "axios";
+import SparkMD5 from "spark-md5";
 import { SUBMISSIONS_API } from "../settings.jsx";
 
 
@@ -171,6 +172,8 @@ async function uploadOnePart(
 
     const { presigned_url } = partResponse.data;
     const blob = file.slice(start, end);
+    const arrayBuffer = await blob.arrayBuffer();
+    const md5 = SparkMD5.ArrayBuffer.hash(arrayBuffer);
     const s3Response = await axios.put(presigned_url, blob, {
         headers: { "Content-Type": fileType },
         onUploadProgress: (progressEvent) => {
@@ -185,6 +188,10 @@ async function uploadOnePart(
     });
 
     const etag = s3Response.headers.etag.replace(/"/g, "");
+    if (etag !== md5) {
+        throw new Error(`ETag does not match MD5 hash for part ${partNumber}`);
+    }
+
     await axios.put(
         `${SUBMISSIONS_API}cloudupload/${upload_id}/update-part/`,
         {
