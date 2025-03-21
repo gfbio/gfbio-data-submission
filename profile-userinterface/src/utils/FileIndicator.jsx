@@ -72,11 +72,11 @@ const FileIndicator = ({
         return fileUploads.map((upload, index) => {
             const isSelected = isFileSelected(index, "local");
             let progressStyle = {
-                width: `${upload.progress || 0}%`,
+                width: `${upload.percentage}%`,
             };
 
             return (
-                <li key={index} className={`row small file-list my-1 py-2 ${isSelected ? "selected" : ""}`}>
+                <li key={index} className={`row small file-list list-group-item my-1 py-2 ${isSelected ? "selected" : ""}`}>
                     <div className="col-12 container">
                         <div className="row">
                             <div className="col-md-9">
@@ -115,11 +115,13 @@ const FileIndicator = ({
                             </button>
                         </div>
 
-                        <div className="progress">
-                            <div className="progress-bar" role="progressbar" style={progressStyle}
-                                 aria-valuenow={`${upload.progress}`} aria-valuemin="0"
-                                 aria-valuemax="100"></div>
-                        </div>
+                        { upload.percentage > -1 && (
+                            <div className="progress">
+                                <div className="progress-bar" role="progressbar" style={progressStyle}
+                                    aria-valuenow={`${upload.progress}`} aria-valuemin="0"
+                                    aria-valuemax="100"></div>
+                            </div>
+                        )}
                     </div>
                 </li>
             );
@@ -137,28 +139,28 @@ const FileIndicator = ({
                         <div className="col-md-8">
                             <div className="container">
                                 <div className="row">
-                <span className="ps-0 py-3 col-6 upload-header list-header">
-                  Metadata
-              <HoverCard
-                  width={320}
-                  shadow="md"
-                  position="right"
-                  withArrow
-              >
-                <HoverCard.Target>
-                  <i
-                      className="fa fa-question-circle-o ps-2"
-                      aria-hidden="true"
-                  ></i>
-                </HoverCard.Target>
-                <HoverCard.Dropdown>
-                  <p>
-                    select the primary metadata file, e.g. metadata
-                    template
-                  </p>
-                </HoverCard.Dropdown>
-              </HoverCard>
-            </span>
+                                    <span className="ps-0 py-3 col-6 upload-header list-header">
+                                    Metadata
+                                    <HoverCard
+                                        width={320}
+                                        shadow="md"
+                                        position="right"
+                                        withArrow
+                                    >
+                                    <HoverCard.Target>
+                                    <i
+                                        className="fa fa-question-circle-o ps-2"
+                                        aria-hidden="true"
+                                    ></i>
+                                    </HoverCard.Target>
+                                    <HoverCard.Dropdown>
+                                    <p>
+                                        select the primary metadata file, e.g. metadata
+                                        template
+                                    </p>
+                                    </HoverCard.Dropdown>
+                                </HoverCard>
+                                </span>
                                 </div>
                             </div>
                         </div>

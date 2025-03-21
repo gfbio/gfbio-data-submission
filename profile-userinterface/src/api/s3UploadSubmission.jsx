@@ -179,7 +179,7 @@ async function uploadOnePart(
                 const naivePercent = Math.floor(
                     ((partNumber - 1) + fractionOfPart) / totalParts * 100,
                 );
-                onProgress(naivePercent);
+                onProgress(file, naivePercent);
             }
         },
     });

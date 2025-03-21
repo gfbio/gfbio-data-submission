@@ -134,6 +134,13 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         setMetadataIndex(metaIndex);
     };
 
+    function setUploadProgressPercent(file, progressPercent) {
+        console.log(`Upload progress: ${progressPercent}%`);
+        file.percentage = progressPercent;
+        setFiles((files) => [...files])
+    }
+    
+    
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
@@ -145,9 +152,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                 attach_to_ticket,
                 meta_data,
                 getToken(),
-                (progressPercent) => {
-                    console.log(`Upload progress for ${file.name}: ${progressPercent}%`);
-                },
+                setUploadProgressPercent,
             );
 
             //TODO: remove after changing entire profile based ui to new models
@@ -157,9 +162,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                 attach_to_ticket,
                 meta_data,
                 getToken(),
-                (percentCompleted) => {
-                    console.log(`Upload progress: ${percentCompleted}%`);
-                },
+                setUploadProgressPercent,
             );
             console.log("Upload complete");
         } catch (error) {

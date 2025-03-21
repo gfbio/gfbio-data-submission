@@ -8,7 +8,7 @@ const UploadMessage = ({ showUploadLimitMessage }) => (
   <Collapse in={showUploadLimitMessage}>
     <Container className="form-group col-md-12">
       <Container role="alert" className="fade alert alert-light show">
-        <Container className="alert-heading h4">
+        <Container className="alert-heading text-danger h4">
           <i className="fa fa-bolt"></i> Upload limit exceeded
         </Container>
         <Text>
