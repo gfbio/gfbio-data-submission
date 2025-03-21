@@ -6,12 +6,12 @@ import { useBlocker, useNavigate } from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
+import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
+import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
-import getToken from "../api/utils/getToken.jsx";
-import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
 
 const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -32,7 +32,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         const values = {
             files: submissionFiles || [],
             embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split("T")[0],
-            license: submissionData?.license || "CC BY 4.0",
+            download_url: submissionData?.download_url || "",
         };
 
         if (!profileData?.form_fields) return values;
@@ -40,6 +40,14 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         profileData.form_fields.forEach(field => {
             const fieldId = field.field.field_id;
             const fieldValue = submissionData?.data?.requirements[fieldId];
+
+            // skip embargo date and download_url
+            if (fieldId === "embargo" || fieldId === "download_url") return;
+
+            // set default value if field is not set
+            if (fieldValue === undefined && field.default !== "") {
+                values[fieldId] = field.default;
+            }
 
             // Only set a value if we have a submission value
             if (fieldValue !== undefined) {
@@ -138,7 +146,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
         try {
-            console.log("hehehe");
             await uploadFileToS3(
                 file,
                 brokerSubmissionId,
