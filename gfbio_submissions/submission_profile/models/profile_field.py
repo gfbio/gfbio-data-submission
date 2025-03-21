@@ -18,7 +18,7 @@ class ProfileField(models.Model):
                                                           "If the 'field' is a system-wide-mandatory field, "
                                                           "the value cannot be changed and will stay True ")
     # TODO: add helper text (admin) explaining swm implication
-    default = models.TextField(max_length=64, blank=True, default="",
+    default = models.TextField(max_length=128, blank=True, default="",
                                help_text="The default value for this field. If the 'field' is a system-wide-mandatory "
                                          "field, the value cannot be changed and will stay blank")
 

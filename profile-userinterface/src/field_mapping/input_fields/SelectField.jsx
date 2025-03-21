@@ -19,6 +19,7 @@ const SelectField = ({ title, description, mandatory, form, options, field_id, p
             placeholder={placeholder}
             required={mandatory}
             data={data}
+            allowDeselect={false}
             key={form.key(field_id)}
             {...inputProps}
         />
@@ -39,6 +40,7 @@ SelectField.propTypes = {
         option: PropTypes.string.isRequired
     })).isRequired,
     placeholder: PropTypes.string,
+    default_value: PropTypes.string,
 };
 
 export default SelectField;
