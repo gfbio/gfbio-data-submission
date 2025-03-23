@@ -33,6 +33,17 @@ def atax_run_combination_task(
     )
     submission = Submission.objects.get(pk=submission_id)
     submission_upload_files = SubmissionUpload.objects.filter(submission_id=submission_id)
+    print('submission_upload_files ', submission_upload_files)
+    print(submission_upload_files.filter(file__icontains="specimen"))
+    print(submission_upload_files.filter(file__icontains="measurement"))
+    print(submission_upload_files.filter(file__icontains="multimedia"))
+
+    # if submission_upload_files empty, try same but for cloud_uploads
+    # download locally like in attach, use local path then
+    # check below on file content ?
+    # OR .. better copy the whole thing, create unit test class like for attach
+    #   and do everything with locally downloaded files
+
 
     spec_file = submission_upload_files.filter(file__icontains="specimen").first()
     measurements_file = submission_upload_files.filter(file__icontains="measurement").first()
@@ -99,7 +110,7 @@ class ToFieldOutputter(handlers.Outputter):
 class DataFromSubmissionProvider(handlers.DataProvider):
     def __init__(self, submission):
         self.submission = submission
-        
+
     def get_user_username(self):
         return self.submission.user.username
 
