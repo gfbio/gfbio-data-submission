@@ -22,7 +22,7 @@ const uploadFile = (
       const percentCompleted = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total,
       );
-      if (onProgress) onProgress(percentCompleted);
+      if (onProgress) onProgress(file, percentCompleted);
     },
   };
 
