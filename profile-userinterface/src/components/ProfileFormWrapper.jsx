@@ -1,26 +1,26 @@
-import {useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
 import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.jsx";
-import {DEFAULT_PROFILE_NAME} from "../settings.jsx";
+import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
-import {useState} from "react";
-import {modals} from '@mantine/modals';
+import { useState } from "react";
+import { modals } from "@mantine/modals";
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
     const brokerSubmissionId = useParams().brokerageId;
-    const profileName = localStorage.getItem('profileName') || DEFAULT_PROFILE_NAME;
+    const profileName = localStorage.getItem("profileName") || DEFAULT_PROFILE_NAME;
 
     const [activeProfile, setActiveProfile] = useState(profileName);
 
     const handleProfileChange = (data) => {
         localStorage.setItem("profileName", data);
         modals.closeAll();
-        setActiveProfile(data)
-    }
+        setActiveProfile(data);
+    };
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
@@ -30,7 +30,8 @@ const ProfileFormWrapper = () => {
         submissionData,
         submissionFiles,
         isLoading,
-        error
+        error,
+        localSubmissionFiles,
     } = useFetchProfileAndSubmission(activeProfile, brokerSubmissionId);
 
     // TODO: where display errors ? what actions if error ?
@@ -65,6 +66,7 @@ const ProfileFormWrapper = () => {
                     isLoading={isLoading}
                     profileError={error}
                     submissionError={error}
+                    localSubmissionFiles={localSubmissionFiles}
                 />
             </div>
         </>

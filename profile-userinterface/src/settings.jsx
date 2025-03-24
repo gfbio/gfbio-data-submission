@@ -6,7 +6,7 @@ export const SERVER_ROOT = "";
 //  and "npm run dev"
 export const LOCAL_ROUTER_BASE_URL = "/";
 // local token, if you want to develop locally with hot-reloading in a javascript only environment
-export const LOCAL_API_TOKEN = "6e9f1d95d5bb666d327b59c16534591250ee4d60"
+export const LOCAL_API_TOKEN = "6e9f1d95d5bb666d327b59c16534591250ee4d60";
 
 export const PROFILE_URL_PREFIX = "/profile/";
 
@@ -32,6 +32,10 @@ export const UPLOAD = "/upload/";
 export const UPLOAD_PATCH = "patch/";
 
 export const UPLOADS = "/uploads/";
+
+export const CLOUD_UPLOADS = "/cloud-uploads/";
+
+export const CLOUD_UPLOAD = "/cloud-upload/";
 
 export const MAX_UPLOAD_ITEMS = 20;
 
