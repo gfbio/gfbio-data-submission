@@ -50,7 +50,7 @@ const FileIndicator = ({
                                 </div>
                             </div>
                             <small className="col-2 file-size d-flex align-items-center">
-                                {filesize(uploaded.file_size)}
+                                {uploaded.file_size && filesize(uploaded.file_size)}
                             </small>
                             <button
                                 className="col-1 btn btn-remove d-flex justify-content-end"
@@ -115,7 +115,7 @@ const FileIndicator = ({
                             </button>
                         </div>
 
-                        { upload.percentage > -1 && (
+                        { (upload.percentage && upload.percentage > -1) && (
                             <div className="progress">
                                 <div className="progress-bar" role="progressbar" style={progressStyle}
                                     aria-valuenow={`${upload.progress}`} aria-valuemin="0"
