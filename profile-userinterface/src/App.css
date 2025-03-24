@@ -393,11 +393,14 @@ body {
   }
 
   .file-upload {
-    .progress-row {
-      .progress {
+    .progress {
+      margin-top: 0.4rem;
+      height: 0.2rem;
+
+      .progress-bar {
         height: 0.2rem;
+        background-color:#8ab755;
       }
-      display: none;
     }
 
     .checkbox-col {

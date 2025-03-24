@@ -156,6 +156,13 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         setMetadataIndex(metaIndex);
     };
 
+    function setUploadProgressPercent(file, progressPercent) {
+        console.log(`Upload progress: ${progressPercent}%`);
+        file.percentage = progressPercent;
+        setFiles((files) => [...files])
+    }
+    
+    
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
@@ -167,9 +174,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                     attach_to_ticket,
                     meta_data,
                     getToken(),
-                    (progressPercent) => {
-                        console.log(`Cloud upload progress for ${file.name}: ${progressPercent}%`);
-                    },
+                    setUploadProgressPercent,
                 );
             } else {
                 await createUploadFileChannel(
@@ -178,9 +183,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                     attach_to_ticket,
                     meta_data,
                     getToken(),
-                    (percentCompleted) => {
-                        console.log(`Upload progress for ${file.name}: ${percentCompleted}%`);
-                    },
+                    setUploadProgressPercent,
                 );
             }
             console.log("Upload complete");

@@ -28,6 +28,9 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     };
 
     const handleDrop = (droppedFiles) => {
+        droppedFiles.forEach((file) => {
+            file.percentage = -1;
+        })
         const newFiles = [...localFiles, ...droppedFiles];
         const withinLimits = checkUploadLimits(newFiles);
         
