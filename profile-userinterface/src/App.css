@@ -136,7 +136,7 @@ body {
     }
   }
 
-  .mantine-Input-input:focus, .mantine-Input-input[data-expanded], .mantine-Input-input:has([data-expanded])  {
+  .mantine-Input-input:focus, .mantine-Input-input[data-expanded], .mantine-Input-input:has([data-expanded]), input.mantine-Checkbox-input:focus  {
     -webkit-box-shadow: 0 0 0 .2rem rgba(129,178,72,.3);
     box-shadow: 0 0 0 .2rem rgba(129,178,72,.3);
   }
@@ -328,18 +328,55 @@ body {
       justify-content: space-between;
 
       .mantine-Checkbox-root {
-        line-break: anywhere;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+
+        .mantine-Checkbox-inner {
+          transform: scale(0.825);
+        }
 
         input {
           --checkbox-color: #80b148;
         }
 
         label {
+          --label-offset-start: 0.4rem;
           padding-right:1rem;
           font-size: 1rem;
         }
+
+        &:active {
+          input:checked {
+            --checkbox-color: #74a041;
+          }
+
+          input:not(:checked) {
+            background-color: #e6e6e6;
+          }
+
+          svg.mantine-Checkbox-icon path {
+            fill: #e6e6e6;
+          }
+        }
       }
     }
+  }
+
+  .main-col .mantine-Checkbox-root {
+    width: 100%;
+
+    @media (min-width: 30rem) { 
+      width: 49%;
+    }
+
+    @media (min-width: 992px) { 
+      width: 32%;
+    }
+  }
+
+  .side-col .mantine-Checkbox-root {
+    width: 100%;
   }
 
   .mantine-MultiSelect-input, .mantine-TagsInput-input {
