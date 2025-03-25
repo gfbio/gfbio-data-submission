@@ -55,6 +55,7 @@ class SubmissionProcessHandler(object):
         return chain
 
     def add_alpha_taxonomic_data_tasks_to_chain(self, chain):
+        # tODO: return cloud based task when std uploads are 0, if both 0 just return chain
         return (
             chain
             | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)

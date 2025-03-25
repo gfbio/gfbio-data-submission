@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import os
+from pprint import pprint
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
 from dt_upload.models import FileUploadRequest
 
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
@@ -13,18 +13,36 @@ from .test_tasks_base import TestTasks
 from ...models import SubmissionCloudUpload
 from ...models.abcd_conversion_result import AbcdConversionResult
 from ...models.submission import Submission
-from ...models.submission_upload import SubmissionUpload
 from ...tasks.atax_tasks.atax_run_combination_task import atax_run_combination_for_cloud_upload_task
 
 
 def create_fake_submission_upload(submission, user, file_sub_path):
     with open(os.path.join(_get_test_data_dir_path(), "csv_files/molecular_metadata.csv"), "rb") as data_file:
-        return SubmissionUpload.objects.create(
-            submission=submission,
-            user=user,
-            meta_data=True,
-            file=SimpleUploadedFile(file_sub_path, data_file.read()),
-        )
+        file_content = data_file.read()
+    local_file = f"{file_sub_path}"
+    with open(local_file, 'w+b') as f:
+        f.write(file_content)
+    file_upload = FileUploadRequest.objects.create(
+        original_filename=file_sub_path,
+        file_key=file_sub_path,
+        file_type="tif",
+        status="COMPLETE",
+        user=user
+    )
+    cloud_upload = SubmissionCloudUpload.objects.create(
+        submission=submission,
+        attach_to_ticket=False,
+        meta_data=False,
+        file_upload=file_upload
+    )
+    return cloud_upload, file_upload
+    # with open(os.path.join(_get_test_data_dir_path(), "csv_files/molecular_metadata.csv"), "rb") as data_file:
+    #     return SubmissionUpload.objects.create(
+    #         submission=submission,
+    #         user=user,
+    #         meta_data=True,
+    #         file=SimpleUploadedFile(file_sub_path, data_file.read()),
+    #     )
 
 
 class TestSubmissionAbcdConversionForCloudUploadTasks(TestTasks):
@@ -60,6 +78,12 @@ class TestSubmissionAbcdConversionForCloudUploadTasks(TestTasks):
 
         self.submission = Submission.objects.first()
         self.user = self.submission.user
+        self.mocked_media_files = ["Holotype_FGZC3761.jpg", "_MAD2789.tif", "_MAD2790.tif", "FGZC 3588.jpg",
+                              "FGZC 3588_ventral.jpg", "FGZC 3762.jpg", "FGZC 3762_ventral.jpg",
+                              "Platypelis_Sorata_plates_01July2019.jpg", "P_tsaratananaensis_FGZC 3648.jpg",
+                              "P_tsaratananaensis_FGZC 3648_vent.jpg", "P_tsaratananaensis_FGZC 3647.jpg",
+                              "P_tsaratananaensis_FGZC 3647_vent.jpg", "P_tsaratananaensis_FGZC 3649.jpg",
+                              "P_tsaratananaensis_FGZC 3649_vent.jpg"]
 
         file_upload = FileUploadRequest.objects.create(
             original_filename=self.specimen,
@@ -105,17 +129,29 @@ class TestSubmissionAbcdConversionForCloudUploadTasks(TestTasks):
         os.remove(self.specimen_file)
         os.remove(self.multimedia_file)
         os.remove(self.measurement_file)
+        for m in self.mocked_media_files:
+            os.remove(m)
 
-    def run_test(self, mocked_media_files):
+    def run_test(self, submission, mocked_media):
+        for filename in mocked_media:
+            upload, file_upload = create_fake_submission_upload(
+                submission, submission.user, filename
+            )
+            # print("\nmocked media ", file_upload.file_key)
+
         def mock_download_fileobj(Bucket, Key, Fileobj):
             if Key == self.specimen:
                 with open(self.specimen_file, 'rb') as f:
                     Fileobj.write(f.read())
-            elif Key == self.specimen:
+            elif Key == self.multimedia:
                 with open(self.multimedia_file, 'rb') as f:
                     Fileobj.write(f.read())
             elif Key == self.measurement:
                 with open(self.measurement_file, 'rb') as f:
+                    Fileobj.write(f.read())
+            elif Key in self.mocked_media_files:
+                print("open mocked file ", Key)
+                with open(self.mocked_media_files[Key], 'rb') as f:
                     Fileobj.write(f.read())
 
         with patch('boto3.client') as mock_boto3_client:
@@ -133,16 +169,15 @@ class TestSubmissionAbcdConversionForCloudUploadTasks(TestTasks):
             atax_run_combination_for_cloud_upload_task(submission_id=self.submission.pk)
 
     def test_abcd_conversion_task(self):
-        mocked_media_files = ["Holotype_FGZC3761.jpg", "_MAD2789.tif", "_MAD2790.tif", "FGZC 3588.jpg",
-                              "FGZC 3588_ventral.jpg", "FGZC 3762.jpg", "FGZC 3762_ventral.jpg",
-                              "Platypelis_Sorata_plates_01July2019.jpg", "P_tsaratananaensis_FGZC 3648.jpg",
-                              "P_tsaratananaensis_FGZC 3648_vent.jpg", "P_tsaratananaensis_FGZC 3647.jpg",
-                              "P_tsaratananaensis_FGZC 3647_vent.jpg", "P_tsaratananaensis_FGZC 3649.jpg",
-                              "P_tsaratananaensis_FGZC 3649_vent.jpg"]
-        self.run_test(mocked_media_files)
+
+        self.run_test(self.submission, self.mocked_media_files)
 
         assert 1 == AbcdConversionResult.objects.count()
         abcdConversionResult = AbcdConversionResult.objects.first()
+        pprint(abcdConversionResult.errors)
+        # print(abcdConversionResult.warnings)
+        # print(abcdConversionResult.logs)
+
         assert True == abcdConversionResult.atax_xml_valid
         assert abcdConversionResult.xml.startswith(
             '<abcd:DataSets xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" '

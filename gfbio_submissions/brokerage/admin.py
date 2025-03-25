@@ -390,6 +390,21 @@ def combine_csvs_to_abcd(modeladmin, request, queryset):
 
 combine_csvs_to_abcd.short_description = "Combine CSV-Files to ABCD-File"
 
+def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
+    from .tasks.atax_tasks.atax_run_combination_task import atax_run_combination_for_cloud_upload_task
+
+    obj = queryset[0]
+    chain = (
+        atax_run_combination_for_cloud_upload_task.s(submission_id=obj.pk).set(
+            countdown=SUBMISSION_DELAY
+        )
+    )
+
+    chain()
+
+
+combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
+
 
 # FIXME: this seems to trigger code that is no longer used/obsolete, compare file atax_tasks/_atax_submission_validate_xml_upload.py
 # def atax_validate(modeladmin, request, queryset):

@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pprint import pprint
+
 from django.conf import settings
 from abcd_converter_gfbio_org import abcd_conversion, handlers, file_validation
 from dt_upload.views.backend_based_upload_mixins import get_s3_client
 
 from config.celery_app import app
+from scripts import cloud_upload
 from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.abcd_conversion_result import AbcdConversionResult
@@ -138,7 +141,7 @@ def atax_run_combination_for_cloud_upload_task(
     handlings.warning_handler = ToFieldOutputter()
     handlings.logHandler = ToFieldOutputter()
     handlings.singleFileHandler = ToFieldOutputter()
-    handlings.multimedia_validator = SubmissionMultimediaFileValidator(submission.id, handlings)
+    handlings.multimedia_validator = SubmissionMultimediaFileValidator(submission.id, handlings, True)
 
     atax_xml_valid = False
 
@@ -210,15 +213,25 @@ class DataFromSubmissionProvider(handlers.DataProvider):
 
 
 class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorInterface):
-    def __init__(self, submission_id, io_handler):
+    def __init__(self, submission_id, io_handler, cloud_upload=False):
+        print("SubmissionMultimediaFileValidator | init")
         self.io_handler = io_handler
-        submission_upload_list = list(
-            SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True).all())
-        self.submission_upload_list = [entry.split("/")[1] for entry in submission_upload_list]
+        self.cloud_upload = cloud_upload
+        if self.cloud_upload:
+            self.submission_upload_list = list(
+                SubmissionCloudUpload.objects.filter(submission_id=submission_id).values_list("file_upload__original_filename", flat=True).all())
+            pprint(self.submission_upload_list)
+
+        else:
+            submission_upload_list = list(
+                SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True).all())
+            self.submission_upload_list = [entry.split("/")[1] for entry in submission_upload_list]
+            pprint(self.submission_upload_list)
         self.file_extensions = file_validation.FILE_EXTENSIONS
         self.file_extensions["image"].append("tif")
 
     def validate(self, file_name, format, row):
+        print("SubmissionMultimediaFileValidator | validate ", file_name)
         if not file_name:
             self.io_handler.warning_handler.handle(f"File in row {row} has no name.",
                                                    {"file": "multimedia", "row": row, "message": "File has no name"})
@@ -228,7 +241,9 @@ class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorI
             self.io_handler.warning_handler.handle(f"File in row {row} has no format.",
                                                    {"file": "multimedia", "row": row, "message": "File has no format"})
         else:
+            print("ELSE ", file_name)
             file_extension = file_name.rsplit(".")[1]
+            print(file_extension)
             if (format.lower() not in self.file_extensions and format.lower() != file_extension.lower()) or (
                 format.lower() in self.file_extensions and file_extension.lower() not in self.file_extensions[
                 format.lower()]):
@@ -236,6 +251,22 @@ class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorI
                 self.io_handler.warning_handler.handle(msg, {"file": "multimedia", "row": row,
                                                              "message": "Unrecognized file extension"})
 
-        if not file_name.replace(" ", "_") in self.submission_upload_list:
+        if not self.cloud_upload:
+            file_name = file_name.replace(" ", "_")
+            print(not self.cloud_upload)
+
+        # if cloud_upload and not file_name in self.submission_upload_list:
+        #     msg = f"File {file_name} in row {row} is missing it's corresponding file in the upload."
+        #     print("\n ERROR msg ", msg)
+        #     pprint(self.submission_upload_list)
+        #     print(file_name in self.submission_upload_list)
+        #     print("============================================\n")
+        #     self.io_handler.errorHandler.handle(msg, {"file": "multimedia", "row": row, "message": "File not found"})
+
+        if not file_name in self.submission_upload_list:
             msg = f"File {file_name} in row {row} is missing it's corresponding file in the upload."
+            print("\n ERROR msg ", msg)
+            pprint(self.submission_upload_list)
+            print(file_name in self.submission_upload_list)
+            print("============================================\n")
             self.io_handler.errorHandler.handle(msg, {"file": "multimedia", "row": row, "message": "File not found"})
