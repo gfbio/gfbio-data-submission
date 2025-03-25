@@ -5,7 +5,10 @@ from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_da
     check_for_submittable_data_task,
 )
 from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
-from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
+from ..models import SubmissionCloudUpload
+from ..models.submission_upload import SubmissionUpload
+from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task, \
+    atax_run_combination_for_cloud_upload_task
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +58,19 @@ class SubmissionProcessHandler(object):
         return chain
 
     def add_alpha_taxonomic_data_tasks_to_chain(self, chain):
-        # tODO: return cloud based task when std uploads are 0, if both 0 just return chain
-        return (
-            chain
-            | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
-        )
+        uploads = SubmissionUpload.objects.filter(submission_id=self.submission_id)
+        cloud_uploads = SubmissionCloudUpload.objects.filter(submission_id=self.submission_id)
+        if len(cloud_uploads) and len(uploads) == 0:
+            return (
+                chain
+                | atax_run_combination_for_cloud_upload_task.s(submission_id=self.submission_id).set(
+                countdown=SUBMISSION_DELAY)
+            )
+        else:
+            return (
+                chain
+                | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
+            )
 
     def add_submittable_data_check_task_to_chain(self, chain):
         return chain | check_for_submittable_data_task.s(submission_id=self.submission_id).set(
