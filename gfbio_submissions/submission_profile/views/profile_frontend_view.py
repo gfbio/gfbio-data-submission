@@ -2,7 +2,7 @@
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 
-from ..models.profile import Profile
+from ..configuration.settings import DEFAULT_PROFILE_NAME
 
 
 class ProfileFrontendView(TemplateView):
@@ -13,7 +13,8 @@ class ProfileFrontendView(TemplateView):
 
         user = self.request.user
         token, _ = Token.objects.get_or_create(user_id=user.id)
-        active_profile_name = Profile.objects.get_active_user_profile_name(user=user)
+        # active_profile_name = Profile.objects.get_active_user_profile_name(user=user)
+        active_profile_name = DEFAULT_PROFILE_NAME
 
         context["parameters"] = {
             "token": str(token),

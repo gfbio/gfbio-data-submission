@@ -81,7 +81,6 @@ class TestProfileListView(TestCase):
     def test_get_for_user_1_system_wide_only(self):
         response = self.api_client.get("/profile/profiles/?system_wide_profile=True")
         data = json.loads(response.content)
-        print(data)
         self.assertEqual(200, response.status_code)
         self.assertEqual(2, len(data))
         system_profile = Profile.objects.filter(system_wide_profile=True).first()
