@@ -2,11 +2,11 @@ import { Center, Text } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import deleteSubmissionUpload from "../../api/deleteSubmissionUpload.jsx";
-import patchSubmissionUpload from "../../api/patchSubmissionUploadMetadata.jsx";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
+import patchSubmissionCloudUpload from "../../api/patchSubmissionCloudUploadMetadata.jsx";
+import deleteSubmissionCloudUpload from "../../api/deleteSubmissionCloudUpload.jsx";
 
 const DropzoneUpload = ({ title, description, form, onFilesChange, submissionData }) => {
     const [localFiles, setLocalFiles] = useState([]);
@@ -28,12 +28,9 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     };
 
     const handleDrop = (droppedFiles) => {
-        droppedFiles.forEach((file) => {
-            file.percentage = -1;
-        })
         const newFiles = [...localFiles, ...droppedFiles];
         const withinLimits = checkUploadLimits(newFiles);
-        
+
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
@@ -65,8 +62,8 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
         try {
             const fileToDelete = serverFiles[index];
-            await deleteSubmissionUpload(brokerSubmissionId, fileToDelete.pk);
-            
+            await deleteSubmissionCloudUpload(brokerSubmissionId, fileToDelete.pk);
+
             const newServerFiles = serverFiles.filter((_, i) => i !== index);
             setServerFiles(newServerFiles);
 
@@ -90,7 +87,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         try {
             const formData = new FormData();
             formData.append("meta_data", isMetadata);
-            await patchSubmissionUpload(brokerSubmissionId, file.pk, formData);
+            await patchSubmissionCloudUpload(brokerSubmissionId, file.pk, formData);
         } catch (error) {
             console.error("Error updating metadata flag:", error);
         }
@@ -123,7 +120,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         if (isServerSource) {
             await updateServerMetadata(serverFiles[index], true);
         }
-        
+
         setMetadataIndex({ indices: [index], source });
     };
 

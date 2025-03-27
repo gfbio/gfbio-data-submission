@@ -6,14 +6,14 @@ import { useBlocker, useNavigate } from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
+import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
+import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
-import getToken from "../api/utils/getToken.jsx";
-import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
 
-const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
+const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
@@ -22,17 +22,31 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
     const [pendingNavigation, setPendingNavigation] = useState(null);
     const [errorList, setErrorList] = useState([]);
     const navigate = useNavigate();
+    const [uploadType, setUploadType] = useState("cloud");
+
+    useEffect(() => {
+        if (localSubmissionFiles && localSubmissionFiles.length > 0) {
+            setUploadType("local");
+        } else {
+            setUploadType("cloud");
+        }
+    }, [localSubmissionFiles]);
 
     // Initialize form with values from profile and submission data
     const buildInitialValues = () => {
         const defaultEmbargoDate = new Date();
         defaultEmbargoDate.setFullYear(defaultEmbargoDate.getFullYear() + 1);
 
+        // Use local uploads if they exist; otherwise, use cloud uploads.
+        const filesValue = (localSubmissionFiles && localSubmissionFiles.length > 0)
+            ? localSubmissionFiles
+            : submissionFiles || [];
+
         // Start with minimal required values
         const values = {
-            files: submissionFiles || [],
+            files: filesValue,
             embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split("T")[0],
-            license: submissionData?.license || "CC BY 4.0",
+            download_url: submissionData?.download_url || "",
         };
 
         if (!profileData?.form_fields) return values;
@@ -40,6 +54,14 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         profileData.form_fields.forEach(field => {
             const fieldId = field.field.field_id;
             const fieldValue = submissionData?.data?.requirements[fieldId];
+
+            // skip embargo date and download_url
+            if (fieldId === "embargo" || fieldId === "download_url") return;
+
+            // set default value if field is not set
+            if (fieldValue === undefined && field.default !== "") {
+                values[fieldId] = field.default;
+            }
 
             // Only set a value if we have a submission value
             if (fieldValue !== undefined) {
@@ -134,33 +156,36 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
         setMetadataIndex(metaIndex);
     };
 
+    function setUploadProgressPercent(file, progressPercent) {
+        console.log(`Upload progress: ${progressPercent}%`);
+        file.percentage = progressPercent;
+        setFiles((files) => [...files])
+    }
+    
+    
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
         try {
-            console.log("hehehe");
-            await uploadFileToS3(
-                file,
-                brokerSubmissionId,
-                attach_to_ticket,
-                meta_data,
-                getToken(),
-                (progressPercent) => {
-                    console.log(`Upload progress for ${file.name}: ${progressPercent}%`);
-                },
-            );
-
-            //TODO: remove after changing entire profile based ui to new models
-            await createUploadFileChannel(
-                brokerSubmissionId,
-                file,
-                attach_to_ticket,
-                meta_data,
-                getToken(),
-                (percentCompleted) => {
-                    console.log(`Upload progress: ${percentCompleted}%`);
-                },
-            );
+            if (uploadType === "cloud") {
+                await uploadFileToS3(
+                    file,
+                    brokerSubmissionId,
+                    attach_to_ticket,
+                    meta_data,
+                    getToken(),
+                    setUploadProgressPercent,
+                );
+            } else {
+                await createUploadFileChannel(
+                    brokerSubmissionId,
+                    file,
+                    attach_to_ticket,
+                    meta_data,
+                    getToken(),
+                    setUploadProgressPercent,
+                );
+            }
             console.log("Upload complete");
         } catch (error) {
             console.error("Upload error: ", error);
@@ -345,7 +370,9 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles }) => {
                                     form={form}
                                     onFilesChange={handleFilesChange}
                                     submissionData={submissionData}
-                                ></FormField>
+                                    submissionFiles={submissionFiles}
+                                    localSubmissionFiles={localSubmissionFiles}
+                                />
                             ))
                         }
                     </div>
@@ -383,6 +410,7 @@ ProfileForm.propTypes = {
     profileData: PropTypes.object.isRequired,
     submissionData: PropTypes.object,
     submissionFiles: PropTypes.array,
+    localSubmissionFiles: PropTypes.array,
 };
 
 export default ProfileForm;

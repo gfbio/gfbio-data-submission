@@ -4,6 +4,9 @@ from django.views.generic import TemplateView
 from dt_upload.views import backend_based_upload_views
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
+from .views.submission_cloud_upload_detail_view import SubmissionCloudUploadDetailView
+from .views.submission_cloud_upload_list_view import SubmissionCloudUploadListView
+from .views.submission_cloud_upload_patch_view import SubmissionCloudUploadPatchView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadAbortView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadCompleteView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadUpdatePartView
@@ -61,14 +64,29 @@ urlpatterns = [
         name="submissions_uploads",
     ),
     re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-uploads/$",
+        view=SubmissionCloudUploadListView.as_view(),
+        name="submissions_cloud_uploads",
+    ),
+    re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/(?P<pk>[0-9]+)$",
         view=SubmissionUploadDetailView.as_view(),
         name="submissions_upload_detail",
     ),
     re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-upload/(?P<pk>[0-9]+)$",
+        view=SubmissionCloudUploadDetailView.as_view(),
+        name="submissions_clou_upload_detail",
+    ),
+    re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/patch/(?P<pk>[0-9]+)/$",
         view=SubmissionUploadPatchView.as_view(),
         name="submissions_upload_patch",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-upload/patch/(?P<pk>[0-9]+)/$",
+        view=SubmissionCloudUploadPatchView.as_view(),
+        name="submissions_cloud_upload_patch",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$",

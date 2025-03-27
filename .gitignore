@@ -369,3 +369,9 @@ userinterface/layout_playground/css/project.min.css
 
 
 /.docs/*
+
+# locally generated files
+gfbio_submissions/static/js/*.js
+gfbio_submissions/static/js/submission-profile-ui/index.css
+gfbio_submissions/static/js/submission-profile-ui/index.js
+gfbio_submissions/static/css/project.css

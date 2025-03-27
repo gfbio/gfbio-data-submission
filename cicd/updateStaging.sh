@@ -10,12 +10,13 @@ nvm use 8
 cd userinterface && npm i && npm run collect-ci
 cd ../
 
+nvm use default
+
 # new profile-userinterface commands so far
 # TODO: add a dedicated script or wrap commands in package.json once it is confirmed that this here is woring
 cd profile-userinterface && npm i && npm run build && mv dist/submission-profile-ui/index*.js dist/submission-profile-ui/index.js && mv dist/submission-profile-ui/index*.css dist/submission-profile-ui/index.css && cp -r dist/submission-profile-ui/ ../gfbio_submissions/static/js
 cd ../
 
-nvm use default
 docker-compose -f staging.yml build
 ./cicd/setLogDriverTag.sh
 docker-compose -f staging.yml up -d postgres

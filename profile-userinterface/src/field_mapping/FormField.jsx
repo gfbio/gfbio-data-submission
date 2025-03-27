@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
 import Contributors from "./input_fields/Contributors.jsx";
-import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
+import AdaptiveDropzoneUpload from "./input_fields/AdaptiveDropzoneUpload.jsx";
 import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 import InfoBox from "./input_fields/InfoBox.jsx";
 import MetadataTemplate from "./input_fields/MetadataTemplate.jsx";
@@ -13,7 +13,7 @@ import TagsInputInlineField from "./input_fields/TagsInputInlineField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
 
-const FormField = ({formField, form, onFilesChange, submissionData}) => {
+const FormField = ({ formField, form, onFilesChange, submissionData, submissionFiles, localSubmissionFiles }) => {
     const fieldParameters = {
         title: formField.field.title,
         description: formField.field.description,
@@ -25,6 +25,8 @@ const FormField = ({formField, form, onFilesChange, submissionData}) => {
         placeholder: formField.field.placeholder,
         form: form,
         submissionData: submissionData,
+        submissionFiles: submissionFiles,
+        localSubmissionFiles: localSubmissionFiles,
     };
 
     if (formField.visible) {
@@ -38,10 +40,10 @@ const FormField = ({formField, form, onFilesChange, submissionData}) => {
             case "file-upload":
                 // TODO: Work in progress...
                 return (
-                    <DropzoneUpload
+                    <AdaptiveDropzoneUpload
                         {...fieldParameters}
                         onFilesChange={onFilesChange}
-                    ></DropzoneUpload>
+                    ></AdaptiveDropzoneUpload>
                 );
             case "collapsible-selector":
                 return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;
@@ -78,6 +80,8 @@ FormField.propTypes = {
     form: PropTypes.object.isRequired,
     onFilesChange: PropTypes.func.isRequired,
     submissionData: PropTypes.object,
+    submissionFiles: PropTypes.array,
+    localSubmissionFiles: PropTypes.array,
 };
 
 export default FormField;
