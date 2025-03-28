@@ -21,6 +21,7 @@ def get_merged_text_data(submission):
     return merged_xml
 
 
+# FIXME: DASS-2397 is this still needed ? No usages besides Tests ...
 @app.task(
     base=SubmissionTask,
     bind=True,

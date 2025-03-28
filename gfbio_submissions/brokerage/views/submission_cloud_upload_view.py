@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 from uuid import uuid4
 
 from django.db import transaction
+from dt_upload.models import MultiPartUpload
 from dt_upload.serializers import backend_based_upload_serializers
 from dt_upload.views import backend_based_upload_mixins, backend_based_upload_views
-from rest_framework import mixins, generics, permissions, status, parsers
+from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models.request_log import RequestLog
+from ..configuration.settings import ATAX
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
@@ -49,17 +52,16 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
             return response
 
-        # TODO: integrate ATAX specific workflows
-        # if sub.target == ATAX and sub.status == Submission.SUBMITTED:
-        #     return Response(
-        #         data={
-        #             "broker_submission_id": sub.broker_submission_id,
-        #             "status": sub.status,
-        #             "embargo": sub.embargo,
-        #             "error": "no uploads allowed with current submission status",
-        #         },
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
+        if sub.target == ATAX and sub.status == Submission.SUBMITTED:
+            return Response(
+                data={
+                    "broker_submission_id": sub.broker_submission_id,
+                    "status": sub.status,
+                    "embargo": sub.embargo,
+                    "error": "no uploads allowed with current submission status",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -78,8 +80,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
             file_key_prefix=prefix_with_folder
         )
 
-        obj = self.perform_create(serializer, sub, file_upload_request, meta_data=meta_data,
-                                  attach_to_ticket=attach_to_ticket)
+        obj = self.perform_create(serializer, sub, file_upload_request, meta_data=meta_data, attach_to_ticket=attach_to_ticket)
 
         headers = self.get_success_headers(serializer.data)
         data_content = dict(serializer.data)
@@ -128,6 +129,17 @@ class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploa
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+
+    def put(self, request, *args, **kwargs):
+        response = self.update(request, *args, **kwargs)
+        try:
+            mpu = MultiPartUpload.objects.get(upload_id=kwargs.get("upload_id"))
+        except MultiPartUpload.DoesNotExist as e:
+            mpu = None
+        if mpu is not None:
+            if hasattr(mpu.file_upload_request, "submissioncloudupload"):
+                mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
+        return response
 
 
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):

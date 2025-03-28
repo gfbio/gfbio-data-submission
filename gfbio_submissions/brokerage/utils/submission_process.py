@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
-from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
-from ..tasks.atax_tasks.validate_merged_atax_data import validate_merged_atax_data_task
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
 )
-
+from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
+from ..models import SubmissionCloudUpload
+from ..models.submission_upload import SubmissionUpload
+from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task, \
+    atax_run_combination_for_cloud_upload_task
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,19 @@ class SubmissionProcessHandler(object):
         return chain
 
     def add_alpha_taxonomic_data_tasks_to_chain(self, chain):
-        return (
-            chain
-            | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
-        )
+        uploads = SubmissionUpload.objects.filter(submission_id=self.submission_id)
+        cloud_uploads = SubmissionCloudUpload.objects.filter(submission_id=self.submission_id)
+        if len(cloud_uploads) and len(uploads) == 0:
+            return (
+                chain
+                | atax_run_combination_for_cloud_upload_task.s(submission_id=self.submission_id).set(
+                countdown=SUBMISSION_DELAY)
+            )
+        else:
+            return (
+                chain
+                | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
+            )
 
     def add_submittable_data_check_task_to_chain(self, chain):
         return chain | check_for_submittable_data_task.s(submission_id=self.submission_id).set(
@@ -113,11 +123,11 @@ class SubmissionProcessHandler(object):
             transfer_data_to_ena_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
             | process_ena_response_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
             | add_accession_to_submission_issue_task.s(submission_id=self.submission_id, target_archive=ENA).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
             | add_accession_link_to_submission_issue_task.s(submission_id=self.submission_id, target_archive=ENA).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
         )
         chain()
 
@@ -142,20 +152,20 @@ class SubmissionProcessHandler(object):
         chain = (
             transfer_data_to_ena_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
             | process_ena_response_task.s(submission_id=self.submission_id, close_submission_on_success=False).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
             | add_accession_to_submission_issue_task.s(
-                submission_id=self.submission_id, target_archive=ENA_PANGAEA
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=self.submission_id, target_archive=ENA_PANGAEA
+        ).set(countdown=SUBMISSION_DELAY)
             | add_accession_link_to_submission_issue_task.s(submission_id=self.submission_id, target_archive=ENA).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
             | create_pangaea_issue_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
             | attach_to_pangaea_issue_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
             | add_accession_to_pangaea_issue_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
             | add_pangaealink_to_submission_issue_task.s(submission_id=self.submission_id).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
         )
         chain()
 
@@ -167,5 +177,5 @@ class SubmissionProcessHandler(object):
         else:
             logger.error(
                 msg="SubmissionTransferHandler. No execute method found for "
-                "target_archive={}".format(self.target_archive)
+                    "target_archive={}".format(self.target_archive)
             )
