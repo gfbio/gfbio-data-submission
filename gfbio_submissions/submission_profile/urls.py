@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from django.contrib.admin.views.decorators import staff_member_required
 from django.urls import path, re_path
 
 from .views.profile_frontend_view import ProfileFrontendView
@@ -27,7 +26,7 @@ urlpatterns = [
     ),
     re_path(
         route=r"^ui/",  # TODO: needed to shorten url to this, otherwise conflict with url above.
-        view=staff_member_required(ProfileFrontendView.as_view()),
+        view=ProfileFrontendView.as_view(),
         name="profile_ui",
     ),
 ]

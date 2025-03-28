@@ -2,6 +2,7 @@
 from django.urls import re_path
 
 from . import views
+from ..submission_profile.views.profile_frontend_view import ProfileFrontendView
 
 app_name = "submission_ui"
 urlpatterns = [
@@ -15,6 +16,11 @@ urlpatterns = [
         view=views.SubmissionFrontendView.as_view(),
         name="create_submission",
     ),
+    # re_path(
+    #     route=r"submission/",  # TODO: needed to shorten url to this, otherwise conflict with url above.
+    #     view=ProfileFrontendView.as_view(),
+    #     name="profile_ui",
+    # ),
     # FIXME: remove once submission.org is in production
     # url(
     #     regex=r'molecular/full_template\.csv',
