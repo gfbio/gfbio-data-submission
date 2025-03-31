@@ -1,10 +1,11 @@
 import PropTypes from "prop-types";
 import DropzoneUpload from "./DropzoneUpload.jsx";
 import DropzoneCloudUpload from "./DropzoneCloudUpload.jsx";
+import { USE_LOCAL_UPLOAD_ONLY } from "../../settings.jsx";
 
 const AdaptiveDropzoneUpload = (props) => {
     const { submissionFiles, localSubmissionFiles } = props;
-    const useLocalUpload = localSubmissionFiles && localSubmissionFiles.length > 0;
+    const useLocalUpload = (localSubmissionFiles && localSubmissionFiles.length > 0) || USE_LOCAL_UPLOAD_ONLY;
     const files = useLocalUpload ? localSubmissionFiles : submissionFiles;
 
     return useLocalUpload ? (
