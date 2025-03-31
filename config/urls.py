@@ -32,8 +32,9 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
     path("resolve/", include("gfbio_submissions.resolve.urls", namespace="resolve")),
-    path("profile/", include("gfbio_submissions.submission_profile.urls", namespace="profile")),
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
+    path("profile/", include("gfbio_submissions.submission_profile.urls", namespace="profile")),
+
     path("generic/", include("gfbio_submissions.generic.urls", namespace="generic")),
 
     re_path(r'favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
