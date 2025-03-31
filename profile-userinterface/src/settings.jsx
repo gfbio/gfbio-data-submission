@@ -12,7 +12,6 @@ export const PROFILE_URL_PREFIX = "/profile/";
 
 // TODO: router base before making profile ui the new standard for submissions
 export const ROUTER_BASE_URL = PROFILE_URL_PREFIX + "ui/";
-// export const ROUTER_BASE_URL = "submission/";
 
 // TODO: handle dynamic, get default from server (global default field there ?)
 export const DEFAULT_PROFILE_NAME = "gfbio";
