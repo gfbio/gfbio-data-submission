@@ -231,7 +231,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                         const brokerSubmissionId = result.broker_submission_id;
                         const fileUploadPromises = files.map((file, index) => {
                             let isMetadata = false;
-                            if (metadataIndex) {
+                            if (metadataIndex && metadataIndex.source === "local") {
                                 isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
                                 console.log("Using local branch for index", index, "-> isMetadata:", isMetadata);
                             }
@@ -266,7 +266,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                         const brokerSubmissionId = result.broker_submission_id;
                         const fileUploadPromises = files.map((file, index) => {
                             let isMetadata = false;
-                            if (metadataIndex) {
+                            if (metadataIndex && metadataIndex.source === "local") {
                                 isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
                                 console.log("Using local branch for index", index, "-> isMetadata:", isMetadata);
                             }

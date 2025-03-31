@@ -16,11 +16,13 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
     useEffect(() => {
         // Find metadata files
-        const metadataIndices = serverFiles
-            .map((file, index) => file.meta_data ? index : -1)
-            .filter(index => index !== -1);
-        setMetadataIndex({ indices: metadataIndices, source: "server" });
-    }, [serverFiles]);
+        if (metadataIndex.source === null) {
+            const metadataIndices = serverFiles
+                .map((file, index) => (file.meta_data ? index : -1))
+                .filter(index => index !== -1);
+            setMetadataIndex({ indices: metadataIndices, source: "server" });
+        }
+    }, [serverFiles, metadataIndex.source]);
 
     const checkUploadLimits = (files) => {
         const totalSize = files.reduce((sum, file) => sum + file.size, 0);
