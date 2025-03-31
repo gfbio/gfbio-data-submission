@@ -24,9 +24,12 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         }
     }, [serverFiles, metadataIndex.source]);
 
-    const checkUploadLimits = (files) => {
-        const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-        return totalSize <= MAX_TOTAL_UPLOAD_SIZE && files.length <= MAX_UPLOAD_ITEMS;
+    const checkUploadLimits = (localFiles, serverFiles) => {
+        const totalCount = localFiles.length + serverFiles.length;
+        const totalSize =
+            localFiles.reduce((sum, file) => sum + (file.size || 0), 0) +
+            serverFiles.reduce((sum, file) => sum + (file.file_size || 0), 0);
+        return totalSize <= MAX_TOTAL_UPLOAD_SIZE && totalCount <= MAX_UPLOAD_ITEMS;
     };
 
     const handleDrop = (droppedFiles) => {
@@ -34,7 +37,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
             file.percentage = -1;
         });
         const newFiles = [...localFiles, ...droppedFiles];
-        const withinLimits = checkUploadLimits(newFiles);
+        const withinLimits = checkUploadLimits(newFiles, serverFiles);
 
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
@@ -44,7 +47,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
     const handleRemoveLocal = (index) => {
         const newFiles = localFiles.filter((_, i) => i !== index);
-        const withinLimits = checkUploadLimits(newFiles);
+        const withinLimits = checkUploadLimits(newFiles, serverFiles);
 
         const newMetadata = metadataIndex.source === "local"
             ? updateMetadataIndexAfterRemoval(metadataIndex, index, "local")
