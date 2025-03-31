@@ -30,10 +30,10 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     const handleDrop = (droppedFiles) => {
         droppedFiles.forEach((file) => {
             file.percentage = -1;
-        })
+        });
         const newFiles = [...localFiles, ...droppedFiles];
         const withinLimits = checkUploadLimits(newFiles);
-        
+
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
         onFilesChange(newFiles, !withinLimits, metadataIndex);
@@ -44,17 +44,14 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         const newFiles = localFiles.filter((_, i) => i !== index);
         const withinLimits = checkUploadLimits(newFiles);
 
-        // Update metadata indices
-        if (metadataIndex.source === "local") {
-            const newIndices = metadataIndex.indices
-                .map(i => i > index ? i - 1 : i)
-                .filter(i => i !== -1);
-            setMetadataIndex({ indices: newIndices, source: "local" });
-        }
+        const newMetadata = metadataIndex.source === "local"
+            ? updateMetadataIndexAfterRemoval(metadataIndex, index, "local")
+            : metadataIndex;
 
+        setMetadataIndex(newMetadata);
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
-        onFilesChange(newFiles, !withinLimits, metadataIndex);
+        onFilesChange(newFiles, !withinLimits, newMetadata);
         form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
@@ -66,17 +63,14 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         try {
             const fileToDelete = serverFiles[index];
             await deleteSubmissionUpload(brokerSubmissionId, fileToDelete.pk);
-            
+
             const newServerFiles = serverFiles.filter((_, i) => i !== index);
             setServerFiles(newServerFiles);
 
-            // Update metadata indices
-            if (metadataIndex.source === "server") {
-                const newIndices = metadataIndex.indices
-                    .map(i => i > index ? i - 1 : i)
-                    .filter(i => i !== -1);
-                setMetadataIndex({ indices: newIndices, source: "server" });
-            }
+            const newMetadata = metadataIndex.source === "server"
+                ? updateMetadataIndexAfterRemoval(metadataIndex, index, "server")
+                : metadataIndex;
+            setMetadataIndex(newMetadata);
         } catch (error) {
             console.error("Error deleting server file:", error);
         }
@@ -102,29 +96,64 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     };
 
     const handleMetadataToggle = async (index, source) => {
-        const isCurrentlySelected = metadataIndex.indices.includes(index) && metadataIndex.source === source;
-        const isServerSource = source === "server";
-
-        // Deselect current file if it's selected
-        if (isCurrentlySelected) {
-            if (isServerSource) {
-                await deselectServerFile(index);
+        if (source === "local") {
+            // Deselect previously selected server file if exists
+            if (metadataIndex.source === "server" && metadataIndex.indices.length > 0) {
+                await deselectServerFile(metadataIndex.indices[0]);
             }
-            setMetadataIndex({ indices: [], source: null });
-            return;
-        }
 
-        // Deselect previously selected server file if exists
-        if (metadataIndex.source === "server") {
-            await deselectServerFile(metadataIndex.indices[0]);
-        }
+            if (localFiles[index].meta_data) {
+                // Deselect current file if it's selected
+                localFiles[index].meta_data = false;
+                setMetadataIndex({ indices: [], source: null });
+                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null });
+            } else {
+                // Ensure only one local file is marked as metadata:
+                localFiles.forEach((file, i) => {
+                    file.meta_data = (i === index);
+                });
+                const newMetaIndex = { indices: [index], source: "local" };
+                setMetadataIndex(newMetaIndex);
+                onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex);
+            }
+            setLocalFiles([...localFiles]);
+        } else if (source === "server") {
+            // For server files, check if it's already selected.
+            const isCurrentlySelected =
+                metadataIndex.source === "server" && metadataIndex.indices.includes(index);
 
-        // Select new file
-        if (isServerSource) {
+            // Deselect current file if it's selected
+            if (isCurrentlySelected) {
+                await deselectServerFile(index);
+                setMetadataIndex({ indices: [], source: null });
+                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null });
+                return;
+            }
+
+            // Deselect previously selected server file if exists
+            if (metadataIndex.source === "server" && metadataIndex.indices.length > 0) {
+                await deselectServerFile(metadataIndex.indices[0]);
+            }
+
             await updateServerMetadata(serverFiles[index], true);
+            const newMetaIndex = { indices: [index], source: "server" };
+            setMetadataIndex(newMetaIndex);
+            onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex);
         }
-        
-        setMetadataIndex({ indices: [index], source });
+    };
+
+    const updateMetadataIndexAfterRemoval = (currentMeta, removedIndex, sourceType) => {
+        if (currentMeta.source !== sourceType) return currentMeta;
+        if (!currentMeta.indices || currentMeta.indices.length === 0) return currentMeta;
+
+        // If the removed file is the one selected for metadata, clear the selection.
+        if (currentMeta.indices.includes(removedIndex)) {
+            return { indices: [], source: sourceType };
+        }
+
+        // Otherwise, adjust any indices that come after the removed file.
+        const newIndices = currentMeta.indices.map(i => (i > removedIndex ? i - 1 : i));
+        return { indices: newIndices, source: sourceType };
     };
 
     return (

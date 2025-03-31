@@ -229,9 +229,14 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        const fileUploadPromises = files.map((file, index) =>
-                            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
-                        );
+                        const fileUploadPromises = files.map((file, index) => {
+                            let isMetadata = false;
+                            if (metadataIndex) {
+                                isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
+                                console.log("Using local branch for index", index, "-> isMetadata:", isMetadata);
+                            }
+                            return handleFileUpload(file, brokerSubmissionId, isMetadata);
+                        });
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
                             sessionStorage.removeItem("successMessageShown");
@@ -259,9 +264,14 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        const fileUploadPromises = files.map((file, index) =>
-                            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
-                        );
+                        const fileUploadPromises = files.map((file, index) => {
+                            let isMetadata = false;
+                            if (metadataIndex) {
+                                isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
+                                console.log("Using local branch for index", index, "-> isMetadata:", isMetadata);
+                            }
+                            return handleFileUpload(file, brokerSubmissionId, isMetadata);
+                        });
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
                             sessionStorage.removeItem("successMessageShown");
