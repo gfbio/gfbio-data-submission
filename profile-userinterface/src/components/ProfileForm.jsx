@@ -233,7 +233,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                             let isMetadata = false;
                             if (metadataIndex && metadataIndex.source === "local") {
                                 isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
-                                console.log("Using local branch for index", index, "-> isMetadata:", isMetadata);
                             }
                             return handleFileUpload(file, brokerSubmissionId, isMetadata);
                         });
@@ -268,7 +267,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                             let isMetadata = false;
                             if (metadataIndex && metadataIndex.source === "local") {
                                 isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
-                                console.log("Using local branch for index", index, "-> isMetadata:", isMetadata);
                             }
                             return handleFileUpload(file, brokerSubmissionId, isMetadata);
                         });
