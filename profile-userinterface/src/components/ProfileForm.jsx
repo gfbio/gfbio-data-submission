@@ -9,7 +9,7 @@ import putSubmission from "../api/putSubmission.jsx";
 import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
-import { ROUTER_BASE_URL } from "../settings.jsx";
+import { ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY } from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
@@ -25,7 +25,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     const [uploadType, setUploadType] = useState("cloud");
 
     useEffect(() => {
-        if (localSubmissionFiles && localSubmissionFiles.length > 0) {
+        if (USE_LOCAL_UPLOAD_ONLY || (localSubmissionFiles && localSubmissionFiles.length > 0)) {
             setUploadType("local");
         } else {
             setUploadType("cloud");
@@ -159,10 +159,10 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     function setUploadProgressPercent(file, progressPercent) {
         console.log(`Upload progress: ${progressPercent}%`);
         file.percentage = progressPercent;
-        setFiles((files) => [...files])
+        setFiles((files) => [...files]);
     }
-    
-    
+
+
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;

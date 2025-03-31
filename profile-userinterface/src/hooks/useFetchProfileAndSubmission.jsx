@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import getCloudSubmissionUploads from "../api/getSubmissionCloudUploads.jsx";
-import { PROFILE_URL, SUBMISSIONS_API } from "../settings.jsx";
+import { PROFILE_URL, SUBMISSIONS_API, USE_LOCAL_UPLOAD_ONLY } from "../settings.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import getSubmissionUploads from "../api/getSubmissionUploads.jsx";
 
@@ -33,9 +33,10 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
                 if (brokerSubmissionId !== undefined) {
                     const submissionResponse = await axios.get(SUBMISSIONS_API + brokerSubmissionId + "/", config);
                     setSubmissionData(submissionResponse.data);
-
-                    const cloudFilesResponse = await getCloudSubmissionUploads(brokerSubmissionId);
-                    setSubmissionFiles(cloudFilesResponse);
+                    if (!USE_LOCAL_UPLOAD_ONLY) {
+                        const cloudFilesResponse = await getCloudSubmissionUploads(brokerSubmissionId);
+                        setSubmissionFiles(cloudFilesResponse);
+                    }
 
                     const localFilesResponse = await getSubmissionUploads(brokerSubmissionId);
                     setLocalSubmissionFiles(localFilesResponse);
