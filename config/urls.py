@@ -34,6 +34,7 @@ urlpatterns = [
     path("resolve/", include("gfbio_submissions.resolve.urls", namespace="resolve")),
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
     path("profile/", include("gfbio_submissions.submission_profile.urls", namespace="profile")),
+
     path("generic/", include("gfbio_submissions.generic.urls", namespace="generic")),
 
     re_path(r'favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),

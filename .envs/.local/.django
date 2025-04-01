@@ -18,7 +18,7 @@ REDIS_URL=redis://redis:6379/0
 
 # Use Profile based UI upon login
 # ------------------------------------------------------------------------------
-LOGIN_REDIRECT_URL=/profile/ui/
+# LOGIN_REDIRECT_URL=/profile/ui/
 
 # Testing DT_UPLOAD
 # ------------------------------------------------------------------------------
