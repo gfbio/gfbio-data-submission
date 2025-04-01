@@ -9,7 +9,7 @@ import putSubmission from "../api/putSubmission.jsx";
 import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
-import { ROUTER_BASE_URL } from "../settings.jsx";
+import { ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY } from "../settings.jsx";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
@@ -25,7 +25,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     const [uploadType, setUploadType] = useState("cloud");
 
     useEffect(() => {
-        if (localSubmissionFiles && localSubmissionFiles.length > 0) {
+        if (USE_LOCAL_UPLOAD_ONLY || (localSubmissionFiles && localSubmissionFiles.length > 0)) {
             setUploadType("local");
         } else {
             setUploadType("cloud");
@@ -159,10 +159,10 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     function setUploadProgressPercent(file, progressPercent) {
         console.log(`Upload progress: ${progressPercent}%`);
         file.percentage = progressPercent;
-        setFiles((files) => [...files])
+        setFiles((files) => [...files]);
     }
-    
-    
+
+
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
@@ -229,9 +229,13 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        const fileUploadPromises = files.map((file, index) =>
-                            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
-                        );
+                        const fileUploadPromises = files.map((file, index) => {
+                            let isMetadata = false;
+                            if (metadataIndex && metadataIndex.source === "local") {
+                                isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
+                            }
+                            return handleFileUpload(file, brokerSubmissionId, isMetadata);
+                        });
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
                             sessionStorage.removeItem("successMessageShown");
@@ -259,9 +263,13 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        const fileUploadPromises = files.map((file, index) =>
-                            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
-                        );
+                        const fileUploadPromises = files.map((file, index) => {
+                            let isMetadata = false;
+                            if (metadataIndex && metadataIndex.source === "local") {
+                                isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
+                            }
+                            return handleFileUpload(file, brokerSubmissionId, isMetadata);
+                        });
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
                             sessionStorage.removeItem("successMessageShown");

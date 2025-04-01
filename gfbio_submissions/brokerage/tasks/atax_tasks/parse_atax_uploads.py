@@ -66,6 +66,7 @@ def store_atx_xml_to_auditable_text_data(submission):
             AuditableTextData.objects.create(name=upload.file.name, submission=submission, text_data=dom.toprettyxml())
 
 
+# FIXME: DASS-2397 is this still needed ? No usages besides Tests ...
 @app.task(
     base=SubmissionTask,
     bind=True,

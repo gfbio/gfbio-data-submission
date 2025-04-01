@@ -9,9 +9,9 @@ from gfbio_submissions.brokerage.tests.utils import (
 )
 from gfbio_submissions.users.models import User
 from ...configuration.settings import GENERIC
-from ...models import SubmissionReport
 from ...models.auditable_text_data import AuditableTextData
 from ...models.submission import Submission
+from ...models.submission_report import SubmissionReport
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
@@ -61,6 +61,7 @@ class TestAtaxSubmissionTasks(TestCase):
         uploads = submission.submissionupload_set.all()
         self.assertEqual(3, len(uploads))
 
+    # FIXME: DASS-2397 is this still needed ?
     def test_parse_atax_uploads_task(self):
         submission = Submission.objects.first()
         result = parse_atax_uploads_task.apply_async(
@@ -74,6 +75,7 @@ class TestAtaxSubmissionTasks(TestCase):
         for a in submission.auditabletextdata_set.all():
             print(a.text_data)
 
+    # FIXME: DASS-2397 is this still needed ?
     def test_validate_merged_atax_data_task(self):
         submission = Submission.objects.first()
         parse_atax_uploads_task.apply_async(
@@ -89,6 +91,7 @@ class TestAtaxSubmissionTasks(TestCase):
         reports = SubmissionReport.objects.all()
         self.assertEqual(len(errors), len(reports))
 
+    # FIXME: DASS-2397 is this still needed ?
     def test_parse_uploads_task_for_unreleased_submission(self):
         submission = self._create_unreleased_submission()
         result = parse_atax_uploads_task.apply_async(
@@ -98,6 +101,7 @@ class TestAtaxSubmissionTasks(TestCase):
         res = result.get()
         self.assertEqual(TaskProgressReport.CANCELLED, res)
 
+    # FIXME: DASS-2397 is this still needed ?
     def test_parse_uploads_task_for_non_atx_submission(self):
         submission = self._create_unreleased_submission()
         submission.release = True
@@ -110,6 +114,7 @@ class TestAtaxSubmissionTasks(TestCase):
         res = result.get()
         self.assertEqual(TaskProgressReport.CANCELLED, res)
 
+    # FIXME: DASS-2397 is this still needed ?
     def test_validate_merged_data_task_for_unreleased_submission(self):
         submission = self._create_unreleased_submission()
         result = validate_merged_atax_data_task.apply_async(
@@ -119,6 +124,7 @@ class TestAtaxSubmissionTasks(TestCase):
         res = result.get()
         self.assertEqual(TaskProgressReport.CANCELLED, res)
 
+    # FIXME: DASS-2397 is this still needed ?
     def test_validate_merged_data_task_for_non_atx_submission(self):
         submission = self._create_unreleased_submission()
         submission.release = True

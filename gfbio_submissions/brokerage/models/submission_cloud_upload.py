@@ -4,6 +4,7 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
 from .submission import Submission
+from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 
 
 class SubmissionCloudUpload(TimeStampedModel):
@@ -71,22 +72,20 @@ class SubmissionCloudUpload(TimeStampedModel):
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionCloudUpload, self).save(*args, **kwargs)
 
-        # TODO: add a check for completeness/availability in cloud before starting this
-        #   or re-define workflow for attach e.g. meta-data
-        # if self.attach_to_ticket and not ignore_attach_to_ticket:
-        #     from ..tasks.jira_tasks.attach_to_submission_issue import (
-        #         attach_to_submission_issue_task,
-        #     )
-        #     attach_to_submission_issue_task.apply_async(
-        #         kwargs={
-        #             "submission_id": "{0}".format(self.submission.pk),
-        #             "submission_upload_id": "{0}".format(self.pk),
-        #         },
-        #         countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
-        #     )
+    def trigger_attach_to_issue(self):
+        if self.attach_to_ticket and self.meta_data and self.file_upload is not None:
+            # TODO: change to constant FileUploadRequest.COMPLETED
+            if self.file_upload.status == "COMPLETED":
+                from ..tasks.jira_tasks.attach_to_submission_issue import attach_cloud_upload_to_submission_issue_task
+                attach_cloud_upload_to_submission_issue_task.apply_async(
+                    kwargs={
+                        "submission_id": "{0}".format(self.submission.pk),
+                        "submission_upload_id": "{0}".format(self.pk),
+                    },
+                    countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
+                )
 
     def __str__(self):
-        # return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
         if self.file_upload is None:
             return f"{self.submission.broker_submission_id}-NO-FILE-UPLOAD-REQUEST"
         elif self.file_upload.original_filename:

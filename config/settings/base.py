@@ -118,7 +118,7 @@ AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 # LOGIN_REDIRECT_URL = "users:redirect"
 
-LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", "/ui/submission/list")
+LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", "/profile/ui/")
 LOGOUT_REDIRECT_URL = "/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"

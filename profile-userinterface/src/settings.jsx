@@ -10,6 +10,7 @@ export const LOCAL_API_TOKEN = "6e9f1d95d5bb666d327b59c16534591250ee4d60";
 
 export const PROFILE_URL_PREFIX = "/profile/";
 
+// TODO: router base before making profile ui the new standard for submissions
 export const ROUTER_BASE_URL = PROFILE_URL_PREFIX + "ui/";
 
 // TODO: handle dynamic, get default from server (global default field there ?)
@@ -39,6 +40,8 @@ export const CLOUD_UPLOAD = "/cloud-upload/";
 
 export const MAX_UPLOAD_ITEMS = 20;
 
-export const MAX_TOTAL_UPLOAD_SIZE = 10000000000;  // 10 GB = 10000000000 bytes
+export const MAX_TOTAL_UPLOAD_SIZE = 200000000;  // 200 MB = 200000000 bytes;  10 GB = 10000000000 bytes
 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
+
+export const USE_LOCAL_UPLOAD_ONLY = true;
