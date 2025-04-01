@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 
 from ..configuration.settings import DEFAULT_PROFILE_NAME
 
 
-class ProfileFrontendView(TemplateView):
+class ProfileFrontendView(LoginRequiredMixin, TemplateView):
     template_name = "submission_profile/profile_frontend.html"
 
     def get_context_data(self, *args, **kwargs):
