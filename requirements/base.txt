@@ -60,6 +60,7 @@ django_reverse_admin==2.9.6
 
 # Upload Library
 # ------------------------------------------------------------------------------
+# TODO: Update library and add .env settings to staging and prod
 django-upload-tools @https://gitlab-pe.gwdg.de/gfbio/django-upload-tools/-/raw/master/dist/django-upload-tools-0.4.1.tar.gz
 
 
