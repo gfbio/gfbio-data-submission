@@ -3,35 +3,27 @@ import { DatePicker } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
 import { useState } from "react";
+import { formatDateToYYYYMMDD } from "../../utils/dateUtils";
 
 const EmbargoDate = ({title, mandatory, form, field_id}) => {
-    // This function creates a date at noon of the given date
-    // This is to ensure that the date is always the same, regardless of the time of day
-    // This is important for the conversion to ISO format
-    const createDateAtNoon = (date) => {
-        const newDate = new Date(date);
-        newDate.setHours(12, 0, 0, 0);
-        return newDate;
-    }
-
-    const today = createDateAtNoon(new Date());
+    const today = new Date();
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-    const defaultDate = createDateAtNoon(new Date());
+    const defaultDate = new Date();
     defaultDate.setFullYear(defaultDate.getFullYear() + 1);
-    const maxDate = createDateAtNoon(new Date());
+    const maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() + 2);
     const [opened, {open, close}] = useDisclosure(false);
     const [tempDate, setTempDate] = useState(() => {
         if (form.values[field_id]) {
             const [year, month, day] = form.values[field_id].split('-');
-            return createDateAtNoon(new Date(year, month - 1, day));
+            return new Date(year, month - 1, day);
         }
         return defaultDate;
     });
 
     const [displayDate, setDisplayDate] = useState(
         form.values[field_id]
-            ? createDateAtNoon(new Date(form.values[field_id]))
+            ? new Date(form.values[field_id])
             : defaultDate
     );
 
@@ -42,14 +34,13 @@ const EmbargoDate = ({title, mandatory, form, field_id}) => {
     };
 
     const formattedDate = (date) => {
-        const d = new Date(date);
-        return d.getDate().toString() + ' ' +
-            d.toLocaleString('default', {month: 'long'}) + ' ' +
-            d.getFullYear().toString();
+        return date.getDate().toString() + ' ' +
+            date.toLocaleString('default', {month: 'long'}) + ' ' +
+            date.getFullYear().toString();
     };
 
     const handleAccept = () => {
-        const formattedValue = tempDate.toISOString().split('T')[0];
+        const formattedValue = formatDateToYYYYMMDD(tempDate);
         form.setFieldValue(field_id, formattedValue);
         setDisplayDate(tempDate);
         close();
