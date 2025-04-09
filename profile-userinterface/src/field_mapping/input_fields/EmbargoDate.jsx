@@ -34,8 +34,8 @@ const EmbargoDate = ({title, mandatory, form, field_id}) => {
     };
 
     const formattedDate = (date) => {
-        return date.getDate().toString() + ' ' +
-            date.toLocaleString('default', {month: 'long'}) + ' ' +
+        return String(date.getDate()).padStart(2, '0') + ' ' +
+            date.toLocaleString('en-GB', {month: 'long'}) + ' ' +
             date.getFullYear().toString();
     };
 
