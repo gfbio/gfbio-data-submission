@@ -449,7 +449,7 @@ DJANGO_UPLOAD_TOOLS_USE_REUPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_REUPLOAD", 
 if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
     # TODO: if s3 is used also elsewhere besides only for django-upload-tools, it may be a better idea to
     #   use this in a more selective way. For this purpose it is ok to assign the settings only if
-    #   DJANGO_UPLOAD_TOOLS_USE_S3 is set to True (defaults to False)
+    #   DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD is set to True (defaults to False)
     # STORAGES
     # ------------------------------------------------------------------------------
 
