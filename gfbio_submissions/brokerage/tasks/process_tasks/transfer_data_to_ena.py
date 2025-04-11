@@ -56,7 +56,7 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
             "SoftTimeLimitExceeded | "
             "submission_id={0} | error={1}".format(submission_id, se)
         )
-        response = Response()
+        return TaskProgressReport.CANCELLED
     except ConnectionError as e:
         logger.error(
             msg="tasks.py | transfer_data_to_ena_task | connection_error "
@@ -66,5 +66,5 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
                 site_configuration.ena_server.title,
             )
         )
-        response = Response()
+        return TaskProgressReport.CANCELLED
     return str(request_id), response.status_code, smart_str(response.content)
