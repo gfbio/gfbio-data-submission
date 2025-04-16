@@ -194,7 +194,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     };
 
     const handleSubmit = (values) => {
-        if (!form.isValid || uploadLimitExceeded) {
+        if (!form.isValid || uploadLimitExceeded || (values.files && values.files.some(file => file.invalid))) {
             return;
         }
         setProcessing(true);
