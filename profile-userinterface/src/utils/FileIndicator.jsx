@@ -83,18 +83,25 @@ const FileIndicator = ({
                 "my-1",
                 "py-2",
                 isSelected ? "selected" : "",
-                upload.invalid ? "invalid" : "",
-            ].join(" ");
+                upload.invalid ? "border border-danger bg-light" : "",
+            ]
+                .filter(Boolean)
+                .join(" ");
 
             return (
                 <li key={index} className={liClasses}>
                     <div className="col-12 container">
-                        <div className="row">
+                        <div className="row align-items-center">
                             <div className="col-md-9">
                                 <div className="container h-100">
                                     <small className="file-name row h-100 ps-3">
-                                        <div
-                                            className="col-1 d-flex justify-content-end align-items-center checkbox-col">
+                                        <div className="col-auto d-flex align-items-center pe-0">
+                                            {upload.invalid && (
+                                                <i
+                                                    className="fa fa-exclamation-circle text-danger fa-lg me-3"
+                                                    title="Invalid filename"
+                                                />
+                                            )}
                                             <Checkbox
                                                 type="checkbox"
                                                 id={`primary${index}`}
@@ -103,19 +110,14 @@ const FileIndicator = ({
                                                 checked={isSelected}
                                             />
                                         </div>
-                                        <div className="col-11 d-flex align-items-center">
-                                            <label htmlFor={`primary${index}`} className="metadata mb-0 w-100">
+                                        <div className="col d-flex align-items-center">
+                                            <label
+                                                htmlFor={`primary${index}`}
+                                                className="metadata mb-0 w-100"
+                                            >
                                                 <i className="icon ion-md-document pub pe-2"></i>
                                                 {upload.name}
                                             </label>
-                                            {upload.invalid && (
-                                                <span
-                                                    className="text-danger"
-                                                    style={{ fontSize: "0.8em", marginLeft: "0.5rem" }}
-                                                >
-                                                    (Invalid filename)
-                                                </span>
-                                            )}
                                         </div>
                                     </small>
                                 </div>
@@ -142,7 +144,7 @@ const FileIndicator = ({
                                     aria-valuenow={`${upload.progress}`}
                                     aria-valuemin="0"
                                     aria-valuemax="100"
-                                ></div>
+                                />
                             </div>
                         )}
                     </div>
