@@ -406,14 +406,13 @@ def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
 combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
 
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
-
+    from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
     for obj in queryset:
         for upload in obj.submissioncloudupload_set.all():
-            print("TRANSFER TO ENA WITH ASPERA ", upload)
-            # transfer_data_to_ena_task.apply_async(
-            #     kwargs={"submission_id": obj.pk, "action": "MODIFY"},
-            #     countdown=SUBMISSION_DELAY,
-            # )
+            transfer_cloud_upload_to_ena_task.apply_async(
+                kwargs={"submission_cloud_upload_id": upload.pk},
+                countdown=SUBMISSION_DELAY,
+            )
 
 transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud uploads to ENA via Aspera"
 
