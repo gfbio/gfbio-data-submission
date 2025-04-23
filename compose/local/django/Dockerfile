@@ -68,6 +68,9 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 COPY ./requirements /requirements
 RUN pip install -r /requirements/local.txt
 
+
+
+
 # TODO: when testing as 3rd party library. copy local build of django_upload_tools package to docker
 #
 # COPY --chown=django:django ./django-upload-tools-1.0.tar.gz ./django-upload-tools-1.0.tar.gz
@@ -103,6 +106,21 @@ RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 
 COPY ./ena_webin_cli /ena_webin_cli
+
+# Install Aspera CLI (ascp) -----------------------------------------------------------------
+# Create a non-root user (e.g., appuser)
+RUN useradd -m asperauser
+
+USER asperauser
+
+RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
+    /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
+    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
+
+# /home/asperauser/.aspera/connect/bin
+
+USER root
+# -------------------------------------------------------------------------------------------------
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
