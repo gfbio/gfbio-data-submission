@@ -7,12 +7,16 @@ import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
 import patchSubmissionCloudUpload from "../../api/patchSubmissionCloudUploadMetadata.jsx";
 import deleteSubmissionCloudUpload from "../../api/deleteSubmissionCloudUpload.jsx";
+import InvalidFilenameMessage from "../../utils/InvalidFileNameMessage.jsx";
 
 const DropzoneUpload = ({ title, description, form, onFilesChange, submissionData }) => {
     const [localFiles, setLocalFiles] = useState([]);
     const [serverFiles, setServerFiles] = useState(form.values.files || []);
     const [metadataIndex, setMetadataIndex] = useState({ indices: [], source: null });
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
+    const [showInvalidFilenameMessage, setShowInvalidFilenameMessage] = useState(false);
+    const allowedCharacters = "Letters (A-Z, a-z), Numbers (0-9), and special characters: ! . _ ' ( ) -";
+    const allowedRegex = /^[a-zA-Z0-9!._*'()\- ]+$/;
 
     useEffect(() => {
         // Find metadata files
@@ -33,14 +37,21 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     };
 
     const handleDrop = (droppedFiles) => {
-        droppedFiles.forEach((file) => {
-            file.percentage = -1;
+        const processedFiles = droppedFiles.map((file) => {
+            const sanitizedName = file.name.replace(/ +/g, "_");
+            file.sanitizedName = sanitizedName;
+            file.invalid = !allowedRegex.test(sanitizedName);
+            return file;
         });
-        const newFiles = [...localFiles, ...droppedFiles];
+        const newFiles = [...localFiles, ...processedFiles];
         const withinLimits = checkUploadLimits(newFiles, serverFiles);
 
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
+
+        const anyInvalid = newFiles.some(file => file.invalid);
+        setShowInvalidFilenameMessage(anyInvalid);
+
         onFilesChange(newFiles, !withinLimits, metadataIndex);
         form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
@@ -48,6 +59,9 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     const handleRemoveLocal = (index) => {
         const newFiles = localFiles.filter((_, i) => i !== index);
         const withinLimits = checkUploadLimits(newFiles, serverFiles);
+
+        const anyInvalid = newFiles.some((file) => file.invalid);
+        setShowInvalidFilenameMessage(anyInvalid);
 
         const newMetadata = metadataIndex.source === "local"
             ? updateMetadataIndexAfterRemoval(metadataIndex, index, "local")
@@ -167,6 +181,11 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 <h2>{title}</h2>
                 <Text>{description}</Text>
             </div>
+
+            <InvalidFilenameMessage
+                showInvalidFilenameMessage={showInvalidFilenameMessage}
+                allowedCharacters={allowedCharacters}
+            />
 
             <FileIndicator
                 fileUploads={localFiles}
