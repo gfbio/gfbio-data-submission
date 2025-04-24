@@ -8,5 +8,8 @@ set -o nounset
 python manage.py migrate
 python manage.py collectstatic --noinput
 
+echo "START DJANGO LOCALLY -- next s3 mount"
+s3fs gfbio-dev-1 /mnt/s3bucket -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url=https://s3.gwdg.de
+
 exec python manage.py runserver_plus 0.0.0.0:8000
 
