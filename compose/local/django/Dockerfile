@@ -83,7 +83,25 @@ RUN pip install ./abcd_converter-0.0.4.tar.gz
 
 # RUN pip install abcd-converter --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 
+COPY ./ena_webin_cli /ena_webin_cli
+
+# Install Aspera CLI (ascp) -----------------------------------------------------------------
+# Create a non-root user
+RUN useradd -m asperauser
+#
+USER asperauser
+RUN whoami
+RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
+    /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
+    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
+
+# commands in /home/asperauser/.aspera/connect/bin
+
+# -------------------------------------------------------------------------------------------------
+
+USER root
 COPY ./compose/production/django/entrypoint /entrypoint
+USER root
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
@@ -110,22 +128,8 @@ RUN chmod +x /start-flower
 COPY ./compose/local/django/passwd-s3fs /etc/passwd-s3fs
 RUN chmod 600 /etc/passwd-s3fs
 
-COPY ./ena_webin_cli /ena_webin_cli
 
-# Install Aspera CLI (ascp) -----------------------------------------------------------------
-# Create a non-root user (e.g., appuser)
-#RUN useradd -m asperauser
-#
-#USER asperauser
-#
-#RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
-#    /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
-#    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
-#
-## /home/asperauser/.aspera/connect/bin
-#
-#USER root
-# -------------------------------------------------------------------------------------------------
+
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
