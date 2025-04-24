@@ -5,7 +5,7 @@ import {DEFAULT_PROFILE_ID, DEFAULT_PROFILE_NAME, PROFILE_SELECTION_FORM_KEY} fr
 import putActiveProfile from "../api/putActiveProfile.jsx";
 
 
-const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData}) => {
+const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData, activeProfile}) => {
 
     const form = useForm({
         mode: "uncontrolled",
@@ -18,12 +18,16 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData}) => {
             if (values[PROFILE_SELECTION_FORM_KEY] !== null) {
                 profileId = values[PROFILE_SELECTION_FORM_KEY];
             }
-            putActiveProfile(profileId).then((result) => {
-                onProfileChange(result["name"]);
-            }).catch((error) => {
-                console.error(error);
-            }).finally(() => {
-            });
+            onProfileChange(profileId);
+            /*
+                Instead of creating a private profile, just use the public profiles for now
+                putActiveProfile(profileId).then((result) => {
+                    onProfileChange(result["name"]);
+                }).catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                });
+            */
         } else if (values && !Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
             // do nothing
         } else {
@@ -37,12 +41,10 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData}) => {
             return result;
         }
         result = profileListData.flatMap(obj => {
-            if (obj && Object.prototype.hasOwnProperty.call(obj, "name") &&
-                Object.prototype.hasOwnProperty.call(obj, "id")) {
-                if (obj["name"] === DEFAULT_PROFILE_NAME) {
-                    return [{"value": "" + obj["id"], "label": obj["name"] + " (default)"}];
-                }
-                return [{"value": "" + obj["id"], "label": obj["name"]}];
+            if (obj && Object.prototype.hasOwnProperty.call(obj, "name")) {
+                return [{"value": "" + obj["name"], "label": obj["name"] 
+                    + ((obj["name"] === DEFAULT_PROFILE_NAME) ? " (default)" : "")
+                    + ((obj["name"] === activeProfile) ? " - active" : "") }];
             }
             return [];
         });
@@ -66,12 +68,13 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData}) => {
                             key={form.key(PROFILE_SELECTION_FORM_KEY)}
                             {...form.getInputProps(PROFILE_SELECTION_FORM_KEY)}
                             mt="md"
+                            defaultValue={activeProfile}
                         />
                         <Group mt="md" className="" justify="center">
-                            <Button className="" type="" onClick={onCancel}>
+                            <Button className="red-button button-inverted" type="button" onClick={onCancel}>
                                 <i className=""></i>Cancel
                             </Button>
-                            <Button className="" type="submit">
+                            <Button className="blue-button" type="submit">
                                 <i className=""></i>Confirm Selection
                             </Button>
                         </Group>

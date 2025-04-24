@@ -940,3 +940,23 @@ button.button-inverted {
   font-family: "Raleway", sans-serif;
   text-align: center;
 }
+
+.fs-7 {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.change-profile-button-menu {
+  cursor: pointer;
+
+  .change-profile-button {
+    background-color: #3cace4;
+    color: white;
+    border: solid 1px #3cace4;
+    height: 100%;
+
+    * {
+      border: none;
+    }
+  }
+}
