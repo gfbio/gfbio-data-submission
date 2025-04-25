@@ -70,9 +70,6 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 COPY ./requirements /requirements
 RUN pip install -r /requirements/local.txt
 
-
-
-
 # TODO: when testing as 3rd party library. copy local build of django_upload_tools package to docker
 #
 # COPY --chown=django:django ./django-upload-tools-1.0.tar.gz ./django-upload-tools-1.0.tar.gz
@@ -125,10 +122,9 @@ COPY ./compose/local/django/celery/flower/start /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 
+# passwd-s3fs contains credentials for s3fs: <ACCESS_KEY>:<SECRET_KEY>
 COPY ./compose/local/django/passwd-s3fs /etc/passwd-s3fs
 RUN chmod 600 /etc/passwd-s3fs
-
-
 
 
 # copy application code to WORKDIR

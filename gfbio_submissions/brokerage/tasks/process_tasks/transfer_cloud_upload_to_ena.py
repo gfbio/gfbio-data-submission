@@ -4,9 +4,11 @@ import os
 import subprocess
 
 from config.celery_app import app
+from config.settings.base import ASPERA_ASCP_PATH
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...utils.task_utils import get_submission_and_site_configuration
+from ....generic.models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
 
@@ -47,30 +49,38 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         )
         return TaskProgressReport.CANCELLED
 
-    # TODO: via resource credentials.
-    # aspera_host = "webin.ebi.ac.uk"
-    # aspera_user = "Webin-40945"
     aspera_host = site_configuration.ena_aspera_server.url
     aspera_user = site_configuration.ena_aspera_server.username
 
-    # TODO: defaults per settings
     # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
     aspera_target_path = "."
-    ascp_path = "/home/asperauser/.aspera/connect/bin/ascp"
+
 
     remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
 
-    cmd = [ascp_path, "-QT", "-l", "100M", file_path, remote_dest]
+    cmd = [ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd}")
 
+    res = TaskProgressReport.CANCELLED
+    details = {"cmd": cmd}
     try:
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
+        res = True
     except Exception as e:
+        details['error'] = str(e)
         logger.error(f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | ")
-        return TaskProgressReport.CANCELLED
 
+    RequestLog.objects.create(
+        type=RequestLog.OUTGOING,
+        url=site_configuration.ena_aspera_server.url,
+        method=RequestLog.NONE,
+        user=submission.user,
+        submission_id=submission.broker_submission_id,
+        request_details=details,
+        # response_content=response.data,
+        # response_status=response.status_code,
+    )
     print("\n\n-----------------------------------\n\ntransfer via ascp")
     print("deal with return values")
-    print("save result to Requestlog & TaskProgressReport")
-    return True
+    return res
