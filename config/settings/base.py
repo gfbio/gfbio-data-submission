@@ -445,7 +445,8 @@ DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD = env.str(
     "DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD", default="upload_file"
 )
 DJANGO_UPLOAD_TOOLS_USE_REUPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_REUPLOAD", default=False)
-
+print("UPLOAD ---------------------------------------------------")
+print(DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD)
 if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
     # TODO: if s3 is used also elsewhere besides only for django-upload-tools, it may be a better idea to
     #   use this in a more selective way. For this purpose it is ok to assign the settings only if
@@ -455,6 +456,7 @@ if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
 
     # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
     AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID", default=None)
+    print(AWS_ACCESS_KEY_ID)
     # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
     AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY", default=None)
     # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings

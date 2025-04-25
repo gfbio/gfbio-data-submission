@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import tempfile
+import subprocess
 
 from config.celery_app import app
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
-from dt_upload.views.backend_based_upload_mixins import get_s3_client
+from ...utils.task_utils import get_submission_and_site_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -17,50 +17,60 @@ from ...tasks.submission_task import SubmissionTask
     base=SubmissionTask,
     bind=True,
     name="tasks.transfer_cloud_upload_to_ena_task",
-    # autoretry_for=(TransferServerError, TransferClientError),
-    # retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    # retry_backoff=SUBMISSION_RETRY_DELAY,
-    # retry_jitter=True,
 )
-def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None):
+def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None):
     if previous_result == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id, task=self, include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        logger.error(
+            f"tasks.py | transfer_cloud_upload_to_ena_task | previous task reported={TaskProgressReport.CANCELLED} | "
+            f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id}")
         return TaskProgressReport.CANCELLED
     submission_cloud_upload = None
     try:
         submission_cloud_upload = SubmissionCloudUpload.objects.get(pk=submission_cloud_upload_id)
     except SubmissionCloudUpload.DoesNotExist:
         logger.error(
-            "tasks.py | transfer_cloud_upload_to_ena_task | "
-            "no valid SubmissionCloudUpload available | "
-            "submission_cloud_upload_id={0}".format(submission_cloud_upload_id))
+            f"tasks.py | transfer_cloud_upload_to_ena_task | no valid SubmissionCloudUpload available | "
+            f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id}")
         return TaskProgressReport.CANCELLED
-    print("\n\nprocess upload: ", submission_cloud_upload)
-    print(submission_cloud_upload.file_upload.original_filename)
-    print(submission_cloud_upload.file_upload.file_key)
-    print(submission_cloud_upload.file_upload.s3_location)
-    print("check s3 mount -------------------")
+
+    # TODO: defaults per settings
     path = "/mnt/s3bucket"
     file_path = f"{path}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
-    print(os.path.exists(path))
-    print(os.path.exists(file_path))
-    if os.path.exists(file_path):
-        print(file_path)
-        print(os.path.getsize(file_path))
-    else:
-        print("no found ", file_path)
-    # bucket_name, s3_client = get_s3_client()
-    # with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-    #     s3_client.download_fileobj(
-    #         Bucket=bucket_name,
-    #         Key=submission_cloud_upload.file_upload.file_key,
-    #         Fileobj=tmp_file
-    #     )
-    #     local_path = tmp_file.name
-    #     print("Loca PATH", local_path)
-    #     print("size ", os.path.getsize(local_path))
+    if not os.path.exists(file_path):
+        logger.error(
+            f"tasks.py | transfer_cloud_upload_to_ena_task | no valid file_path available | file_path={file_path} "
+        )
+        return TaskProgressReport.CANCELLED
+
+    # TODO: via resource credentials.
+    # aspera_host = "webin.ebi.ac.uk"
+    # aspera_user = "Webin-40945"
+    aspera_host = site_configuration.ena_aspera_server.url
+    aspera_user = site_configuration.ena_aspera_server.username
+
+    # TODO: defaults per settings
+    # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
+    aspera_target_path = "."
+    ascp_path = "/home/asperauser/.aspera/connect/bin/ascp"
+
+    remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
+
+    cmd = [ascp_path, "-QT", "-l", "100M", file_path, remote_dest]
+    logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd}")
+
+    try:
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
+    except Exception as e:
+        logger.error(f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | ")
+        return TaskProgressReport.CANCELLED
+
     print("\n\n-----------------------------------\n\ntransfer via ascp")
     print("deal with return values")
     print("save result to Requestlog & TaskProgressReport")
-    print("delete temp file")
-    # os.remove(local_path)
-    return TaskProgressReport.CANCELLED
+    return True

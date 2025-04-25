@@ -410,7 +410,8 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         for upload in obj.submissioncloudupload_set.all():
             transfer_cloud_upload_to_ena_task.apply_async(
-                kwargs={"submission_cloud_upload_id": upload.pk},
+                kwargs={"submission_cloud_upload_id": upload.pk,
+                        "submission_id": obj.pk},
                 countdown=SUBMISSION_DELAY,
             )
 

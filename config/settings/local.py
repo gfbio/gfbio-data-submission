@@ -77,3 +77,4 @@ CORS_URLS_REGEX = r'^.*$'
 
 # https://docs.djangoproject.com/en/4.2/ref/settings/#secure-cross-origin-opener-policy
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
