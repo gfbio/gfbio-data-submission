@@ -85,15 +85,12 @@ COPY ./ena_webin_cli /ena_webin_cli
 # Install Aspera CLI (ascp) -----------------------------------------------------------------
 # Create a non-root user
 RUN useradd -m asperauser
-#
 USER asperauser
 RUN whoami
 RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
     /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
     rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
-
 # commands in /home/asperauser/.aspera/connect/bin
-
 # -------------------------------------------------------------------------------------------------
 
 USER root

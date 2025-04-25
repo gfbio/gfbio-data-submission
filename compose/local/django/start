@@ -4,12 +4,10 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-
 python manage.py migrate
 python manage.py collectstatic --noinput
 
-# TODO: bucket name should be configurable, url also
-s3fs gfbio-dev-1 /mnt/s3bucket -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url=https://s3.gwdg.de
+s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
 
 exec python manage.py runserver_plus 0.0.0.0:8000
 

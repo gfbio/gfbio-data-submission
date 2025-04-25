@@ -495,3 +495,4 @@ DJANGO_UPLOAD_TOOLS_PROJECT_NAME = env("DJANGO_UPLOAD_TOOLS_PROJECT_NAME", defau
 # Aspera Settings
 # ------------------------------------------------------------------------------
 ASPERA_ASCP_PATH = env.str("ASPERA_ASCP_PATH", default="/home/asperauser/.aspera/connect/bin/ascp")
+S3FS_MOUNT_POINT = env.str("DJANGO_S3FS_MOUNT_POINT", default="/mnt/s3bucket")

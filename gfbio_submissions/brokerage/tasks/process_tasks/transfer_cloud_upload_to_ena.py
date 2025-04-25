@@ -3,8 +3,9 @@ import logging
 import os
 import subprocess
 
+from django.conf import settings
+
 from config.celery_app import app
-from config.settings.base import ASPERA_ASCP_PATH
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...utils.task_utils import get_submission_and_site_configuration
@@ -41,8 +42,8 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         return TaskProgressReport.CANCELLED
 
     # TODO: defaults per settings
-    path = "/mnt/s3bucket"
-    file_path = f"{path}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
+
+    file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
     if not os.path.exists(file_path):
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | no valid file_path available | file_path={file_path} "
@@ -58,7 +59,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
 
     remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
 
-    cmd = [ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
+    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd}")
 
     res = TaskProgressReport.CANCELLED
@@ -81,6 +82,4 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         # response_content=response.data,
         # response_status=response.status_code,
     )
-    print("\n\n-----------------------------------\n\ntransfer via ascp")
-    print("deal with return values")
     return res
