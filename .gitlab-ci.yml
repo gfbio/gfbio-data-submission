@@ -34,6 +34,7 @@ run unit tests:
     - SHORT_REF_NAME="${CI_COMMIT_REF_NAME:0:9}"
     - ISSUE_ID=$(awk -F - '{print $2}' <<< "$CI_COMMIT_REF_NAME")
     - if [[ -z "$ISSUE_ID" ]]; then DOCKER_NAME="$PROJECT_NAME-$SHORT_REF_NAME"; else DOCKER_NAME="$ISSUE_ID-$PROJECT_NAME"; fi
+    - rsync -a /home/gitlab-runner/.envs/passwd-s3fs compose/local/django/
     - docker compose -f local.yml build
     - CURRENT_UID="$(id -u):$(id -g)" docker stack deploy -c cicd/local.yml "$DOCKER_NAME-tests"
     - while [[ $(docker ps -a | grep "$DOCKER_NAME-tests_django" | grep -c Exited) == 0 ]]; do sleep 1; done
