@@ -48,6 +48,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   ca-certificates \
   # java itself
   openjdk-17-jdk \
+  # install s3fs to mount s3 buckets
+  s3fs \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -78,7 +80,22 @@ RUN pip install ./abcd_converter-0.0.4.tar.gz
 
 # RUN pip install abcd-converter --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 
+COPY ./ena_webin_cli /ena_webin_cli
+
+# Install Aspera CLI (ascp) -----------------------------------------------------------------
+# Create a non-root user
+RUN useradd -m asperauser
+USER asperauser
+RUN whoami
+RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
+    /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
+    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
+# commands in /home/asperauser/.aspera/connect/bin
+# -------------------------------------------------------------------------------------------------
+
+USER root
 COPY ./compose/production/django/entrypoint /entrypoint
+USER root
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
@@ -102,7 +119,11 @@ COPY ./compose/local/django/celery/flower/start /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 
-COPY ./ena_webin_cli /ena_webin_cli
+# passwd-s3fs contains credentials for s3fs: <ACCESS_KEY>:<SECRET_KEY>
+COPY ./compose/local/django/passwd-s3fs /etc/passwd-s3fs
+#COPY ./passwd-s3fs /etc/passwd-s3fs
+RUN chmod 600 /etc/passwd-s3fs
+
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}

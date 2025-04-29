@@ -445,7 +445,6 @@ DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD = env.str(
     "DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD", default="upload_file"
 )
 DJANGO_UPLOAD_TOOLS_USE_REUPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_REUPLOAD", default=False)
-
 if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
     # TODO: if s3 is used also elsewhere besides only for django-upload-tools, it may be a better idea to
     #   use this in a more selective way. For this purpose it is ok to assign the settings only if
@@ -491,3 +490,9 @@ DJANGO_UPLOAD_TOOLS_AOS_PORT = env("DJANGO_UPLOAD_TOOLS_AOS_PORT", default="")
 DJANGO_UPLOAD_TOOLS_PROJECT_ID = env("DJANGO_UPLOAD_TOOLS_PROJECT_ID", default="")
 # The name of your project
 DJANGO_UPLOAD_TOOLS_PROJECT_NAME = env("DJANGO_UPLOAD_TOOLS_PROJECT_NAME", default=None)
+
+
+# Aspera Settings
+# ------------------------------------------------------------------------------
+ASPERA_ASCP_PATH = env.str("ASPERA_ASCP_PATH", default="/home/asperauser/.aspera/connect/bin/ascp")
+S3FS_MOUNT_POINT = env.str("DJANGO_S3FS_MOUNT_POINT", default="/mnt/s3bucket")
