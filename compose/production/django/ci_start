@@ -8,6 +8,8 @@ set -o nounset
 python /app/manage.py collectstatic --noinput
 python /app/manage.py migrate
 
+s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+
 python /app/manage.py shell << EOF
 from django.contrib.auth import get_user_model;
 User = get_user_model();
