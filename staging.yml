@@ -1,4 +1,4 @@
-version: '3'
+version: "3.2"
 
 volumes:
   production_postgres_data: { }
@@ -34,6 +34,8 @@ services:
       - internalProxy
     volumes:
       - django_media:/app/gfbio_submissions/media
+      - type: tmpfs
+        target: /mnt/s3bucket
     command: /start
 
   postgres:
