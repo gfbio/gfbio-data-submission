@@ -52,11 +52,11 @@ groups
 #echo "$DJANGO_AWS_S3_ENDPOINT_URL"
 
 # Ensure /mnt/s3bucket exists and is owned by the Django user
-#mkdir -p /mnt/s3bucket
-#chown django:django /mnt/s3bucket
-#chmod 0770 /mnt/s3bucket
+mkdir -p /mnt/s3bucket
+chown django:django /mnt/s3bucket
+chmod 0770 /mnt/s3bucket
 
 # original
-exec "$@"
+#exec "$@"
 
-#exec gosu django "$@"
+exec gosu django "$@"
