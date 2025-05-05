@@ -34,8 +34,6 @@ services:
       - internalProxy
     volumes:
       - django_media:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
     command: /start
 
   postgres:
