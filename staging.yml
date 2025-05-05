@@ -12,6 +12,12 @@ services:
       dockerfile: ./compose/production/django/Dockerfile
     image: gfbio_submissions_production_django
     container_name: gfbio-django
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
     depends_on:
       - postgres
       - redis
@@ -28,6 +34,8 @@ services:
       - internalProxy
     volumes:
       - django_media:/app/gfbio_submissions/media
+      - type: tmpfs
+        target: /mnt/s3bucket
     command: /start
 
   postgres:
