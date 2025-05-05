@@ -54,6 +54,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   openjdk-17-jdk \
   # install s3fs to mount s3 buckets
   s3fs \
+  # install gosu to run the entrypoint as non-root
+  gosu \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*

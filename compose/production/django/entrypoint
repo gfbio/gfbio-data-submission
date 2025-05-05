@@ -65,4 +65,4 @@ chmod 0770 "$DJANGO_S3FS_MOUNT_POINT"
 # original
 #exec "$@"
 
-exec su-exec django "$@"
+exec gosu django "$@"
