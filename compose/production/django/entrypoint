@@ -6,6 +6,7 @@ set -o nounset
 
 
 
+
 # N.B. If only .env files supported variable expansion...
 export CELERY_BROKER_URL="${REDIS_URL}"
 
@@ -46,4 +47,22 @@ END
 
 >&2 echo 'PostgreSQL is available'
 
-exec "$@"
+
+echo "ENTRYPOINT"
+whoami
+groups
+
+echo "VARIABLES in production start script"
+echo "$DJANGO_AWS_STORAGE_BUCKET_NAME"
+echo "$DJANGO_S3FS_MOUNT_POINT"
+echo "$DJANGO_AWS_S3_ENDPOINT_URL"
+
+# Ensure /mnt/s3bucket exists and is owned by the Django user
+mkdir -p "$DJANGO_S3FS_MOUNT_POINT"
+chown django:django "$DJANGO_S3FS_MOUNT_POINT"
+chmod 0770 "$DJANGO_S3FS_MOUNT_POINT"
+
+# original
+#exec "$@"
+
+exec su-exec django "$@"

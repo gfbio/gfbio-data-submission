@@ -76,6 +76,7 @@ COPY ./ena_webin_cli /ena_webin_cli
 
 # Install Aspera CLI (ascp) -----------------------------------------------------------------
 # Create a non-root user
+# TODO/FIXME: use django user that is created in line 40 instead of asperauser ?
 RUN useradd -m asperauser
 USER asperauser
 RUN whoami
@@ -124,6 +125,6 @@ COPY --chown=django:django . ${APP_HOME}
 # make django owner of the WORKDIR directory as well.
 RUN chown django:django ${APP_HOME}
 
-USER django
+#USER django
 
 ENTRYPOINT ["/entrypoint"]
