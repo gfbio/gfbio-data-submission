@@ -11,7 +11,8 @@ echo "$DJANGO_AWS_STORAGE_BUCKET_NAME"
 echo "$DJANGO_S3FS_MOUNT_POINT"
 echo "$DJANGO_AWS_S3_ENDPOINT_URL"
 echo "mount with s3fs via s3fs $DJANGO_AWS_STORAGE_BUCKET_NAME $DJANGO_S3FS_MOUNT_POINT -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url=$DJANGO_AWS_S3_ENDPOINT_URL"
+echo "deactivate mount command for now"
 
-s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+# s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
 
 exec /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app
