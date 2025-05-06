@@ -4,5 +4,17 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+echo "START CELERY"
+echo "Celery running as:"
+whoami
+id
+groups
+
+echo "paths from here:"
+ls -l /mnt/
+ls -l /mnt/s3bucket
+ls -l /etc/passwd-s3fs
+echo "--------------------------------------------"
+
 
 exec celery -A config.celery_app worker -l INFO
