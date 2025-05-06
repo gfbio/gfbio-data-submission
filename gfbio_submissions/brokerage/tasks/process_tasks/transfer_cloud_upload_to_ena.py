@@ -67,21 +67,49 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     res = TaskProgressReport.CANCELLED
     details = {"cmd": cmd}
     try:
+        logger.info(f"tasks.py | trying to execute | ")
+
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        logger.info(f"tasks.py | subprocess opened | execute proc={proc}")
+
         proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
+        logger.info(f"tasks.py | after communicate password | expect process to be terminated | {proc.returncode}")
         res = True
+        RequestLog.objects.create(
+            type=RequestLog.OUTGOING,
+            url=site_configuration.ena_aspera_server.url,
+            method=RequestLog.NONE,
+            user=submission.user,
+            submission_id=submission.broker_submission_id,
+            request_details=details,
+            # response_content=response.data,
+            # response_status=response.status_code,
+        )
+        logger.info(f"tasks.py | explicit return | res={res}")
+        return res
+
     except Exception as e:
         details['error'] = str(e)
         logger.error(f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | ")
+        RequestLog.objects.create(
+            type=RequestLog.OUTGOING,
+            url=site_configuration.ena_aspera_server.url,
+            method=RequestLog.NONE,
+            user=submission.user,
+            submission_id=submission.broker_submission_id,
+            request_details=details,
+            # response_content=response.data,
+            # response_status=response.status_code,
+        )
 
-    RequestLog.objects.create(
-        type=RequestLog.OUTGOING,
-        url=site_configuration.ena_aspera_server.url,
-        method=RequestLog.NONE,
-        user=submission.user,
-        submission_id=submission.broker_submission_id,
-        request_details=details,
-        # response_content=response.data,
-        # response_status=response.status_code,
-    )
+    # RequestLog.objects.create(
+    #     type=RequestLog.OUTGOING,
+    #     url=site_configuration.ena_aspera_server.url,
+    #     method=RequestLog.NONE,
+    #     user=submission.user,
+    #     submission_id=submission.broker_submission_id,
+    #     request_details=details,
+    #     # response_content=response.data,
+    #     # response_status=response.status_code,
+    # )
     return res
