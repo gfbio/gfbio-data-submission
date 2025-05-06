@@ -20,8 +20,8 @@ from ...tasks.submission_task import SubmissionTask
     base=SubmissionTask,
     bind=True,
     name="tasks.transfer_cloud_upload_to_ena_task",
-    task_soft_time_limit=900,
-    task_time_limit=1000,
+    # task_soft_time_limit=900, # override by global setting ->
+    # task_time_limit=1000,
 )
 def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None):
     if previous_result == TaskProgressReport.CANCELLED:
