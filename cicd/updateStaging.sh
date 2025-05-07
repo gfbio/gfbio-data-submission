@@ -10,9 +10,9 @@ ls .envs
 mv .envs/passwd-s3fs compose/production/django/passwd-s3fs
 
 sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
-#nvm use 8
-#cd userinterface && npm i && npm run collect-ci
-#cd ../
+nvm use 8
+cd userinterface && npm i && npm run collect-ci
+cd ../
 
 nvm use default
 
