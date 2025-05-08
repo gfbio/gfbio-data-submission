@@ -12,9 +12,12 @@ class SubmissionCloudUploadSerializer(serializers.ModelSerializer):
     file = serializers.FileField(source="file_upload.uploaded_file", read_only=True)
     file_name = serializers.CharField(source="file_upload.original_filename", read_only=True)
     file_size = serializers.IntegerField(source="file_upload.file_size", read_only=True)
+    md5 = serializers.CharField(source="file_upload.md5", read_only=True)
+    sha256 = serializers.CharField(source="file_upload.sha256", read_only=True)
 
     class Meta:
         model = SubmissionCloudUpload
         fields = (
-            "user", "file", "submission", "attach_to_ticket", "file_name", "file_size", "meta_data", "pk",
+            "user", "file", "submission", "attach_to_ticket", "file_name", "file_size", "meta_data", "pk", "md5",
+            "sha256"
         )

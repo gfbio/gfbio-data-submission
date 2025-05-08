@@ -2,7 +2,7 @@ import { Checkbox, HoverCard } from "@mantine/core";
 // import filesize from "filesize";
 import PropTypes from "prop-types";
 import React from "react";
-import {filesize} from "filesize";
+import { filesize } from "filesize";
 
 const FileIndicator = ({
                            fileUploads,
@@ -75,15 +75,33 @@ const FileIndicator = ({
                 width: `${upload.percentage}%`,
             };
 
+            const liClasses = [
+                "row",
+                "small",
+                "file-list",
+                "list-group-item",
+                "my-1",
+                "py-2",
+                isSelected ? "selected" : "",
+                upload.invalid ? "border border-danger bg-light" : "",
+            ]
+                .filter(Boolean)
+                .join(" ");
+
             return (
-                <li key={index} className={`row small file-list list-group-item my-1 py-2 ${isSelected ? "selected" : ""}`}>
+                <li key={index} className={liClasses}>
                     <div className="col-12 container">
-                        <div className="row">
+                        <div className="row align-items-center">
                             <div className="col-md-9">
                                 <div className="container h-100">
                                     <small className="file-name row h-100 ps-3">
-                                        <div
-                                            className="col-1 d-flex justify-content-end align-items-center checkbox-col">
+                                        <div className="col-auto d-flex align-items-center pe-0">
+                                            {upload.invalid && (
+                                                <i
+                                                    className="fa fa-exclamation-circle text-danger fa-lg me-3"
+                                                    title="Invalid filename"
+                                                />
+                                            )}
                                             <Checkbox
                                                 type="checkbox"
                                                 id={`primary${index}`}
@@ -92,8 +110,11 @@ const FileIndicator = ({
                                                 checked={isSelected}
                                             />
                                         </div>
-                                        <div className="col-11 d-flex align-items-center">
-                                            <label htmlFor={`primary${index}`} className="metadata mb-0 w-100">
+                                        <div className="col d-flex align-items-center">
+                                            <label
+                                                htmlFor={`primary${index}`}
+                                                className="metadata mb-0 w-100"
+                                            >
                                                 <i className="icon ion-md-document pub pe-2"></i>
                                                 {upload.name}
                                             </label>
@@ -114,12 +135,16 @@ const FileIndicator = ({
                                 <i className="fa fa-trash" aria-hidden="true"></i>
                             </button>
                         </div>
-
-                        { (upload.percentage && upload.percentage > -1) && (
+                        {upload.percentage !== undefined && upload.percentage > -1 && (
                             <div className="progress">
-                                <div className="progress-bar" role="progressbar" style={progressStyle}
-                                    aria-valuenow={`${upload.progress}`} aria-valuemin="0"
-                                    aria-valuemax="100"></div>
+                                <div
+                                    className="progress-bar"
+                                    role="progressbar"
+                                    style={progressStyle}
+                                    aria-valuenow={`${upload.progress}`}
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                />
                             </div>
                         )}
                     </div>
@@ -139,28 +164,19 @@ const FileIndicator = ({
                         <div className="col-md-8">
                             <div className="container">
                                 <div className="row">
-                                    <span className="ps-0 py-3 col-6 upload-header list-header">
-                                    Metadata
-                                    <HoverCard
-                                        width={320}
-                                        shadow="md"
-                                        position="right"
-                                        withArrow
-                                    >
-                                    <HoverCard.Target>
-                                    <i
-                                        className="fa fa-question-circle-o ps-2"
-                                        aria-hidden="true"
-                                    ></i>
-                                    </HoverCard.Target>
-                                    <HoverCard.Dropdown>
-                                    <p>
-                                        select the primary metadata file, e.g. metadata
-                                        template
-                                    </p>
-                                    </HoverCard.Dropdown>
-                                </HoverCard>
-                                </span>
+                  <span className="ps-0 py-3 col-6 upload-header list-header">
+                    Metadata
+                    <HoverCard width={320} shadow="md" position="right" withArrow>
+                      <HoverCard.Target>
+                        <i className="fa fa-question-circle-o ps-2" aria-hidden="true"></i>
+                      </HoverCard.Target>
+                      <HoverCard.Dropdown>
+                        <p>
+                          Select the primary metadata file, e.g. metadata template.
+                        </p>
+                      </HoverCard.Dropdown>
+                    </HoverCard>
+                  </span>
                                 </div>
                             </div>
                         </div>

@@ -76,7 +76,6 @@ app.autodiscover_tasks(
         "gfbio_submissions.brokerage.tasks.submission_tasks.check_on_hold_status",
         "gfbio_submissions.brokerage.tasks.atax_tasks.parse_atax_uploads",
         "gfbio_submissions.brokerage.tasks.atax_tasks.atax_run_combination_task",
-        # "gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_parse_csv_upload_to_xml",
-        # "gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_combine_xmls_to_one_structure",
+        "gfbio_submissions.brokerage.tasks.process_tasks.transfer_cloud_upload_to_ena",
     ]
 )

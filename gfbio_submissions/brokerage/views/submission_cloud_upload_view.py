@@ -70,6 +70,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
         # TODO: try and except block
         # TODO: refactor worker code to dedicated methods
+
         upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=request.data)
         upload_serializer.is_valid(raise_exception=True)
 

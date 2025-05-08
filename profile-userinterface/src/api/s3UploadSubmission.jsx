@@ -2,6 +2,17 @@ import axios from "axios";
 import SparkMD5 from "spark-md5";
 import { SUBMISSIONS_API } from "../settings.jsx";
 
+async function calculateSHA256(file) {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function calculateMD5(file) {
+    const buffer = await file.arrayBuffer();
+    return SparkMD5.ArrayBuffer.hash(buffer);
+}
 
 async function runWithConcurrency(tasks, concurrency) {
     const results = new Array(tasks.length);
@@ -40,6 +51,11 @@ export async function uploadFileToS3(
     const totalParts = Math.ceil(file.size / partSize);
     const fileType = file.type || "application/octet-stream";
 
+    const [md5, sha256] = await Promise.all([
+        calculateMD5(file),
+        calculateSHA256(file),
+    ]);
+
     const startResponse = await axios.post(
         `${SUBMISSIONS_API}${brokerSubmissionId}/cloudupload/`,
         {
@@ -50,6 +66,8 @@ export async function uploadFileToS3(
             total_parts: totalParts,
             meta_data: meta_data,
             attach_to_ticket: attach_to_ticket,
+            md5: md5,
+            sha256: sha256,
         },
         {
             headers: {

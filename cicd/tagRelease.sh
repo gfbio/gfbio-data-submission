@@ -16,6 +16,8 @@ if [ ${IS_PRODUCTION} -eq "1" ]; then
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
   # build
   rsync -a /home/gitlab-runner/.envs .
+  mv .envs/passwd-s3fs compose/production/django/passwd-s3fs
+
   nvm use 8
   cd userinterface && npm i && npm run collect-ci
   cd ../

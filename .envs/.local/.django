@@ -22,4 +22,4 @@ REDIS_URL=redis://redis:6379/0
 
 # Testing DT_UPLOAD
 # ------------------------------------------------------------------------------
-DJANGO_UPLOAD_TOOLS_USE_S3=True
+

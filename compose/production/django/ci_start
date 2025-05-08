@@ -4,11 +4,10 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-
 python /app/manage.py collectstatic --noinput
 python /app/manage.py migrate
 
-python /app/manage.py shell << EOF
+python /app/manage.py shell <<EOF
 from django.contrib.auth import get_user_model;
 User = get_user_model();
 User.objects.create_superuser("adminuser", "adminuser@dev.com", "adminuser")

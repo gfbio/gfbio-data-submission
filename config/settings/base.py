@@ -307,10 +307,10 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-time-limit
 # TODO: set to whatever value is adequate in your circumstances
-CELERY_TASK_TIME_LIMIT = 15 * 60
+CELERY_TASK_TIME_LIMIT = 25 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 # TODO: set to whatever value is adequate in your circumstances
-CELERY_TASK_SOFT_TIME_LIMIT = 10 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 20 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#beat-scheduler
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-send-task-events
@@ -436,7 +436,7 @@ DEFAULT_COLLECTION_ID = 1  # specified via fixture
 # Determine Environment
 DJANGO_ENV = env("DJANGO_ENV", default="development")
 DJANGO_UPLOAD_TOOLS_USE_CLIENTSIDE_UPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_CLIENTSIDE_UPLOAD", default=False)
-DJANGO_UPLOAD_TOOLS_USE_S3 = env.bool("DJANGO_UPLOAD_TOOLS_USE_S3", default=False)
+DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD", default=False)
 DJANGO_UPLOAD_TOOLS_USE_ARUNA = env.bool("DJANGO_UPLOAD_TOOLS_USE_ARUNA", default=False)
 DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP = env.bool("DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP", default=False)
 DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP = env.bool("DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", default=False)
@@ -445,11 +445,10 @@ DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD = env.str(
     "DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD", default="upload_file"
 )
 DJANGO_UPLOAD_TOOLS_USE_REUPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_REUPLOAD", default=False)
-
-if DJANGO_UPLOAD_TOOLS_USE_S3:
+if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
     # TODO: if s3 is used also elsewhere besides only for django-upload-tools, it may be a better idea to
     #   use this in a more selective way. For this purpose it is ok to assign the settings only if
-    #   DJANGO_UPLOAD_TOOLS_USE_S3 is set to True (defaults to False)
+    #   DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD is set to True (defaults to False)
     # STORAGES
     # ------------------------------------------------------------------------------
 
@@ -463,33 +462,8 @@ if DJANGO_UPLOAD_TOOLS_USE_S3:
     AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default="default")
     # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
     AWS_S3_ENDPOINT_URL = env("DJANGO_AWS_S3_ENDPOINT_URL", default=None)
-    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#cloudfront
-    aws_s3_domain = AWS_S3_ENDPOINT_URL or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 
-    # MEDIA
-    # ------------------------------------------------------------------------------
-    DEFAULT_FILE_STORAGE = "dt_upload.utils.storages.MediaRootS3Boto3Storage"
-    MEDIA_URL = f"{aws_s3_domain}/"
-
-if DJANGO_UPLOAD_TOOLS_USE_ARUNA:
-    # STORAGES
-    # ------------------------------------------------------------------------------
-
-    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-    AWS_ACCESS_KEY_ID = env("DJANGO_ARUNA_AWS_ACCESS_KEY_ID", default=None)
-    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-    AWS_SECRET_ACCESS_KEY = env("DJANGO_ARUNA_AWS_SECRET_ACCESS_KEY", default=None)
-    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-    AWS_STORAGE_BUCKET_NAME = env("DJANGO_ARUNA_AWS_STORAGE_BUCKET_NAME", default=None)
-    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-    AWS_S3_ENDPOINT_URL = env("DJANGO_ARUNA_AWS_S3_ENDPOINT_URL", default=None)
-
-    # # MEDIA
-    # # ------------------------------------------------------------------------------
-    DEFAULT_FILE_STORAGE = "dt_upload.utils.storages.MediaRootS3Boto3Storage"
-    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/"
-
-# END if DJANGO_UPLOAD_TOOLS_USE_ARUNA: +++++++++++++++++++++++++++++++++++++++++++
+    CLOUD_MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/"
 
 if DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP or DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP:
     # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
@@ -502,3 +476,23 @@ if DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP or DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP
     BACKUP_AWS_S3_ENDPOINT_URL = env("BACKUP_DJANGO_AWS_S3_ENDPOINT_URL", default=None)
 
     BACKUP_MEDIA_URL = f"{BACKUP_AWS_S3_ENDPOINT_URL}/"
+
+# Aruna Settings to create collections
+# ------------------------------------------------------------------------------
+DJANGO_UPLOAD_TOOLS_CREATE_COLLECTION = env.bool("DJANGO_UPLOAD_TOOLS_CREATE_COLLECTION", default=False)
+# The gRPC server endpoint to connect to (e.g. grpc.aruna-storage.org)
+DJANGO_UPLOAD_TOOLS_AOS_HOST = env("DJANGO_UPLOAD_TOOLS_AOS_HOST", default="")
+# Authentication token, prefixed by Bearer: Bearer <token>. Can be created on https://aruna-storage.org/
+DJANGO_UPLOAD_TOOLS_API_TOKEN = env("DJANGO_UPLOAD_TOOLS_API_TOKEN", default=None)
+# Open port for communication(443)
+DJANGO_UPLOAD_TOOLS_AOS_PORT = env("DJANGO_UPLOAD_TOOLS_AOS_PORT", default="")
+# ID of the created AOS project
+DJANGO_UPLOAD_TOOLS_PROJECT_ID = env("DJANGO_UPLOAD_TOOLS_PROJECT_ID", default="")
+# The name of your project
+DJANGO_UPLOAD_TOOLS_PROJECT_NAME = env("DJANGO_UPLOAD_TOOLS_PROJECT_NAME", default=None)
+
+
+# Aspera Settings
+# ------------------------------------------------------------------------------
+ASPERA_ASCP_PATH = env.str("ASPERA_ASCP_PATH", default="/home/asperauser/.aspera/connect/bin/ascp")
+S3FS_MOUNT_POINT = env.str("DJANGO_S3FS_MOUNT_POINT", default="/mnt/s3bucket")

@@ -10,6 +10,7 @@ import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import { ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY } from "../settings.jsx";
+import { formatDateToYYYYMMDD } from "../utils/dateUtils";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 
@@ -45,7 +46,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         // Start with minimal required values
         const values = {
             files: filesValue,
-            embargo: submissionData?.embargo || defaultEmbargoDate.toISOString().split("T")[0],
+            embargo: submissionData?.embargo || formatDateToYYYYMMDD(defaultEmbargoDate),
             download_url: submissionData?.download_url || "",
         };
 
@@ -193,7 +194,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     };
 
     const handleSubmit = (values) => {
-        if (!form.isValid || uploadLimitExceeded) {
+        if (!form.isValid || uploadLimitExceeded || (values.files && values.files.some(file => file.invalid))) {
             return;
         }
         setProcessing(true);

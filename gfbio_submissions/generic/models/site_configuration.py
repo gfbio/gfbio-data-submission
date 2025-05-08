@@ -69,6 +69,17 @@ class SiteConfiguration(TimeStampedModel):
         ),
         on_delete=models.PROTECT,
     )
+    ena_aspera_server = models.ForeignKey(
+        ResourceCredential,
+        null=True,
+        blank=True,
+        related_name="SiteConfiguration.ena_aspera_server+",
+        help_text=(
+            "Select which server and/or account this configuration should use to connect to access ENA Aspera "
+            "server."
+        ),
+        on_delete=models.PROTECT,
+    )
     pangaea_token_server = models.ForeignKey(
         ResourceCredential,
         null=True,

@@ -60,6 +60,6 @@ django_reverse_admin==2.9.6
 
 # Upload Library
 # ------------------------------------------------------------------------------
-django-upload-tools @https://gitlab-pe.gwdg.de/gfbio/django-upload-tools/-/raw/master/dist/django-upload-tools-0.4.1.tar.gz
+django-upload-tools @https://gitlab-pe.gwdg.de/gfbio/django-upload-tools/-/raw/master/dist/django-upload-tools-0.4.4.tar.gz
 
 
