@@ -42,21 +42,12 @@ END
 
 echo >&2 'PostgreSQL is available'
 
-echo "ENTRYPOINT"
-whoami
-groups
-
-#echo "VARIABLES in ENTRYPOINT start script"
-#echo "$DJANGO_AWS_STORAGE_BUCKET_NAME"
-#echo "$DJANGO_S3FS_MOUNT_POINT"
-#echo "$DJANGO_AWS_S3_ENDPOINT_URL"
-
 # Ensure /mnt/s3bucket exists and is owned by the Django user
 mkdir -p /mnt/s3bucket
 chown django:django /mnt/s3bucket
 chmod 0770 /mnt/s3bucket
 
-# original
+# original exec command
 #exec "$@"
 
 exec gosu django "$@"

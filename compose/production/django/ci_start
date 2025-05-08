@@ -4,18 +4,10 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-
 python /app/manage.py collectstatic --noinput
 python /app/manage.py migrate
 
-echo "VARIABLES in production ci-start script"
-echo "$DJANGO_AWS_STORAGE_BUCKET_NAME"
-echo "$DJANGO_S3FS_MOUNT_POINT"
-echo "$DJANGO_AWS_S3_ENDPOINT_URL"
-
-# s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
-
-python /app/manage.py shell << EOF
+python /app/manage.py shell <<EOF
 from django.contrib.auth import get_user_model;
 User = get_user_model();
 User.objects.create_superuser("adminuser", "adminuser@dev.com", "adminuser")

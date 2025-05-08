@@ -4,23 +4,6 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-echo "START CELERY"
-echo "Celery running as:"
-whoami
-id
-groups
-
-echo "paths from here:"
-ls -l /mnt/
-ls -l /mnt/s3bucket
-ls -l /etc/passwd-s3fs
-echo "--------------------------------------------"
-echo "$DJANGO_AWS_STORAGE_BUCKET_NAME"
-echo "$DJANGO_S3FS_MOUNT_POINT"
-echo "$DJANGO_AWS_S3_ENDPOINT_URL"
-echo "mount with s3fs via s3fs $DJANGO_AWS_STORAGE_BUCKET_NAME $DJANGO_S3FS_MOUNT_POINT -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url=$DJANGO_AWS_S3_ENDPOINT_URL"
-
 s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
-
 
 exec celery -A config.celery_app worker -l INFO

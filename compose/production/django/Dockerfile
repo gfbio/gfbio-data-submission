@@ -128,6 +128,8 @@ COPY --chown=django:django . ${APP_HOME}
 # make django owner of the WORKDIR directory as well.
 RUN chown django:django ${APP_HOME}
 
-#USER django
+# do not switch to user django here, as it was done before, and stay user root
+# to execute permission changes in the entrypoint
+# USER django
 
 ENTRYPOINT ["/entrypoint"]
