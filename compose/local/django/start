@@ -7,7 +7,13 @@ set -o nounset
 python manage.py migrate
 python manage.py collectstatic --noinput
 
-s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+if [ "${MOUNT_S3FS:-false}" = "True" ]; then
+  echo "Mounting S3FS. MOUNT_S3FS=${MOUNT_S3FS}"
+  echo "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+  s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+else
+  echo "Not mounting S3FS. MOUNT_S3FS is set to False or not existing."
+fi
 
 exec python manage.py runserver_plus 0.0.0.0:8000
 

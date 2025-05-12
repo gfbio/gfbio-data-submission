@@ -121,7 +121,6 @@ RUN chmod +x /start-flower
 
 # passwd-s3fs contains credentials for s3fs: <ACCESS_KEY>:<SECRET_KEY>
 COPY ./compose/local/django/passwd-s3fs /etc/passwd-s3fs
-#COPY ./passwd-s3fs /etc/passwd-s3fs
 RUN chmod 600 /etc/passwd-s3fs
 
 
