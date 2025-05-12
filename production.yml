@@ -89,6 +89,15 @@ services:
         tag: 'GFBio-celery-worker'
     command: /start-celeryworker
 
+  celery-transfer-worker:
+    <<: *django
+    image: gfbio_submissions_production_celeryworker
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-transfer-worker'
+    command: /start-celery-transfer-worker
+
   celerybeat:
     <<: *django
     image: gfbio_submissions_production_celerybeat

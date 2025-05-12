@@ -20,6 +20,7 @@ from ...tasks.submission_task import SubmissionTask
     base=SubmissionTask,
     bind=True,
     name="tasks.transfer_cloud_upload_to_ena_task",
+    queue="ena_transfer",
     # task_soft_time_limit=900, # override by global setting ->
     # task_time_limit=1000,
 )
