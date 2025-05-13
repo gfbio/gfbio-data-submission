@@ -154,7 +154,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.common.BrokenLinkEmailsMiddleware",
+    # "django.middleware.common.BrokenLinkEmailsMiddleware",
+    "gfbio_submissions.utils.middleware.LogBrokenLinksMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "gfbio_submissions.utils.middleware.RestrictedMediaMiddleware",
 ]
