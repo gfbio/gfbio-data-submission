@@ -5,4 +5,4 @@ set -o nounset
 
 
 
-exec watchfiles celery.__main__.main --args '-A config.celery_app worker -l INFO'
+exec watchfiles celery.__main__.main --args '-A config.celery_app worker -l INFO -Q default --concurrency=4'
