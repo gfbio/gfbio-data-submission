@@ -35,9 +35,6 @@ class RestrictedMediaMiddleware:
 
 class LogBrokenLinksMiddleware(BrokenLinkEmailsMiddleware):
     def process_response(self, request, response):
-        if response.status_code == 404 and self.is_ignorable_404(request, response):
-            # Do not log ignorable 404s
-            return response
         if response.status_code == 404:
             logger.warning(
                 "middleware.py | BrokenLinkEmailsMiddleware - LogBrokenLinksMiddleware | Broken link: %s (Referer: %s)",
