@@ -68,11 +68,21 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     try:
         logger.info(f"tasks.py | trying to execute | ")
 
-        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logger.info(f"tasks.py | subprocess opened | execute proc={proc}")
 
-        proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
+
+        stdout, stderr = proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
+
+        # TODO: process for a list of suitable errors (most likely text parsing/mathcing) and if on of them is
+        #  found return 500 to already existign retry implementation
+        #  needs an object response, for that response.status_code can be accessed to mimick behaviour
+        #   see register study at ena task (navlink 2+3), see taskutisl (navlink 4) see transfer_exceptions (navlink 5)
+
+        logger.info(f"tasks.py | after communicate password | ascp stdout: {stdout.decode(errors='replace')}")
+        logger.error(f"tasks.py | after communicate password |ascp stderr: {stderr.decode(errors='replace')}")
         logger.info(f"tasks.py | after communicate password | expect process to be terminated | {proc.returncode}")
+
         res = True
     except Exception as e:
         details['error'] = str(e)
