@@ -3,9 +3,11 @@ import logging
 import os
 import subprocess
 
+from celery.exceptions import Retry
 from django.conf import settings
 
 from config.celery_app import app
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...utils.task_utils import get_submission_and_site_configuration
@@ -20,6 +22,9 @@ from ...tasks.submission_task import SubmissionTask
     base=SubmissionTask,
     bind=True,
     name="tasks.transfer_cloud_upload_to_ena_task",
+    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True,
     queue="ena_transfer",
 )
 def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None):
@@ -71,19 +76,43 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logger.info(f"tasks.py | subprocess opened | execute proc={proc}")
 
-
         stdout, stderr = proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
 
-        # TODO: process for a list of suitable errors (most likely text parsing/mathcing) and if on of them is
-        #  found return 500 to already existign retry implementation
-        #  needs an object response, for that response.status_code can be accessed to mimick behaviour
-        #   see register study at ena task (navlink 2+3), see taskutisl (navlink 4) see transfer_exceptions (navlink 5)
+        logger.info(
+            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | ascp stdout: {stdout.decode(errors='replace')}")
+        logger.error(
+            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password |ascp stderr: {stderr.decode(errors='replace')}")
+        logger.info(
+            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | expect process to be terminated | {proc.returncode}")
 
-        logger.info(f"tasks.py | after communicate password | ascp stdout: {stdout.decode(errors='replace')}")
-        logger.error(f"tasks.py | after communicate password |ascp stderr: {stderr.decode(errors='replace')}")
-        logger.info(f"tasks.py | after communicate password | expect process to be terminated | {proc.returncode}")
-
-        res = True
+        retryable_patterns = [
+            "failed to connect",
+            "unable to reach server",
+            "target address not available",
+            "server not responding",
+            "session timeout",
+            "connection lost",
+            "network error",
+            "timeout"
+        ]
+        if proc.returncode != 0:
+            stderr_str = stderr.decode(errors='replace').lower()
+            if any(pattern in stderr_str for pattern in retryable_patterns):
+                logger.info(
+                    f"tasks.py | transfer_cloud_upload_to_ena_task | starting retry | "
+                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode}"
+                )
+                raise self.retry(exc=Exception(stderr_str))
+            else:
+                res = TaskProgressReport.CANCELLED
+                logger.error(
+                    f"tasks.py | transfer_cloud_upload_to_ena_task | general error | "
+                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode}"
+                )
+        else:
+            res = True
+    except Retry:
+        raise
     except Exception as e:
         details['error'] = str(e)
         logger.error(f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | ")
