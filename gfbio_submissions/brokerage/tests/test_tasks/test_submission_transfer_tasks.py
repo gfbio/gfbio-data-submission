@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 
 import responses
 from celery import chain
@@ -19,6 +20,7 @@ from .test_tasks_base import TestTasks
 
 
 class TestSubmissionTransferTasks(TestTasks):
+
     def test_prepare_ena_submission_data_task(self):
         submission = Submission.objects.first()
         text_data = AuditableTextData.objects.all()
@@ -30,6 +32,10 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertIn("SAMPLE", ret_val.keys())
         text_data = AuditableTextData.objects.all()
         self.assertEqual(4, len(text_data))
+
+        print('RUN XML: ----------------')
+        pprint(ret_val['RUN'])
+
 
     @responses.activate
     def test_transfer_to_ena_task_successful(self):

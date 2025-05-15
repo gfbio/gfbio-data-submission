@@ -74,6 +74,7 @@ class Enalizer(object):
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
         self.submission_id = submission.id
+        self.submission = submission
         self.samples_with_checklist_errors = []
 
     def _upper_case_dictionary(self, dictionary):
@@ -537,9 +538,13 @@ class Enalizer(object):
             data_block = SubElement(run_root, "DATA_BLOCK")
 
             files = SubElement(data_block, "FILES")
+            print('\ncreate_run_data_block with files ----------------------')
             for file in run.get("data_block", {}).get("files", []):
                 file_element = SubElement(files, "FILE")
-
+                print('\tfile ', file)
+                print('\tfile_attributes ', file_attributes)
+                print('\tsubmission ', self.submission)
+                print('\tsubmission assoc cloud uploads ', self.submission.submissioncloudupload_set.all())
                 for attrib in file_attributes:
                     if attrib == "filename" and broker_submission_id:
                         file[attrib] = "{0}/{1}".format(broker_submission_id, file[attrib])
