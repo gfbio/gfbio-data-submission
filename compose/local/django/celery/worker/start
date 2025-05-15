@@ -3,6 +3,7 @@
 set -o errexit
 set -o nounset
 
+# when needed for local testing with CELERY_ALWAYS_EAGER=False: s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
 
 
 exec watchfiles celery.__main__.main --args '-A config.celery_app worker -l INFO -Q default --concurrency=4'
