@@ -10,24 +10,6 @@
   <script>
     window.props = {{ parameters|safe }};
   </script>
-  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <h4 class="alert-heading">
-      Important Notice: ENA Submission Processing Downtime
-    </h4>
-    <p class="mb-1">
-      The European Nucleotide Archive (ENA) will undergo scheduled cluster downtime and maintenance from
-      <strong>Monday, May 12th, to Friday, May 16th, 2025.</strong>
-      During this period, ENA will not be processing submissions, and any new submissions may encounter issues during the submission process.
-      Following ENA's advice, no data should be submitted until Friday, 16th May.
-    </p>
-    <p class="mb-1">
-      If you are planning to submit data to ENA during this time via our Submission Service, be aware that there will be delays in the processing and brokering of your data.
-    </p>
-    <p class="mb-1">
-      Thank you for your understanding.
-    </p>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
   <div id="root"></div>
 
 {% endblock content %}

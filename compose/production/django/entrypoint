@@ -42,12 +42,20 @@ END
 
 echo >&2 'PostgreSQL is available'
 
-# Ensure /mnt/s3bucket exists and is owned by the Django user
-mkdir -p /mnt/s3bucket
-chown django:django /mnt/s3bucket
-chmod 0770 /mnt/s3bucket
+mkdir -p "$DJANGO_S3FS_MOUNT_POINT"
+USER_TO_CHECK=django
 
-# original exec command
+if id "$USER_TO_CHECK" &>/dev/null; then
+    # Ensure /mnt/s3bucket exists and is owned by the Django user if available
+    chown django:django "$DJANGO_S3FS_MOUNT_POINT"
+    chmod 0770 "$DJANGO_S3FS_MOUNT_POINT"
+    exec gosu django "$@"
+else
+    echo "User $USER_TO_CHECK does not exist, skipping chown. Only root will be able to access /mnt/s3bucket"
+    exec "$@"
+fi
+
+# original exec command from cookiecutter template:
 #exec "$@"
 
-exec gosu django "$@"
+

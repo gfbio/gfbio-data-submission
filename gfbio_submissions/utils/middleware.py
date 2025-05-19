@@ -1,5 +1,11 @@
+import logging
+
 from django.conf import settings
 from django.http import HttpResponse
+from django.middleware.common import BrokenLinkEmailsMiddleware
+
+logger = logging.getLogger(__name__)
+
 
 class RestrictedMediaMiddleware:
 
@@ -12,10 +18,10 @@ class RestrictedMediaMiddleware:
             if request.user.is_authenticated:
                 return self.defaultHandling(request)
             else:
-                return HttpResponse('Please log in to receive media files', status=401) 
+                return HttpResponse('Please log in to receive media files', status=401)
         else:
             return self.defaultHandling(request)
-    
+
     handle = defaultHandling
 
     def __init__(self, get_response):
@@ -25,3 +31,14 @@ class RestrictedMediaMiddleware:
 
     def __call__(self, request):
         return self.handle(request)
+
+
+class LogBrokenLinksMiddleware(BrokenLinkEmailsMiddleware):
+    def process_response(self, request, response):
+        if response.status_code == 404:
+            logger.warning(
+                "middleware.py | BrokenLinkEmailsMiddleware - LogBrokenLinksMiddleware | Broken link: %s (Referer: %s)",
+                request.build_absolute_uri(),
+                request.META.get("HTTP_REFERER", "-"),
+            )
+        return response

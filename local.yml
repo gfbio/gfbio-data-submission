@@ -1,9 +1,9 @@
 version: "3"
 
 volumes:
-  local_postgres_data: {}
-  local_postgres_data_backups: {}
-  django_media: {}
+  local_postgres_data: { }
+  local_postgres_data_backups: { }
+  django_media: { }
 
 services:
   django: &django
@@ -47,7 +47,6 @@ services:
     ports:
       - "5444:5432"
 
-  # lorem ipsum ...
 
   docs:
     image: gfbio_submissions_local_docs
@@ -83,6 +82,17 @@ services:
 
     ports: []
     command: /start-celeryworker
+
+  celery-transfer-worker:
+    <<: *django
+    image: gfbio_submissions_local_celeryworker
+    container_name: celery-transfer-worker
+    depends_on:
+      - redis
+      - postgres
+
+    ports: [ ]
+    command: /start-celery-transfer-worker
 
   celerybeat:
     <<: *django

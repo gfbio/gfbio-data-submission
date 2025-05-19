@@ -5,6 +5,7 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+from kombu import Queue
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
@@ -154,7 +155,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.common.BrokenLinkEmailsMiddleware",
+    # "django.middleware.common.BrokenLinkEmailsMiddleware",
+    "gfbio_submissions.utils.middleware.LogBrokenLinksMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "gfbio_submissions.utils.middleware.RestrictedMediaMiddleware",
 ]
@@ -317,6 +319,11 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_WORKER_SEND_TASK_EVENTS = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-task_send_sent_event
 CELERY_TASK_SEND_SENT_EVENT = True
+
+CELERY_TASK_QUEUES = [
+    Queue('default', routing_key='default'),
+    Queue('ena_transfer', routing_key='ena_transfer'),
+]
 
 # django-allauth
 # ------------------------------------------------------------------------------

@@ -111,6 +111,10 @@ COPY ./compose/local/django/celery/worker/start /start-celeryworker
 RUN sed -i 's/\r$//g' /start-celeryworker
 RUN chmod +x /start-celeryworker
 
+COPY ./compose/local/django/celery/worker/start-transfer-worker /start-celery-transfer-worker
+RUN sed -i 's/\r$//g' /start-celery-transfer-worker
+RUN chmod +x /start-celery-transfer-worker
+
 COPY ./compose/local/django/celery/beat/start /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat
 RUN chmod +x /start-celerybeat
@@ -121,7 +125,6 @@ RUN chmod +x /start-flower
 
 # passwd-s3fs contains credentials for s3fs: <ACCESS_KEY>:<SECRET_KEY>
 COPY ./compose/local/django/passwd-s3fs /etc/passwd-s3fs
-#COPY ./passwd-s3fs /etc/passwd-s3fs
 RUN chmod 600 /etc/passwd-s3fs
 
 
