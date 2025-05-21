@@ -80,7 +80,7 @@ services:
       driver: syslog
       options:
         tag: 'GFBio-celery-transfer-worker'
-    command: /start-celery-transfer-worker
+    command: /start-transfer-worker
 
   celerybeat:
     <<: *django
