@@ -2,6 +2,7 @@
 
 import datetime
 import gzip
+import hashlib
 import io
 import json
 import logging
@@ -544,11 +545,52 @@ class Enalizer(object):
                 print('\tfile ', file)
                 print('\tfile_attributes ', file_attributes)
                 print('\tsubmission ', self.submission)
-                print('\tsubmission assoc cloud uploads ', self.submission.submissioncloudupload_set.all())
+                print('\tsubmission assoc cloud uploads ', )
+                # for scu in self.submission.submissioncloudupload_set.all():
+                #     print("\t\t", scu.file_upload.file_key)
+                #     print("\t\t", scu.file_upload.original_filename)
+                #     file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{scu.file_upload.file_key}"
+                #     print("\t\t", file_path)
+                #     print("\t\t", os.path.exists(file_path))
+                #     if os.path.exists(file_path):
+                #         with open(file_path, 'rb') as f:
+                #             f_read = f.read()
+                #             md5 = hashlib.md5(f_read).hexdigest()
+                #             sha256 = hashlib.sha256(f_read).hexdigest()
+                #             print("\t\tMD5: ", md5)
+                #             print("\t\tSHA256: ", sha256)
+
+
                 for attrib in file_attributes:
+                    print("\n-------\nattribute ", attrib)
                     if attrib == "filename" and broker_submission_id:
-                        file[attrib] = "{0}/{1}".format(broker_submission_id, file[attrib])
-                    file_element.set(attrib, file.get(attrib, "no_attribute_found"))
+                        filename = file["filename"]
+                        # file["filename"] = "{0}/{1}".format(broker_submission_id, filename)
+                        print("\tattrib filename ", filename)
+                        file_element.set("filename", filename)
+
+                        valid_checksum_methods = ["md5", "sha256"]
+                        checksum_method = file.get("checksum_method", "invalid").lower()
+                        print("\t\tchecksum_method: ", checksum_method)
+                        if file.get("checksum_method", False) and checksum_method in valid_checksum_methods:
+                            submission_cloud_upload = self.submission.submissioncloudupload_set.filter(file_upload__original_filename=filename).first()
+                            file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
+                            print("\t\t", file_path)
+                            if submission_cloud_upload and os.path.exists(file_path):
+                                with open(file_path, 'rb') as f:
+                                    f_read = f.read()
+                                    if checksum_method == "md5":
+                                        checksum = hashlib.md5(f_read).hexdigest()
+                                    elif checksum_method == "sha256":
+                                        checksum = hashlib.sha256(f_read).hexdigest()
+                                    print("\t\tchecksum: ", checksum)
+                            file["checksum"] = checksum
+                            file_element.set("checksum", checksum)
+                            file["checksum_method"] = checksum_method
+                            file_element.set("checksum_method", checksum_method)
+                        # print(f"set attrib {attrib} with file-get-attrib={file.get(attrib, 'no_attribute_found')} to file_element")
+                    else:
+                        file_element.set(attrib, file.get(attrib, "no_attribute_found"))
             return data_block
         else:
             return None
@@ -563,6 +605,9 @@ class Enalizer(object):
         file_attributes = [
             "filename",
             "filetype",
+            # TODO: DASS-2607
+            "checksum_method",
+            "checksum"
         ]
         for r in self.run:
             # center=wenn gfbio center vom user | broker_name="Wir als GFBio" siehe brokeraccount   | (optional) run_center=wer hat sequenziert, registriert bei ena ?
