@@ -78,6 +78,10 @@ RUN sed -i 's/\r$//g' /start-celeryworker
 RUN chmod +x /start-celeryworker
 RUN chown django /start-celeryworker
 
+COPY --chown=django:django ./compose/production/django/celery/worker/start-transfer-worker /start-celery-transfer-worker
+RUN sed -i 's/\r$//g' /start-celery-transfer-worker
+RUN chmod +x /start-celery-transfer-worker
+
 COPY ./compose/production/django/celery/beat/start /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat
 RUN chmod +x /start-celerybeat

@@ -116,7 +116,7 @@ services:
       driver: syslog
       options:
         tag: "GFBio-celery-transferworker"
-    command: /start-transfer-worker
+    command: /start-celery-transfer-worker
     restart: always
 
   celerybeat:
