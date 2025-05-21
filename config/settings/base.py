@@ -325,6 +325,9 @@ CELERY_TASK_QUEUES = [
     Queue('ena_transfer', routing_key='ena_transfer'),
 ]
 
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+
 # django-allauth
 # ------------------------------------------------------------------------------
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
