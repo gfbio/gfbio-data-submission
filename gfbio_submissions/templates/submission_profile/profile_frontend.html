@@ -10,6 +10,9 @@
   <script>
     window.props = {{ parameters|safe }};
   </script>
+  {% if active_banners %}
+    {% include "utils/banners.html" %}
+  {% endif %}
   <div id="root"></div>
 
 {% endblock content %}

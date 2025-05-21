@@ -78,6 +78,9 @@
       gtag('config', 'G-F96NGEWFKC', {anonymize_ip: true});
     </script>
   {% endif %}
+  {% if active_banners %}
+    <script src="{% static 'js/banners.js' %}"></script>
+  {% endif %}
 
 </head>
 
