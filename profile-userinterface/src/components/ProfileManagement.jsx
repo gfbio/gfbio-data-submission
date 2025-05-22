@@ -40,7 +40,7 @@ const ProfileManagement = ({profileListData, activeProfile, setActiveProfile}) =
                     }}
                 >
                     <div>
-                        Current profile: <b>{activeProfile}</b>
+                        Current Profile: <b>{activeProfile}</b>
                     </div>
                     <Button className="change-profile-button ms-2">
                         Change

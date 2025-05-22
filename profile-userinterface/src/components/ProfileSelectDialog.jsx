@@ -59,11 +59,11 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData, active
                 className="submission-form container"
             >
                 <div className="col-md-12 pt-2">
-                    Fields are currently displayed according to profile <b>{activeProfile}</b>
+                    Fields are currently displayed according to Submission Profile <b>{activeProfile}</b>.
                     <div className="">
                         <Select
                             // label="Submission Profile Selection"
-                            description="Select a new default Profile for your account, or keep the currently used Profile. "
+                            description="Select a Submission Profile to use for displaying the fields of Submissions for your whole account."
                             placeholder="Select a Profile."
                             data={prepareSelectOptions(profileListData)}
                             // allowDeselect
