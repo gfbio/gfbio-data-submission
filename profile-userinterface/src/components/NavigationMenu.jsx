@@ -6,7 +6,7 @@ const NavigationMenu = (props) => {
     return <section className="sub-navi">
         <div className="container">
             <div className="row">
-                <div className="col-sm-12">
+                <div className="col-sm-12 px-0">
                     <nav className="nav">
                         <Link to={base} className="nav-link">
                             <i className="icon ion-ios-list"/>

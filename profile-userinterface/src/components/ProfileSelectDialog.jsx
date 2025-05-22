@@ -29,7 +29,8 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData, active
                 });
             */
         } else if (values && !Object.prototype.hasOwnProperty.call(values, PROFILE_SELECTION_FORM_KEY)) {
-            // do nothing
+            // Confirmed, though profile wasn't changed. Just quit.
+            onCancel();
         } else {
             // do nothing
         }
@@ -57,7 +58,8 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData, active
                 onSubmit={form.onSubmit(handleSubmit)}
                 className="submission-form container"
             >
-                <div className="col-md-12">
+                <div className="col-md-12 pt-2">
+                    Fields are currently displayed according to profile <b>{activeProfile}</b>
                     <div className="">
                         <Select
                             // label="Submission Profile Selection"
