@@ -18,6 +18,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: gfbio_submissions_production_django
+    container_name: submission-django-production
     cap_add:
       - SYS_ADMIN
     devices:
@@ -48,6 +49,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
+    container_name: submission-postgres-production
     networks:
       - default
     volumes:
@@ -62,6 +64,7 @@ services:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
     image: gfbio_submissions_production_traefik
+    container_name: submission-traefik-production
     networks:
       - default
     depends_on:
@@ -83,6 +86,7 @@ services:
   celeryworker:
     <<: *django
     image: gfbio_submissions_production_celeryworker
+    container_name: submission-celeryworker-production
     logging:
       driver: syslog
       options:
@@ -92,6 +96,7 @@ services:
   celery-transfer-worker:
     <<: *django
     image: gfbio_submissions_production_celeryworker
+    container_name: submission-celery-transfer-worker-production
     logging:
       driver: syslog
       options:
@@ -101,6 +106,7 @@ services:
   celerybeat:
     <<: *django
     image: gfbio_submissions_production_celerybeat
+    container_name: submission-celerybeat-production
     logging:
       driver: syslog
       options:
@@ -110,6 +116,7 @@ services:
   flower:
     <<: *django
     image: gfbio_submissions_production_flower
+    container_name: submission-flower-production
     logging:
       driver: syslog
       options:

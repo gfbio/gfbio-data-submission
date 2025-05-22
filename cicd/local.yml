@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: ../compose/local/django/Dockerfile
     image: gfbio_submissions_local_django
+    container_name: submission-django-local-cicd
     depends_on:
       - postgres
     user: ${CURRENT_UID}
@@ -28,6 +29,7 @@ services:
       context: .
       dockerfile: ../compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
+    container_name: submission-postgres-local-cicd
     env_file:
       - ../.envs/.local/.postgres
 
@@ -37,6 +39,7 @@ services:
   celeryworker:
     <<: *django
     image: gfbio_submissions_local_celeryworker
+    container_name: submission-celeryworker-local-cicd
     depends_on:
       - redis
       - postgres
@@ -44,9 +47,21 @@ services:
     ports: []
     command: /start-celeryworker
 
+  celery-transfer-worker:
+    <<: *django
+    image: gfbio_submissions_local_celeryworker
+    container_name: submission-celery-transfer-worker-local-cicd
+    depends_on:
+      - redis
+      - postgres
+
+    ports: [ ]
+    command: /start-celeryworker
+
   celerybeat:
     <<: *django
     image: gfbio_submissions_local_celerybeat
+    container_name: submission-celerybeat-local-cicd
     depends_on:
       - redis
       - postgres
@@ -57,6 +72,7 @@ services:
   flower:
     <<: *django
     image: gfbio_submissions_local_flower
+    container_name: submission-flower-local-cicd
     ports:
       - "5555:5555"
     command: /start-flower

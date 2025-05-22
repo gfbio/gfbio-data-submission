@@ -13,6 +13,7 @@ services:
         GROUP_ID: 997
         USER_ID: 998
     image: gfbio_submissions_production_django
+    container_name: submission-django-production-cicd
     cap_add:
       - SYS_ADMIN
     devices:
@@ -59,6 +60,7 @@ services:
       context: ../
       dockerfile: ./compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
+    container_name: submission-postgres-production-cicd
     networks:
       - internal
     restart: always
@@ -67,6 +69,7 @@ services:
 
   redis:
     image: redis:5.0
+    container_name: submission-redis-production-cicd
     restart: always
     networks:
       - internal
@@ -88,6 +91,7 @@ services:
       - type: tmpfs
         target: /mnt/s3bucket
     image: gfbio_submissions_production_celeryworker
+    container_name: submission-celeryworker-production-cicd
     logging:
       driver: syslog
       options:
@@ -112,6 +116,7 @@ services:
       - type: tmpfs
         target: /mnt/s3bucket
     image: gfbio_submissions_production_celeryworker
+    container_name: submission-celery-transfer-worker-production-cicd
     logging:
       driver: syslog
       options:
@@ -132,6 +137,7 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_celerybeat
+    container_name: submission-celerybeat-production-cicd
     logging:
       driver: syslog
       options:
@@ -152,6 +158,7 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_flower
+    container_name: submission-flower-production-cicd
     logging:
       driver: syslog
       options:
