@@ -11,7 +11,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: gfbio_submissions_production_django
-    container_name: submission-django-staging
+    container_name: gfbio-django
     cap_add:
       - SYS_ADMIN
     devices:
@@ -43,7 +43,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
-    container_name: submission-postgres-staging
+    container_name: gfbio-postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
       - production_postgres_data_backups:/backups
@@ -55,7 +55,7 @@ services:
 
   redis:
     image: redis:6
-    container_name: submission-redis-staging
+    container_name: gfbio-redis
     networks:
       - default
     restart: always
@@ -63,7 +63,7 @@ services:
   celeryworker:
     <<: *django
     image: gfbio_submissions_production_celeryworker
-    container_name: submission-celeryworker-staging
+    container_name: gfbio-celeryworker
     networks:
       - default
     logging:
@@ -75,7 +75,7 @@ services:
   celery-transfer-worker:
     <<: *django
     image: gfbio_submissions_production_celeryworker
-    container_name: submission-celery-transfer-worker-staging
+    container_name: gfbio-celery-transfer-worker
     logging:
       driver: syslog
       options:
@@ -85,7 +85,7 @@ services:
   celerybeat:
     <<: *django
     image: gfbio_submissions_production_celerybeat
-    container_name: submission-celerybeat-staging
+    container_name: gfbio-celerybeat
     networks:
       - default
     logging:
@@ -97,7 +97,7 @@ services:
   flower:
     <<: *django
     image: gfbio_submissions_production_flower
-    container_name: submission-flower-staging
+    container_name: gfbio-flower
     networks:
       - default
     logging:
