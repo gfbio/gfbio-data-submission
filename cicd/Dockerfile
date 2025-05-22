@@ -12,13 +12,13 @@ RUN apt-get update \
   # dig tool to get ip of allowed domains
   && apt-get install -y dnsutils \
   # needed for java
-  && apt-get ca-certificates \
+  && apt-get install -y ca-certificates \
   # java itself
-  && apt-get openjdk-17-jdk \
+  && apt-get install -y openjdk-17-jdk \
   # install s3fs to mount s3 buckets
-  && apt-get s3fs \
+  && apt-get install -y s3fs \
   # install gosu to run the entrypoint as non-root
-  && apt-get gosu \
+  && apt-get install -y gosu \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
