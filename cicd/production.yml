@@ -43,6 +43,7 @@ services:
       && echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\"$ADMIN_NICKNAME\", \"$ADMIN_EMAIL\", \"$ADMIN_PASSWORD\")' | python /app/manage.py shell
       && python /app/manage.py loaddata /app/cicd/test_data.json
       && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/jira_messages.json
+      && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/submission_profiles.json
       && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
 
   postgres:
