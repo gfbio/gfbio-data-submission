@@ -28,7 +28,7 @@ from ...tasks.submission_task import SubmissionTask
     queue="ena_transfer",
 )
 def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None):
-    logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | queue={self.queue}")
+    logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | queue={self.queue} | task_id={self.request.id}")
     if previous_result == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
     submission, site_configuration = get_submission_and_site_configuration(
@@ -37,7 +37,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     if submission == TaskProgressReport.CANCELLED:
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | previous task reported={TaskProgressReport.CANCELLED} | "
-            f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id}")
+            f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
         return TaskProgressReport.CANCELLED
     submission_cloud_upload = None
     try:
@@ -45,7 +45,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     except SubmissionCloudUpload.DoesNotExist:
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | no valid SubmissionCloudUpload available | "
-            f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id}")
+            f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
         return TaskProgressReport.CANCELLED
 
     # TODO: defaults per settings
@@ -53,7 +53,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
     if not os.path.exists(file_path):
         logger.error(
-            f"tasks.py | transfer_cloud_upload_to_ena_task | no valid file_path available | file_path={file_path} "
+            f"tasks.py | transfer_cloud_upload_to_ena_task | no valid file_path available | file_path={file_path} | task_id={self.request.id}"
         )
         return TaskProgressReport.CANCELLED
 
@@ -66,24 +66,24 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
 
     cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
-    logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd}")
+    logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd} | task_id={self.request.id}")
 
     res = TaskProgressReport.CANCELLED
     details = {"cmd": cmd}
     try:
-        logger.info(f"tasks.py | trying to execute | ")
+        logger.info(f"tasks.py | trying to execute | task_id={self.request.id}")
 
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logger.info(f"tasks.py | subprocess opened | execute proc={proc}")
+        logger.info(f"tasks.py | subprocess opened | execute proc={proc} | task_id={self.request.id}")
 
         stdout, stderr = proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
 
         logger.info(
-            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | ascp stdout: {stdout.decode(errors='replace')}")
+            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | ascp stdout: {stdout.decode(errors='replace')} | task_id={self.request.id}")
         logger.error(
-            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password |ascp stderr: {stderr.decode(errors='replace')}")
+            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password |ascp stderr: {stderr.decode(errors='replace')} | task_id={self.request.id}")
         logger.info(
-            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | expect process to be terminated | {proc.returncode}")
+            f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | expect process to be terminated | {proc.returncode} | task_id={self.request.id}")
 
         retryable_patterns = [
             "failed to connect",
@@ -100,14 +100,14 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
             if any(pattern in stderr_str for pattern in retryable_patterns):
                 logger.info(
                     f"tasks.py | transfer_cloud_upload_to_ena_task | starting retry | "
-                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode}"
+                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode} | task_id={self.request.id}"
                 )
                 raise self.retry(exc=Exception(stderr_str))
             else:
                 res = TaskProgressReport.CANCELLED
                 logger.error(
                     f"tasks.py | transfer_cloud_upload_to_ena_task | general error | "
-                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode}"
+                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode} | task_id={self.request.id}"
                 )
         else:
             res = True
@@ -115,7 +115,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         raise
     except Exception as e:
         details['error'] = str(e)
-        logger.error(f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | ")
+        logger.error(f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | task_id={self.request.id}")
 
     RequestLog.objects.create(
         type=RequestLog.OUTGOING,

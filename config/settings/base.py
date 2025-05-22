@@ -327,6 +327,7 @@ CELERY_TASK_QUEUES = [
 
 CELERY_TASK_DEFAULT_QUEUE = 'default'
 CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+CELERY_TASK_ALWAYS_EAGER = False
 
 # django-allauth
 # ------------------------------------------------------------------------------
