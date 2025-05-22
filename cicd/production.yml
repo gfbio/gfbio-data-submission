@@ -52,6 +52,7 @@ services:
       && python /app/manage.py loaddata /app/cicd/test_data.json
       && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/jira_messages.json
       && s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+      && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/submission_profiles.json
       && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
 
   postgres:

@@ -1,0 +1,954 @@
+[
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 1,
+        "fields": {
+            "created": "2025-02-27T14:25:13.227Z",
+            "modified": "2025-02-27T14:25:13.227Z",
+            "type": "contributors",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 2,
+        "fields": {
+            "created": "2025-02-27T14:25:22.906Z",
+            "modified": "2025-02-27T14:25:22.906Z",
+            "type": "metadata-template",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 3,
+        "fields": {
+            "created": "2025-02-27T14:25:35.157Z",
+            "modified": "2025-02-27T14:25:35.157Z",
+            "type": "tags-input",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 4,
+        "fields": {
+            "created": "2025-02-27T14:25:43.334Z",
+            "modified": "2025-02-27T14:25:43.334Z",
+            "type": "data-url-field",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 5,
+        "fields": {
+            "created": "2025-02-27T14:26:10.658Z",
+            "modified": "2025-02-27T14:26:10.658Z",
+            "type": "embargo-date-picker",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 6,
+        "fields": {
+            "created": "2025-02-27T14:26:20.545Z",
+            "modified": "2025-02-27T14:26:20.545Z",
+            "type": "multiselect-dropdown",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 7,
+        "fields": {
+            "created": "2025-02-27T14:26:35.537Z",
+            "modified": "2025-02-27T14:26:35.537Z",
+            "type": "multiselect-checkboxes",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 8,
+        "fields": {
+            "created": "2025-02-27T14:26:44.458Z",
+            "modified": "2025-02-27T14:26:44.458Z",
+            "type": "info-box",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 9,
+        "fields": {
+            "created": "2025-02-27T14:26:53.379Z",
+            "modified": "2025-02-27T14:26:53.379Z",
+            "type": "collapsible-selector",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 10,
+        "fields": {
+            "created": "2025-02-27T14:27:05.146Z",
+            "modified": "2025-02-27T14:27:05.146Z",
+            "type": "select-field",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 11,
+        "fields": {
+            "created": "2025-02-27T14:27:14.865Z",
+            "modified": "2025-02-27T14:27:14.865Z",
+            "type": "file-upload",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 12,
+        "fields": {
+            "created": "2025-02-27T14:27:22.437Z",
+            "modified": "2025-02-27T14:27:22.437Z",
+            "type": "text-area",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 13,
+        "fields": {
+            "created": "2025-02-27T14:27:41.905Z",
+            "modified": "2025-02-27T14:27:41.905Z",
+            "type": "text-field",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 1,
+        "fields": {
+            "created": "2025-02-27T14:28:23.011Z",
+            "modified": "2025-02-27T14:28:23.011Z",
+            "field_name": "title",
+            "field_type": 13,
+            "title": "Title",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 5,
+            "system_wide_mandatory": true,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 2,
+        "fields": {
+            "created": "2025-02-27T14:29:10.881Z",
+            "modified": "2025-02-27T14:29:10.881Z",
+            "field_name": "description",
+            "field_type": 12,
+            "title": "Description",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 10,
+            "system_wide_mandatory": true,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 3,
+        "fields": {
+            "created": "2025-02-27T14:29:47.032Z",
+            "modified": "2025-02-27T14:29:47.032Z",
+            "field_name": "upload",
+            "field_type": 11,
+            "title": "Upload",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 25,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 4,
+        "fields": {
+            "created": "2025-02-27T14:30:22.761Z",
+            "modified": "2025-04-04T08:16:47.312Z",
+            "field_name": "download_url",
+            "field_type": 4,
+            "title": "Data URL",
+            "description": "Supported are Owncloud and Nextcloud. Google drive and dropbox are not supported.",
+            "comment": "",
+            "position": "main",
+            "order": 35,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 5,
+        "fields": {
+            "created": "2025-02-27T14:34:16.493Z",
+            "modified": "2025-02-27T14:34:16.493Z",
+            "field_name": "target_data_center",
+            "field_type": 10,
+            "title": "Target Datacenter",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 50,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 6,
+        "fields": {
+            "created": "2025-02-27T14:34:39.853Z",
+            "modified": "2025-02-27T14:34:39.853Z",
+            "field_name": "contributors",
+            "field_type": 1,
+            "title": "Contributors",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 100,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 7,
+        "fields": {
+            "created": "2025-02-27T14:36:50.346Z",
+            "modified": "2025-02-27T14:36:50.346Z",
+            "field_name": "categories",
+            "field_type": 7,
+            "title": "Categories for this submission",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 100,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 8,
+        "fields": {
+            "created": "2025-02-27T14:37:33.746Z",
+            "modified": "2025-02-27T14:50:53.018Z",
+            "field_name": "labels",
+            "field_type": 3,
+            "title": "Labels",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 150,
+            "system_wide_mandatory": false,
+            "placeholder": "Add Labels to your dataset"
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 9,
+        "fields": {
+            "created": "2025-02-27T14:38:18.029Z",
+            "modified": "2025-02-27T14:38:18.029Z",
+            "field_name": "related_publications",
+            "field_type": 3,
+            "title": "Related Publications",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 250,
+            "system_wide_mandatory": false,
+            "placeholder": "Enter a full citation or a DOI"
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 10,
+        "fields": {
+            "created": "2025-02-27T14:38:46.273Z",
+            "modified": "2025-02-27T14:38:46.273Z",
+            "field_name": "comment",
+            "field_type": 12,
+            "title": "Leave a comment for the curator",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 500,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 11,
+        "fields": {
+            "created": "2025-02-27T14:39:13.603Z",
+            "modified": "2025-02-27T14:39:13.603Z",
+            "field_name": "info",
+            "field_type": 8,
+            "title": "Info",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 50,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 12,
+        "fields": {
+            "created": "2025-02-27T14:42:34.631Z",
+            "modified": "2025-02-27T14:49:08.101Z",
+            "field_name": "licenses",
+            "field_type": 9,
+            "title": "License",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 125,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 13,
+        "fields": {
+            "created": "2025-02-27T14:43:47.199Z",
+            "modified": "2025-02-27T14:43:47.199Z",
+            "field_name": "legal_requirements",
+            "field_type": 7,
+            "title": "Legal Requirements",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 246,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 14,
+        "fields": {
+            "created": "2025-02-27T14:44:18.697Z",
+            "modified": "2025-02-27T14:44:18.697Z",
+            "field_name": "metadata_templates",
+            "field_type": 2,
+            "title": "Metadata Templates",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 350,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 15,
+        "fields": {
+            "created": "2025-02-27T14:44:48.195Z",
+            "modified": "2025-04-04T08:20:07.500Z",
+            "field_name": "embargo",
+            "field_type": 5,
+            "title": "Embargo Date",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 500,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 1,
+        "fields": {
+            "field": 5,
+            "order": 1,
+            "option": "GFBio Data Centers - our curators will suggest the appropriate one(s)",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 2,
+        "fields": {
+            "field": 5,
+            "order": 2,
+            "option": "ENA – European Nucleotide Archive",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 3,
+        "fields": {
+            "field": 5,
+            "order": 3,
+            "option": "PANGAEA – Data Publisher for Earth & Environmental Science",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 4,
+        "fields": {
+            "field": 5,
+            "order": 4,
+            "option": "IPK - Leibniz Institute of Plant Genetics and Crop Plant Research",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 5,
+        "fields": {
+            "field": 5,
+            "order": 5,
+            "option": "BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 6,
+        "fields": {
+            "field": 5,
+            "order": 6,
+            "option": "DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 7,
+        "fields": {
+            "field": 5,
+            "order": 7,
+            "option": "MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 8,
+        "fields": {
+            "field": 5,
+            "order": 8,
+            "option": "SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 9,
+        "fields": {
+            "field": 5,
+            "order": 9,
+            "option": "SMNS – State Museum of Natural History Stuttgart",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 10,
+        "fields": {
+            "field": 5,
+            "order": 10,
+            "option": "SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 11,
+        "fields": {
+            "field": 5,
+            "order": 11,
+            "option": "ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 12,
+        "fields": {
+            "field": 7,
+            "order": 1,
+            "option": "Algae & Protists",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 13,
+        "fields": {
+            "field": 7,
+            "order": 2,
+            "option": "Bacteriology or Virology",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 14,
+        "fields": {
+            "field": 7,
+            "order": 3,
+            "option": "Botany",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 15,
+        "fields": {
+            "field": 7,
+            "order": 4,
+            "option": "Ecology & Environment",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 16,
+        "fields": {
+            "field": 7,
+            "order": 5,
+            "option": "Geoscience",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 17,
+        "fields": {
+            "field": 7,
+            "order": 6,
+            "option": "Microbiology",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 18,
+        "fields": {
+            "field": 7,
+            "order": 7,
+            "option": "Mycology",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 19,
+        "fields": {
+            "field": 7,
+            "order": 8,
+            "option": "Palaeontology",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 20,
+        "fields": {
+            "field": 7,
+            "order": 9,
+            "option": "Zoology",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 21,
+        "fields": {
+            "field": 12,
+            "order": 1,
+            "option": "CC0 1.0",
+            "description": "What does this mean ?\r\n\r\nOthers can copy, modify, distribute and perform the work, even for commercial purposes, all without asking permission.",
+            "help_link": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 22,
+        "fields": {
+            "field": 12,
+            "order": 2,
+            "option": "CC BY 4.0",
+            "description": "What does this mean ?\r\n\r\nThis license lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation.",
+            "help_link": "https://creativecommons.org/licenses/by/4.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 23,
+        "fields": {
+            "field": 12,
+            "order": 3,
+            "option": "CC BY-NC 4.0",
+            "description": "What does this mean ?\r\n\r\nThis license lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don’t have to license their derivative works on the same terms.",
+            "help_link": "https://creativecommons.org/licenses/by-nc/4.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 24,
+        "fields": {
+            "field": 12,
+            "order": 4,
+            "option": "CC BY-NC-ND 4.0",
+            "description": "What does this mean ?\r\n\r\nThis license lets others reuse the work for any purpose, including commercially; however, it cannot be shared with others in adapted form, and credit must be provided to you.",
+            "help_link": "https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 25,
+        "fields": {
+            "field": 12,
+            "order": 5,
+            "option": "CC BY-NC-SA 4.0",
+            "description": "What does this mean ?\r\n\r\nThis license lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms.",
+            "help_link": "https://creativecommons.org/licenses/by-nd/4.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 26,
+        "fields": {
+            "field": 12,
+            "order": 6,
+            "option": "CC BY-ND 4.0",
+            "description": "What does this mean ?\r\n\r\nThis license is the most restrictive of the main creative commons licenses, only allowing others to download your works and share themwith others as long as they credit you, but they can’t change them in any way or use them commercially.",
+            "help_link": "https://creativecommons.org/licenses/by-sa/4.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 27,
+        "fields": {
+            "field": 12,
+            "order": 7,
+            "option": "CC BY-SA 4.0",
+            "description": "What does this mean ?\r\n\r\nThis license lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms.",
+            "help_link": "https://creativecommons.org/licenses/by-sa/4.0/deed.en"
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 28,
+        "fields": {
+            "field": 12,
+            "order": 8,
+            "option": "Other License",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 29,
+        "fields": {
+            "field": 13,
+            "order": 1,
+            "option": "Nagoya Protocol",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 30,
+        "fields": {
+            "field": 13,
+            "order": 2,
+            "option": "IUCN Red List of Threatened Species",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 31,
+        "fields": {
+            "field": 13,
+            "order": 3,
+            "option": "Sensitive Personal Information",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 32,
+        "fields": {
+            "field": 13,
+            "order": 4,
+            "option": "Uncertain",
+            "description": "",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.profile",
+        "pk": 1,
+        "fields": {
+            "created": "2025-02-27T14:49:32.269Z",
+            "modified": "2025-04-04T08:17:23.822Z",
+            "name": "gfbio",
+            "target": "GENERIC",
+            "parent": null,
+            "system_wide_profile": true,
+            "user": null,
+            "active_user_profile": false
+        }
+    },
+    {
+        "model": "submission_profile.profile",
+        "pk": 2,
+        "fields": {
+            "created": "2025-02-27T14:51:36.890Z",
+            "modified": "2025-02-27T14:51:47.230Z",
+            "name": "minimal",
+            "target": "GENERIC",
+            "parent": null,
+            "system_wide_profile": true,
+            "user": null,
+            "active_user_profile": false
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 3,
+        "fields": {
+            "field": 1,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 4,
+        "fields": {
+            "field": 2,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 5,
+        "fields": {
+            "field": 3,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 6,
+        "fields": {
+            "field": 4,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 7,
+        "fields": {
+            "field": 6,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 8,
+        "fields": {
+            "field": 5,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": "GFBio Data Centers - our curators will suggest the appropriate one(s)"
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 9,
+        "fields": {
+            "field": 7,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 10,
+        "fields": {
+            "field": 8,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 11,
+        "fields": {
+            "field": 9,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 12,
+        "fields": {
+            "field": 10,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 13,
+        "fields": {
+            "field": 11,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 14,
+        "fields": {
+            "field": 12,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": "CC BY 4.0"
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 15,
+        "fields": {
+            "field": 13,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 16,
+        "fields": {
+            "field": 14,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 17,
+        "fields": {
+            "field": 15,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 18,
+        "fields": {
+            "field": 1,
+            "profile": 2,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 19,
+        "fields": {
+            "field": 2,
+            "profile": 2,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    }
+]
