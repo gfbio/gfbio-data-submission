@@ -50,6 +50,8 @@ RUN pip install --no-cache-dir -r /requirements/production.txt \
 
 RUN pip install --no-cache-dir abcd-converter==0.0.4 --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 
+COPY ./ena_webin_cli /ena_webin_cli
+
 # Install Aspera CLI (ascp) -----------------------------------------------------------------
 # Create a non-root user
 # TODO/FIXME: use django user that is created in line 40 instead of asperauser ?
