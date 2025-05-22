@@ -48,4 +48,4 @@ export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 10000000000;  // 10 GB = 10000
 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
 
-export const USE_LOCAL_UPLOAD_ONLY = false;
+export const USE_LOCAL_UPLOAD_ONLY = true;

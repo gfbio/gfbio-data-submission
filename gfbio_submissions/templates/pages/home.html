@@ -41,7 +41,7 @@
             <div class="form-row">
               <div class="form-group col-md-12 col-sm-12">
                 <a href="/ui/submission/form/"
-                   class="btn btn-block btn-secondary btn-landing-search">
+                   class="btn w-100 btn-secondary btn-landing-search">
                   Submit your Data !
                   {#                                    Start your submission. now !#}
                 </a>
@@ -72,6 +72,10 @@
         {#          </p>#}
         {#        </div>#}
         {#  ---------------------------------------  #}
+
+        {% if active_banners %}
+          {% include "utils/banners.html" %}
+        {% endif %}
 
       </div>
 
