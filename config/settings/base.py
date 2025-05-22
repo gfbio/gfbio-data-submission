@@ -5,6 +5,7 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+from kombu import Queue
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
@@ -86,6 +87,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "mozilla_django_oidc",
     "dt_upload",
+    "gfbio_django_utilities",
 ]
 
 LOCAL_APPS = [
@@ -154,7 +156,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.common.BrokenLinkEmailsMiddleware",
+    # "django.middleware.common.BrokenLinkEmailsMiddleware",
+    "gfbio_submissions.utils.middleware.LogBrokenLinksMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "gfbio_submissions.utils.middleware.RestrictedMediaMiddleware",
 ]
@@ -212,6 +215,7 @@ TEMPLATES = [
                 "gfbio_submissions.users.context_processors.allauth_settings",
                 "gfbio_submissions.submission_ui.context_processors.prod_env",
                 "gfbio_submissions.submission_ui.context_processors.matomo_settings",
+                "gfbio_django_utilities.context_processors.active_banners",
             ],
         },
     }
@@ -307,16 +311,25 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-time-limit
 # TODO: set to whatever value is adequate in your circumstances
-CELERY_TASK_TIME_LIMIT = 15 * 60
+CELERY_TASK_TIME_LIMIT = 25 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 # TODO: set to whatever value is adequate in your circumstances
-CELERY_TASK_SOFT_TIME_LIMIT = 10 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 20 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#beat-scheduler
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-send-task-events
 CELERY_WORKER_SEND_TASK_EVENTS = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-task_send_sent_event
 CELERY_TASK_SEND_SENT_EVENT = True
+
+CELERY_TASK_QUEUES = [
+    Queue('default', routing_key='default'),
+    Queue('ena_transfer', routing_key='ena_transfer'),
+]
+
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+CELERY_TASK_ALWAYS_EAGER = False
 
 # django-allauth
 # ------------------------------------------------------------------------------
@@ -445,7 +458,6 @@ DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD = env.str(
     "DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD", default="upload_file"
 )
 DJANGO_UPLOAD_TOOLS_USE_REUPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_REUPLOAD", default=False)
-
 if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
     # TODO: if s3 is used also elsewhere besides only for django-upload-tools, it may be a better idea to
     #   use this in a more selective way. For this purpose it is ok to assign the settings only if
@@ -491,3 +503,9 @@ DJANGO_UPLOAD_TOOLS_AOS_PORT = env("DJANGO_UPLOAD_TOOLS_AOS_PORT", default="")
 DJANGO_UPLOAD_TOOLS_PROJECT_ID = env("DJANGO_UPLOAD_TOOLS_PROJECT_ID", default="")
 # The name of your project
 DJANGO_UPLOAD_TOOLS_PROJECT_NAME = env("DJANGO_UPLOAD_TOOLS_PROJECT_NAME", default=None)
+
+
+# Aspera Settings
+# ------------------------------------------------------------------------------
+ASPERA_ASCP_PATH = env.str("ASPERA_ASCP_PATH", default="/home/asperauser/.aspera/connect/bin/ascp")
+S3FS_MOUNT_POINT = env.str("DJANGO_S3FS_MOUNT_POINT", default="/mnt/s3bucket")

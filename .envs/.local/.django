@@ -22,4 +22,8 @@ REDIS_URL=redis://redis:6379/0
 
 # Testing DT_UPLOAD
 # ------------------------------------------------------------------------------
-DJANGO_UPLOAD_TOOLS_USE_S3=True
+MOUNT_S3FS=False
+DJANGO_AWS_STORAGE_BUCKET_NAME=gfbio-dev-1
+DJANGO_AWS_S3_ENDPOINT_URL=https://s3.gwdg.de
+DJANGO_S3FS_MOUNT_POINT=/mnt/s3bucket
+MOUNT_S3FS=False

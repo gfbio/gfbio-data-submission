@@ -49,7 +49,7 @@ def raise_response_exceptions(response):
         if error:
             logger.error(
                 msg="SubmissionTransferError: "
-                "Aborted with status_code {0} "
-                "due to error {1}".format(response.status_code, error)
+                    "Aborted with status_code {0} "
+                    "due to error {1}".format(response.status_code, error)
             )
             raise error

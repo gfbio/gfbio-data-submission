@@ -1,9 +1,9 @@
-version: "3"
+version: "3.2"
 
 volumes:
-  local_postgres_data: {}
-  local_postgres_data_backups: {}
-  django_media: {}
+  local_postgres_data: { }
+  local_postgres_data_backups: { }
+  django_media: { }
 
 services:
   django: &django
@@ -12,12 +12,20 @@ services:
       dockerfile: ./compose/local/django/Dockerfile
     image: gfbio_submissions_local_django
     container_name: django
+    cap_add:
+      - SYS_ADMIN
+    devices:
+        - /dev/fuse
+    security_opt:
+        - apparmor:unconfined
     depends_on:
       - postgres
       - redis
     volumes:
       - .:/app:z
       - django_media:/app/gfbio_submissions/media
+      - type: tmpfs
+        target: /mnt/s3bucket
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
@@ -39,7 +47,6 @@ services:
     ports:
       - "5444:5432"
 
-  # lorem ipsum ...
 
   docs:
     image: gfbio_submissions_local_docs
@@ -75,6 +82,17 @@ services:
 
     ports: []
     command: /start-celeryworker
+
+  celery-transfer-worker:
+    <<: *django
+    image: gfbio_submissions_local_celeryworker
+    container_name: celery-transfer-worker
+    depends_on:
+      - redis
+      - postgres
+
+    ports: [ ]
+    command: /start-celery-transfer-worker
 
   celerybeat:
     <<: *django

@@ -405,22 +405,17 @@ def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
 
 combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
 
+def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
+    from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
+    for obj in queryset:
+        for upload in obj.submissioncloudupload_set.all():
+            transfer_cloud_upload_to_ena_task.apply_async(
+                kwargs={"submission_cloud_upload_id": upload.pk,
+                        "submission_id": obj.pk},
+                countdown=SUBMISSION_DELAY,
+            )
 
-# FIXME: this seems to trigger code that is no longer used/obsolete, compare file atax_tasks/_atax_submission_validate_xml_upload.py
-# def atax_validate(modeladmin, request, queryset):
-#     from .tasks.atax_tasks.atax_submission_validate_xml_upload import atax_submission_validate_auditable_atax_xml_task
-#
-#     for obj in queryset:
-#         chain = (
-#             atax_submission_validate_auditable_atax_xml_task.s(
-#                 auditable_id=obj.pk
-#             ).set(countdown=SUBMISSION_DELAY)
-#         )
-#
-#         chain()
-#
-#
-# atax_validate.short_description = "ATAX validate"
+transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud uploads to ENA via Aspera"
 
 
 class AuditableTextDataAdmin(admin.ModelAdmin):
@@ -460,6 +455,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         create_helpdesk_issue_manually,
         cancel_selected_submissions,
         release_submission_study_on_ena,
+        transfer_submission_cloud_uploads_to_ena,
         validate_against_ena,
         submit_to_ena_test,
         modify_ena_objects_with_current_xml,

@@ -4,19 +4,16 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-
-
 # N.B. If only .env files supported variable expansion...
 export CELERY_BROKER_URL="${REDIS_URL}"
 
-
 if [ -z "${POSTGRES_USER}" ]; then
-    base_postgres_image_default_user='postgres'
-    export POSTGRES_USER="${base_postgres_image_default_user}"
+  base_postgres_image_default_user='postgres'
+  export POSTGRES_USER="${base_postgres_image_default_user}"
 fi
 export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
 
-python << END
+python <<END
 import sys
 import time
 
@@ -43,7 +40,22 @@ while True:
     time.sleep(1)
 END
 
+echo >&2 'PostgreSQL is available'
 
->&2 echo 'PostgreSQL is available'
+mkdir -p "$DJANGO_S3FS_MOUNT_POINT"
+USER_TO_CHECK=django
 
-exec "$@"
+if id "$USER_TO_CHECK" &>/dev/null; then
+    # Ensure /mnt/s3bucket exists and is owned by the Django user if available
+    chown django:django "$DJANGO_S3FS_MOUNT_POINT"
+    chmod 0770 "$DJANGO_S3FS_MOUNT_POINT"
+    exec gosu django "$@"
+else
+    echo "User $USER_TO_CHECK does not exist, skipping chown. Only root will be able to access /mnt/s3bucket"
+    exec "$@"
+fi
+
+# original exec command from cookiecutter template:
+#exec "$@"
+
+
