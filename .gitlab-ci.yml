@@ -54,14 +54,12 @@ web_test_update:
     PROJECT_NAME: "submissions"
     COMPOSE_FILE: "cicd/production.yml"
   script:
-    - echo "COMPOSE_FILE $COMPOSE_FILE"
-    - cat $COMPOSE_FILE
     - ISSUE_ID=$(awk -F- '{print $2}' <<< ${CI_COMMIT_REF_NAME})
     - TEST_NAME=$ISSUE_ID-$PROJECT_NAME
     - rsync -a /home/gitlab-runner/.gfbio_envs/passwd-s3fs compose/production/django/
     - TEST_NAME=${TEST_NAME} ADMIN_URL=${ADMIN_URL} ./cicd/createWebTest.sh
     - docker compose -f $COMPOSE_FILE build
-    - TEST_NAME=${TEST_NAME} ADMIN_URL=${ADMIN_URL} PROJECT_NAME=${PROJECT_NAME} COMPOSE_FILE=${COMPOSE_FILE} ISSUE_ID=${ISSUE_ID} ./web_test_deploy.sh
+    - ./web_test_deploy.sh
 
 web_test_stop:
   variables:
