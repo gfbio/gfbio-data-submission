@@ -4,6 +4,7 @@ import shutil
 
 # import xml.dom.minidom
 from collections import OrderedDict
+from pprint import pprint
 
 from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -836,6 +837,9 @@ class TestCSVParsing(TestCase):
             requirements_keys = requirements.keys()
             self.assertIn("experiments", requirements_keys)
             self.assertIn("samples", requirements_keys)
+        print(requirements.keys())
+        for k in requirements.keys():
+            pprint(requirements[k])
 
     def test_parse_environmental_package(self):
         file_names = [

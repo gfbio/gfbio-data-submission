@@ -72,7 +72,7 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None, s
             "submission_upload_id={0}".format(submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
-    molecular_requirements = parse_molecular_csv_with_encoding_detection(submission_upload.file.path)
+    molecular_requirements, old_template_attribute_replaced = parse_molecular_csv_with_encoding_detection(submission_upload.file.path)
     return process_molecular_requirements(report, submission_upload.submission, molecular_requirements)
 
 
@@ -108,6 +108,6 @@ def parse_csv_to_update_clean_submission_cloud_upload_task(self, previous_task_r
         with requests.get(submission_cloud_upload.file_upload.s3_location, stream=True) as r:
             r.raise_for_status()
             tf.write(r.content)
-            molecular_requirements = parse_molecular_csv_with_encoding_detection(tf.name)
+            molecular_requirements, old_template_attribute_replaced = parse_molecular_csv_with_encoding_detection(tf.name)
             tf.close()
     return process_molecular_requirements(report, submission_cloud_upload.submission, molecular_requirements)

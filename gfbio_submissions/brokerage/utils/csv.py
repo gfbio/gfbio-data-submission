@@ -6,6 +6,8 @@ import os
 from collections import OrderedDict
 
 import _csv
+from pprint import pprint
+
 import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
@@ -47,7 +49,7 @@ unit_mapping = {
     "Depth": "m",
     "depth": "m",
     "geographic location (altitude)": "m",
-    "geographic location (depth)": "m",
+    "geographic location (depth)": "m",  # TODO: replace with depth DASS-2700
     "geographic location (elevation)": "m",
     "geographic location (latitude)": "DD",
     "geographic location (longitude)": "DD",
@@ -230,8 +232,16 @@ attribute_value_blacklist = [
     "N/A",
 ]
 
+# TODO: DASS-2699: move to method
+ena_header_mapping = {
+ "geographic location (depth)": "depth",
+ "environment (biome)": "broad-scale environmental context",
+ "environment (material)": "environmental medium",
+ "environment (feature)": "local environmental context",
+}
 
 def extract_sample(row, field_names, sample_id):
+    old_template_attribute_replaced = False
     for k in row.keys():
         row[k] = row[k].strip()
 
@@ -259,7 +269,14 @@ def extract_sample(row, field_names, sample_id):
     if len(sample_attributes):
         sample["sample_attributes"] = sample_attributes
 
-    return sample
+    print("\nextract sample:")
+    # pprint(sample)
+    for s in sample_attributes:
+        if s["tag"] in ena_header_mapping:
+            print(s["tag"], "-->", ena_header_mapping[s["tag"]])
+            s["tag"] = ena_header_mapping[s["tag"]]
+            old_template_attribute_replaced = True
+    return sample, old_template_attribute_replaced
 
 
 def find_correct_platform_and_model(platform_value):
@@ -439,9 +456,11 @@ def extract_experiment(experiment_id, row, sample_id):
     return experiment
 
 
+
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
     header = csv_file.readline()
+    print("parse_molecular_csv: header: ", header)
     dialect = csv.Sniffer().sniff(smart_str(header))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
@@ -459,13 +478,15 @@ def parse_molecular_csv(csv_file):
         "samples": [],
         "experiments": [],
     }
+    old_template_attribute_replaced = False
     try:
         field_names = csv_reader.fieldnames
+        print("parse_molecular_csv: fieldnames: ", field_names)
         for i in range(0, len(field_names)):
             field_names[i] = field_names[i].strip().lower()
 
     except _csv.Error as e:
-        return molecular_requirements
+        return molecular_requirements, old_template_attribute_replaced
     short_id = ShortId()
     sample_titles = []
     sample_ids = []
@@ -478,7 +499,7 @@ def parse_molecular_csv(csv_file):
                 sample_titles.append(title)
                 sample_id = short_id.generate()
                 sample_ids.append(sample_id)
-                sample = extract_sample(row, field_names, sample_id)
+                sample, old_template_attribute_replaced = extract_sample(row, field_names, sample_id)
                 molecular_requirements["samples"].append(sample)
 
                 experiment = extract_experiment(experiment_id, row, sample_id)
@@ -486,7 +507,7 @@ def parse_molecular_csv(csv_file):
                 experiment = extract_experiment(experiment_id, row, sample_ids[sample_titles.index(title)])
 
             molecular_requirements["experiments"].append(experiment)
-    return molecular_requirements
+    return molecular_requirements, old_template_attribute_replaced
 
 
 def parse_molecular_csv_with_encoding_detection(path):
@@ -590,7 +611,7 @@ def check_for_molecular_content(submission):
             return status, messages, check_performed
 
         meta_data_file = meta_data_files.first()
-        molecular_requirements = parse_molecular_csv_with_encoding_detection(meta_data_file.file.path)
+        molecular_requirements, old_template_attribute_replaced = parse_molecular_csv_with_encoding_detection(meta_data_file.file.path)
         submission.data.get("requirements", {}).update(molecular_requirements)
         path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
