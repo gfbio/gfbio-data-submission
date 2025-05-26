@@ -15,10 +15,10 @@ services:
     image: gfbio_submissions_production_django
     cap_add:
       - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    security_opt:
-      - apparmor:unconfined
+#    devices:
+#      - /dev/fuse
+#    security_opt:
+#      - apparmor:unconfined
     depends_on:
       - postgres
       - redis
@@ -27,8 +27,8 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
+#      - type: tmpfs
+#        target: /mnt/s3bucket
     networks:
       - internalProxy
       - internal
@@ -53,6 +53,7 @@ services:
       && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/jira_messages.json
       && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/submission_profiles.json
       && s3fs "$DJANGO_AWS_STORAGE_BUCKET_NAME" "$DJANGO_S3FS_MOUNT_POINT" -o passwd_file=/etc/passwd-s3fs -o use_path_request_style -o url="$DJANGO_AWS_S3_ENDPOINT_URL"
+      && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/submission_profiles.json
       && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
 
   postgres:
@@ -84,10 +85,14 @@ services:
       - ../.envs/.production/.postgres
     networks:
       - internal
+#    devices:
+#      - /dev/fuse
+#    security_opt:
+#      - apparmor:unconfined
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
+#      - type: tmpfs
+#        target: /mnt/s3bucket
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog
@@ -108,10 +113,14 @@ services:
       - ../.envs/.production/.postgres
     networks:
       - internal
+#    devices:
+#      - /dev/fuse
+#    security_opt:
+#      - apparmor:unconfined
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
+#      - type: tmpfs
+#        target: /mnt/s3bucket
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog
