@@ -55,6 +55,7 @@ web_test_update:
     COMPOSE_FILE: "cicd/production.yml"
   script:
     - echo "COMPOSE_FILE $COMPOSE_FILE"
+    - cat $COMPOSE_FILE
     - ISSUE_ID=$(awk -F- '{print $2}' <<< ${CI_COMMIT_REF_NAME})
     - TEST_NAME=$ISSUE_ID-$PROJECT_NAME
     - rsync -a /home/gitlab-runner/.gfbio_envs/passwd-s3fs compose/production/django/
