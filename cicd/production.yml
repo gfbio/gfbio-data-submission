@@ -15,10 +15,10 @@ services:
     image: gfbio_submissions_production_django
     cap_add:
       - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    security_opt:
-      - apparmor:unconfined
+#    devices:
+#      - /dev/fuse
+#    security_opt:
+#      - apparmor:unconfined
     depends_on:
       - postgres
       - redis
@@ -27,8 +27,8 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
+#      - type: tmpfs
+#        target: /mnt/s3bucket
     networks:
       - internalProxy
       - internal
@@ -84,14 +84,14 @@ services:
       - ../.envs/.production/.postgres
     networks:
       - internal
-    devices:
-      - /dev/fuse
-    security_opt:
-      - apparmor:unconfined
+#    devices:
+#      - /dev/fuse
+#    security_opt:
+#      - apparmor:unconfined
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
+#      - type: tmpfs
+#        target: /mnt/s3bucket
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog
@@ -112,14 +112,14 @@ services:
       - ../.envs/.production/.postgres
     networks:
       - internal
-    devices:
-      - /dev/fuse
-    security_opt:
-      - apparmor:unconfined
+#    devices:
+#      - /dev/fuse
+#    security_opt:
+#      - apparmor:unconfined
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - type: tmpfs
-        target: /mnt/s3bucket
+#      - type: tmpfs
+#        target: /mnt/s3bucket
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog
