@@ -512,7 +512,7 @@ def parse_molecular_csv(csv_file, submission):
             kwargs={
                 "submission_id": f"{submission.id}",
                 "comment": "ENA specific headers int the csv file have been replaced. "
-                           "Please check to template that was used",
+                           "Please check the template that was used",
                 "is_internal": True
             },
             countdown=SUBMISSION_UPLOAD_RETRY_DELAY,

@@ -696,8 +696,6 @@ class TestCSVParsing(TestCase):
             ],
         }
         sample, attributes_replaced = extract_sample(row=row, field_names=field_names, sample_id=sample_id)
-        # pprint(sample)
-        # pprint(expected_sample)
         self.assertFalse(attributes_replaced)
         self.assertEqual(expected_sample, sample)
 
