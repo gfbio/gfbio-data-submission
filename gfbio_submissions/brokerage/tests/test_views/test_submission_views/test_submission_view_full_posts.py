@@ -208,6 +208,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_for_submittable_data_task",
+            "tasks.add_general_comment_to_issue_task",
         ]
         all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         for a in all_task_reports:
@@ -418,6 +419,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_for_submittable_data_task",
+            "tasks.add_general_comment_to_issue_task",
         ]
         all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         for a in all_task_reports:

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import shutil
-
-# import xml.dom.minidom
 from collections import OrderedDict
 from pprint import pprint
 
@@ -10,7 +7,6 @@ from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import ATAX, ENA, ENA_PANGAEA, GENERIC, GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import (
@@ -25,7 +21,6 @@ from gfbio_submissions.brokerage.utils.csv import (
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
 from gfbio_submissions.users.models import User
-
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
@@ -76,9 +71,9 @@ class TestCSVParsing(TestCase):
             }
         )
         serializer.is_valid()
-        submission = serializer.save(user=user)
-        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
-        cls.create_csv_submission_upload(submission, user)
+        cls.submission = serializer.save(user=user)
+        cls.submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
+        cls.create_csv_submission_upload(cls.submission, user)
         cls.expected_parse_result = {
             "experiments": [
                 {
@@ -207,53 +202,53 @@ class TestCSVParsing(TestCase):
                         OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(latitude)"),
+                                ("tag", "geographic location (latitude)"),
                                 ("value", "79.065100"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(longitude)"),
+                                ("tag", "geographic location (longitude)"),
                                 ("value", "4.1810000-0.5"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(depth)"),
+                                ("tag", "depth"),
                                 ("value", "0-0.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(elevation)"),
+                                ("tag", "geographic location (elevation)"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(country and/or sea)"),
+                                ("tag", "geographic location (country and/or sea)"),
                                 ("value", "Atlantic Ocean"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (biome)"),
+                                ("tag", "broad-scale environmental context"),
                                 ("value", "marine benthic biome " "(ENVO:01000024)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (material)"),
+                                ("tag", "environmental medium"),
                                 ("value", "marine sediment " "(ENVO:00002113)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (feature)"),
+                                ("tag", "local environmental context"),
                                 ("value", "marine benthic feature " "(ENVO:01000105)"),
                             ]
                         ),
@@ -282,53 +277,53 @@ class TestCSVParsing(TestCase):
                         OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(latitude)"),
+                                ("tag", "geographic location (latitude)"),
                                 ("value", "79.065100"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(longitude)"),
+                                ("tag", "geographic location (longitude)"),
                                 ("value", "4.1810000-0.5"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(depth)"),
+                                ("tag", "depth"),
                                 ("value", "0-0.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(elevation)"),
+                                ("tag", "geographic location (elevation)"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(country and/or sea)"),
+                                ("tag", "geographic location (country and/or sea)"),
                                 ("value", "Atlantic Ocean"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (biome)"),
+                                ("tag", "broad-scale environmental context"),
                                 ("value", "marine benthic biome " "(ENVO:01000024)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (material)"),
+                                ("tag", "environmental medium"),
                                 ("value", "marine sediment " "(ENVO:00002113)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (feature)"),
+                                ("tag", "local environmental context"),
                                 ("value", "marine benthic feature " "(ENVO:01000105)"),
                             ]
                         ),
@@ -358,53 +353,53 @@ class TestCSVParsing(TestCase):
                         OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(latitude)"),
+                                ("tag", "geographic location (latitude)"),
                                 ("value", "79.065100"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(longitude)"),
+                                ("tag", "geographic location (longitude)"),
                                 ("value", "4.1810000-0.5"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(depth)"),
+                                ("tag", "depth"),
                                 ("value", "0-0.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(elevation)"),
+                                ("tag", "geographic location (elevation)"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(country and/or sea)"),
+                                ("tag", "geographic location (country and/or sea)"),
                                 ("value", "Atlantic Ocean"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (biome)"),
+                                ("tag", "broad-scale environmental context"),
                                 ("value", "marine benthic biome " "(ENVO:01000024)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (material)"),
+                                ("tag", "environmental medium"),
                                 ("value", "marine sediment " "(ENVO:00002113)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (feature)"),
+                                ("tag", "local environmental context"),
                                 ("value", "marine benthic feature " "(ENVO:01000105)"),
                             ]
                         ),
@@ -434,53 +429,53 @@ class TestCSVParsing(TestCase):
                         OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(latitude)"),
+                                ("tag", "geographic location (latitude)"),
                                 ("value", "79.065100"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(longitude)"),
+                                ("tag", "geographic location (longitude)"),
                                 ("value", "4.1810000-0.5"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(depth)"),
+                                ("tag", "depth"),
                                 ("value", "0-0.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(elevation)"),
+                                ("tag", "geographic location (elevation)"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(country and/or sea)"),
+                                ("tag", "geographic location (country and/or sea)"),
                                 ("value", "Atlantic Ocean"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (biome)"),
+                                ("tag", "broad-scale environmental context"),
                                 ("value", "marine benthic biome " "(ENVO:01000024)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (material)"),
+                                ("tag", "environmental medium"),
                                 ("value", "marine sediment " "(ENVO:00002113)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (feature)"),
+                                ("tag", "local environmental context"),
                                 ("value", "marine benthic feature " "(ENVO:01000105)"),
                             ]
                         ),
@@ -510,53 +505,53 @@ class TestCSVParsing(TestCase):
                         OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(latitude)"),
+                                ("tag", "geographic location (latitude)"),
                                 ("value", "79.065100"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(longitude)"),
+                                ("tag", "geographic location (longitude)"),
                                 ("value", "4.1810000-0.5"),
                                 ("units", "DD"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(depth)"),
+                                ("tag", "depth"),
                                 ("value", "0-0.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(elevation)"),
+                                ("tag", "geographic location (elevation)"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location " "(country and/or sea)"),
+                                ("tag", "geographic location (country and/or sea)"),
                                 ("value", "Atlantic Ocean"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (biome)"),
+                                ("tag", "broad-scale environmental context"),
                                 ("value", "marine benthic biome " "(ENVO:01000024)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (material)"),
+                                ("tag", "environmental medium"),
                                 ("value", "marine sediment " "(ENVO:00002113)"),
                             ]
                         ),
                         OrderedDict(
                             [
-                                ("tag", "environment (feature)"),
+                                ("tag", "local environmental context"),
                                 ("value", "marine benthic feature " "(ENVO:01000105)"),
                             ]
                         ),
@@ -607,15 +602,15 @@ class TestCSVParsing(TestCase):
                 ("collection date", "2016-06-25"),
                 ("geographic location (latitude)", "78.61N"),
                 ("geographic location (longitude)", "5.04E"),
-                ("geographic location (depth)", "0-1"),
+                ("depth", "0-1"),
                 ("total depth of water column", "2338"),
                 (
                     "geographic location (country and/or sea)",
                     "Arctic Ocean: Greenland Sea",
                 ),
-                ("environment (biome)", "ENVO:00000426"),
-                ("environment (material)", "ENVO:00002113"),
-                ("environment (feature)", "ENVO:01000007"),
+                ("broad-scale environmental context", "ENVO:00000426"),
+                ("environmental medium", "ENVO:00002113"),
+                ("local environmental context", "ENVO:01000007"),
             ]
         )
         field_names = [
@@ -638,12 +633,12 @@ class TestCSVParsing(TestCase):
             "collection date",
             "geographic location (latitude)",
             "geographic location (longitude)",
-            "geographic location (depth)",
+            "depth",
             "total depth of water column",
             "geographic location (country and/or sea)",
-            "environment (biome)",
-            "environment (material)",
-            "environment (feature)",
+            "broad-scale environmental context",
+            "environmental medium",
+            "local environmental context",
         ]
         sample_id = "CeB9oY"
         expected_sample = {
@@ -677,7 +672,7 @@ class TestCSVParsing(TestCase):
                 ),
                 OrderedDict(
                     [
-                        ("tag", "geographic location (depth)"),
+                        ("tag", "depth"),
                         ("value", "0-1"),
                         ("units", "m"),
                     ]
@@ -695,12 +690,15 @@ class TestCSVParsing(TestCase):
                         ("value", "Arctic Ocean: Greenland Sea"),
                     ]
                 ),
-                OrderedDict([("tag", "environment (biome)"), ("value", "ENVO:00000426")]),
-                OrderedDict([("tag", "environment (material)"), ("value", "ENVO:00002113")]),
-                OrderedDict([("tag", "environment (feature)"), ("value", "ENVO:01000007")]),
+                OrderedDict([("tag", "broad-scale environmental context"), ("value", "ENVO:00000426")]),
+                OrderedDict([("tag", "environmental medium"), ("value", "ENVO:00002113")]),
+                OrderedDict([("tag", "local environmental context"), ("value", "ENVO:01000007")]),
             ],
         }
-        sample = extract_sample(row=row, field_names=field_names, sample_id=sample_id)
+        sample, attributes_replaced = extract_sample(row=row, field_names=field_names, sample_id=sample_id)
+        # pprint(sample)
+        # pprint(expected_sample)
+        self.assertFalse(attributes_replaced)
         self.assertEqual(expected_sample, sample)
 
     def test_extract_sample_na_attributes(self):
@@ -725,15 +723,15 @@ class TestCSVParsing(TestCase):
                 ("collection date", "2016-06-25"),
                 ("geographic location (latitude)", "78.61N"),
                 ("geographic location (longitude)", "5.04E"),
-                ("geographic location (depth)", "NA"),  # no
+                ("depth", "NA"),  # no
                 ("total depth of water column", "2338"),
                 (
                     "geographic location (country and/or sea)",
                     "Arctic Ocean: Greenland Sea",
                 ),
-                ("environment (biome)", "n/a"),  # no
-                ("environment (material)", "ENVO:00002113"),
-                ("environment (feature)", "N/A"),
+                ("broad-scale environmental context", "n/a"),  # no
+                ("environmental medium", "ENVO:00002113"),
+                ("local environmental context", "N/A"),
             ]
         )  # no
         field_names = [
@@ -756,12 +754,12 @@ class TestCSVParsing(TestCase):
             "collection date",
             "geographic location (latitude)",
             "geographic location (longitude)",
-            "geographic location (depth)",
+            "depth",
             "total depth of water column",
             "geographic location (country and/or sea)",
-            "environment (biome)",
-            "environment (material)",
-            "environment (feature)",
+            "broad-scale environmental context",
+            "environmental medium",
+            "local environmental context",
         ]
         sample_id = "CeB9oY"
         expected_sample = {
@@ -795,7 +793,7 @@ class TestCSVParsing(TestCase):
                     ]
                 ),
                 # OrderedDict(
-                #     [('tag', 'geographic location (depth)'), ('value', '0-1'),
+                #     [('tag', 'geographic location ("depth")'), ('value', '0-1'),
                 #      ('units', 'm')]),
                 OrderedDict(
                     [
@@ -813,13 +811,13 @@ class TestCSVParsing(TestCase):
                 # OrderedDict(
                 #     [('tag', 'environment (biome)'),
                 #      ('value', 'ENVO:00000426')]),
-                OrderedDict([("tag", "environment (material)"), ("value", "ENVO:00002113")]),
+                OrderedDict([("tag", "environmental medium"), ("value", "ENVO:00002113")]),
                 # OrderedDict(
                 #     [('tag', 'environment (feature)'),
                 #      ('value', 'ENVO:01000007')])
             ],
         }
-        sample = extract_sample(row=row, field_names=field_names, sample_id=sample_id)
+        sample, attributes_replaced = extract_sample(row=row, field_names=field_names, sample_id=sample_id)
         self.assertEqual(expected_sample, sample)
 
     def test_parse_molecular_csv(self):
@@ -833,13 +831,10 @@ class TestCSVParsing(TestCase):
 
         for fn in file_names:
             path = os.path.join(_get_test_data_dir_path(), fn)
-            requirements = parse_molecular_csv_with_encoding_detection(path)
+            requirements = parse_molecular_csv_with_encoding_detection(path, submission=Submission.objects.first())
             requirements_keys = requirements.keys()
             self.assertIn("experiments", requirements_keys)
             self.assertIn("samples", requirements_keys)
-        print(requirements.keys())
-        for k in requirements.keys():
-            pprint(requirements[k])
 
     def test_parse_environmental_package(self):
         file_names = [
@@ -855,7 +850,7 @@ class TestCSVParsing(TestCase):
 
         for fn in file_names:
             path = os.path.join(_get_test_data_dir_path(), fn)
-            requirements = parse_molecular_csv_with_encoding_detection(path)
+            requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
 
             requirements_keys = requirements.keys()
             self.assertIn("samples", requirements_keys)
@@ -872,7 +867,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/molecular_metadata_white_spaces.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
@@ -915,7 +910,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/molecular_metadata_double_quoting_white_spaces.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
@@ -958,7 +953,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/molecular_metadata_no_quoting_white_spaces.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
@@ -1001,7 +996,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/mol_5_items_comma_some_double_quotes.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
@@ -1012,7 +1007,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/mol_5_items_comma_no_quoting_in_header.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
@@ -1023,7 +1018,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/mol_comma_with_empty_rows_cols.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
@@ -1034,7 +1029,7 @@ class TestCSVParsing(TestCase):
 
     def test_parse_semi_no_quoting(self):
         path = os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_semi_no_quoting.csv")
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
@@ -1045,7 +1040,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/mol_5_items_semi_double_quoting.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
@@ -1056,7 +1051,7 @@ class TestCSVParsing(TestCase):
             _get_test_data_dir_path(),
             "csv_files/PS99_sediment_gfbio_submission_form.csv",
         )
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         self.assertEqual(7, len(requirements["samples"]))
         self.assertEqual(7, len(requirements["experiments"]))
 
@@ -1131,12 +1126,11 @@ class TestCSVParsing(TestCase):
     def test_parse_tab(self):
         self.maxDiff = None
         path = os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_tab.csv")
-        requirements = parse_molecular_csv_with_encoding_detection(path)
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
         self.assertDictEqual(self.expected_parse_result, self._strip(requirements))
-
 
     def test_parse_with_bom(self):
         test_files = [
@@ -1146,11 +1140,10 @@ class TestCSVParsing(TestCase):
             os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF8_no_BOM.csv")
         ]
         for path in test_files:
-            requirements = parse_molecular_csv_with_encoding_detection(path)
+            requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
 
             assert "samples" in requirements
             assert len(requirements["samples"]) == 1
-
 
     def test_check_for_molecular_content(self):
         submission = Submission.objects.first()
@@ -1270,7 +1263,7 @@ class TestCSVParsing(TestCase):
 
     # # TODO: remove ?
     # def test_check_content_metadata_rules(self):
-    #     # TEMPLATE_HEADER = '"sample_title";"taxon_id";"sample_description";"sequencing_platform";"library_strategy";"library_source";"library_selection";"library_layout";"nominal_length";"forward_read_file_name";"forward_read_file_checksum";"reverse_read_file_name";"reverse_read_file_checksum";"checksum_method";"investigation type";"environmental package";"collection date";"geographic location (latitude)";"geographic location (longitude)";"geographic location (depth)";"geographic location (elevation)";"geographic location (country and/or sea)";"environment (biome)";"environment (material)";"environment (feature)";"project name";"geographic location (region and locality)";"total depth of water column"'
+    #     # TEMPLATE_HEADER = '"sample_title";"taxon_id";"sample_description";"sequencing_platform";"library_strategy";"library_source";"library_selection";"library_layout";"nominal_length";"forward_read_file_name";"forward_read_file_checksum";"reverse_read_file_name";"reverse_read_file_checksum";"checksum_method";"investigation type";"environmental package";"collection date";"geographic location (latitude)";"geographic location (longitude)";"depth";"geographic location (elevation)";"geographic location (country and/or sea)";"broad-scale environmental context";"environmental medium";"local environmental context";"project name";"geographic location (region and locality)";"total depth of water column"'
     #     # template_cols = TEMPLATE_HEADER.replace('"', '').split(';')
     #     # print(template_cols)
     #     # print(len(template_cols))
