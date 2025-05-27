@@ -42,17 +42,22 @@ END
 
 echo >&2 'PostgreSQL is available'
 
-mkdir -p "$DJANGO_S3FS_MOUNT_POINT"
-USER_TO_CHECK=django
+if [ "${MOUNT_S3FS:-false}" = "True" ]; then
+  echo "Mounting S3FS. MOUNT_S3FS=${MOUNT_S3FS}"
+    mkdir -p "$DJANGO_S3FS_MOUNT_POINT"
+    USER_TO_CHECK=django
 
-if id "$USER_TO_CHECK" &>/dev/null; then
-    # Ensure /mnt/s3bucket exists and is owned by the Django user if available
-    chown django:django "$DJANGO_S3FS_MOUNT_POINT"
-    chmod 0770 "$DJANGO_S3FS_MOUNT_POINT"
-    exec gosu django "$@"
+    if id "$USER_TO_CHECK" &>/dev/null; then
+        # Ensure /mnt/s3bucket exists and is owned by the Django user if available
+        chown django:django "$DJANGO_S3FS_MOUNT_POINT"
+        chmod 0770 "$DJANGO_S3FS_MOUNT_POINT"
+        exec gosu django "$@"
+    else
+        echo "User $USER_TO_CHECK does not exist, skipping chown. Only root will be able to access /mnt/s3bucket"
+        exec "$@"
+    fi
 else
-    echo "User $USER_TO_CHECK does not exist, skipping chown. Only root will be able to access /mnt/s3bucket"
-    exec "$@"
+  echo "Skipping creation of DJANGO_S3FS_MOUNT_POINT. MOUNT_S3FS is set to False or not existing."
 fi
 
 # original exec command from cookiecutter template:
