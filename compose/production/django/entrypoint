@@ -58,6 +58,7 @@ if [ "${MOUNT_S3FS:-false}" = "True" ]; then
     fi
 else
   echo "Skipping creation of DJANGO_S3FS_MOUNT_POINT. MOUNT_S3FS is set to False or not existing."
+  exec gosu django "$@"
 fi
 
 # original exec command from cookiecutter template:
