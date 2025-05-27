@@ -239,13 +239,12 @@ ena_header_mapping = {
 
 
 def replace_ena_header_attributes(sample_attributes):
-    old_template_attribute_replaced = False
+    template_attribute_replaced = False
     for s in sample_attributes:
         if s["tag"] in ena_header_mapping:
-            print(s["tag"], "-->", ena_header_mapping[s["tag"]])
             s["tag"] = ena_header_mapping[s["tag"]]
-            old_template_attribute_replaced = True
-    return old_template_attribute_replaced
+            template_attribute_replaced = True
+    return template_attribute_replaced
 
 
 def extract_sample(row, field_names, sample_id):
@@ -273,10 +272,12 @@ def extract_sample(row, field_names, sample_id):
         "sample_description": row.get("sample_description", "").replace('"', ""),
         "taxon_id": taxon_id,
     }
+    template_attribute_replaced = False
     if len(sample_attributes):
+        template_attribute_replaced = replace_ena_header_attributes(sample_attributes)
         sample["sample_attributes"] = sample_attributes
 
-    return sample, replace_ena_header_attributes(sample_attributes)
+    return sample, template_attribute_replaced
 
 
 def find_correct_platform_and_model(platform_value):
@@ -459,7 +460,6 @@ def extract_experiment(experiment_id, row, sample_id):
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file, submission):
     header = csv_file.readline()
-    print("parse_molecular_csv: header: ", header)
     dialect = csv.Sniffer().sniff(smart_str(header))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
@@ -477,7 +477,7 @@ def parse_molecular_csv(csv_file, submission):
         "samples": [],
         "experiments": [],
     }
-    old_template_attributes_replaced = False
+    template_attributes_replaced = False
     try:
         field_names = csv_reader.fieldnames
         print("parse_molecular_csv: fieldnames: ", field_names)
@@ -498,7 +498,7 @@ def parse_molecular_csv(csv_file, submission):
                 sample_titles.append(title)
                 sample_id = short_id.generate()
                 sample_ids.append(sample_id)
-                sample, old_template_attributes_replaced = extract_sample(row, field_names, sample_id)
+                sample, template_attributes_replaced = extract_sample(row, field_names, sample_id)
                 molecular_requirements["samples"].append(sample)
 
                 experiment = extract_experiment(experiment_id, row, sample_id)
@@ -506,7 +506,7 @@ def parse_molecular_csv(csv_file, submission):
                 experiment = extract_experiment(experiment_id, row, sample_ids[sample_titles.index(title)])
 
             molecular_requirements["experiments"].append(experiment)
-    if old_template_attributes_replaced:
+    if template_attributes_replaced:
         from ..tasks.jira_tasks.add_general_comment_to_issue import add_general_comment_to_issue_task
         add_general_comment_to_issue_task.apply_async(
             kwargs={
