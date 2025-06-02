@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 
 import responses
 from celery import chain
@@ -8,7 +7,7 @@ from django.test import override_settings
 from gfbio_submissions.brokerage.tests.utils import _get_ena_error_xml_response, _get_ena_xml_response
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-
+from .test_tasks_base import TestTasks
 from ...models.auditable_text_data import AuditableTextData
 from ...models.broker_object import BrokerObject
 from ...models.persistent_identifier import PersistentIdentifier
@@ -16,7 +15,6 @@ from ...models.submission import Submission
 from ...tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
 from ...tasks.process_tasks.process_ena_response import process_ena_response_task
 from ...tasks.process_tasks.transfer_data_to_ena import transfer_data_to_ena_task
-from .test_tasks_base import TestTasks
 
 
 class TestSubmissionTransferTasks(TestTasks):
@@ -32,10 +30,6 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertIn("SAMPLE", ret_val.keys())
         text_data = AuditableTextData.objects.all()
         self.assertEqual(4, len(text_data))
-
-        print('RUN XML: ----------------')
-        pprint(ret_val['RUN'])
-
 
     @responses.activate
     def test_transfer_to_ena_task_successful(self):
