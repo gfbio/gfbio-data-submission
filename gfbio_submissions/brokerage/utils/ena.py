@@ -534,61 +534,51 @@ class Enalizer(object):
             self.create_single_experiment_xml(experiment_set, experiment, sample_descriptor_platform_mappings)
         return sample_descriptor_platform_mappings, ET.tostring(experiment_set, encoding="utf-8", method="xml")
 
+    @staticmethod
+    def calculate_checksum_locally(checksum_method, submission_cloud_upload):
+        file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
+        checksum = ""
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                f_read = f.read()
+                if checksum_method == "md5":
+                    checksum = hashlib.md5(f_read).hexdigest()
+                elif checksum_method == "sha256":
+                    checksum = hashlib.sha256(f_read).hexdigest()
+        return checksum
+
+    def process_filename_attribute(self, file, file_element, broker_submission_id):
+        filename = file["filename"]
+        file_element.set("filename", f"{broker_submission_id}/{filename}")
+        valid_checksum_methods = ["md5", "sha256"]
+        checksum_method = file.get("checksum_method", "invalid").lower()
+        checksum = ""
+        if checksum_method in valid_checksum_methods:
+            submission_cloud_upload = self.submission.submissioncloudupload_set.filter(
+                file_upload__original_filename=filename).first()
+            if submission_cloud_upload:
+                if checksum_method == "md5" and submission_cloud_upload.file_upload.md5 is not None and len(
+                    submission_cloud_upload.file_upload.md5) > 0:
+                    checksum = submission_cloud_upload.file_upload.md5
+                elif checksum_method == "sha256" and submission_cloud_upload.file_upload.sha256 is not None and len(
+                    submission_cloud_upload.file_upload.sha256) > 0:
+                    checksum = submission_cloud_upload.file_upload.sha256
+                else:
+                    checksum = self.calculate_checksum_locally(checksum_method, submission_cloud_upload)
+        file["checksum"] = checksum
+        file_element.set("checksum", checksum)
+        file["checksum_method"] = checksum_method
+        file_element.set("checksum_method", checksum_method)
+
     def create_run_data_block(self, file_attributes, run, run_root, broker_submission_id=None):
         if "data_block" in run.keys():
             data_block = SubElement(run_root, "DATA_BLOCK")
-
             files = SubElement(data_block, "FILES")
-            print('\ncreate_run_data_block with files ----------------------')
             for file in run.get("data_block", {}).get("files", []):
                 file_element = SubElement(files, "FILE")
-                print('\tfile ', file)
-                print('\tfile_attributes ', file_attributes)
-                print('\tsubmission ', self.submission)
-                print('\tsubmission assoc cloud uploads ', )
-                # for scu in self.submission.submissioncloudupload_set.all():
-                #     print("\t\t", scu.file_upload.file_key)
-                #     print("\t\t", scu.file_upload.original_filename)
-                #     file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{scu.file_upload.file_key}"
-                #     print("\t\t", file_path)
-                #     print("\t\t", os.path.exists(file_path))
-                #     if os.path.exists(file_path):
-                #         with open(file_path, 'rb') as f:
-                #             f_read = f.read()
-                #             md5 = hashlib.md5(f_read).hexdigest()
-                #             sha256 = hashlib.sha256(f_read).hexdigest()
-                #             print("\t\tMD5: ", md5)
-                #             print("\t\tSHA256: ", sha256)
-
-
                 for attrib in file_attributes:
-                    print("\n-------\nattribute ", attrib)
                     if attrib == "filename" and broker_submission_id:
-                        filename = file["filename"]
-                        # file["filename"] = "{0}/{1}".format(broker_submission_id, filename)
-                        print("\tattrib filename ", filename)
-                        file_element.set("filename", filename)
-
-                        valid_checksum_methods = ["md5", "sha256"]
-                        checksum_method = file.get("checksum_method", "invalid").lower()
-                        print("\t\tchecksum_method: ", checksum_method)
-                        if file.get("checksum_method", False) and checksum_method in valid_checksum_methods:
-                            submission_cloud_upload = self.submission.submissioncloudupload_set.filter(file_upload__original_filename=filename).first()
-                            file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
-                            print("\t\t", file_path)
-                            if submission_cloud_upload and os.path.exists(file_path):
-                                with open(file_path, 'rb') as f:
-                                    f_read = f.read()
-                                    if checksum_method == "md5":
-                                        checksum = hashlib.md5(f_read).hexdigest()
-                                    elif checksum_method == "sha256":
-                                        checksum = hashlib.sha256(f_read).hexdigest()
-                                    print("\t\tchecksum: ", checksum)
-                            file["checksum"] = checksum
-                            file_element.set("checksum", checksum)
-                            file["checksum_method"] = checksum_method
-                            file_element.set("checksum_method", checksum_method)
-                        # print(f"set attrib {attrib} with file-get-attrib={file.get(attrib, 'no_attribute_found')} to file_element")
+                        self.process_filename_attribute(file, file_element, broker_submission_id)
                     else:
                         file_element.set(attrib, file.get(attrib, "no_attribute_found"))
             return data_block
@@ -621,7 +611,6 @@ class Enalizer(object):
             if len(run_attributes_data) > 0:
                 run_attributes = SubElement(run, "RUN_ATTRIBUTES")
                 self.create_attributes(run_attributes, run_attributes_data, "run")
-
         return ET.tostring(run_set, encoding="utf-8", method="xml")
 
     def prepare_submission_data(self, broker_submission_id=None):
