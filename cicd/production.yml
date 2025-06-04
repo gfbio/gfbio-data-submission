@@ -84,6 +84,28 @@ services:
     command: /start-celeryworker
     restart: always
 
+  celery-transfer-worker:
+    build:
+      context: ../
+      dockerfile: ./cicd/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+    image: gfbio_submissions_production_celeryworker
+    logging:
+      driver: syslog
+      options:
+        tag: "GFBio-celery-transferworker"
+    command: /start-celery-transfer-worker
+    restart: always
+
   celerybeat:
     build:
       context: ../
