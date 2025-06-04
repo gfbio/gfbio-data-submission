@@ -326,6 +326,9 @@ CELERY_TASK_QUEUES = [
     Queue('default', routing_key='default'),
     Queue('ena_transfer', routing_key='ena_transfer'),
 ]
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+CELERY_TASK_ALWAYS_EAGER = False
 
 CELERY_TASK_DEFAULT_QUEUE = 'default'
 CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'

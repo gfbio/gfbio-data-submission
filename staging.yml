@@ -76,6 +76,8 @@ services:
     <<: *django
     image: gfbio_submissions_production_celeryworker
     container_name: gfbio-celery-transfer-worker
+    networks:
+      - default
     logging:
       driver: syslog
       options:
