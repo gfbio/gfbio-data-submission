@@ -6,6 +6,7 @@ import ProfileForm from "./ProfileForm.jsx";
 import { useState } from "react";
 import ProfileManagement from "./ProfileManagement.jsx"
 import Cookies from 'universal-cookie';
+import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
 
 import useFetchProfileList from "../hooks/useFetchProfileList.jsx";
 import NavigationMenu from "./NavigationMenu.jsx";
