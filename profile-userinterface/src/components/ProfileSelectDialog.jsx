@@ -59,7 +59,8 @@ const ProfileSelectDialog = ({onCancel, onProfileChange, profileListData, active
                 className="submission-form container"
             >
                 <div className="col-md-12 pt-2">
-                    Fields are currently displayed according to Submission Profile <b>{activeProfile}</b>.
+                    Fields are currently displayed according to Submission Profile <b>{activeProfile}</b>. <br />
+                    <b>Warning:</b> unsaved changes in your current form will be lost on profile change!
                     <div className="">
                         <Select
                             // label="Submission Profile Selection"
