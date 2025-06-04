@@ -52,7 +52,7 @@ services:
       - postgres
 
     ports: [ ]
-    command: /start-transfer-worker
+    command: /start-celery-transfer-worker
 
   celerybeat:
     <<: *django
