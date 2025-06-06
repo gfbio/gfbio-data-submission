@@ -119,6 +119,10 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
 
     def create(self, request, *args, **kwargs):
         response = super(SubmissionCloudUploadPartURLView, self).create(request, *args, **kwargs)
+        upload = MultiPartUpload.objects.get(upload_id=kwargs["upload_id"])
+        upload.file_upload_request.s3_presigned_url = response.data["presigned_url"]
+        upload.file_upload_request.save()        
+        
         return response
 
 

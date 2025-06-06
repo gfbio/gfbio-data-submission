@@ -74,6 +74,7 @@ app.autodiscover_tasks(
         "gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submission_without_helpdesk_issue",
         "gfbio_submissions.brokerage.tasks.submission_tasks.check_issue_existing_for_submission",
         "gfbio_submissions.brokerage.tasks.submission_tasks.check_on_hold_status",
+        "gfbio_submissions.brokerage.tasks.submission_upload_tasks.post_process_admin_submission_upload.py",
         "gfbio_submissions.brokerage.tasks.atax_tasks.parse_atax_uploads",
         "gfbio_submissions.brokerage.tasks.atax_tasks.atax_run_combination_task",
         "gfbio_submissions.brokerage.tasks.process_tasks.transfer_cloud_upload_to_ena",
