@@ -3,12 +3,8 @@ from django.dispatch import receiver
 from dt_upload.models import FileUploadRequest
 from .models import SubmissionCloudUpload
 
-print("Meep-Hook-file exec!")
 @receiver(post_save, sender=FileUploadRequest, dispatch_uid="recalculate_checksums")
 def recalculate_checksums(sender, instance, **kwargs):
-    print("Meep-Hook works amazingly!!")
-    print(vars(instance.uploaded_file))
-    print(instance.uploaded_file.name)
     submission_cloud_upload = SubmissionCloudUpload.objects.filter(file_upload_id = instance.pk).first()
 
     if (submission_cloud_upload and instance.status != "PENDING-admin-upload" and instance.uploaded_file.name and not instance.uploaded_file.name.startswith(str(submission_cloud_upload.submission.broker_submission_id))):
