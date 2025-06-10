@@ -127,6 +127,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_for_submittable_data_task",
+            "tasks.add_general_comment_to_issue_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
