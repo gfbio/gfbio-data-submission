@@ -5,6 +5,10 @@ import getToken from "./utils/getToken.jsx";
 // TODO: work in progress.
 const postSubmission = async (target, embargo, data) => {
     let result = {};
+
+    let comment = data.comment || "";
+    delete data.comment;
+
     const requestData = {
         target: target,
         embargo: embargo,
@@ -35,6 +39,8 @@ const postSubmission = async (target, embargo, data) => {
         })
         .finally(() => {
         });
+
+    result["comment"] =  comment;
     return result;
 };
 
