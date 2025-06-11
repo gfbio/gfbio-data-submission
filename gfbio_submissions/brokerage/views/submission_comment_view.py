@@ -3,12 +3,12 @@ import json
 from uuid import uuid4
 
 from django.db import transaction
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest, \
+    inline_serializer
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest, inline_serializer
-
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
@@ -91,11 +91,7 @@ class SubmissionCommentView(generics.GenericAPIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        print(request.data)
         form = SubmissionCommentForm(request.POST)
-        print("SubmissionCommentView.post: form.is_valid={0}".format(form.is_valid()))
-        print(request.POST)
-        print(form.data)
         if form.is_valid():
             broker_submission_id = kwargs.get("broker_submission_id", uuid4())
             response = self._process_post_comment(broker_submission_id, form.cleaned_data["comment"])
