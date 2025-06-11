@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 )
 def post_process_admin_submission_upload_task(self, previous_task_result=None, file_upload_request_id=None):
     report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    print(file_upload_request_id)
     file_upload_request = FileUploadRequest.objects.filter(id=file_upload_request_id).first()
 
     if previous_task_result == TaskProgressReport.CANCELLED:

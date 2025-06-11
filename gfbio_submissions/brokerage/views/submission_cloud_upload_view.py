@@ -119,9 +119,10 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
 
     def create(self, request, *args, **kwargs):
         response = super(SubmissionCloudUploadPartURLView, self).create(request, *args, **kwargs)
-        upload = MultiPartUpload.objects.get(upload_id=kwargs["upload_id"])
-        upload.file_upload_request.s3_presigned_url = response.data["presigned_url"]
-        upload.file_upload_request.save()        
+        upload = MultiPartUpload.objects.filter(upload_id=kwargs["upload_id"]).first()
+        if upload:
+            upload.file_upload_request.s3_presigned_url = response.data["presigned_url"]
+            upload.file_upload_request.save()
         
         return response
 
@@ -136,6 +137,10 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def put(self, request, *args, **kwargs):
+        print(self)
+        print(request)
+        print(args)
+        print(kwargs)
         response = self.update(request, *args, **kwargs)
         try:
             mpu = MultiPartUpload.objects.get(upload_id=kwargs.get("upload_id"))
