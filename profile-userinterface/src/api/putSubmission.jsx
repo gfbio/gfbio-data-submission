@@ -9,6 +9,10 @@ export default async function putSubmission(
     data
 ) {
     let result = {};
+
+    let comment = data.comment || "";
+    delete data.comment;
+
     const requestData = {
         broker_submission_id: broker_submission_id,
         target: target,
@@ -36,5 +40,7 @@ export default async function putSubmission(
         })
         .finally(() => {
         });
+
+    result["comment"] =  comment;
     return result;
 }
