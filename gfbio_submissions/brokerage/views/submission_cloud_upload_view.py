@@ -137,10 +137,6 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def put(self, request, *args, **kwargs):
-        print(self)
-        print(request)
-        print(args)
-        print(kwargs)
         response = self.update(request, *args, **kwargs)
         try:
             mpu = MultiPartUpload.objects.get(upload_id=kwargs.get("upload_id"))
