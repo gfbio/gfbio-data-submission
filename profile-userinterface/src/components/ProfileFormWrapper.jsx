@@ -2,25 +2,25 @@ import { useParams } from "react-router-dom";
 import withErrorHandling from "../hocs/withErrorHandling";
 import withLoading from "../hocs/withLoading";
 import useFetchProfileAndSubmission from "../hooks/useFetchProfileAndSubmission.jsx";
-import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
 import ProfileForm from "./ProfileForm.jsx";
 import { useState } from "react";
-import { modals } from "@mantine/modals";
+import ProfileManagement from "./ProfileManagement.jsx"
+import Cookies from 'universal-cookie';
+import { DEFAULT_PROFILE_NAME } from "../settings.jsx";
+
+import useFetchProfileList from "../hooks/useFetchProfileList.jsx";
+import NavigationMenu from "./NavigationMenu.jsx";
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
+
     const brokerSubmissionId = useParams().brokerageId;
-    const profileName = localStorage.getItem("profileName") || DEFAULT_PROFILE_NAME;
+    const cookies = new Cookies();
+    const profileName = cookies.get("profileName") || DEFAULT_PROFILE_NAME;
 
     const [activeProfile, setActiveProfile] = useState(profileName);
-
-    const handleProfileChange = (data) => {
-        localStorage.setItem("profileName", data);
-        modals.closeAll();
-        setActiveProfile(data);
-    };
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
@@ -34,29 +34,22 @@ const ProfileFormWrapper = () => {
         localSubmissionFiles,
     } = useFetchProfileAndSubmission(activeProfile, brokerSubmissionId);
 
+    const {
+        profileListData,
+        profileListIsLoading,
+        profileListError,
+    } = useFetchProfileList();
+    
     // TODO: where display errors ? what actions if error ?
     return (
         <>
-            {/* TODO: DASS-2455 (12.03.2025): this button opens a modal with a dialog that allows selecting on of the
-                    available system-wide-profile followed by a re-render of the form based on the newly selected
-                    profile. This is de-activated for now, but will be used in the near future. */}
-            {/*<Button*/}
-            {/*    onClick={() => {*/}
-            {/*        modals.open({*/}
-            {/*            title: "Submission Profile Selection",*/}
-            {/*            size: "xl",*/}
-            {/*            centered: true,*/}
-            {/*            children: (*/}
-            {/*                <>*/}
-            {/*                    <ProfileSelector onCancel={modals.closeAll} onProfileChange={handleProfileChange}></ProfileSelector>*/}
-            {/*                </>*/}
-            {/*            ),*/}
-            {/*        });*/}
-            {/*    }}*/}
-            {/*>*/}
-            {/*    Change Profile*/}
-            {/*</Button>*/}
-            {/* -----------------------------------------------------------------------------------------------------*/}
+            <NavigationMenu />
+
+            <ProfileManagement
+                activeProfile={activeProfile}
+                profileListData={profileListData}
+                setActiveProfile={setActiveProfile}
+            />
 
             <div id={"profileFormWrapper"}>
                 <ProfileWithErrorHandling

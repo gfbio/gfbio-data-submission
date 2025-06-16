@@ -56,6 +56,7 @@ web_test_update:
   script:
     - ISSUE_ID=$(awk -F- '{print $2}' <<< ${CI_COMMIT_REF_NAME})
     - TEST_NAME=$ISSUE_ID-$PROJECT_NAME
+    - rsync -a /home/gitlab-runner/.gfbio_envs/passwd-s3fs compose/production/django/
     - TEST_NAME=${TEST_NAME} ADMIN_URL=${ADMIN_URL} ./cicd/createWebTest.sh
     - docker compose -f $COMPOSE_FILE build
     - ./web_test_deploy.sh

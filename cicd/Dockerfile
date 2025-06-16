@@ -12,13 +12,13 @@ RUN apt-get update \
   # dig tool to get ip of allowed domains
   && apt-get install -y dnsutils \
   # needed for java
-  && apt-get ca-certificates \
+  && apt-get install -y ca-certificates \
   # java itself
-  && apt-get openjdk-17-jdk \
+  && apt-get install -y openjdk-17-jdk \
   # install s3fs to mount s3 buckets
-  && apt-get s3fs \
+  && apt-get install -y s3fs \
   # install gosu to run the entrypoint as non-root
-  && apt-get gosu \
+  && apt-get install -y gosu \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -50,6 +50,8 @@ RUN pip install --no-cache-dir -r /requirements/production.txt \
 
 RUN pip install --no-cache-dir abcd-converter==0.0.4 --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 
+COPY ./ena_webin_cli /ena_webin_cli
+
 # Install Aspera CLI (ascp) -----------------------------------------------------------------
 # Create a non-root user
 # TODO/FIXME: use django user that is created in line 40 instead of asperauser ?
@@ -58,7 +60,7 @@ USER asperauser
 RUN whoami
 RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
     /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
-    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
+    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh
 # commands in /home/asperauser/.aspera/connect/bin
 # -------------------------------------------------------------------------------------------------
 

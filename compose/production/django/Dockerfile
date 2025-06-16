@@ -52,6 +52,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   ca-certificates \
   # java itself
   openjdk-17-jdk \
+  # install libfuse \
+  libfuse2 \
   # install s3fs to mount s3 buckets
   s3fs \
   # install gosu to run the entrypoint as non-root
@@ -84,7 +86,8 @@ USER asperauser
 RUN whoami
 RUN tar -xzvf /ena_webin_cli/ibm-aspera-connect_4.2.13.820_linux_x86_64.tar.gz -C /tmp && \
     /bin/bash /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh && \
-    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh \
+    rm -f /tmp/ibm-aspera-connect_4.2.13.820_linux_x86_64.sh
+
 # commands in /home/asperauser/.aspera/connect/bin
 # -------------------------------------------------------------------------------------------------
 
