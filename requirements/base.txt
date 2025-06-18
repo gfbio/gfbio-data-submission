@@ -66,3 +66,4 @@ django-upload-tools @https://gitlab-pe.gwdg.de/gfbio/django-upload-tools/-/raw/m
 # ------------------------------------------------------------------------------
 --extra-index-url https://gitlab-pe.gwdg.de/api/v4/projects/26281/packages/pypi/simple
 gfbio-django-utilities==0.1.0
+aiozipstream==0.4

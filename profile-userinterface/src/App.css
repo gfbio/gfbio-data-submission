@@ -436,7 +436,7 @@ body {
       background: #f8f8f8;
     }
 
-    .ion-md-document, .btn-remove {
+    .ion-md-document, .btn-remove, .btn-download, .btn-download i.fa {
       font-size: 18px;
     }
 
@@ -446,6 +446,14 @@ body {
 
     .btn-remove {
       color: orangered;
+    }
+
+    .btn-download-all {
+      font-size: 18px;
+
+      i.fa {
+        font-size: 18px;
+      }
     }
   }
 
