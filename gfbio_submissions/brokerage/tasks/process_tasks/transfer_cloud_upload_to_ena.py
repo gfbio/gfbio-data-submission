@@ -33,9 +33,11 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission):
     # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
     aspera_host = site_configuration.ena_aspera_server.url
     aspera_user = site_configuration.ena_aspera_server.username
-    aspera_target_path = f"{submission.broker_submission_id}/."
+    # aspera_target_path = f"/{submission.broker_submission_id}/{os.path.basename(file_path)}"
+    aspera_target_path = f"/{submission.broker_submission_id}/"
     remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
-    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
+    # TODO: check explicit -d option
+    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", "-d", file_path, remote_dest]
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd} | task_id={task.request.id}")
     res = TaskProgressReport.CANCELLED
     details = {"cmd": cmd}

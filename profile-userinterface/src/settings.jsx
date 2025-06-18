@@ -1,6 +1,6 @@
 // TODO: add local dev prefix automatically without the need to set this explicitly
 export const SERVER_ROOT = "";
-// export const SERVER_ROOT = 'http://0.0.0.0:8000/';
+// export const SERVER_ROOT = 'http://0.0.0.0:8000';
 
 // use as base url for router in main.jsx to allow development with hot reload
 //  and "npm run dev"
@@ -28,6 +28,8 @@ export const SUBMISSIONS_API = SERVER_ROOT + "/api/submissions/";
 
 export const JIRA_ROOT = "https://helpdesk.gfbio.org/browse/";
 
+export const JIRA_COMMENT = "/comment/";
+
 export const UPLOAD = "/upload/";
 
 export const UPLOAD_PATCH = "patch/";
@@ -48,4 +50,4 @@ export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 10000000000;  // 10 GB = 10000
 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
 
-export const USE_LOCAL_UPLOAD_ONLY = true;
+export const USE_LOCAL_UPLOAD_ONLY = false;

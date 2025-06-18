@@ -124,6 +124,10 @@ body {
   }
 }
 
+.submission-list-wrapper {
+  margin-top: 3rem;
+}
+
 .submission-form {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
@@ -848,7 +852,7 @@ button.button-inverted {
 
 .sub-navi {
   padding: 0;
-  margin-bottom: 2rem;
+  margin-bottom: 0 !important;
   border-bottom: 1px solid #ccc;
 }
 
@@ -947,4 +951,39 @@ button.button-inverted {
 .mantine-DatePicker-weekday {
   font-family: "Raleway", sans-serif;
   text-align: center;
+}
+
+.profile-managment-bar {
+  min-height: 1.4rem;
+}
+
+.profile-menu {
+  cursor: pointer;
+  margin-top: 0.2rem;
+  margin-bottom: 1rem;
+  color: #666;
+
+  .change-profile-button {
+    background-color: #3cace4;
+    color: white;
+    border: solid 1px #3cace4;
+    height: 1.5rem;
+
+    * {
+      border: none;
+    }
+  }
+
+  &:hover {
+    .change-profile-button {
+      background-color: white;
+      color: #3cace4;
+      border: solid 1px #3cace4;
+      height: 1.5rem;
+
+      * {
+        border: none;
+      }
+    }
+  }
 }

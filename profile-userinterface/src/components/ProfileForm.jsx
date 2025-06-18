@@ -1,18 +1,19 @@
-import { Button, Group } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import {Button, Group} from "@mantine/core";
+import {useForm} from "@mantine/form";
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
-import { useBlocker, useNavigate } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useBlocker, useNavigate} from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
-import { uploadFileToS3 } from "../api/s3UploadSubmission.jsx";
+import {uploadFileToS3} from "../api/s3UploadSubmission.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
-import { ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY } from "../settings.jsx";
-import { formatDateToYYYYMMDD } from "../utils/dateUtils";
+import {ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY} from "../settings.jsx";
+import {formatDateToYYYYMMDD} from "../utils/dateUtils";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
+import postComment from "../api/postComment.jsx";
 
 const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -230,6 +231,12 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
+                        if(result?.comment) {
+                            postComment(result.broker_submission_id, result.comment).then((result) => {
+                            }).catch((error) => {
+                                console.error(error);
+                            }).finally(() => {});
+                        }
                         const fileUploadPromises = files.map((file, index) => {
                             let isMetadata = false;
                             if (metadataIndex && metadataIndex.source === "local") {
@@ -264,6 +271,12 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
+                        if(result?.comment) {
+                            postComment(result.broker_submission_id, result.comment).then((result) => {
+                            }).catch((error) => {
+                                console.error(error);
+                            }).finally(() => {});
+                        }
                         const fileUploadPromises = files.map((file, index) => {
                             let isMetadata = false;
                             if (metadataIndex && metadataIndex.source === "local") {
