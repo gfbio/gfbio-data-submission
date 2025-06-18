@@ -642,7 +642,7 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
     inline_reverse = [
-        ("file_upload", {"fields": ["original_filename", "file_key", "status", "s3_location"]}),
+        ("file_upload", {"fields": ["uploaded_file", "original_filename", "file_key", "status", "s3_location"]}),
     ]
     actions = [
         reparse_csv_metadata_cloud_uploads,
