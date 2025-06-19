@@ -198,6 +198,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 metadataSource={metadataIndex.source}
                 metadataIndex={metadataIndex}
                 handleMetadataSelect={handleMetadataToggle}
+                brokerSubmissionId={submissionData?.broker_submission_id}
             />
 
             <UploadMessage

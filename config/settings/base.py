@@ -435,6 +435,11 @@ IS_PROD_ENV = env.bool("IS_PROD_ENV", False)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
 
+# Downloads
+# ------------------------------------------------------------------------------
+MAX_USER_DOWNLOAD_SPEED = env.int("MAX_USER_DOWNLOAD_SPEED", default= 32 * 1024 * 1024)
+MAX_BUCKET_DOWNLOAD_SPEED = env.int("MAX_BUCKET_DOWNLOAD_SPEED", default= 512 * 1024 * 1024)
+
 # Fallbacks
 # ------------------------------------------------------------------------------
 FALLBACK_CATEGORY_NAME = "unclassified"
