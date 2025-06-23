@@ -637,7 +637,7 @@ download_submission_cloud_upload_file.short_description = "Download the file of 
 class SubmissionCloudUploadAdmin(ReverseModelAdmin):
     list_display = ("__str__", "meta_data", "user", "attachment_id", "attach_to_ticket")
     list_filter = ("user", "meta_data", "attach_to_ticket")
-    search_fields = ["submission__broker_submission_id"]
+    search_fields = ["submission__broker_submission_id", "submission__additionalreference__reference_key"]
     inline_type = "stacked"
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
