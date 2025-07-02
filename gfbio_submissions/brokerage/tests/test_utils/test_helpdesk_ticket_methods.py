@@ -2,6 +2,8 @@
 
 import json
 import os
+import random
+import string
 from unittest import skip
 
 import responses
@@ -15,7 +17,6 @@ from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username,
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-
 from ...configuration.settings import (
     GFBIO_HELPDESK_TICKET,
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
@@ -103,6 +104,30 @@ class TestHelpDeskTicketMethods(TestCase):
         site_config = SiteConfiguration.objects.first()
         payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
+
+    def test_prepare_helpdesk_payload_long_title_and_summary(self):
+        with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
+            data = json.load(data_file)
+        chars = string.ascii_letters + string.digits + ' '
+        data["requirements"]["title"] = ''.join(random.choices(chars, k=300))
+        data["requirements"]["description"] = ''.join(random.choices(chars, k=300))
+
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
+        is_valid = serializer.is_valid()
+        self.assertTrue(is_valid)
+        submission = serializer.save(user=User.objects.first())
+
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
+
+        self.assertIn("description", payload.keys())
+        self.assertLess(len(payload["description"]), 255)
+        self.assertIn("summary", payload.keys())
+        self.assertLess(len(payload["summary"]), 255)
+        self.assertIn("customfield_10201", payload.keys())
+        self.assertLess(len(payload["customfield_10201"]), 255)
+        self.assertIn("customfield_10208", payload.keys())
+        self.assertLess(len(payload["customfield_10208"]), 255)
 
     def test_lib_datacenter_assignee(self):
         with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
