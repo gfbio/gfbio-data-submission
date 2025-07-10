@@ -11,7 +11,7 @@ entryPoints:
 
 https://gitlab-pe:
   gwdg:
-    de/gfbio/submissions:
+    de/gfbio/submission:
       gfbio:
         org:
           git:
