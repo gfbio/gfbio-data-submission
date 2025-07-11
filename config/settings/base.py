@@ -87,6 +87,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "mozilla_django_oidc",
     "dt_upload",
+    "gfbio_django_utilities",
 ]
 
 LOCAL_APPS = [
@@ -214,6 +215,7 @@ TEMPLATES = [
                 "gfbio_submissions.users.context_processors.allauth_settings",
                 "gfbio_submissions.submission_ui.context_processors.prod_env",
                 "gfbio_submissions.submission_ui.context_processors.matomo_settings",
+                "gfbio_django_utilities.context_processors.active_banners",
             ],
         },
     }
