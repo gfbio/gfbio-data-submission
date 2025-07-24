@@ -31,6 +31,18 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=""):
     )
 
 
+def check_length_for_jira(requirements):
+    summary = requirements.get("title", "")
+    description = requirements.get("description", "")
+    jira_max_length = 254
+    truncation_text = " (... TRUNCATED)."
+    if len(summary) > jira_max_length:
+        summary = '{0}{1}'.format(summary[:jira_max_length - len(truncation_text)], truncation_text)
+    if len(description) > jira_max_length:
+        description = '{0}{1}'.format(description[:jira_max_length - len(truncation_text)], truncation_text)
+    return description, summary
+
+
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, prepare_for_update=False):
     requirements = submission.data.get("requirements", {})
     if reporter is None:
@@ -65,8 +77,11 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         )
         authors_text += contributor if len(contributor.strip()) else ""
 
-    # TODO: add a non-empty default to prevent jira errors
-    summary = requirements.get("title", "")
+    # TODO / Error: DASS-2801 customfield_10201 & summary/title must be less then 255 according to Jira
+    # (400, b'{"errorMessages":[],"errors":{"summary":"Summary must be less than 255 characters.",
+    # "customfield_10201":"The entered text is too long. It exceeds the allowed limit of 255 characters."}}')
+    description, summary = check_length_for_jira(requirements)
+
     # as requested in: GFBIO-2679 & DEVOPS-3
     # if len(summary) >= 45:
     #     summary = '{0}{1}'.format(summary[:45], '...')
@@ -92,14 +107,14 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
     mutual_data = {
         "project": {"key": site_config.jira_project_key},
         "summary": "{0}".format(summary),
-        "description": "{0}".format(requirements.get("description", "")),
+        "description": "{0}".format(description),
         "issuetype": {"name": "Data Submission"},
         "reporter": {"name": reporter.get("jira_user_name", site_config.contact)},
         "customfield_10200": "{0}".format(submission.embargo.isoformat())
         if submission.embargo is not None
         else "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
-        "customfield_10201": requirements.get("title", ""),
-        "customfield_10208": requirements.get("description", ""),
+        "customfield_10201": summary,
+        "customfield_10208": description,
         "customfield_10303": "{0}".format(submission.broker_submission_id),
         "customfield_10311": requirements.get("data_collection_time", ""),
         # FIXME: looks strange in ticket -> ['label 1', 'label 2'] => 1 2 label
@@ -111,6 +126,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         "customfield_10314": requirements.get("project_id", ""),
         "customfield_10202": GFBIO_LICENSE_MAPPINGS.get(requirements.get("license", "Other License")),
         "customfield_10600": requirements.get("download_url", ""),
+        "customfield_13100": f"{settings.HOST_URL_ROOT}api/submissions/{submission.broker_submission_id}/cloudupload/zip/",
+        "customfield_13101": f"{settings.HOST_URL_ROOT}profile/ui/form/{submission.broker_submission_id}/",
     }
 
     # metadata_schema = requirements.get('metadata_schema',

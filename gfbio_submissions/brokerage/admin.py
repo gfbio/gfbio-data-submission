@@ -407,8 +407,13 @@ combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded 
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
 
+    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ]
+
     for obj in queryset:
         for upload in obj.submissioncloudupload_set.all():
+            filename = upload.file_upload.file_key
+            if not any(filename.lower().endswith(ext) for ext in allowed_types):
+                continue
             transfer_cloud_upload_to_ena_task.apply_async(
                 kwargs={"submission_cloud_upload_id": upload.pk, "submission_id": obj.pk, "user_id": request.user.id},
                 countdown=SUBMISSION_DELAY,
