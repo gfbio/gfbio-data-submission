@@ -5,12 +5,15 @@ import subprocess
 
 from celery.exceptions import Retry
 from django.conf import settings
+from django.core.mail import send_mail
 
 from config.celery_app import app
 from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
+from ....users.models import User
 from ...utils.task_utils import get_submission_and_site_configuration
+from ...utils.ena import open_ftp_to_ena_download_file_and_calculate_checksum
 from ....generic.models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
@@ -100,6 +103,35 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission):
     return res
 
 
+def check_checksum_via_ftp(task, site_configuration, submission, submission_cloud_upload, admin_user):
+    try:
+        calculated_md5sum, transmission_protocol = open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, submission_cloud_upload)
+        if calculated_md5sum == submission_cloud_upload.file_upload.md5:
+            checksum_message = f"Matching checksums: {calculated_md5sum}"
+        else:
+            checksum_message = f"Expected checksum: {submission_cloud_upload.file_upload.md5} | actual checksum: {calculated_md5sum}"
+            transmission_protocol.append(checksum_message)
+            if (task.request.retries == 0):
+                raise task.retry(exc=Exception(transmission_protocol))
+            else:
+                mail_subject=f"Checksum-Missmatch in submission {submission.broker_submission_id}, cloud_upload {submission_cloud_upload.file_upload.original_filename}"
+                mail_message=(f"The checksum of the transmitted file {submission_cloud_upload.file_upload.original_filename} " +
+                f"at ENA differs from the expected checksum, even after retrying. {checksum_message}")
+                if admin_user and admin_user.email:
+                    send_mail(subject=mail_subject, message=mail_message, recipient_list=[admin_user.email], from_email=settings.SERVER_EMAIL,)
+                raise Exception(mail_subject + "|" + mail_message)
+    finally:
+        RequestLog.objects.create(
+            type=RequestLog.OUTGOING,
+            url=site_configuration.ena_ftp.url,
+            method=RequestLog.NONE,
+            user=admin_user if admin_user else None,
+            submission_id=submission.broker_submission_id,
+            json=transmission_protocol,
+            files = submission_cloud_upload.file_upload.original_filename,
+            data=checksum_message
+        )
+
 @app.task(
     base=SubmissionTask,
     bind=True,
@@ -109,7 +141,7 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission):
     retry_jitter=True,
     queue="ena_transfer",
 )
-def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None):
+def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None, user_id=None):
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | queue={self.queue} | task_id={self.request.id}")
     if previous_result == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
@@ -117,6 +149,9 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         submission_id=submission_id, task=self, include_closed=True
     )
 
+    admin_user = None
+    if user_id:
+        admin_user = User.objects.get(pk=user_id)
     if submission == TaskProgressReport.CANCELLED:
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | previous task reported={TaskProgressReport.CANCELLED} | "
@@ -129,7 +164,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
             f"tasks.py | transfer_cloud_upload_to_ena_task | no valid SubmissionCloudUpload available | "
             f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
         return TaskProgressReport.CANCELLED
-
+    
     file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
     if not os.path.exists(file_path):
         logger.error(
@@ -140,4 +175,8 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     folder_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission.broker_submission_id}"
     ensure_folder_with_keep(folder_path)
 
-    return perform_ascp_file_transfer(self, file_path, site_configuration, submission)
+    transfer_result = perform_ascp_file_transfer(self, file_path, site_configuration, submission)
+    if transfer_result == True:
+        check_checksum_via_ftp(self, site_configuration, submission, submission_cloud_upload, admin_user)
+    
+    return transfer_result
