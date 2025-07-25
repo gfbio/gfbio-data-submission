@@ -415,7 +415,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
             if not any(filename.lower().endswith(ext) for ext in allowed_types):
                 continue
             transfer_cloud_upload_to_ena_task.apply_async(
-                kwargs={"submission_cloud_upload_id": upload.pk, "submission_id": obj.pk},
+                kwargs={"submission_cloud_upload_id": upload.pk, "submission_id": obj.pk, "user_id": request.user.id},
                 countdown=SUBMISSION_DELAY,
             )
 

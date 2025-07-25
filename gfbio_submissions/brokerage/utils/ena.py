@@ -900,6 +900,37 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
     return transmission_report
 
 
+class md5ChecksumCalculator:
+    def __init__(self):
+        self.checksum = ""
+        self.md5 = hashlib.md5()
+    
+    def calculate_checksum(self, bytes):
+        self.checksum = self.md5.update(bytes)
+    
+    def get_checksum(self):
+        return self.md5.hexdigest()
+
+
+def open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, submission_cloud_upload):
+    checksum = ""
+    transmission_report = []
+    checksumCalculator = md5ChecksumCalculator()
+
+    ftp = None
+
+    try:
+        ftp_rc = site_configuration.ena_ftp
+        with FTP(ftp_rc.url) as ftp:
+            transmission_report.append(ftp.login(user=ftp_rc.username, passwd=ftp_rc.password))
+            transmission_report.append(ftp.retrbinary("RETR " + submission_cloud_upload.file_upload.file_key, checksumCalculator.calculate_checksum))
+            checksum = checksumCalculator.get_checksum()
+    except Exception as ex:
+        transmission_report.append(str(ex))
+    
+    return checksum, transmission_report
+
+
 # https://www.ebi.ac.uk/ena/submit/report/swagger-ui.html
 def fetch_ena_report(site_configuration, report_type):
     url = "{0}{1}?format=json".format(site_configuration.ena_report_server.url, report_type)
