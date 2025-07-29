@@ -114,6 +114,9 @@ COPY --chown=django:django ./compose/production/django/celery/worker/start-trans
 RUN sed -i 's/\r$//g' /start-celery-transfer-worker
 RUN chmod +x /start-celery-transfer-worker
 
+COPY --chown=django:django ./compose/production/django/celery/worker/backup-start /start-celeryworkerbackup
+RUN sed -i 's/\r$//g' /start-celeryworkerbackup
+RUN chmod +x /start-celeryworkerbackup
 
 COPY --chown=django:django ./compose/production/django/celery/beat/start /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat

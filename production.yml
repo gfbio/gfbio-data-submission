@@ -98,6 +98,11 @@ services:
         tag: 'GFBio-celery-transfer-worker'
     command: /start-celery-transfer-worker
 
+  celeryworkerbackup:
+    <<: *django
+    image: gfbio_submissions_production_celeryworkerbackup
+    command: /start-celeryworkerbackup
+
   celerybeat:
     <<: *django
     image: gfbio_submissions_production_celerybeat
