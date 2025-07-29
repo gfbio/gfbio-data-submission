@@ -101,6 +101,10 @@ services:
   celeryworkerbackup:
     <<: *django
     image: gfbio_submissions_production_celeryworkerbackup
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celeryworkerbackup'
     command: /start-celeryworkerbackup
 
   celerybeat:
