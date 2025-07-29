@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from django.utils.encoding import smart_bytes
 from django_reverse_admin import ReverseModelAdmin
 from dt_upload.models import DTUpload
+from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
@@ -657,6 +658,11 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
 
 try:
     admin.site.unregister(DTUpload)
+except admin.sites.NotRegistered:
+    pass
+
+try:
+    admin.site.unregister(DTUploadMirror)
 except admin.sites.NotRegistered:
     pass
 
