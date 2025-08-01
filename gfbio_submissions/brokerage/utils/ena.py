@@ -22,6 +22,7 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
 from .email_curators import send_checklist_mapping_error_notification
@@ -534,19 +535,6 @@ class Enalizer(object):
             self.create_single_experiment_xml(experiment_set, experiment, sample_descriptor_platform_mappings)
         return sample_descriptor_platform_mappings, ET.tostring(experiment_set, encoding="utf-8", method="xml")
 
-    @staticmethod
-    def calculate_checksum_locally(checksum_method, submission_cloud_upload):
-        file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
-        checksum = ""
-        if os.path.exists(file_path):
-            with open(file_path, 'rb') as f:
-                f_read = f.read()
-                if checksum_method == "md5":
-                    checksum = hashlib.md5(f_read).hexdigest()
-                elif checksum_method == "sha256":
-                    checksum = hashlib.sha256(f_read).hexdigest()
-        return checksum
-
     def process_filename_attribute(self, file, file_element, broker_submission_id):
         filename = file["filename"]
         file_element.set("filename", f"{broker_submission_id}/{filename}")
@@ -564,7 +552,7 @@ class Enalizer(object):
                     submission_cloud_upload.file_upload.sha256) > 0:
                     checksum = submission_cloud_upload.file_upload.sha256
                 else:
-                    checksum = self.calculate_checksum_locally(checksum_method, submission_cloud_upload)
+                    checksum = calculate_checksum_locally(checksum_method, submission_cloud_upload)
         file["checksum"] = checksum
         file_element.set("checksum", checksum)
         file["checksum_method"] = checksum_method
