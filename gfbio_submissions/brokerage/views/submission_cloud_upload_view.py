@@ -11,7 +11,8 @@ from rest_framework.authentication import TokenAuthentication, BasicAuthenticati
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models.request_log import RequestLog
-from ..configuration.settings import ATAX
+from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import verify_file_upload_request_checksum_in_bucket_task
+from ..configuration.settings import ATAX, SUBMISSION_DELAY
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
@@ -143,6 +144,13 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
         except MultiPartUpload.DoesNotExist as e:
             mpu = None
         if mpu is not None:
+            verify_file_upload_request_checksum_in_bucket_task.apply_async(
+                kwargs={
+                    "submission_id": mpu.file_upload_request.submissioncloudupload.submission.pk,
+                    "submission_cloud_upload_id": mpu.file_upload_request.submissioncloudupload.pk
+                },
+                countdown=SUBMISSION_DELAY,
+            )
             if hasattr(mpu.file_upload_request, "submissioncloudupload"):
                 mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
         return response
