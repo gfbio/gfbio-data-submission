@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import {
     MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD,
-    MAX_UPLOAD_ITEMS_CLOUD_UPLOAD,
 } from "../../settings.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
@@ -32,11 +31,10 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     }, [serverFiles, metadataIndex.source]);
 
     const checkUploadLimits = (localFiles, serverFiles) => {
-        const totalCount = localFiles.length + serverFiles.length;
         const totalSize =
             localFiles.reduce((sum, file) => sum + (file.size || 0), 0) +
             serverFiles.reduce((sum, file) => sum + (file.file_size || 0), 0);
-        return totalSize <= MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD && totalCount <= MAX_UPLOAD_ITEMS_CLOUD_UPLOAD;
+        return totalSize <= MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD;
     };
 
     const handleDrop = (droppedFiles) => {
@@ -203,7 +201,6 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
             <UploadMessage
                 showUploadLimitMessage={uploadLimitExceeded}
-                maxUploadItems={MAX_UPLOAD_ITEMS_CLOUD_UPLOAD}
                 maxTotalUploadSize={MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD}
             />
 
