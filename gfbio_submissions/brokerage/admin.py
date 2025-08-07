@@ -7,7 +7,9 @@ import requests
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
+from django.template.response import TemplateResponse
 from django.utils.encoding import smart_bytes
+from django.utils.translation import gettext as _
 from django_reverse_admin import ReverseModelAdmin
 from dt_upload.models import DTUpload
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
@@ -492,6 +494,100 @@ class SubmissionAdmin(admin.ModelAdmin):
         if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
         super(SubmissionAdmin, self).save_model(request, obj, form, change)
+    
+
+    def get_urls(self):
+        from django.urls import path
+        from functools import update_wrapper
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            wrapper.model_admin = self
+            return update_wrapper(wrapper, view)
+
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/submission-cloud-upload-view/",
+                wrap(self.submission_cloud_uploads_view),
+                name="submission_submission_submission_cloud_upload_view",
+            ),
+        ]
+        return custom_urls + urls
+    
+    def submission_cloud_uploads_view(self, request, object_id, extra_context=None):
+        "The 'history' admin view for this model."
+        from django.contrib.admin.models import LogEntry
+
+        model = self.model
+        obj = Submission.objects.get(pk=object_id)
+        if obj is None:
+            return self._get_obj_does_not_exist_redirect(
+                request, model._meta, object_id
+            )
+
+        orderlist = [
+            SubmissionCloudUpload.STATUS_ACTIVE,
+            SubmissionCloudUpload.STATUS_NEW,
+            SubmissionCloudUpload.STATUS_UPLOADED,
+            SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+            SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM,
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+            SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM,
+            SubmissionCloudUpload.STATUS_DELETED,
+        ]
+        submission_cloud_uploads = list(SubmissionCloudUpload.objects.filter(submission__pk=object_id))
+        submission_cloud_uploads.sort(key=lambda x: orderlist.index(x.status))
+
+        cloud_upload_list = {}
+        for cloud_upload in submission_cloud_uploads:
+            last_action = (
+                LogEntry.objects.filter(
+                    object_id=cloud_upload.pk,
+                    content_type=40,
+                ).order_by("action_time").first()
+            )
+
+            status = "-"
+            for status_choice in SubmissionCloudUpload.STATUS_CHOICES:
+                if status_choice[0] == cloud_upload.status:
+                    status = status_choice[1]
+                    break
+
+            if not status in cloud_upload_list:
+                cloud_upload_list[status] = []
+
+            cloud_upload_list[status].append({
+                "pk": cloud_upload.pk,
+                "name": str(cloud_upload),
+                "status": status,
+                "last_change_action_time": last_action.action_time if last_action else cloud_upload.modified,
+                "last_change_message": last_action.get_change_message() if last_action else ""
+            })
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Submission Cloud Uploads of the Submission: %s") % obj,
+            "subtitle": None,
+            "cloud_upload_list": cloud_upload_list,
+            "module_name": str(self.opts.verbose_name_plural),
+            "object": obj,
+            "opts": self.opts,
+            **(extra_context or {}),
+        }
+
+        request.current_app = self.admin_site.name
+
+        return TemplateResponse(
+            request,
+            "admin/brokerage/submission/submission_submission_cloud_upload_list.html",
+            context,
+        )
+
 
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):

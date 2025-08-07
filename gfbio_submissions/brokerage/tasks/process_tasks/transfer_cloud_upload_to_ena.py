@@ -32,7 +32,7 @@ def ensure_folder_with_keep(path):
             f.write("")
 
 
-def perform_ascp_file_transfer(task, file_path, site_configuration, submission):
+def perform_ascp_file_transfer(task, file_path, site_configuration, submission, submission_cloud_upload, user_id):
     # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
     aspera_host = site_configuration.ena_aspera_server.url
     aspera_user = site_configuration.ena_aspera_server.username
@@ -72,6 +72,13 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission):
         ]
         if proc.returncode != 0:
             stderr_str = stderr.decode(errors='replace').lower()
+            if submission_cloud_upload.status == SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
+                submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
+                submission_cloud_upload.save()
+                submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} due to {stderr_str}"]}}], user_id)
+            else:
+                submission_cloud_upload.log_change([{"changed": {"fields": [f"status kept at {submission_cloud_upload.status} due to {stderr_str}"]}}], user_id)
+
             if any(pattern in stderr_str for pattern in retryable_patterns):
                 logger.info(
                     f"tasks.py | transfer_cloud_upload_to_ena_task | starting retry | "
@@ -92,6 +99,13 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission):
         details['error'] = str(e)
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | task_id={task.request.id}")
+        if submission_cloud_upload.status == SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
+            submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
+            submission_cloud_upload.save()
+            submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} due to {details['error']}"]}}], user_id)
+        else:
+            submission_cloud_upload.log_change([{"changed": {"fields": [f"status kept at {submission_cloud_upload.status} due to {details['error']}"]}}], user_id)
+
     RequestLog.objects.create(
         type=RequestLog.OUTGOING,
         url=site_configuration.ena_aspera_server.url,
@@ -108,8 +122,15 @@ def check_checksum_via_ftp(task, site_configuration, submission, submission_clou
         calculated_md5sum, transmission_protocol = open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, submission_cloud_upload)
         if calculated_md5sum == submission_cloud_upload.file_upload.md5:
             checksum_message = f"Matching checksums: {calculated_md5sum}"
+            submission_cloud_upload.status = SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
+            submission_cloud_upload.save()
+            submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], admin_user.pk)
         else:
             checksum_message = f"Expected checksum: {submission_cloud_upload.file_upload.md5} | actual checksum: {calculated_md5sum}"
+            submission_cloud_upload.status = SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM
+            submission_cloud_upload.save()
+            submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} ({checksum_message})"]}}], admin_user.pk)
+
             transmission_protocol.append(checksum_message)
             if (task.request.retries == 0):
                 raise task.retry(exc=Exception(transmission_protocol))
@@ -170,13 +191,19 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | no valid file_path available | file_path={file_path} | task_id={self.request.id}"
         )
+        submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
+        submission_cloud_upload.save()
+        submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} (File not found in bucket)"]}}], user_id)
         return TaskProgressReport.CANCELLED
 
     folder_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission.broker_submission_id}"
     ensure_folder_with_keep(folder_path)
 
-    transfer_result = perform_ascp_file_transfer(self, file_path, site_configuration, submission)
+    transfer_result = perform_ascp_file_transfer(self, file_path, site_configuration, submission, submission_cloud_upload, user_id)
     if transfer_result == True:
+        submission_cloud_upload.status = SubmissionCloudUpload.STATUS_IS_TRANSFERRED
+        submission_cloud_upload.save()
+        submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], user_id)
         check_checksum_via_ftp(self, site_configuration, submission, submission_cloud_upload, admin_user)
-    
+
     return transfer_result

@@ -144,6 +144,11 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
         except MultiPartUpload.DoesNotExist as e:
             mpu = None
         if mpu is not None:
+            #submission_cloud_upload = mpu.file_upload_request.submissioncloudupload
+            submission_cloud_upload = SubmissionCloudUpload.objects.get(pk=mpu.file_upload_request.submissioncloudupload.pk)
+            submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+            submission_cloud_upload.save()
+            submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], self.request.user.id)
             verify_file_upload_request_checksum_in_bucket_task.apply_async(
                 kwargs={
                     "submission_id": mpu.file_upload_request.submissioncloudupload.submission.pk,

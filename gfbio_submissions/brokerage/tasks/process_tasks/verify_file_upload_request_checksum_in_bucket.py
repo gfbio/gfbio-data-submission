@@ -53,9 +53,15 @@ def verify_file_upload_request_checksum_in_bucket_task(self, previous_result=Non
         )
         return TaskProgressReport.CANCELLED
 
-
     calculated_md5sum = calculate_checksum_locally("md5", submission_cloud_upload)
-    if calculated_md5sum != submission_cloud_upload.file_upload.md5:
+    if calculated_md5sum == submission_cloud_upload.file_upload.md5:
+        submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
+        submission_cloud_upload.save()
+        submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}])
+    else:
+        submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM
+        submission_cloud_upload.save()
+        submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}])
         checksum_missmatch_message = (
             f"A checksum-missmatch occurred for the transmitted file '{submission_cloud_upload.file_upload.original_filename}'. "
             f"Expected checksum: {submission_cloud_upload.file_upload.md5}, actual checksum: {calculated_md5sum}"

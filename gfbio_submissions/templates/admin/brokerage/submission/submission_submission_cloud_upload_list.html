@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ module_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+&rsaquo; {% translate 'Submission Cloud Uploads of a Submission' %}
+</div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <div id="submission_submission_cloud_uploads" class="module">
+      {% if cloud_upload_list %}
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{% translate 'Filename' %}</th>
+              <th scope="col">{% translate 'Status' %}</th>
+              <th scope="col">{% translate 'Last change date' %}</th>
+              <th scope="col">{% translate 'Last change action' %}</th>
+              <th scope="col">{% translate 'Go to history' %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for status, uploads in cloud_upload_list.items %}
+              <tr>
+                <th colspan="4">{{status}}</th>
+              </tr>
+              {% for upload in uploads %}
+                <tr>
+                  <th scope="row">
+                      <a href="/admin/brokerage/submissioncloudupload/{{ upload.pk }}/change/">
+                          {{upload.name}}
+                      </a>
+                  </th>
+                  <td>{{ upload.status }}</td>
+                  <td>{{ upload.last_change_action_time|date:"DATETIME_FORMAT" }}</td>
+                  <td>{{ upload.last_change_message }}</td>
+                  <td scope="row">
+                    <a href="/admin/brokerage/submissioncloudupload/{{ upload.pk }}/history/">
+                        view history
+                    </a>
+                    </td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+          <p>{% translate 'This submission has no submission cloud uploads.' %}</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
