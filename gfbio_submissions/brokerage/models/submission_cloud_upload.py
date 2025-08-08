@@ -102,7 +102,6 @@ class SubmissionCloudUpload(TimeStampedModel):
                 )
 
     def log_change(self, message, user_id=None):
-        print("Meep - log - start")
         from django.contrib.admin.models import CHANGE, LogEntry
 
         LogEntry.objects.log_action(
@@ -113,9 +112,6 @@ class SubmissionCloudUpload(TimeStampedModel):
             change_message=message,
             object_repr=self.__str__()
         )
-
-        print("Meep - log - success")
-
 
     def __str__(self):
         if self.file_upload is None:
