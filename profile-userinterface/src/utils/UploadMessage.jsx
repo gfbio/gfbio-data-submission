@@ -5,7 +5,7 @@ import { filesize } from "filesize";
 
 const UploadMessage = ({
                            showUploadLimitMessage,
-                           maxUploadItems,
+
                            maxTotalUploadSize,
                        }) => (
     <Collapse in={showUploadLimitMessage}>
@@ -15,7 +15,7 @@ const UploadMessage = ({
                     <i className="fa fa-bolt"></i> Upload limit exceeded
                 </Container>
                 <Text>
-                    If you need to upload more than {maxUploadItems} files, or more than{" "}
+                    If you need to upload more than{" "}
                     {filesize(maxTotalUploadSize, { base: 10 })}, either provide a URL
                     in the field below, or leave a comment for the curator at the bottom.
                 </Text>
@@ -26,7 +26,6 @@ const UploadMessage = ({
 
 UploadMessage.propTypes = {
     showUploadLimitMessage: PropTypes.bool.isRequired,
-    maxUploadItems: PropTypes.number.isRequired,
     maxTotalUploadSize: PropTypes.number.isRequired,
 };
 

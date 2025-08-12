@@ -12,7 +12,7 @@ const FileIndicator = ({
                            metadataSource,
                            handleMetadataSelect,
                            deleteFile,
-                           brokerSubmissionId
+                           brokerSubmissionId,
                        }) => {
     const isFileSelected = (index, source) => {
         return metadataSource === source && metadataIndex.indices.includes(index);
@@ -56,7 +56,9 @@ const FileIndicator = ({
                             {
                                 brokerSubmissionId &&
                                 <button type="button" className="col-1 btn btn-download d-flex justify-content-end">
-                                    <a className="col-1 d-flex justify-content-end" href={`/api/submissions/${brokerSubmissionId}/cloudupload/download_file/${uploaded.pk}/`} target="_blank">
+                                    <a className="col-1 d-flex justify-content-end"
+                                       href={`/api/submissions/${brokerSubmissionId}/cloudupload/download_file/${uploaded.pk}/`}
+                                       target="_blank">
                                         <i className="fa fa-download"></i>
                                     </a>
                                 </button>
@@ -200,10 +202,12 @@ const FileIndicator = ({
                             </div>
                         </div>
                     </div>
-                    <ul className="list-group list-group-flush">
-                        {uploadedFileListElement}
-                        {fileListElements}
-                    </ul>
+                    <div className="scrollable-file-list">
+                        <ul className="list-group list-group-flush">
+                            {uploadedFileListElement}
+                            {fileListElements}
+                        </ul>
+                    </div>
                 </div>
             ) : null}
         </>
