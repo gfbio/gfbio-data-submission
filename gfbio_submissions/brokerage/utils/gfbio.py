@@ -34,13 +34,17 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=""):
 def check_length_for_jira(requirements):
     summary = requirements.get("title", "")
     description = requirements.get("description", "")
-    jira_max_length = 254
+    truncated_description = description
+    jira_summary_max_length = 254
+    jira_description_max_length = 30000
     truncation_text = " (... TRUNCATED)."
-    if len(summary) > jira_max_length:
-        summary = '{0}{1}'.format(summary[:jira_max_length - len(truncation_text)], truncation_text)
-    if len(description) > jira_max_length:
-        description = '{0}{1}'.format(description[:jira_max_length - len(truncation_text)], truncation_text)
-    return description, summary
+    if len(summary) > jira_summary_max_length:
+        summary = '{0}{1}'.format(summary[:jira_summary_max_length - len(truncation_text)], truncation_text)
+    if len(description) > jira_description_max_length:
+        description = '{0}{1}'.format(description[:jira_description_max_length - len(truncation_text)], truncation_text)
+    if len(truncated_description) > jira_summary_max_length:
+        truncated_description = '{0}{1}'.format(truncated_description[:jira_summary_max_length - len(truncation_text)], truncation_text)
+    return description, summary, truncated_description
 
 
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, prepare_for_update=False):
@@ -80,7 +84,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
     # TODO / Error: DASS-2801 customfield_10201 & summary/title must be less then 255 according to Jira
     # (400, b'{"errorMessages":[],"errors":{"summary":"Summary must be less than 255 characters.",
     # "customfield_10201":"The entered text is too long. It exceeds the allowed limit of 255 characters."}}')
-    description, summary = check_length_for_jira(requirements)
+    description, summary, truncated_description = check_length_for_jira(requirements)
 
     # as requested in: GFBIO-2679 & DEVOPS-3
     # if len(summary) >= 45:
@@ -114,7 +118,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         if submission.embargo is not None
         else "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
         "customfield_10201": summary,
-        "customfield_10208": description,
+        "customfield_10208": truncated_description,
         "customfield_10303": "{0}".format(submission.broker_submission_id),
         "customfield_10311": requirements.get("data_collection_time", ""),
         # FIXME: looks strange in ticket -> ['label 1', 'label 2'] => 1 2 label
