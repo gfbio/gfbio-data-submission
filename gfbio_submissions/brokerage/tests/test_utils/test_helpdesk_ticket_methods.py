@@ -110,7 +110,7 @@ class TestHelpDeskTicketMethods(TestCase):
             data = json.load(data_file)
         chars = string.ascii_letters + string.digits + ' '
         data["requirements"]["title"] = ''.join(random.choices(chars, k=300))
-        data["requirements"]["description"] = ''.join(random.choices(chars, k=300))
+        data["requirements"]["description"] = ''.join(random.choices(chars, k=33000))
 
         serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         is_valid = serializer.is_valid()
@@ -121,7 +121,7 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
 
         self.assertIn("description", payload.keys())
-        self.assertLess(len(payload["description"]), 255)
+        self.assertLess(len(payload["description"]), 31000)
         self.assertIn("summary", payload.keys())
         self.assertLess(len(payload["summary"]), 255)
         self.assertIn("customfield_10201", payload.keys())
