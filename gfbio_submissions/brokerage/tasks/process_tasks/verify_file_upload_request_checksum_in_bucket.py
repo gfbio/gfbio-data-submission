@@ -54,10 +54,12 @@ def verify_file_upload_request_checksum_in_bucket_task(self, previous_result=Non
         return TaskProgressReport.CANCELLED
 
     calculated_md5sum = calculate_checksum_locally("md5", submission_cloud_upload)
+    jira_message = ""
     if calculated_md5sum == submission_cloud_upload.file_upload.md5:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         submission_cloud_upload.save()
         submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}])
+        jira_message = f"File {submission_cloud_upload.file_upload.original_filename} was successfully added to the submission. The user-provided and our calculated checksum match."
     else:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM
         submission_cloud_upload.save()
@@ -66,17 +68,18 @@ def verify_file_upload_request_checksum_in_bucket_task(self, previous_result=Non
             f"A checksum-missmatch occurred for the transmitted file '{submission_cloud_upload.file_upload.original_filename}'. "
             f"Expected checksum: {submission_cloud_upload.file_upload.md5}, actual checksum: {calculated_md5sum}"
         )
+        jira_message = checksum_missmatch_message
         logger.warning(
             f"tasks.py | check_transfer_cloud_upload_checksums_task | " + checksum_missmatch_message +
             f" | submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
 
-        reference = submission.get_primary_helpdesk_reference()
+    reference = submission.get_primary_helpdesk_reference()
 
-        if reference and site_configuration.helpdesk_server:
-            jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-            jira_client.add_comment(key_or_issue=reference.reference_key, text=checksum_missmatch_message, is_internal=False)
-            return jira_error_auto_retry(
-                jira_client=jira_client,
-                task=self,
-                broker_submission_id=submission.broker_submission_id,
-            )
+    if reference and site_configuration.helpdesk_server:
+        jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+        jira_client.add_comment(key_or_issue=reference.reference_key, text=jira_message, is_internal=False)
+        return jira_error_auto_retry(
+            jira_client=jira_client,
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+        )
