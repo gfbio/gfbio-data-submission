@@ -18,7 +18,7 @@ from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_da
     check_for_submittable_data_task,
 )
 
-from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
+from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models import SubmissionCloudUpload
 from .models.abcd_conversion_result import AbcdConversionResult
 from .models.additional_reference import AdditionalReference
@@ -409,18 +409,28 @@ combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded 
 
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
+    from .tasks.process_tasks.notify_admin_on_ena_transfer_completed import notify_admin_on_ena_transfer_completed_task
+    from celery import chord
 
     allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ]
 
     for obj in queryset:
-        for upload in obj.submissioncloudupload_set.all():
-            filename = upload.file_upload.file_key
-            if not any(filename.lower().endswith(ext) for ext in allowed_types):
-                continue
-            transfer_cloud_upload_to_ena_task.apply_async(
-                kwargs={"submission_cloud_upload_id": upload.pk, "submission_id": obj.pk, "user_id": request.user.id},
-                countdown=SUBMISSION_DELAY,
-            )
+        submission_cloud_upload_ids = [
+            upload.pk for upload in obj.submissioncloudupload_set.all()
+            if not any(upload.file_upload.file_key.lower().endswith(ext) for ext in allowed_types)
+        ]
+        parallel_transfers = [
+            transfer_cloud_upload_to_ena_task.s(
+                submission_cloud_upload_id=upload_id, submission_id=obj.pk, user_id=request.user.id
+            ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES)
+            for upload_id in submission_cloud_upload_ids
+        ]
+        chord(parallel_transfers).apply_async(
+            kwargs={
+                "body":notify_admin_on_ena_transfer_completed_task.s(submission_id=obj.pk, submission_cloud_upload_ids=submission_cloud_upload_ids).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES),
+            },
+            max_retries=SUBMISSION_MAX_RETRIES
+        )
 
 
 transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud uploads to ENA via Aspera"
@@ -552,12 +562,7 @@ class SubmissionAdmin(admin.ModelAdmin):
                 ).order_by("action_time").first()
             )
 
-            status = "-"
-            for status_choice in SubmissionCloudUpload.STATUS_CHOICES:
-                if status_choice[0] == cloud_upload.status:
-                    status = status_choice[1]
-                    break
-
+            status = SubmissionCloudUpload.get_status_name(cloud_upload.status)
             if not status in cloud_upload_list:
                 cloud_upload_list[status] = []
 
