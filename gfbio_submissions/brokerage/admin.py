@@ -422,12 +422,20 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
         parallel_transfers = [
             transfer_cloud_upload_to_ena_task.s(
                 submission_cloud_upload_id=upload_id, submission_id=obj.pk, user_id=request.user.id
-            ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES)
+            ).set(countdown=SUBMISSION_DELAY)
             for upload_id in submission_cloud_upload_ids
         ]
         chord(parallel_transfers).apply_async(
             kwargs={
-                "body":notify_admin_on_ena_transfer_completed_task.s(submission_id=obj.pk, submission_cloud_upload_ids=submission_cloud_upload_ids).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES),
+                "body":notify_admin_on_ena_transfer_completed_task.s(
+                    submission_id=obj.pk,
+                    submission_cloud_upload_ids=submission_cloud_upload_ids
+                ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES).on_error(
+                    notify_admin_on_ena_transfer_completed_task.s(
+                        submission_id=obj.pk,
+                        submission_cloud_upload_ids=submission_cloud_upload_ids
+                    ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES)
+                ),
             },
             max_retries=SUBMISSION_MAX_RETRIES
         )

@@ -25,8 +25,6 @@ from ..submission_task import SubmissionTask
     queue="ena_transfer",
 )
 def notify_admin_on_ena_transfer_completed_task(self, previous_result=None, submission_id=None, submission_cloud_upload_ids=[], user_id=None):
-    print("Meep-naoetct")
-
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -44,7 +42,7 @@ def notify_admin_on_ena_transfer_completed_task(self, previous_result=None, subm
             if file.status != SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
         ]
         if files_with_errors:
-            jira_message += f"\nProcess ran into problems for {len(files_with_errors)} file(s):"
+            jira_message += f"\nProcess ran into problems for {len(files_with_errors)} file(s):\n"
             jira_message += "\n".join([
                 f"- {fwe.file_upload.original_filename}: {SubmissionCloudUpload.get_status_name(fwe.status)}"
                 for fwe in files_with_errors
