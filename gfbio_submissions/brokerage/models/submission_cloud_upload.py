@@ -120,3 +120,12 @@ class SubmissionCloudUpload(TimeStampedModel):
             return f"{self.file_upload.original_filename} / {self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
         else:
             return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
+
+    @staticmethod
+    def get_status_name(status):
+        status_name = "-"
+        for status_choice in SubmissionCloudUpload.STATUS_CHOICES:
+            if status_choice[0] == status:
+                status_name = status_choice[1]
+                break
+        return status_name

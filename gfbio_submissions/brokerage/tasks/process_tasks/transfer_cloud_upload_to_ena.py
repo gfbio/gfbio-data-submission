@@ -135,12 +135,12 @@ def check_checksum_via_ftp(task, site_configuration, submission, submission_clou
             if (task.request.retries == 0):
                 raise task.retry(exc=Exception(transmission_protocol))
             else:
-                mail_subject=f"Checksum-Missmatch in submission {submission.broker_submission_id}, cloud_upload {submission_cloud_upload.file_upload.original_filename}"
-                mail_message=(f"The checksum of the transmitted file {submission_cloud_upload.file_upload.original_filename} " +
-                f"at ENA differs from the expected checksum, even after retrying. {checksum_message}")
-                if admin_user and admin_user.email:
-                    send_mail(subject=mail_subject, message=mail_message, recipient_list=[admin_user.email], from_email=settings.SERVER_EMAIL,)
-                raise Exception(mail_subject + "|" + mail_message)
+                message=(
+                    f"Checksum-Missmatch in submission {submission.broker_submission_id}, cloud_upload {submission_cloud_upload.file_upload.original_filename}: " +
+                    f"The checksum of the transmitted file {submission_cloud_upload.file_upload.original_filename} " +
+                    f"at ENA differs from the expected checksum, even after retrying. {checksum_message}"
+                )
+                raise Exception(message)
     finally:
         RequestLog.objects.create(
             type=RequestLog.OUTGOING,
