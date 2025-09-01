@@ -17,6 +17,9 @@ from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
 )
+from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads import (
+    check_meta_referenced_files_in_cloud_uploads_task,
+)
 
 from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models import SubmissionCloudUpload
@@ -601,6 +604,29 @@ class SubmissionAdmin(admin.ModelAdmin):
             context,
         )
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        # gate the check action by cloud upload setting
+        try:
+            from config.settings.base import DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD
+        except Exception:
+            DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD = False
+
+        if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
+
+            def check_referenced_files(modeladmin, req, queryset):
+                for obj in queryset:
+                    check_meta_referenced_files_in_cloud_uploads_task.apply_async(
+                        kwargs={"submission_id": obj.pk}, countdown=SUBMISSION_DELAY
+                    )
+
+            check_referenced_files.short_description = "Check that meta CSV references exist in cloud uploads"
+            actions["check_referenced_files"] = (
+                check_referenced_files.__name__,
+                check_referenced_files,
+                check_referenced_files.short_description,
+            )
+        return actions
 
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):
