@@ -13,25 +13,7 @@ function App(props) {
     return (
         <MantineProvider>
             <ModalsProvider>
-                <section className="sub-navi">
-                    <div className="container">
-                        <div className="row">
-                            <div className="col-sm-12">
-                                <nav className="nav">
-                                    <Link to={base} className="nav-link">
-                                        <i className="icon ion-ios-list"/>
-                                        My Submissions
-                                    </Link>
-                                    <Link to={base + "form/"} className="nav-link">
-                                        <i className="icon ion-ios-add-circle-outline"/>
-                                        Create Submission
-                                    </Link>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <Outlet/>
+                <Outlet />
                 <ScrollToTop/>
             </ModalsProvider>
         </MantineProvider>

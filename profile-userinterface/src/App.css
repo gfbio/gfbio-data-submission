@@ -124,6 +124,10 @@ body {
   }
 }
 
+.submission-list-wrapper {
+  margin-top: 3rem;
+}
+
 .submission-form {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
@@ -436,7 +440,7 @@ body {
       background: #f8f8f8;
     }
 
-    .ion-md-document, .btn-remove {
+    .ion-md-document, .btn-remove, .btn-download, .btn-download i.fa {
       font-size: 18px;
     }
 
@@ -446,6 +450,14 @@ body {
 
     .btn-remove {
       color: orangered;
+    }
+
+    .btn-download-all {
+      font-size: 18px;
+
+      i.fa {
+        font-size: 18px;
+      }
     }
   }
 
@@ -840,7 +852,7 @@ button.button-inverted {
 
 .sub-navi {
   padding: 0;
-  margin-bottom: 2rem;
+  margin-bottom: 0 !important;
   border-bottom: 1px solid #ccc;
 }
 
@@ -939,4 +951,46 @@ button.button-inverted {
 .mantine-DatePicker-weekday {
   font-family: "Raleway", sans-serif;
   text-align: center;
+}
+
+.profile-managment-bar {
+  min-height: 1.4rem;
+}
+
+.profile-menu {
+  cursor: pointer;
+  margin-top: 0.2rem;
+  margin-bottom: 1rem;
+  color: #666;
+
+  .change-profile-button {
+    background-color: #3cace4;
+    color: white;
+    border: solid 1px #3cace4;
+    height: 1.5rem;
+
+    * {
+      border: none;
+    }
+  }
+
+  &:hover {
+    .change-profile-button {
+      background-color: white;
+      color: #3cace4;
+      border: solid 1px #3cace4;
+      height: 1.5rem;
+
+      * {
+        border: none;
+      }
+    }
+  }
+}
+
+.scrollable-file-list {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 12px;
 }

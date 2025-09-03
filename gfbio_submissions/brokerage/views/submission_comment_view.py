@@ -3,12 +3,12 @@ import json
 from uuid import uuid4
 
 from django.db import transaction
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest, \
+    inline_serializer
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest, inline_serializer
-
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User

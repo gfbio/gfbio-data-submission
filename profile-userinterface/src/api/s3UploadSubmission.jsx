@@ -50,6 +50,8 @@ export async function uploadFileToS3(
 ) {
     const totalParts = Math.ceil(file.size / partSize);
     const fileType = file.type || "application/octet-stream";
+    const uploadedBytesByPart = {};
+    let totalUploaded = 0;
 
     const [md5, sha256] = await Promise.all([
         calculateMD5(file),
@@ -90,7 +92,14 @@ export async function uploadFileToS3(
             start,
             end,
             upload_id,
-            onProgress,
+            (file, partNumber, loaded) => {
+                const prev = uploadedBytesByPart[partNumber] || 0;
+                const delta = loaded - prev;
+                uploadedBytesByPart[partNumber] = loaded;
+                totalUploaded += delta;
+                const percent = Math.min(Math.floor((totalUploaded / file.size) * 100), 100);
+                onProgress(file, percent);
+            },
             maxRetries,
             totalParts,
             token,
@@ -195,12 +204,8 @@ async function uploadOnePart(
     const s3Response = await axios.put(presigned_url, blob, {
         headers: { "Content-Type": fileType },
         onUploadProgress: (progressEvent) => {
-            if (onProgress && progressEvent.total) {
-                const fractionOfPart = progressEvent.loaded / (end - start);
-                const naivePercent = Math.floor(
-                    ((partNumber - 1) + fractionOfPart) / totalParts * 100,
-                );
-                onProgress(file, naivePercent);
+            if (onProgress && progressEvent.lengthComputable) {
+                onProgress(file, partNumber, progressEvent.loaded);
             }
         },
     });

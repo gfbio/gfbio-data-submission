@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
+import _csv
 import csv
 import json
 import logging
 import os
 from collections import OrderedDict
 
-import _csv
 import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
 from gfbio_submissions.brokerage.utils.ena_taxon_queries import query_ena
-
-from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
+from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS, SUBMISSION_UPLOAD_RETRY_DELAY
 from ..utils.encodings import sniff_encoding
 from ..utils.schema_validation import validate_data_full
 
@@ -47,7 +46,7 @@ unit_mapping = {
     "Depth": "m",
     "depth": "m",
     "geographic location (altitude)": "m",
-    "geographic location (depth)": "m",
+    "geographic location (depth)": "m",  # TODO: replace with depth DASS-2700
     "geographic location (elevation)": "m",
     "geographic location (latitude)": "DD",
     "geographic location (longitude)": "DD",
@@ -230,6 +229,23 @@ attribute_value_blacklist = [
     "N/A",
 ]
 
+# TODO: DASS-2699: move to method
+ena_header_mapping = {
+    "geographic location (depth)": "depth",
+    "environment (biome)": "broad-scale environmental context",
+    "environment (material)": "environmental medium",
+    "environment (feature)": "local environmental context",
+}
+
+
+def replace_ena_header_attributes(sample_attributes):
+    template_attribute_replaced = False
+    for s in sample_attributes:
+        if s["tag"] in ena_header_mapping:
+            s["tag"] = ena_header_mapping[s["tag"]]
+            template_attribute_replaced = True
+    return template_attribute_replaced
+
 
 def extract_sample(row, field_names, sample_id):
     for k in row.keys():
@@ -256,10 +272,12 @@ def extract_sample(row, field_names, sample_id):
         "sample_description": row.get("sample_description", "").replace('"', ""),
         "taxon_id": taxon_id,
     }
+    template_attribute_replaced = False
     if len(sample_attributes):
+        template_attribute_replaced = replace_ena_header_attributes(sample_attributes)
         sample["sample_attributes"] = sample_attributes
 
-    return sample
+    return sample, template_attribute_replaced
 
 
 def find_correct_platform_and_model(platform_value):
@@ -440,7 +458,7 @@ def extract_experiment(experiment_id, row, sample_id):
 
 
 # TODO: maybe csv is in a file like implemented or comes as text/string
-def parse_molecular_csv(csv_file):
+def parse_molecular_csv(csv_file, submission):
     header = csv_file.readline()
     dialect = csv.Sniffer().sniff(smart_str(header))
     csv_file.seek(0)
@@ -459,8 +477,10 @@ def parse_molecular_csv(csv_file):
         "samples": [],
         "experiments": [],
     }
+    template_attributes_replaced = False
     try:
         field_names = csv_reader.fieldnames
+        print("parse_molecular_csv: fieldnames: ", field_names)
         for i in range(0, len(field_names)):
             field_names[i] = field_names[i].strip().lower()
 
@@ -478,7 +498,7 @@ def parse_molecular_csv(csv_file):
                 sample_titles.append(title)
                 sample_id = short_id.generate()
                 sample_ids.append(sample_id)
-                sample = extract_sample(row, field_names, sample_id)
+                sample, template_attributes_replaced = extract_sample(row, field_names, sample_id)
                 molecular_requirements["samples"].append(sample)
 
                 experiment = extract_experiment(experiment_id, row, sample_id)
@@ -486,15 +506,26 @@ def parse_molecular_csv(csv_file):
                 experiment = extract_experiment(experiment_id, row, sample_ids[sample_titles.index(title)])
 
             molecular_requirements["experiments"].append(experiment)
+    if template_attributes_replaced:
+        from ..tasks.jira_tasks.add_general_comment_to_issue import add_general_comment_to_issue_task
+        add_general_comment_to_issue_task.apply_async(
+            kwargs={
+                "submission_id": f"{submission.id}",
+                "comment": "ENA specific headers int the csv file have been replaced. "
+                           "Please check the template that was used",
+                "is_internal": True
+            },
+            countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
+        )
     return molecular_requirements
 
 
-def parse_molecular_csv_with_encoding_detection(path):
+def parse_molecular_csv_with_encoding_detection(path, submission):
     encoding = sniff_encoding(path)
     with open(
         path, "r", encoding=encoding
     ) as csv_file:
-        return parse_molecular_csv(csv_file)
+        return parse_molecular_csv(csv_file, submission)
 
 
 def check_minimum_header_cols(meta_data):
@@ -538,8 +569,8 @@ def check_csv_file_rule(submission):
 def check_for_molecular_content(submission):
     logger.info(
         msg="check_for_molecular_content | "
-        "process submission={0} | target={1} | release={2}"
-        "".format(submission.broker_submission_id, submission.target, submission.release)
+            "process submission={0} | target={1} | release={2}"
+            "".format(submission.broker_submission_id, submission.target, submission.release)
     )
 
     status = False
@@ -555,8 +586,8 @@ def check_for_molecular_content(submission):
         submission.save()
         logger.info(
             msg="check_for_molecular_content  | check_csv_file_rule=True | "
-            "return status={0} messages={1} "
-            "molecular_data_check_performed={2}".format(status, messages, check_performed)
+                "return status={0} messages={1} "
+                "molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
 
     # FIXME: this is redundant to method above
@@ -568,8 +599,8 @@ def check_for_molecular_content(submission):
         submission.save()
         logger.info(
             msg="check_for_molecular_content  | check_metadata_rule=True | "
-            "return status={0} messages={1} "
-            "molecular_data_check_performed={2}".format(status, messages, check_performed)
+                "return status={0} messages={1} "
+                "molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
 
     if submission.release and submission.data.get("requirements", {}).get("data_center", "").count("ENA"):
@@ -583,14 +614,15 @@ def check_for_molecular_content(submission):
         if no_of_meta_data_files != 1:
             logger.info(
                 msg="check_for_molecular_content | "
-                "invalid no. of meta_data_files, {0} | return=False"
-                "".format(no_of_meta_data_files)
+                    "invalid no. of meta_data_files, {0} | return=False"
+                    "".format(no_of_meta_data_files)
             )
             messages = ["invalid no. of meta_data_files, " "{0}".format(no_of_meta_data_files)]
             return status, messages, check_performed
 
         meta_data_file = meta_data_files.first()
-        molecular_requirements = parse_molecular_csv_with_encoding_detection(meta_data_file.file.path)
+        molecular_requirements = parse_molecular_csv_with_encoding_detection(
+            meta_data_file.file.path, submission)
         submission.data.get("requirements", {}).update(molecular_requirements)
         path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
@@ -609,7 +641,7 @@ def check_for_molecular_content(submission):
         submission.save()
         logger.info(
             msg="check_for_molecular_content  | finished | return status={0} "
-            "messages={1} molecular_data_check_performed={2}".format(status, messages, check_performed)
+                "messages={1} molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
     return status, messages, check_performed
 
@@ -702,8 +734,8 @@ def check_for_submittable_data(submission):
     """
     logger.info(
         msg="check_for_submittable_data | "
-        "process submission={0} | target={1} | release={2}"
-        "".format(submission.broker_submission_id, submission.target, submission.release)
+            "process submission={0} | target={1} | release={2}"
+            "".format(submission.broker_submission_id, submission.target, submission.release)
     )
 
     status = True
