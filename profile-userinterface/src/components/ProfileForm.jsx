@@ -13,6 +13,7 @@ import { ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY } from "../settings.jsx";
 import { formatDateToYYYYMMDD } from "../utils/dateUtils";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
+import postComment from "../api/postComment.jsx";
 
 const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -181,7 +182,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 await createUploadFileChannel(
                     brokerSubmissionId,
                     file,
-                    attach_to_ticket,
+                    file.size < 10 * 1024 * 1024,
                     meta_data,
                     getToken(),
                     setUploadProgressPercent,
@@ -230,6 +231,12 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
+                        if(result?.comment) {
+                            postComment(result.broker_submission_id, result.comment).then((result) => {
+                            }).catch((error) => {
+                                console.error(error);
+                            }).finally(() => {});
+                        }
                         const fileUploadPromises = files.map((file, index) => {
                             let isMetadata = false;
                             if (metadataIndex && metadataIndex.source === "local") {
@@ -264,6 +271,12 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
+                        if(result?.comment) {
+                            postComment(result.broker_submission_id, result.comment).then((result) => {
+                            }).catch((error) => {
+                                console.error(error);
+                            }).finally(() => {});
+                        }
                         const fileUploadPromises = files.map((file, index) => {
                             let isMetadata = false;
                             if (metadataIndex && metadataIndex.source === "local") {

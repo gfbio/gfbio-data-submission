@@ -91,7 +91,11 @@ class SubmissionCommentView(generics.GenericAPIView):
         }
     )
     def post(self, request, *args, **kwargs):
+        print(request.data)
         form = SubmissionCommentForm(request.POST)
+        print("SubmissionCommentView.post: form.is_valid={0}".format(form.is_valid()))
+        print(request.POST)
+        print(form.data)
         if form.is_valid():
             broker_submission_id = kwargs.get("broker_submission_id", uuid4())
             response = self._process_post_comment(broker_submission_id, form.cleaned_data["comment"])
