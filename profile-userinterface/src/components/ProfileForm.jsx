@@ -182,7 +182,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 await createUploadFileChannel(
                     brokerSubmissionId,
                     file,
-                    attach_to_ticket,
+                    file.size < 10 * 1024 * 1024,
                     meta_data,
                     getToken(),
                     setUploadProgressPercent,
