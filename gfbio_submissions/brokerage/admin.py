@@ -607,10 +607,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         # gate the check action by cloud upload setting
-        try:
-            from config.settings.base import DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD
-        except Exception:
-            DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD = False
+        from config.settings.base import DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD
 
         if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
 
