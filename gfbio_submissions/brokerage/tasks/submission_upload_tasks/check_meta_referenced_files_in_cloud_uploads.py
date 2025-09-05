@@ -112,16 +112,9 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
 
     # Existing cloud-uploaded filenames for this submission (exclude the meta CSV itself)
     uploaded_names = set()
-    meta_basename = _normalize_filename(meta_upload.file_upload.original_filename if meta_upload.file_upload else "")
-    for upload in SubmissionCloudUpload.objects.filter(submission=submission):
-        # skip meta csv uploads
-        if upload.meta_data:
-            continue
+    for upload in SubmissionCloudUpload.objects.filter(submission=submission, meta_data=False):
         if upload.file_upload and upload.file_upload.original_filename:
             normalized_name = _normalize_filename(upload.file_upload.original_filename)
-            if normalized_name == meta_basename:
-                # also skip identical name to the meta file just in case
-                continue
             uploaded_names.add(normalized_name)
 
     referenced_set = set(referenced_files)
