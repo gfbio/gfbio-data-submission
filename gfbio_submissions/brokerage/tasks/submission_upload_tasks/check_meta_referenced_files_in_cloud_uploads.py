@@ -76,8 +76,8 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
         report.save()
         return TaskProgressReport.CANCELLED
     meta_upload = meta_qs.first()
-    if meta_upload.file_upload is None or not meta_upload.file_upload.s3_location:
-        msg = "Meta CSV cloud upload has no associated file or s3_location"
+    if meta_upload.file_upload is None or not meta_upload.file_upload.uploaded_file.url:
+        msg = "Meta CSV cloud upload has no associated file or url"
         logger.error(
             "check_meta_referenced_files_in_cloud_uploads_task | %s | submission_id=%s",
             msg,
@@ -89,7 +89,7 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
 
     # Download meta CSV to temp file and parse
     with tempfile.NamedTemporaryFile() as tf:
-        with requests.get(meta_upload.file_upload.s3_location, stream=True) as r:
+        with requests.get(meta_upload.file_upload.uploaded_file.url, stream=True) as r:
             r.raise_for_status()
             tf.write(r.content)
             tf.flush()
@@ -110,11 +110,19 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
     counts = Counter(referenced_files)
     duplicates_in_csv = sorted([name for name, cnt in counts.items() if cnt > 1])
 
-    # Existing cloud-uploaded filenames for this submission
+    # Existing cloud-uploaded filenames for this submission (exclude the meta CSV itself)
     uploaded_names = set()
+    meta_basename = _normalize_filename(meta_upload.file_upload.original_filename if meta_upload.file_upload else "")
     for upload in SubmissionCloudUpload.objects.filter(submission=submission):
+        # skip meta csv uploads
+        if upload.meta_data:
+            continue
         if upload.file_upload and upload.file_upload.original_filename:
-            uploaded_names.add(_normalize_filename(upload.file_upload.original_filename))
+            normalized_name = _normalize_filename(upload.file_upload.original_filename)
+            if normalized_name == meta_basename:
+                # also skip identical name to the meta file just in case
+                continue
+            uploaded_names.add(normalized_name)
 
     referenced_set = set(referenced_files)
     missing = sorted(list(referenced_set - uploaded_names))

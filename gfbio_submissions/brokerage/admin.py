@@ -622,8 +622,8 @@ class SubmissionAdmin(admin.ModelAdmin):
 
             check_referenced_files.short_description = "Check that meta CSV references exist in cloud uploads"
             actions["check_referenced_files"] = (
-                check_referenced_files.__name__,
                 check_referenced_files,
+                check_referenced_files.__name__,
                 check_referenced_files.short_description,
             )
         return actions
