@@ -21,7 +21,7 @@ from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_refere
     check_meta_referenced_files_in_cloud_uploads_task,
 )
 
-from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
+from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY, ENA, ENA_PANGAEA
 from .models import SubmissionCloudUpload
 from .models.abcd_conversion_result import AbcdConversionResult
 from .models.additional_reference import AdditionalReference
@@ -681,8 +681,18 @@ def get_submission_id_from_cloud_upload(cloud_upload_id):
 
 
 def reparse_csv_metadata_cloud_uploads(modeladmin, request, queryset):
+    non_ena_scu_ids = []
+    non_ena_submission_cloud_uploads = [scu for scu in queryset if scu.submission.target not in [ENA, ENA_PANGAEA]]
+    if non_ena_submission_cloud_uploads:
+        msg = f"The following cloud uploads have not the target '{ENA}' or '{ENA_PANGAEA}' and can't be processed: <br />" 
+        msg += ", <br />".join([f"{scu}" for scu in non_ena_submission_cloud_uploads])
+        from django.utils.safestring import mark_safe
+        from django.contrib import messages
+        modeladmin.message_user(request, mark_safe(msg), level=messages.ERROR)        
+        non_ena_scu_ids = [scu.id for scu in non_ena_submission_cloud_uploads]
+
     run_csv_reparse_task_in_reparse_pipeline(
-        queryset,
+        queryset.exclude(id__in=non_ena_scu_ids),
         get_submission_id_from_cloud_upload,
         lambda ob_id: parse_csv_to_update_clean_submission_cloud_upload_task.s(
             submission_cloud_upload_id=ob_id,
