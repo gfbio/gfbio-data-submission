@@ -7,6 +7,8 @@ import requests
 from kombu.utils import json
 
 from config.celery_app import app
+from gfbio_submissions.brokerage.utils.jira import JiraClient
+from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
 
 from ...models.submission import Submission
 from ...models.submission_cloud_upload import SubmissionCloudUpload
@@ -41,7 +43,9 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
         return TaskProgressReport.CANCELLED
 
     try:
-        submission = Submission.objects.get(pk=submission_id)
+        submission, site_configuration = get_submission_and_site_configuration(
+            submission_id=submission_id, task=self, include_closed=True
+        )
     except Submission.DoesNotExist:
         logger.error(
             "check_meta_referenced_files_in_cloud_uploads_task | submission does not exist | submission_id=%s",
@@ -112,7 +116,7 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
 
     # Existing cloud-uploaded filenames for this submission (exclude the meta CSV itself)
     uploaded_names = set()
-    for upload in SubmissionCloudUpload.objects.filter(submission=submission, meta_data=False):
+    for upload in SubmissionCloudUpload.objects.filter(submission=submission, meta_data=False).exclude(status=SubmissionCloudUpload.STATUS_DELETED):
         if upload.file_upload and upload.file_upload.original_filename:
             normalized_name = _normalize_filename(upload.file_upload.original_filename)
             uploaded_names.add(normalized_name)
@@ -138,4 +142,35 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
         result,
     )
 
+    send_completeness_report_to_jira(submission, site_configuration, meta_upload, missing, duplicates_in_csv, extra_uploads, referenced_set, uploaded_names)
+
     return result
+
+
+def send_completeness_report_to_jira(submission, site_configuration, meta_upload, missing, duplicates_in_csv, extra_uploads, referenced_set, uploaded_names):
+    jira_message = f"Check for referenced files in csv-meta-file was executed for '{meta_upload}' "
+    if missing or duplicates_in_csv:
+        jira_message = "{color:#de350b}" + jira_message + "with errors! {color}"
+    elif extra_uploads:
+        jira_message = "{color:#ff8b00}" + jira_message + "with warnings {color}"
+    else:
+        jira_message = "{color:#00875a}" + jira_message + "successfully {color}"
+    
+    jira_message = f"h3. {jira_message} \n\n"
+    jira_message += f"Files in csv: {len(referenced_set)} | files uploaded: {len(uploaded_names)}\n\n"
+
+    if duplicates_in_csv:
+        jira_message += "The following files are referenced multiple times in the csv:\n"
+        jira_message += "\n".join([f"- {file}" for file in duplicates_in_csv]) + "\n\n"
+
+    if missing:
+        jira_message += "Files missing (referenced in csv, but were not uploaded):\n"
+        jira_message += "\n".join([f"- {file}" for file in missing]) + "\n\n"
+
+    if extra_uploads:
+        jira_message += "Files that were uploaded, but not referenced in the csv:\n"
+        jira_message += "\n".join([f"- {file}" for file in extra_uploads]) + "\n\n"
+
+    jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+    reference = submission.get_primary_helpdesk_reference()
+    jira_client.add_comment(key_or_issue=reference.reference_key, text=jira_message, is_internal=True)
