@@ -7,6 +7,7 @@ import tempfile
 from django.db import transaction
 from kombu.utils import json
 
+from django.conf import settings
 from config.celery_app import app
 from ...configuration.settings import ENA_PANGAEA
 from ...models.submission_upload import SubmissionUpload
@@ -104,12 +105,7 @@ def parse_csv_to_update_clean_submission_cloud_upload_task(self, previous_task_r
         return TaskProgressReport.CANCELLED
 
     report.submission = submission_cloud_upload.submission
-
-    with tempfile.NamedTemporaryFile() as tf:
-        with requests.get(submission_cloud_upload.file_upload.s3_location, stream=True) as r:
-            r.raise_for_status()
-            tf.write(r.content)
-            molecular_requirements = parse_molecular_csv_with_encoding_detection(tf.name,
-                                                                                 submission_cloud_upload.submission)
-            tf.close()
+    
+    file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
+    molecular_requirements = parse_molecular_csv_with_encoding_detection(file_path, submission_cloud_upload.submission)
     return process_molecular_requirements(report, submission_cloud_upload.submission, molecular_requirements)
