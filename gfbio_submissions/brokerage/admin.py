@@ -21,7 +21,7 @@ from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_refere
     check_meta_referenced_files_in_cloud_uploads_task,
 )
 
-from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY, ENA, ENA_PANGAEA
+from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY, ENA, ENA_PANGAEA, GFBIO_HELPDESK_TICKET
 from .models import SubmissionCloudUpload
 from .models.abcd_conversion_result import AbcdConversionResult
 from .models.additional_reference import AdditionalReference
@@ -45,7 +45,7 @@ from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import 
 )
 from .utils.ena import release_study_on_ena
 from .utils.submission_process import SubmissionProcessHandler
-from .utils.task_utils import jira_cancel_issue
+from .utils.task_utils import _safe_get_site_config, jira_cancel_issue
 
 
 class PersistentIdentifierInline(admin.TabularInline):
@@ -465,8 +465,10 @@ class SubmissionAdmin(admin.ModelAdmin):
         "broker_submission_id",
         "user",
         "created",
+        "modified",
         "target",
         "status",
+        "get_ticket",
     )
     list_filter = (
         "status",
@@ -507,6 +509,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     readonly_fields = (
         "created",
         "modified",
+        "get_ticket"
     )
 
     def save_model(self, request, obj, form, change):
@@ -624,6 +627,33 @@ class SubmissionAdmin(admin.ModelAdmin):
                 check_referenced_files.short_description,
             )
         return actions
+    
+    @admin.display(description="Ticket")
+    def get_ticket(self, obj):
+        reference = None
+        all_primaries = obj.additionalreference_set.filter(primary=True)
+        if len(all_primaries) == 1:
+            reference = all_primaries.first()
+        elif len(all_primaries) > 1:
+            return "multiple primaries"
+        else:
+            all_refs = obj.additionalreference_set.all()
+            if len(all_refs) == 1:
+                reference = all_refs.first()
+            elif len(all_refs) > 1:
+                return "multiple references"
+        if reference and reference.reference_key:
+            if reference.type == GFBIO_HELPDESK_TICKET:
+                site_config = _safe_get_site_config(obj)
+                if site_config and site_config.helpdesk_server:
+                    from django.utils.html import format_html
+                    return format_html("<a href='{url}'>{title}</a>", 
+                        url=site_config.helpdesk_server.url + "/browse/" + reference.reference_key,
+                        title=reference.reference_key
+                    )
+            return reference.reference_key
+        else:
+            return "-"
 
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):

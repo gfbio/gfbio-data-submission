@@ -2,7 +2,8 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.admin import re_create_ena_xml, submit_to_ena_test, validate_against_ena
+from gfbio_submissions.brokerage.admin import SubmissionAdmin, re_create_ena_xml, submit_to_ena_test, validate_against_ena
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET, PANGAEA_JIRA_TICKET
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
@@ -78,3 +79,17 @@ class TestSubmissionAdmin(TestCase):
             "tasks.submit_to_ena_test_server_task",
             TaskProgressReport.objects.first().task_name,
         )
+
+    def test_submission_get_ticket(self):
+        admin = SubmissionAdmin(model=Submission, admin_site="")
+        submission = Submission.objects.first()
+        self.assertEqual("-", admin.get_ticket(submission))
+        submission.additionalreference_set.create(primary=False, reference_key="SAND-123", type=GFBIO_HELPDESK_TICKET)
+        self.assertEqual("<a href='https://www.example.com/browse/SAND-123'>SAND-123</a>", admin.get_ticket(submission))
+        submission.additionalreference_set.create(primary=False, reference_key="2nd ref", type=GFBIO_HELPDESK_TICKET)
+        self.assertEqual("multiple references", admin.get_ticket(submission))
+        submission.additionalreference_set.create(primary=True, reference_key="ext-1", type=PANGAEA_JIRA_TICKET)
+        self.assertEqual("ext-1", admin.get_ticket(submission))
+        submission.additionalreference_set.create(primary=True, reference_key="DSUB-1", type=GFBIO_HELPDESK_TICKET)
+        self.assertEqual("multiple primaries", admin.get_ticket(submission))
+
