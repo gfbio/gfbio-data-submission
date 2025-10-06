@@ -33,7 +33,7 @@ def notify_admin_on_ena_transfer_completed_task(self, previous_result=None, subm
     if reference and site_configuration.helpdesk_server:
         jira_message = (
             f"Transfer to ENA for Submission {submission.broker_submission_id} executed.\n"
-            f"Check {settings.HOST_URL_ROOT}/admin/brokerage/submission/{submission.pk}/submission-cloud-upload-view/ for detailed information.\n"
+            f"Check {settings.HOST_URL_ROOT}/{settings.ADMIN_URL}/brokerage/submission/{submission.pk}/submission-cloud-upload-view/ for detailed information.\n"
         )
         submission_cloud_uploads = submission.submissioncloudupload_set.filter(pk__in=submission_cloud_upload_ids).all()
 
