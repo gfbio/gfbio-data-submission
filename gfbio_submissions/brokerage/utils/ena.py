@@ -538,21 +538,21 @@ class Enalizer(object):
     def process_filename_attribute(self, file, file_element, broker_submission_id):
         filename = file["filename"]
         file_element.set("filename", f"{broker_submission_id}/{filename}")
-        valid_checksum_methods = ["md5", "sha256"]
-        checksum_method = file.get("checksum_method", "invalid").lower()
+        valid_checksum_methods = ["MD5", "SHA256"]
+        checksum_method = file.get("checksum_method", "invalid").upper()
         checksum = ""
         if checksum_method in valid_checksum_methods:
             submission_cloud_upload = self.submission.submissioncloudupload_set.filter(
                 file_upload__original_filename=filename).first()
             if submission_cloud_upload:
-                if checksum_method == "md5" and submission_cloud_upload.file_upload.md5 is not None and len(
+                if checksum_method == "MD5" and submission_cloud_upload.file_upload.md5 is not None and len(
                     submission_cloud_upload.file_upload.md5) > 0:
                     checksum = submission_cloud_upload.file_upload.md5
-                elif checksum_method == "sha256" and submission_cloud_upload.file_upload.sha256 is not None and len(
+                elif checksum_method == "SHA256" and submission_cloud_upload.file_upload.sha256 is not None and len(
                     submission_cloud_upload.file_upload.sha256) > 0:
                     checksum = submission_cloud_upload.file_upload.sha256
                 else:
-                    checksum = calculate_checksum_locally(checksum_method, submission_cloud_upload)
+                    checksum = calculate_checksum_locally(checksum_method.lower(), submission_cloud_upload)
         file["checksum"] = checksum
         file_element.set("checksum", checksum)
         file["checksum_method"] = checksum_method
