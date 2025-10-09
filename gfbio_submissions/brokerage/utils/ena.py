@@ -22,6 +22,7 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
@@ -539,20 +540,30 @@ class Enalizer(object):
         filename = file["filename"]
         file_element.set("filename", f"{broker_submission_id}/{filename}")
         valid_checksum_methods = ["MD5", "SHA256"]
-        checksum_method = file.get("checksum_method", "invalid").upper()
+        checksum_method = file.get("checksum_method", "MD5").upper()
+        metadata_checksum = file.get("checksum", "")
         checksum = ""
+        is_cloud_uploader_submission = self.submission.submissioncloudupload_set.count() > 0
         if checksum_method in valid_checksum_methods:
             submission_cloud_upload = self.submission.submissioncloudupload_set.filter(
                 file_upload__original_filename=filename).first()
-            if submission_cloud_upload:
+            if is_cloud_uploader_submission and submission_cloud_upload:
                 if checksum_method == "MD5" and submission_cloud_upload.file_upload.md5 is not None and len(
                     submission_cloud_upload.file_upload.md5) > 0:
-                    checksum = submission_cloud_upload.file_upload.md5
+                    file_checksum = submission_cloud_upload.file_upload.md5
                 elif checksum_method == "SHA256" and submission_cloud_upload.file_upload.sha256 is not None and len(
                     submission_cloud_upload.file_upload.sha256) > 0:
-                    checksum = submission_cloud_upload.file_upload.sha256
+                    file_checksum = submission_cloud_upload.file_upload.sha256
                 else:
-                    checksum = calculate_checksum_locally(checksum_method.lower(), submission_cloud_upload)
+                    file_checksum = calculate_checksum_locally(checksum_method.lower(), submission_cloud_upload)
+                if metadata_checksum and file_checksum != metadata_checksum:
+                    raise Exception(f"For the referenced file '{filename}' exists a checksum in the metadata-file ({metadata_checksum}), that does not match the checksum of the cloud-upload ({file_checksum}).")
+                checksum = file_checksum
+            else:
+                if metadata_checksum:
+                    checksum = metadata_checksum
+                elif is_cloud_uploader_submission:
+                    raise Exception(f"For the referenced file '{filename}' exists no checksum in the metadata-file and no cloud-upload was found.")
         file["checksum"] = checksum
         file_element.set("checksum", checksum)
         file["checksum_method"] = checksum_method
@@ -560,15 +571,21 @@ class Enalizer(object):
 
     def create_run_data_block(self, file_attributes, run, run_root, broker_submission_id=None):
         if "data_block" in run.keys():
+            errors = []
             data_block = SubElement(run_root, "DATA_BLOCK")
             files = SubElement(data_block, "FILES")
             for file in run.get("data_block", {}).get("files", []):
                 file_element = SubElement(files, "FILE")
                 for attrib in file_attributes:
-                    if attrib == "filename" and broker_submission_id:
-                        self.process_filename_attribute(file, file_element, broker_submission_id)
-                    else:
-                        file_element.set(attrib, file.get(attrib, "no_attribute_found"))
+                    try:
+                        if attrib == "filename" and broker_submission_id:
+                            self.process_filename_attribute(file, file_element, broker_submission_id)
+                        else:
+                            file_element.set(attrib, file.get(attrib, "no_attribute_found"))
+                    except Exception as ex:
+                        errors.append(f"- {ex} \n")
+            if errors:
+                raise Exception("".join(errors))
             return data_block
         else:
             return None
@@ -587,18 +604,24 @@ class Enalizer(object):
             "checksum_method",
             "checksum"
         ]
+        errors = []
         for r in self.run:
             # center=wenn gfbio center vom user | broker_name="Wir als GFBio" siehe brokeraccount   | (optional) run_center=wer hat sequenziert, registriert bei ena ?
             run = self.create_subelement_with_attribute(run_set, "RUN", "alias", r, "run_alias")
             run.set("center_name", self.center_name)
             run.set("broker_name", DEFAULT_ENA_BROKER_NAME)
             experiment_ref = self.create_subelement_with_attribute(run, "experiment_ref", "refname", r)
-            data_block = self.create_run_data_block(file_attributes, r, run, broker_submission_id)
+            try:
+                data_block = self.create_run_data_block(file_attributes, r, run, broker_submission_id)
+            except Exception as ex:
+                errors.append(f"{ex}")
 
             run_attributes_data = r.get("run_attributes", [])
             if len(run_attributes_data) > 0:
                 run_attributes = SubElement(run, "RUN_ATTRIBUTES")
                 self.create_attributes(run_attributes, run_attributes_data, "run")
+        if errors:
+            raise Exception("".join(errors))
         return ET.tostring(run_set, encoding="utf-8", method="xml")
 
     def prepare_submission_data(self, broker_submission_id=None):
@@ -661,8 +684,23 @@ def store_single_data_item_as_auditable_text_data(submission, data):
 
 def prepare_ena_data(submission):
     # outgoing_request_id = uuid.uuid4()
-    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
-    return enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
+    try:
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
+        return enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
+    except Exception as ex:
+        submission.status = Submission.ERROR
+        submission.save()
+
+        from gfbio_submissions.brokerage.utils.task_utils import _safe_get_site_config
+        site_configuration = _safe_get_site_config(submission)
+        jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+        jira_client.add_comment(
+            key_or_issue=submission.get_primary_helpdesk_reference(),
+            text=f"Errors occured during preparation of ena-data:\n\n{ex}",
+            is_internal=True,
+        )
+        raise Exception(f"Errors occured during preparation of ena-data:\n\n{ex}")
+
 
 
 def store_ena_data_as_auditable_text_data(submission, data):

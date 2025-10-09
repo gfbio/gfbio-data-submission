@@ -54,9 +54,7 @@
                 },
                 "files": {
                     "forward_read_file_name": "File3.forward.fastq.gz",
-                    "reverse_read_file_name": "File3.reverse.fastq.gz",
-                    "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
-                    "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                    "reverse_read_file_name": "File3.reverse.fastq.gz"
                 }
             }
         ]
