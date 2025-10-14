@@ -14,8 +14,8 @@ from django_reverse_admin import ReverseModelAdmin
 from dt_upload.models import DTUpload
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
-from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
-    check_for_submittable_data_task,
+from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
+    check_submittable_taxon_id_task,
 )
 from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads import (
     check_meta_referenced_files_in_cloud_uploads_task,
@@ -684,7 +684,7 @@ def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
             | update_ena_submission_data_task.s(
                 submission_id=submission_id,
             ).set(countdown=SUBMISSION_DELAY)
-            | check_for_submittable_data_task.s(
+            | check_submittable_taxon_id_task.s(
                 submission_id=submission_id,
             ).set(countdown=SUBMISSION_DELAY)
         )

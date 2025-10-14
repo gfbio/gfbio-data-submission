@@ -12,7 +12,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import (
     check_csv_file_rule,
     check_for_molecular_content,
-    check_for_submittable_data,
+    check_submittable_taxon_id,
     check_metadata_rule,
     check_minimum_header_cols,
     extract_sample,
@@ -1321,7 +1321,7 @@ class TestCSVParsing(TestCase):
         submission.save()
 
         self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/dsub-269_template.csv")
-        status, messages, check_performed = check_for_submittable_data(submission)
+        status, messages, check_performed = check_submittable_taxon_id(submission)
         self.assertTrue(status)
         self.assertEqual([], messages)
         self.assertTrue(check_performed)
@@ -1334,9 +1334,9 @@ class TestCSVParsing(TestCase):
         submission.save()
 
         self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/molecular_metadata.csv")
-        status, messages, check_performed = check_for_submittable_data(submission)
+        status, messages, check_performed = check_submittable_taxon_id(submission)
         self.assertFalse(status)
-        self.assertEqual(["Data with the following taxon ids is not submittable:", "1234"], messages)
+        self.assertEqual(["Data with the following taxon ids is not submittable: 1234"], messages)
         self.assertTrue(check_performed)
 
     # test check for submittable atax data valid
@@ -1349,7 +1349,7 @@ class TestCSVParsing(TestCase):
         self.create_csv_submission_upload(
             submission, User.objects.first(), "csv_files/specimen_table_Platypelis_valid.csv"
         )
-        status, messages, check_performed = check_for_submittable_data(submission)
+        status, messages, check_performed = check_submittable_taxon_id(submission)
         self.assertTrue(status)
         self.assertEqual([], messages)
         self.assertTrue(check_performed)
@@ -1364,12 +1364,11 @@ class TestCSVParsing(TestCase):
         self.create_csv_submission_upload(
             submission, User.objects.first(), "csv_files/specimen_table_Platypelis_wrong_sc_name.csv"
         )
-        status, messages, check_performed = check_for_submittable_data(submission)
+        status, messages, check_performed = check_submittable_taxon_id(submission)
         self.assertFalse(status)
         self.assertEqual(
             [
-                "Data with the following scientific names is not submittable:",
-                "Platypelis tsaratananaensissis",
+                "Data with the following scientific names is not submittable: Platypelis tsaratananaensissis",
             ],
             messages,
         )

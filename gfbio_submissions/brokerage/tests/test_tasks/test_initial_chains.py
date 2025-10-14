@@ -108,7 +108,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
-            "tasks.check_for_submittable_data_task",
+            "tasks.check_submittable_taxon_id_task",
         ]
         self.assertEqual(8, len(task_reports))
         for t in task_reports:
@@ -145,7 +145,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
-            "tasks.check_for_submittable_data_task",
+            "tasks.check_submittable_taxon_id_task",
         ]
         self.assertEqual(8, len(task_reports))
         for t in task_reports:
@@ -182,7 +182,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_on_hold_status_task",
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
-            "tasks.check_for_submittable_data_task",
+            "tasks.check_submittable_taxon_id_task",
         ]
         tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(10, len(tprs))
@@ -215,7 +215,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
-            "tasks.check_for_submittable_data_task",
+            "tasks.check_submittable_taxon_id_task",
         ]
         self.assertEqual(8, len(task_reports))
         for t in task_reports:
@@ -270,12 +270,12 @@ class TestInitialChainTasks(TestCase):
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
-            "tasks.check_for_submittable_data_task",
+            "tasks.check_submittable_taxon_id_task",
         ]
-        self.assertEqual(14, len(task_reports))
         for t in task_reports:
             # print(t.task_name)
             self.assertIn(t.task_name, expected_tasknames)
+        self.assertEqual(14, len(task_reports))
 
     @responses.activate
     def test_atx_post_with_release_initial_chain(self):
@@ -313,7 +313,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.atax_run_combination_task",
-            "tasks.check_for_submittable_data_task",
+            "tasks.check_submittable_taxon_id_task",
         ]
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
