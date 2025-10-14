@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from dt_upload.models import FileUploadRequest
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
 
 from .test_tasks_base import TestTasks
 from ...models import SubmissionCloudUpload
@@ -73,3 +74,30 @@ class TestPrepareRunXMLWithCloudUploads(TestTasks):
         self.assertIn("SAMPLE", ret_val.keys())
         text_data = AuditableTextData.objects.all()
         self.assertEqual(4, len(text_data))
+
+    def test_prepare_ena_submission_data_task_fails_with_missing_file_and_checksum(self):
+        submission = Submission.objects.first()
+        SubmissionCloudUpload.objects.filter(file_upload__file_key="File3.reverse.fastq.gz-1234").delete()
+        try:
+            prepare_ena_submission_data_task.apply_async(kwargs={"submission_id": submission.pk})
+            self.fail()
+        except AssertionError:
+            raise
+        except Exception as exc:
+            self.assertTrue(f"{exc}".startswith("Errors occured during preparation of ena-data"))
+            self.assertTrue("- For the referenced file 'File3.reverse.fastq.gz' exists no checksum in the metadata-file and no cloud-upload was found." in f"{exc}")
+
+
+    def test_prepare_ena_submission_data_task_fails_with_file_missmatching_checksum(self):
+        submission = Submission.objects.first()
+        submission.data["requirements"]["experiments"][0]["files"]["forward_read_file_checksum"] = "some bad checksum standin"
+        submission.save()
+        BrokerObject.objects.add_submission_data(submission)
+        try:
+            prepare_ena_submission_data_task.apply_async(kwargs={"submission_id": submission.pk})
+            self.fail()
+        except AssertionError:
+            raise
+        except Exception as exc:
+            self.assertTrue(f"{exc}".startswith("Errors occured during preparation of ena-data"))
+            self.assertTrue("- For the referenced file 'File3.forward.fastq.gz' exists a checksum in the metadata-file (some bad checksum standin), that does not match the checksum of the cloud-upload" in f"{exc}")

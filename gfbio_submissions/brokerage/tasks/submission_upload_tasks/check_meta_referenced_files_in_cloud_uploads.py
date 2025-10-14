@@ -42,11 +42,10 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
         )
         return TaskProgressReport.CANCELLED
 
-    try:
-        submission, site_configuration = get_submission_and_site_configuration(
-            submission_id=submission_id, task=self, include_closed=True
-        )
-    except Submission.DoesNotExist:
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id, task=self, include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
         logger.error(
             "check_meta_referenced_files_in_cloud_uploads_task | submission does not exist | submission_id=%s",
             submission_id,
