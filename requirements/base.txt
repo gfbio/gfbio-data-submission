@@ -62,7 +62,7 @@ django_reverse_admin==2.9.6
 # ------------------------------------------------------------------------------
 # django-upload-tools @https://gitlab-pe.gwdg.de/gfbio/django-upload-tools/-/raw/master/dist/django-upload-tools-0.4.4.tar.gz
 --extra-index-url https://gitlab-pe.gwdg.de/api/v4/projects/25982/packages/pypi/simple
-django_upload_tools==0.4.21
+django_upload_tools==0.4.23
 
 # gfbio django utilities (https://gitlab-pe.gwdg.de/gfbio/gfbio-django-utilities)
 # ------------------------------------------------------------------------------
