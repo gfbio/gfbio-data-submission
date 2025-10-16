@@ -10,7 +10,7 @@ import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.utils.ena_taxon_queries import query_ena
+from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmissionCloudUploadOpener, SubmissionUploadOpener, SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
 from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS, SUBMISSION_UPLOAD_RETRY_DELAY
 from ..utils.encodings import sniff_encoding
 from ..utils.schema_validation import validate_data_full
@@ -646,67 +646,6 @@ def check_for_molecular_content(submission):
     return status, messages, check_performed
 
 
-# parse meta data file for unique tax ids
-def parse_meta_data_for_unique_tax_ids(file):
-    tax_ids = set()
-    dialect = csv.Sniffer().sniff(file.read(20))
-    file.seek(0)
-    csv_reader = csv.DictReader(file, dialect=dialect)
-    for row in csv_reader:
-        tax_id = row.get("taxon_id", "")
-        if tax_id:
-            tax_ids.add(tax_id)
-    return tax_ids
-
-
-# parse meta data file for unique scientific names
-def parse_meta_data_for_unique_scientific_names(file):
-    scientific_names = set()
-    dialect = csv.Sniffer().sniff(file.read(20))
-    delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ","
-    file.seek(0)
-    csv_reader = csv.DictReader(file, dialect=dialect, delimiter=delimiter, quoting=csv.QUOTE_ALL)
-    csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
-    for row in csv_reader:
-        scientific_name = row.get("scientific name", "")
-        if scientific_name:
-            scientific_names.add(scientific_name)
-    return scientific_names
-
-
-def check_meta_data(data_to_check, target, messages):
-    status = True
-    for data in data_to_check:
-        ena_response = query_ena(data, target)
-        if ena_response is None:
-            if target == ENA and not messages:
-                messages.append("Data with the following taxon ids is not submittable:")
-            elif target == ATAX and not messages:
-                messages.append("Data with the following scientific names is not submittable:")
-            messages.append(data)
-            status = False
-    return status
-
-
-def parse_meta_data(meta_data_file, target, messages):
-    if not meta_data_file.file.name.endswith(".csv"):
-        messages.append("Invalid file format. Meta data file must be in CSV format.")
-        return False
-    with open(meta_data_file.file.path, "r", encoding="utf-8-sig", newline="") as file:
-        if target == ENA:
-            data_to_check = parse_meta_data_for_unique_tax_ids(file)
-            if not data_to_check:
-                messages.append("No taxon_id found in the meta data file")
-                return False
-        elif target == ATAX:
-            data_to_check = parse_meta_data_for_unique_scientific_names(file)
-            if not data_to_check:
-                messages.append("No scientific_name found in the meta data file")
-                return False
-        status = check_meta_data(data_to_check, target, messages)
-        return status
-
-
 # search for specimen meta data for ATAX submission
 def search_for_specimen_meta_data(meta_data_files):
     specimen_cols = ["specimen identifier", "basis of record", "scientific name"]
@@ -721,7 +660,7 @@ def search_for_specimen_meta_data(meta_data_files):
     return None
 
 
-def check_for_submittable_data(submission):
+def check_submittable_taxon_id(submission):
     """Check if the data in the submission meta file is submittable
 
     Args:
@@ -733,29 +672,13 @@ def check_for_submittable_data(submission):
         check_performed: True if the check was performed, False otherwise
     """
     logger.info(
-        msg="check_for_submittable_data | "
+        msg="check_submittable_taxon_id | "
             "process submission={0} | target={1} | release={2}"
             "".format(submission.broker_submission_id, submission.target, submission.release)
     )
+    file_opener = SubmissionCloudUploadOpener() if submission.submissioncloudupload_set.count() > 0 else SubmissionUploadOpener()
+    submittable_data_handler_class = SubmittableTaxIdHandler if submission.target == ENA else (SubmittableScientificNameHandler if submission.target == ATAX else SubmittableDataHandler)
+    submittable_data_handler = submittable_data_handler_class(file_opener)
 
-    status = True
-    messages = []
-    check_performed = False
-
-    meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-    if not meta_data_files:
-        check_performed = True
-        return status, messages, check_performed
-    if submission.target == ENA:
-        meta_data_file = meta_data_files.first()
-        status = parse_meta_data(meta_data_file, ENA, messages)
-    elif submission.target == ATAX:
-        correct_meta_data_file = search_for_specimen_meta_data(meta_data_files)
-        if correct_meta_data_file:
-            status = parse_meta_data(correct_meta_data_file, ATAX, messages)
-        else:
-            messages.append("No specimen file found")
-            status = False
-    check_performed = True
-
-    return status, messages, check_performed
+    status = submittable_data_handler.run_taxons_are_submittable_check(submission)
+    return status, submittable_data_handler.messages, True

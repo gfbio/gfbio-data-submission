@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
-    check_for_submittable_data_task,
+from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
+    check_submittable_taxon_id_task,
 )
 from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
 from ..models import SubmissionCloudUpload
@@ -73,7 +73,7 @@ class SubmissionProcessHandler(object):
             )
 
     def add_submittable_data_check_task_to_chain(self, chain):
-        return chain | check_for_submittable_data_task.s(submission_id=self.submission_id).set(
+        return chain | check_submittable_taxon_id_task.s(submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY
         )
 
