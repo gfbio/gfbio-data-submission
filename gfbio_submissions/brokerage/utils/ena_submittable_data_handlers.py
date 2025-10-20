@@ -45,13 +45,17 @@ class SubmittableDataHandler():
         return status
     
     def check_file_is_csv(self, metadata_file):
+        if not metadata_file:
+            self.messages.append("There is not meta data file present.")
+            return False
         if not self.file_opener.is_csv(metadata_file):
             self.messages.append("Invalid file format. Meta data file must be in CSV format.")
             return False
         return True
     
     def get_metadata_file(self, metadata_files):
-        return []
+        self.messages.append("Can only perform submittable-data-handling for targets ENA and ATAX.")
+        return False
             
     def query_ena(self, data):
         return True
