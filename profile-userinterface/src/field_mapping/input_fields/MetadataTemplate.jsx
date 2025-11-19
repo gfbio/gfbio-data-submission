@@ -43,12 +43,12 @@ const MetadataTemplate = () => {
           <li key={template.id} className="list-group-item px-2 pt-0 pb-3 border-bottom-0 label-text">
             {template.name}
             <div className="mt-3">
-              <a href={template.template_link} target="_blank" className="px-3" id="metadata-template-csv-link">
+              <a href={template.template_link} target="_blank" className="px-3" id={`${template.id}-csv-link`}>
                 <i className="fa fa-download pr-2" aria-hidden="true"></i> CSV Template
               </a>
             </div>
             <div className="mt-3">
-              <a href={template.description_link} target="_blank" className="px-3" id="metadata-template-description-link">
+              <a href={template.description_link} target="_blank" className="px-3" id={`${template.id}-description-link`}>
                 <i className="fa fa-book pr-2" aria-hidden="true"></i> Template
                 Description
               </a>
