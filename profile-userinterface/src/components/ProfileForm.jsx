@@ -334,19 +334,19 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     const createSubmitButton = () => {
         if (isProcessing) {
             return (
-                <Button className="submission-button disabled" type="submit" disabled>
+                <Button id="form-submit-button" className="submission-button disabled" type="submit" disabled>
                     <i className="fa fa-gear me-3"></i> Processing...
                 </Button>
             );
         } else if (submissionData?.broker_submission_id) {
             return (
-                <Button className="submission-button" type="submit">
+                <Button id="form-submit-button" className="submission-button" type="submit">
                     <i className="fa fa-forward me-3"></i> Update Submission
                 </Button>
             );
         } else {
             return (
-                <Button className="submission-button" type="submit">
+                <Button id="form-submit-button" className="submission-button" type="submit">
                     <i className="fa fa-play me-3"></i> Create Submission
                 </Button>
             );
