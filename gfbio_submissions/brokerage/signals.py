@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from dt_upload.models import FileUploadRequest
 from .models import SubmissionCloudUpload
 from .tasks.submission_upload_tasks.post_process_admin_submission_upload import post_process_admin_submission_upload_task, move_file_and_update_file_upload
+from builtins import getattr
 
 @receiver(post_save, sender=FileUploadRequest, dispatch_uid="recalculate_checksums")
 def recalculate_checksums(sender, instance, **kwargs):
@@ -15,8 +16,9 @@ def recalculate_checksums(sender, instance, **kwargs):
             and not instance.uploaded_file.name.startswith(str(submission_cloud_upload.submission.broker_submission_id))
         ):
         file_path_in_bucket_root = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{instance.uploaded_file.name}"
+        is_celery_in_debug = getattr(settings, "CELERY_TASK_EAGER_PROPAGATES", False) or getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False)
         if os.path.exists(file_path_in_bucket_root):
-            if (settings.CELERY_TASK_EAGER_PROPAGATES or settings.CELERY_TASK_ALWAYS_EAGER):
+            if (is_celery_in_debug):
                 # for some reason the changes made in celery get rolled back when these settings are active. So work around for local testing:
                 move_file_and_update_file_upload(instance)
                 return
