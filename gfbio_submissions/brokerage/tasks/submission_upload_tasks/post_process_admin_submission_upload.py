@@ -66,8 +66,10 @@ def move_file_and_update_file_upload(file_upload_request):
 
     file_upload_request.status = "COMPLETED"
     file_upload_request.save()
-    save_to_redundant_storage_clientside_fileupload.apply_async(
-        kwargs={
-            "file_upload_request_id": file_upload_request.id,
-        }
-    )
+
+    if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
+        save_to_redundant_storage_clientside_fileupload.apply_async(
+            kwargs={
+                "file_upload_request_id": file_upload_request.id,
+            }
+        )
