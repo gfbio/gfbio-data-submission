@@ -7,6 +7,7 @@ from django.db import transaction
 
 from config.celery_app import app
 from dt_upload.models import FileUploadRequest
+from dt_upload.tasks.backup_task import save_to_redundant_storage_clientside_fileupload
 
 from ...models.task_progress_report import TaskProgressReport
 from ..submission_task import SubmissionTask
@@ -62,5 +63,13 @@ def move_file_and_update_file_upload(file_upload_request):
             f_read = f.read()
             file_upload_request.md5 = hashlib.md5(f_read).hexdigest()
             file_upload_request.sha256 = hashlib.sha256(f_read).hexdigest()
+
     file_upload_request.status = "COMPLETED"
     file_upload_request.save()
+
+    if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
+        save_to_redundant_storage_clientside_fileupload.apply_async(
+            kwargs={
+                "file_upload_request_id": file_upload_request.id,
+            }
+        )
