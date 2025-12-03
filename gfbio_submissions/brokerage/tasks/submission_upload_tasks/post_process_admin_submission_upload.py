@@ -59,12 +59,10 @@ def move_file_and_update_file_upload(file_upload_request, delete_old=True):
     if not field_file:
         return
 
-    print("hehehehe" + field_file.name)
     storage = field_file.storage
-    print("hehehehe" + storage)
+
 
     requested_name = file_upload_request.file_key
-    print("hehehehe" + requested_name)
     field_file.open("rb")
 
     try:
