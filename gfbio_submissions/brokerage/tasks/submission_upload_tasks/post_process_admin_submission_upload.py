@@ -1,6 +1,5 @@
 import logging
 from django.conf import settings
-import os
 import hashlib
 
 from django.db import transaction
@@ -48,39 +47,49 @@ def post_process_admin_submission_upload_task(self, previous_task_result=None, f
     return True
 
 
-def move_file_and_update_file_upload(file_upload_request):
-    storage = file_upload_request.uploaded_file.storage
+def move_file_and_update_file_upload(file_upload_request, delete_old=True):
+    """
+    Re-save the uploaded file under its desired key and update metadata.
+
+    The overwrite / "new unique name" behavior is delegated to CloudStorage,
+    which uses DJANGO_UPLOAD_TOOLS_USE_REUPLOAD.
+    """
+    field_file = file_upload_request.uploaded_file
+
+    if not field_file:
+        return
+
+    print("hehehehe" + field_file.name)
+    storage = field_file.storage
+    print("hehehehe" + storage)
+
     requested_name = file_upload_request.file_key
+    print("hehehehe" + requested_name)
+    field_file.open("rb")
 
-    if getattr(storage, "file_overwrite", False):
-        final_name = requested_name
-    else:
-        final_name = storage.get_available_name(requested_name)
+    try:
+        stored_name = storage.save(requested_name, field_file.file)
+    finally:
+        field_file.close()
 
-    file_path_src = os.path.join(
-        settings.S3FS_MOUNT_POINT,
-        file_upload_request.uploaded_file.name,
-    )
+    file_upload_request.file_key = stored_name
+    file_upload_request.uploaded_file.name = stored_name
+    file_upload_request.file_size = storage.size(stored_name)
 
-    file_path_trg = os.path.join(settings.S3FS_MOUNT_POINT, final_name)
-    os.replace(file_path_src, file_path_trg)
+    md5 = hashlib.md5()
+    sha256 = hashlib.sha256()
+    with storage.open(stored_name, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            md5.update(chunk)
+            sha256.update(chunk)
 
-    file_upload_request.file_key = final_name
-    file_upload_request.uploaded_file.name = final_name
-    file_upload_request.file_size = os.stat(file_path_trg).st_size
+    file_upload_request.md5 = md5.hexdigest()
+    file_upload_request.sha256 = sha256.hexdigest()
 
-    if os.path.exists(file_path_trg):
-        with open(file_path_trg, "rb") as f:
-            f_read = f.read()
-        file_upload_request.md5 = hashlib.md5(f_read).hexdigest()
-        file_upload_request.sha256 = hashlib.sha256(f_read).hexdigest()
-
-    file_upload_request.status = "COMPLETED"
+    file_upload_request.status = FileUploadRequest.COMPLETED
     file_upload_request.save()
 
     if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
         save_to_redundant_storage_clientside_fileupload.apply_async(
-            kwargs={
-                "file_upload_request_id": file_upload_request.id,
-            }
+            kwargs={"file_upload_request_id": file_upload_request.id}
         )
