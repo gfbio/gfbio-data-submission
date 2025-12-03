@@ -15,7 +15,6 @@ from ..submission_task import SubmissionTask
 logger = logging.getLogger(__name__)
 
 
-
 @app.task(
     base=SubmissionTask,
     bind=True,
@@ -50,19 +49,31 @@ def post_process_admin_submission_upload_task(self, previous_task_result=None, f
 
 
 def move_file_and_update_file_upload(file_upload_request):
-    file_path_src = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{file_upload_request.uploaded_file.name}"
-    file_path_trg = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{file_upload_request.file_key}"
-    mv_cmd = f'mv -f "{file_path_src}" "{file_path_trg}"'
-    os.system(mv_cmd)
+    storage = file_upload_request.uploaded_file.storage
+    requested_name = file_upload_request.file_key
 
-    file_upload_request.uploaded_file.name = file_upload_request.file_key
+    if getattr(storage, "file_overwrite", False):
+        final_name = requested_name
+    else:
+        final_name = storage.get_available_name(requested_name)
+
+    file_path_src = os.path.join(
+        settings.S3FS_MOUNT_POINT,
+        file_upload_request.uploaded_file.name,
+    )
+
+    file_path_trg = os.path.join(settings.S3FS_MOUNT_POINT, final_name)
+    os.replace(file_path_src, file_path_trg)
+
+    file_upload_request.file_key = final_name
+    file_upload_request.uploaded_file.name = final_name
     file_upload_request.file_size = os.stat(file_path_trg).st_size
 
     if os.path.exists(file_path_trg):
-        with open(file_path_trg, 'rb') as f:
+        with open(file_path_trg, "rb") as f:
             f_read = f.read()
-            file_upload_request.md5 = hashlib.md5(f_read).hexdigest()
-            file_upload_request.sha256 = hashlib.sha256(f_read).hexdigest()
+        file_upload_request.md5 = hashlib.md5(f_read).hexdigest()
+        file_upload_request.sha256 = hashlib.sha256(f_read).hexdigest()
 
     file_upload_request.status = "COMPLETED"
     file_upload_request.save()
