@@ -47,40 +47,49 @@ def post_process_admin_submission_upload_task(self, previous_task_result=None, f
     return True
 
 
-def move_file_and_update_file_upload(file_upload_request, delete_old=True):
+def move_file_and_update_file_upload(file_upload_request):
     """
-    Re-save the uploaded file under its desired key and update metadata.
+    Recalculate size and checksums for the current uploaded_file and update metadata.
 
-    The overwrite / "new unique name" behavior is delegated to CloudStorage,
-    which uses DJANGO_UPLOAD_TOOLS_USE_REUPLOAD.
+    The file is assumed to already be stored at uploaded_file.name using CloudStorage
+    (upload_to of FileUploadRequest has already placed it under <submission_id>/<filename>).
     """
+
     field_file = file_upload_request.uploaded_file
-
-    if not field_file:
+    if not field_file or not field_file.name:
+        logger.warning(
+            "move_file_and_update_file_upload: no uploaded_file for FileUploadRequest id=%s",
+            file_upload_request.pk,
+        )
         return
 
     storage = field_file.storage
+    name = field_file.name
 
+    file_upload_request.file_key = name
 
-    requested_name = file_upload_request.file_key
-    field_file.open("rb")
+    if not storage.exists(name):
+        logger.error(
+            "move_file_and_update_file_upload: storage object %r not found for FileUploadRequest id=%s",
+            name,
+            file_upload_request.pk,
+        )
+        file_upload_request.status = FileUploadRequest.FAILED
+        file_upload_request.save(update_fields=["status"])
+        return
 
-    try:
-        stored_name = storage.save(requested_name, field_file.file)
-    finally:
-        field_file.close()
-
-    file_upload_request.file_key = stored_name
-    file_upload_request.uploaded_file.name = stored_name
-    file_upload_request.file_size = storage.size(stored_name)
+    file_size = storage.size(name)
 
     md5 = hashlib.md5()
     sha256 = hashlib.sha256()
-    with storage.open(stored_name, "rb") as f:
+    with storage.open(name, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
+            if not chunk:
+                break
             md5.update(chunk)
             sha256.update(chunk)
 
+    file_upload_request.file_size = file_size
     file_upload_request.md5 = md5.hexdigest()
     file_upload_request.sha256 = sha256.hexdigest()
 
