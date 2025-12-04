@@ -64,8 +64,8 @@ class TestSignals(TestCase):
             data={},
         )
 
-        # Step 1: create FileUploadRequest with a file_key, but NO file yet.
-        # This simulates the state after your frontend / multipart setup.
+        # Step 1: create FileUploadRequest with a file_key, but no file yet.
+        # This simulates the state after frontend / multipart setup.
         fur = FileUploadRequest.objects.create(
             original_filename="TestFile.txt",
             file_key=f"{submission_id}/TestFile.txt",
@@ -86,7 +86,6 @@ class TestSignals(TestCase):
         )
 
         # Step 2: FIRST admin upload (empty -> file).
-        # According to your pre_save logic, this must NOT trigger the checksum pipeline.
         initial_content = b"initial-content"
         initial_file = SimpleUploadedFile("TestFile.txt", initial_content)
         fur.uploaded_file = initial_file
@@ -95,7 +94,7 @@ class TestSignals(TestCase):
         fur.refresh_from_db()
         initial_name = fur.uploaded_file.name
 
-        # Name behaviour for the first upload, since repeats of this test do not guarante
+        # Name behaviour for the first upload, since repeats of this test do not guarantee
         # deletion of files, so a re-run would fail if comparing directly with the filename
         # since then it would have a suffix:
         # 1) must live under the submission prefix
