@@ -7,13 +7,21 @@ import requests
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
+from django.template.response import TemplateResponse
 from django.utils.encoding import smart_bytes
+from django.utils.translation import gettext as _
 from django_reverse_admin import ReverseModelAdmin
+from dt_upload.models import DTUpload
+from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
-from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
-    check_for_submittable_data_task,
+from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
+    check_submittable_taxon_id_task,
 )
-from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
+from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads import (
+    check_meta_referenced_files_in_cloud_uploads_task,
+)
+
+from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY, ENA, ENA_PANGAEA, GFBIO_HELPDESK_TICKET
 from .models import SubmissionCloudUpload
 from .models.abcd_conversion_result import AbcdConversionResult
 from .models.additional_reference import AdditionalReference
@@ -32,12 +40,12 @@ from .tasks.broker_object_tasks.create_broker_objects_from_submission_data impor
 )
 from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
 from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
-    parse_csv_to_update_clean_submission_task,
     parse_csv_to_update_clean_submission_cloud_upload_task,
+    parse_csv_to_update_clean_submission_task,
 )
 from .utils.ena import release_study_on_ena
 from .utils.submission_process import SubmissionProcessHandler
-from .utils.task_utils import jira_cancel_issue
+from .utils.task_utils import _safe_get_site_config, jira_cancel_issue
 
 
 class PersistentIdentifierInline(admin.TabularInline):
@@ -258,12 +266,12 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
             | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(
-            countdown=SUBMISSION_DELAY
-        )
+                countdown=SUBMISSION_DELAY
+            )
             | create_targeted_sequence_ena_manifest_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
-            countdown=SUBMISSION_DELAY
-        )
+                countdown=SUBMISSION_DELAY
+            )
             | process_targeted_sequence_results_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         )
         chain()
@@ -284,8 +292,8 @@ def register_study_at_ena(modeladmin, request, queryset):
             | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(
-            countdown=SUBMISSION_DELAY
-        )
+                countdown=SUBMISSION_DELAY
+            )
         )
         chain()
 
@@ -338,8 +346,10 @@ validate_manifest_at_ena.short_description = "Validate MANIFEST file at ENA"
 
 
 def create_helpdesk_issue_manually(modeladmin, request, queryset):
-    from .tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task, \
-        attach_cloud_upload_to_submission_issue_task
+    from .tasks.jira_tasks.attach_to_submission_issue import (
+        attach_cloud_upload_to_submission_issue_task,
+        attach_to_submission_issue_task,
+    )
     from .tasks.jira_tasks.create_submission_issue import create_submission_issue_task
     from .tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
     from .tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
@@ -360,8 +370,9 @@ def create_helpdesk_issue_manually(modeladmin, request, queryset):
                 },
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
             )
-        related_cloud_uploads = SubmissionCloudUpload.objects.filter(submission=obj, attach_to_ticket=True,
-                                                                     meta_data=True)
+        related_cloud_uploads = SubmissionCloudUpload.objects.filter(
+            submission=obj, attach_to_ticket=True, meta_data=True
+        )
         for upload in related_cloud_uploads:
             attach_cloud_upload_to_submission_issue_task.apply_async(
                 kwargs={
@@ -379,48 +390,65 @@ def combine_csvs_to_abcd(modeladmin, request, queryset):
     from .tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
 
     obj = queryset[0]
-    chain = (
-        atax_run_combination_task.s(submission_id=obj.pk).set(
-            countdown=SUBMISSION_DELAY
-        )
-    )
+    chain = atax_run_combination_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
 
     chain()
 
 
 combine_csvs_to_abcd.short_description = "Combine CSV-Files to ABCD-File"
 
+
 def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
     from .tasks.atax_tasks.atax_run_combination_task import atax_run_combination_for_cloud_upload_task
 
     obj = queryset[0]
-    chain = (
-        atax_run_combination_for_cloud_upload_task.s(submission_id=obj.pk).set(
-            countdown=SUBMISSION_DELAY
-        )
-    )
+    chain = atax_run_combination_for_cloud_upload_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
 
     chain()
 
 
 combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
 
+
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
+    from .tasks.process_tasks.notify_admin_on_ena_transfer_completed import notify_admin_on_ena_transfer_completed_task
+    from celery import chord
+
+    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ]
+
     for obj in queryset:
-        for upload in obj.submissioncloudupload_set.all():
-            transfer_cloud_upload_to_ena_task.apply_async(
-                kwargs={"submission_cloud_upload_id": upload.pk,
-                        "submission_id": obj.pk},
-                countdown=SUBMISSION_DELAY,
-            )
+        submission_cloud_upload_ids = [
+            upload.pk for upload in obj.submissioncloudupload_set.all()
+            if any(upload.file_upload.file_key.lower().endswith(ext) for ext in allowed_types)
+        ]
+        parallel_transfers = [
+            transfer_cloud_upload_to_ena_task.s(
+                submission_cloud_upload_id=upload_id, submission_id=obj.pk, user_id=request.user.id
+            ).set(countdown=SUBMISSION_DELAY)
+            for upload_id in submission_cloud_upload_ids
+        ]
+        chord(parallel_transfers).apply_async(
+            kwargs={
+                "body":notify_admin_on_ena_transfer_completed_task.s(
+                    submission_id=obj.pk,
+                    submission_cloud_upload_ids=submission_cloud_upload_ids
+                ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES).on_error(
+                    notify_admin_on_ena_transfer_completed_task.s(
+                        submission_id=obj.pk,
+                        submission_cloud_upload_ids=submission_cloud_upload_ids
+                    ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES)
+                ),
+            },
+            max_retries=SUBMISSION_MAX_RETRIES
+        )
+
 
 transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud uploads to ENA via Aspera"
 
 
 class AuditableTextDataAdmin(admin.ModelAdmin):
-    actions = [
-    ]
+    actions = []
 
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
@@ -437,16 +465,23 @@ class SubmissionAdmin(admin.ModelAdmin):
         "broker_submission_id",
         "user",
         "created",
+        "modified",
         "target",
         "status",
+        "get_ticket",
     )
     list_filter = (
         "status",
         "target",
     )
     # TODO: user username emaial
-    search_fields = ["broker_submission_id", "additionalreference__reference_key", "user__username", "user__email",
-                     "user__name"]
+    search_fields = [
+        "broker_submission_id",
+        "additionalreference__reference_key",
+        "user__username",
+        "user__email",
+        "user__name",
+    ]
     inlines = (
         AuditableTextDataInlineAdmin,
         AdditionalReferenceInline,
@@ -474,6 +509,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     readonly_fields = (
         "created",
         "modified",
+        "get_ticket"
     )
 
     def save_model(self, request, obj, form, change):
@@ -482,6 +518,142 @@ class SubmissionAdmin(admin.ModelAdmin):
         if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
         super(SubmissionAdmin, self).save_model(request, obj, form, change)
+    
+
+    def get_urls(self):
+        from django.urls import path
+        from functools import update_wrapper
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            wrapper.model_admin = self
+            return update_wrapper(wrapper, view)
+
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/submission-cloud-upload-view/",
+                wrap(self.submission_cloud_uploads_view),
+                name="submission_submission_submission_cloud_upload_view",
+            ),
+        ]
+        return custom_urls + urls
+    
+    def submission_cloud_uploads_view(self, request, object_id, extra_context=None):
+        "The 'history' admin view for this model."
+        from django.contrib.admin.models import LogEntry
+
+        model = self.model
+        obj = Submission.objects.get(pk=object_id)
+        if obj is None:
+            return self._get_obj_does_not_exist_redirect(
+                request, model._meta, object_id
+            )
+
+        orderlist = [
+            SubmissionCloudUpload.STATUS_ACTIVE,
+            SubmissionCloudUpload.STATUS_NEW,
+            SubmissionCloudUpload.STATUS_UPLOADED,
+            SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+            SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM,
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+            SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM,
+            SubmissionCloudUpload.STATUS_DELETED,
+        ]
+        submission_cloud_uploads = list(SubmissionCloudUpload.objects.filter(submission__pk=object_id))
+        submission_cloud_uploads.sort(key=lambda x: orderlist.index(x.status))
+
+        cloud_upload_list = {}
+        for cloud_upload in submission_cloud_uploads:
+            last_action = (
+                LogEntry.objects.filter(
+                    object_id=cloud_upload.pk,
+                    content_type=40,
+                ).order_by("action_time").first()
+            )
+
+            status = SubmissionCloudUpload.get_status_name(cloud_upload.status)
+            if not status in cloud_upload_list:
+                cloud_upload_list[status] = []
+
+            cloud_upload_list[status].append({
+                "pk": cloud_upload.pk,
+                "name": str(cloud_upload),
+                "status": status,
+                "last_change_action_time": last_action.action_time if last_action else cloud_upload.modified,
+                "last_change_message": last_action.get_change_message() if last_action else ""
+            })
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Submission Cloud Uploads of the Submission: %s") % obj,
+            "subtitle": None,
+            "cloud_upload_list": cloud_upload_list,
+            "module_name": str(self.opts.verbose_name_plural),
+            "object": obj,
+            "opts": self.opts,
+            **(extra_context or {}),
+        }
+
+        request.current_app = self.admin_site.name
+
+        return TemplateResponse(
+            request,
+            "admin/brokerage/submission/submission_submission_cloud_upload_list.html",
+            context,
+        )
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        # gate the check action by cloud upload setting
+        from config.settings.base import DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD
+
+        if DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD:
+
+            def check_referenced_files(modeladmin, req, queryset):
+                for obj in queryset:
+                    check_meta_referenced_files_in_cloud_uploads_task.apply_async(
+                        kwargs={"submission_id": obj.pk}, countdown=SUBMISSION_DELAY
+                    )
+
+            check_referenced_files.short_description = "Check that meta CSV references exist in cloud uploads"
+            actions["check_referenced_files"] = (
+                check_referenced_files,
+                check_referenced_files.__name__,
+                check_referenced_files.short_description,
+            )
+        return actions
+    
+    @admin.display(description="Ticket")
+    def get_ticket(self, obj):
+        reference = None
+        all_primaries = obj.additionalreference_set.filter(primary=True)
+        if len(all_primaries) == 1:
+            reference = all_primaries.first()
+        elif len(all_primaries) > 1:
+            return "multiple primaries"
+        else:
+            all_refs = obj.additionalreference_set.all()
+            if len(all_refs) == 1:
+                reference = all_refs.first()
+            elif len(all_refs) > 1:
+                return "multiple references"
+        if reference and reference.reference_key:
+            if reference.type == GFBIO_HELPDESK_TICKET:
+                site_config = _safe_get_site_config(obj)
+                if site_config and site_config.helpdesk_server:
+                    from django.utils.html import format_html
+                    return format_html("<a href='{url}'>{title}</a>", 
+                        url=site_config.helpdesk_server.url + "/browse/" + reference.reference_key,
+                        title=reference.reference_key
+                    )
+            return reference.reference_key
+        else:
+            return "-"
 
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):
@@ -506,15 +678,15 @@ def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
             ).set(countdown=SUBMISSION_DELAY)
             | task(submission_upload_id)
             | create_broker_objects_from_submission_data_task.s(
-            submission_id=submission_id,
-            use_submitted_submissions=True,
-        ).set(countdown=SUBMISSION_DELAY)
+                submission_id=submission_id,
+                use_submitted_submissions=True,
+            ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
-            submission_id=submission_id,
-        ).set(countdown=SUBMISSION_DELAY)
-            | check_for_submittable_data_task.s(
-            submission_id=submission_id,
-        ).set(countdown=SUBMISSION_DELAY)
+                submission_id=submission_id,
+            ).set(countdown=SUBMISSION_DELAY)
+            | check_submittable_taxon_id_task.s(
+                submission_id=submission_id,
+            ).set(countdown=SUBMISSION_DELAY)
         )
         rebuild_from_csv_metadata_chain()
 
@@ -525,7 +697,7 @@ def reparse_csv_metadata(modeladmin, request, queryset):
         SubmissionUpload.objects.get_related_submission_id,
         lambda ob_id: parse_csv_to_update_clean_submission_task.s(
             submission_upload_id=ob_id,
-        ).set(countdown=SUBMISSION_DELAY)
+        ).set(countdown=SUBMISSION_DELAY),
     )
 
 
@@ -539,12 +711,22 @@ def get_submission_id_from_cloud_upload(cloud_upload_id):
 
 
 def reparse_csv_metadata_cloud_uploads(modeladmin, request, queryset):
+    non_ena_scu_ids = []
+    non_ena_submission_cloud_uploads = [scu for scu in queryset if scu.submission.target not in [ENA, ENA_PANGAEA]]
+    if non_ena_submission_cloud_uploads:
+        msg = f"The following cloud uploads have not the target '{ENA}' or '{ENA_PANGAEA}' and can't be processed: <br />" 
+        msg += ", <br />".join([f"{scu}" for scu in non_ena_submission_cloud_uploads])
+        from django.utils.safestring import mark_safe
+        from django.contrib import messages
+        modeladmin.message_user(request, mark_safe(msg), level=messages.ERROR)        
+        non_ena_scu_ids = [scu.id for scu in non_ena_submission_cloud_uploads]
+
     run_csv_reparse_task_in_reparse_pipeline(
-        queryset,
+        queryset.exclude(id__in=non_ena_scu_ids),
         get_submission_id_from_cloud_upload,
         lambda ob_id: parse_csv_to_update_clean_submission_cloud_upload_task.s(
             submission_cloud_upload_id=ob_id,
-        ).set(countdown=SUBMISSION_DELAY)
+        ).set(countdown=SUBMISSION_DELAY),
     )
 
 
@@ -606,21 +788,14 @@ class JiraMessageAdmin(admin.ModelAdmin):
 class AbcdConversionResultAdmin(admin.ModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
-    list_display = (
-        "data_id",
-        "submission",
-        "created",
-        "atax_xml_valid"
-    )
+    list_display = ("data_id", "submission", "created", "atax_xml_valid")
     list_filter = (
         "submission",
         "created",
         "atax_xml_valid",
     )
     search_fields = ["submission__id", "submission__broker_submission_id"]
-    readonly_fields = (
-        "created",
-    )
+    readonly_fields = ("created",)
 
 
 def download_submission_cloud_upload_file(modeladmin, request, queryset):
@@ -640,21 +815,28 @@ download_submission_cloud_upload_file.short_description = "Download the file of 
 class SubmissionCloudUploadAdmin(ReverseModelAdmin):
     list_display = ("__str__", "meta_data", "user", "attachment_id", "attach_to_ticket")
     list_filter = ("user", "meta_data", "attach_to_ticket")
-    search_fields = ["submission__broker_submission_id"]
-    inline_type = 'stacked'
+    search_fields = ["submission__broker_submission_id", "submission__additionalreference__reference_key"]
+    inline_type = "stacked"
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
     inline_reverse = [
-        (
-            'file_upload', {
-                'fields': ['original_filename', 'file_key', 'status', 's3_location']
-            }
-        ),
+        ("file_upload", {"fields": ["uploaded_file", "original_filename", "file_key", "status", "s3_location"]}),
     ]
     actions = [
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
     ]
+
+
+try:
+    admin.site.unregister(DTUpload)
+except admin.sites.NotRegistered:
+    pass
+
+try:
+    admin.site.unregister(DTUploadMirror)
+except admin.sites.NotRegistered:
+    pass
 
 
 admin.site.register(Submission, SubmissionAdmin)

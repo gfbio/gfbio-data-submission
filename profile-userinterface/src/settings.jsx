@@ -42,8 +42,10 @@ export const CLOUD_UPLOAD = "/cloud-upload/";
 
 export const MAX_UPLOAD_ITEMS = 20;
 
-export const MAX_TOTAL_UPLOAD_SIZE = 200000000;  // 200 MB = 200000000 bytes;  10 GB = 10000000000 bytes
+export const MAX_TOTAL_UPLOAD_SIZE = 200000000;  // 200 MB = 200000000 bytes;
+
+export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 10000000000;  // 10 GB = 10000000000 bytes
 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
 
-export const USE_LOCAL_UPLOAD_ONLY = true;
+export const USE_LOCAL_UPLOAD_ONLY = false;

@@ -32,6 +32,7 @@
                 <ul class="navbar-nav ms-auto me-3">
                     <li class="nav-item me-5">
                         <a class="nav-link help-link"
+                           id="navbar-help-link"
                            href="mailto:info@gfbio.org?subject=Help with Submission&body=Dear GFBio Team,"
                         >
                             Do you need Help ?
@@ -61,6 +62,7 @@
                             {# URL provided by django-allauth/account/urls.py #}
                             <a class="nav-link btn btn-secondary btn-sm sign-up"
                                     {#                               href="{% url 'account_signup' %}"#}
+                               id="navbar-signup-link"
                                href="https://sso.gfbio.org/simplesaml/module.php/accountui/register.php"
                             >
                                 Sign Up
@@ -69,6 +71,7 @@
                         <li class="nav-item ms-2">
                             {# URL provided by django-allauth/account/urls.py #}
                             <a class="nav-link btn btn-secondary btn-sm sign-in"
+                               id="navbar-signin-link"
                                href="{% url 'account_login' %}">
                                 Sign In
                             </a>

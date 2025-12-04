@@ -178,7 +178,11 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 handleMetadataSelect={handleMetadataToggle}
             />
 
-            <UploadMessage showUploadLimitMessage={uploadLimitExceeded} />
+            <UploadMessage
+                showUploadLimitMessage={uploadLimitExceeded}
+                maxUploadItems={MAX_UPLOAD_ITEMS}
+                maxTotalUploadSize={MAX_TOTAL_UPLOAD_SIZE}
+            />
 
             <Dropzone h={120} p={0} multiple onDrop={handleDrop}>
                 <Center h={120}>

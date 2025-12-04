@@ -2,7 +2,9 @@ import { Center, Text } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
+import {
+    MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD,
+} from "../../settings.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
 import patchSubmissionCloudUpload from "../../api/patchSubmissionCloudUploadMetadata.jsx";
@@ -29,11 +31,10 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     }, [serverFiles, metadataIndex.source]);
 
     const checkUploadLimits = (localFiles, serverFiles) => {
-        const totalCount = localFiles.length + serverFiles.length;
         const totalSize =
             localFiles.reduce((sum, file) => sum + (file.size || 0), 0) +
             serverFiles.reduce((sum, file) => sum + (file.file_size || 0), 0);
-        return totalSize <= MAX_TOTAL_UPLOAD_SIZE && totalCount <= MAX_UPLOAD_ITEMS;
+        return totalSize <= MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD;
     };
 
     const handleDrop = (droppedFiles) => {
@@ -195,9 +196,13 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 metadataSource={metadataIndex.source}
                 metadataIndex={metadataIndex}
                 handleMetadataSelect={handleMetadataToggle}
+                brokerSubmissionId={submissionData?.broker_submission_id}
             />
 
-            <UploadMessage showUploadLimitMessage={uploadLimitExceeded} />
+            <UploadMessage
+                showUploadLimitMessage={uploadLimitExceeded}
+                maxTotalUploadSize={MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD}
+            />
 
             <Dropzone h={120} p={0} multiple onDrop={handleDrop}>
                 <Center h={120}>

@@ -24,8 +24,9 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
     def get_queryset(self):
         broker_submission_id = self.kwargs.get("broker_submission_id", uuid4())
         return SubmissionCloudUpload.objects.filter(
-            submission__broker_submission_id=broker_submission_id,
-            status='active'
+            submission__broker_submission_id=broker_submission_id
+        ).exclude(
+            status=SubmissionCloudUpload.STATUS_DELETED
         )
 
     @extend_schema(

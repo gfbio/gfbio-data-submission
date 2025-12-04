@@ -115,6 +115,10 @@ COPY ./compose/local/django/celery/worker/start-transfer-worker /start-celery-tr
 RUN sed -i 's/\r$//g' /start-celery-transfer-worker
 RUN chmod +x /start-celery-transfer-worker
 
+COPY ./compose/local/django/celery/worker/backup-start /start-celeryworkerbackup
+RUN sed -i 's/\r$//g' /start-celeryworkerbackup
+RUN chmod +x /start-celeryworkerbackup
+
 COPY ./compose/local/django/celery/beat/start /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat
 RUN chmod +x /start-celerybeat

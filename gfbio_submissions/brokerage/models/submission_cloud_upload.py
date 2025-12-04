@@ -9,10 +9,26 @@ from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 
 class SubmissionCloudUpload(TimeStampedModel):
     STATUS_ACTIVE = 'active'
+    STATUS_NEW = 'new'
+    STATUS_UPLOADED = 'uploaded'
+    STATUS_UPLOADED_WITH_CHECKED_CHECKSUM = 'uploaded_with_checked_checksum'
+    STATUS_UPLOADED_WITH_BAD_CHECKSUM = 'uploaded_with_bad_checksum'
+    STATUS_TRANSFER_FAILED = 'transfer_failed'
+    STATUS_IS_TRANSFERRED = 'transferred'
+    STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM = 'transferred_with_checked_checksum'
+    STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM = 'transferred_with_bad_checksum'
     STATUS_DELETED = 'deleted'
     STATUS_CHOICES = (
+        (STATUS_NEW, 'New'),
         (STATUS_ACTIVE, 'Active'),
         (STATUS_DELETED, 'Deleted'),
+        (STATUS_UPLOADED, 'In our bucket'),
+        (STATUS_UPLOADED_WITH_CHECKED_CHECKSUM, 'In our bucket, checksum-check successfull'),
+        (STATUS_UPLOADED_WITH_BAD_CHECKSUM, 'In our bucket, checksum-check failed'),
+        (STATUS_IS_TRANSFERRED, 'File was transferred'),
+        (STATUS_TRANSFER_FAILED, 'Tried to transfer file but failed'),
+        (STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM, 'File was transferred, checksum-check successfull'),
+        (STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM, 'File was transferred, checksum-check failed'),
     )
 
     submission = models.ForeignKey(
@@ -58,9 +74,9 @@ class SubmissionCloudUpload(TimeStampedModel):
     )
 
     status = models.CharField(
-        max_length=10,
+        max_length=128,
         choices=STATUS_CHOICES,
-        default=STATUS_ACTIVE,
+        default=STATUS_NEW,
         help_text="Select the status of the upload."
     )
 
@@ -85,6 +101,18 @@ class SubmissionCloudUpload(TimeStampedModel):
                     countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
                 )
 
+    def log_change(self, message, user_id=None):
+        from django.contrib.admin.models import CHANGE, LogEntry
+
+        LogEntry.objects.log_action(
+            user_id=user_id if user_id else self.submission.user.pk,
+            content_type_id=40,
+            object_id=self.pk,
+            action_flag=CHANGE,
+            change_message=message,
+            object_repr=self.__str__()
+        )
+
     def __str__(self):
         if self.file_upload is None:
             return f"{self.submission.broker_submission_id}-NO-FILE-UPLOAD-REQUEST"
@@ -92,3 +120,12 @@ class SubmissionCloudUpload(TimeStampedModel):
             return f"{self.file_upload.original_filename} / {self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
         else:
             return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
+
+    @staticmethod
+    def get_status_name(status):
+        status_name = "-"
+        for status_choice in SubmissionCloudUpload.STATUS_CHOICES:
+            if status_choice[0] == status:
+                status_name = status_choice[1]
+                break
+        return status_name

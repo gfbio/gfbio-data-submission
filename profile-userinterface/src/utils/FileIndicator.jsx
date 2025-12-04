@@ -12,6 +12,7 @@ const FileIndicator = ({
                            metadataSource,
                            handleMetadataSelect,
                            deleteFile,
+                           brokerSubmissionId,
                        }) => {
     const isFileSelected = (index, source) => {
         return metadataSource === source && metadataIndex.indices.includes(index);
@@ -27,7 +28,7 @@ const FileIndicator = ({
                     className={`row small file-list my-1 py-2 list-group-item file-upload success ${isSelected ? "selected" : ""}`}>
                     <div className="col-12 container">
                         <div className="row">
-                            <div className="col-md-9">
+                            <div className={brokerSubmissionId ? "col-md-8" : "col-md-9"}>
                                 <div className="container h-100">
                                     <small className="file-name row h-100 ps-3">
                                         <div
@@ -52,6 +53,16 @@ const FileIndicator = ({
                             <small className="col-2 file-size d-flex align-items-center">
                                 {uploaded.file_size && filesize(uploaded.file_size)}
                             </small>
+                            {
+                                brokerSubmissionId &&
+                                <button type="button" className="col-1 btn btn-download d-flex justify-content-end">
+                                    <a className="col-1 d-flex justify-content-end"
+                                       href={`/api/submissions/${brokerSubmissionId}/cloudupload/download_file/${uploaded.pk}/`}
+                                       target="_blank">
+                                        <i className="fa fa-download"></i>
+                                    </a>
+                                </button>
+                            }
                             <button
                                 className="col-1 btn btn-remove d-flex justify-content-end"
                                 onClick={(e) => {
@@ -161,30 +172,42 @@ const FileIndicator = ({
             {fileListElements.length > 0 || uploadedFileListElement.length > 0 ? (
                 <div className="container mb-3">
                     <div className="row">
-                        <div className="col-md-8">
+                        <div className="col-12">
                             <div className="container">
                                 <div className="row">
-                  <span className="ps-0 py-3 col-6 upload-header list-header">
-                    Metadata
-                    <HoverCard width={320} shadow="md" position="right" withArrow>
-                      <HoverCard.Target>
-                        <i className="fa fa-question-circle-o ps-2" aria-hidden="true"></i>
-                      </HoverCard.Target>
-                      <HoverCard.Dropdown>
-                        <p>
-                          Select the primary metadata file, e.g. metadata template.
-                        </p>
-                      </HoverCard.Dropdown>
-                    </HoverCard>
-                  </span>
+                                    <span className="ps-0 py-3 col-6 col-lg-8 upload-header list-header">
+                                        Metadata
+                                        <HoverCard width={320} shadow="md" position="right" withArrow>
+                                        <HoverCard.Target>
+                                            <i className="fa fa-question-circle-o ps-2" aria-hidden="true"></i>
+                                        </HoverCard.Target>
+                                        <HoverCard.Dropdown>
+                                            <p>
+                                            Select the primary metadata file, e.g. metadata template.
+                                            </p>
+                                        </HoverCard.Dropdown>
+                                        </HoverCard>
+                                    </span>
+                                    {
+                                        brokerSubmissionId && (
+                                            <div className="col-6 col-lg-4 btn-download-all d-flex flex-row-reverse align-items-center">
+                                                <a href={`/api/submissions/${brokerSubmissionId}/cloudupload/zip/`} target="_blank">
+                                                    Download All 
+                                                    <i className="px-2 fa fa-file-zip-o"></i>
+                                                </a>
+                                            </div>
+                                        )
+                                    }
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <ul className="list-group list-group-flush">
-                        {uploadedFileListElement}
-                        {fileListElements}
-                    </ul>
+                    <div className="scrollable-file-list">
+                        <ul className="list-group list-group-flush">
+                            {uploadedFileListElement}
+                            {fileListElements}
+                        </ul>
+                    </div>
                 </div>
             ) : null}
         </>
@@ -199,6 +222,7 @@ FileIndicator.propTypes = {
     metadataSource: PropTypes.string.isRequired,
     handleMetadataSelect: PropTypes.func.isRequired,
     deleteFile: PropTypes.func.isRequired,
+    brokerSubmissionId: PropTypes.string,
 };
 
 export default FileIndicator;

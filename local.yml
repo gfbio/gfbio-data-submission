@@ -94,6 +94,16 @@ services:
     ports: [ ]
     command: /start-celery-transfer-worker
 
+  celeryworkerbackup:
+    <<: *django
+    image: gfbio_submissions_local_celeryworker_backup
+    container_name: celeryworker_backup
+    depends_on:
+      - redis
+      - postgres
+    ports: []
+    command: /start-celeryworkerbackup
+
   celerybeat:
     <<: *django
     image: gfbio_submissions_local_celerybeat

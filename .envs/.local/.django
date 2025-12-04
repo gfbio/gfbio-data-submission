@@ -6,6 +6,7 @@ IPYTHONDIR=/app/.ipython
 # Redis
 # ------------------------------------------------------------------------------
 REDIS_URL=redis://redis:6379/0
+HOST_URL_ROOT=http://127.0.0.1:8000/
 
 # Celery
 # ------------------------------------------------------------------------------
@@ -22,8 +23,27 @@ REDIS_URL=redis://redis:6379/0
 
 # Testing DT_UPLOAD
 # ------------------------------------------------------------------------------
-MOUNT_S3FS=False
-DJANGO_AWS_STORAGE_BUCKET_NAME=gfbio-dev-1
+
+# DJANGO_UPLOAD_TOOLS_USE_S3=True
+# DJANGO_UPLOAD_TOOLS_USE_CLOUD_UPLOAD=True 
+# DJANGO_AWS_ACCESS_KEY_ID= 
+# DJANGO_AWS_SECRET_ACCESS_KEY= 
+DJANGO_AWS_STORAGE_BUCKET_NAME=gfbio-dev-1 
 DJANGO_AWS_S3_ENDPOINT_URL=https://s3.gwdg.de
 DJANGO_S3FS_MOUNT_POINT=/mnt/s3bucket
 MOUNT_S3FS=False
+
+# Needed for the fallback
+# DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP=True
+# BACKUP_DJANGO_AWS_ACCESS_KEY_ID=
+# BACKUP_DJANGO_AWS_SECRET_ACCESS_KEY=
+# BACKUP_DJANGO_AWS_STORAGE_BUCKET_NAME=
+# BACKUP_DJANGO_AWS_S3_ENDPOINT_URL=https://data.gi.dev.aruna-storage.org
+# 
+# DJANGO_UPLOAD_TOOLS_CREATE_PROJECT=True
+# DJANGO_UPLOAD_TOOLS_API_TOKEN=
+# DJANGO_UPLOAD_TOOLS_PROJECT_ID=
+# DJANGO_UPLOAD_TOOLS_AOS_HOST=grpc.dev.aruna-storage.org
+# DJANGO_UPLOAD_TOOLS_AOS_PORT=443
+# 
+# DJANGO_UPLOAD_TOOLS_BACKUP_MODEL=dt_upload.FileUploadRequest

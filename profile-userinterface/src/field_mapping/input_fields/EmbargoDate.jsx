@@ -46,6 +46,14 @@ const EmbargoDate = ({title, mandatory, form, field_id}) => {
         close();
     };
 
+    const setToTomorrow = () => {
+        const newDate = new Date(today);
+        newDate.setDate(today.getDate() + 1);
+        const formattedValue = formatDateToYYYYMMDD(newDate);
+        form.setFieldValue(field_id, formattedValue);
+        setDisplayDate(newDate);
+    };
+
     const handleCancel = () => {
         setTempDate(form.values[field_id] ? new Date(form.values[field_id]) : defaultDate);
         close();
@@ -59,6 +67,10 @@ const EmbargoDate = ({title, mandatory, form, field_id}) => {
             <Button fullWidth justify="space-between" onClick={open} variant="default" className="link-style">
                 <i className="icon ion-md-calendar align-top"></i>
                 Change embargo date
+            </Button>
+            <Button fullWidth justify="space-between" variant="default" className="link-style" onClick={setToTomorrow}>
+                <i className="fa fa-calendar-check-o align-top fs-5" />
+                Release tomorrow
             </Button>
 
             <Modal 

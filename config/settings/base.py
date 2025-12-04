@@ -323,11 +323,11 @@ CELERY_WORKER_SEND_TASK_EVENTS = True
 CELERY_TASK_SEND_SENT_EVENT = True
 
 CELERY_TASK_QUEUES = [
-    Queue('default', routing_key='default'),
-    Queue('ena_transfer', routing_key='ena_transfer'),
+    Queue("default", routing_key="default"),
+    Queue("ena_transfer", routing_key="ena_transfer"),
 ]
-CELERY_TASK_DEFAULT_QUEUE = 'default'
-CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_DEFAULT_ROUTING_KEY = "default"
 CELERY_TASK_ALWAYS_EAGER = False
 
 # django-allauth
@@ -379,7 +379,7 @@ SPECTACULAR_SETTINGS = {
 # django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
 # FIXME: can this be a list of strings ?
 # CORS_URLS_REGEX = r"^/api/.*$"
-CORS_URLS_REGEX = r'^.*$'
+CORS_URLS_REGEX = r"^.*$"
 
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------
@@ -434,6 +434,11 @@ IS_PROD_ENV = env.bool("IS_PROD_ENV", False)
 # ------------------------------------------------------------------------------
 DATA_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
+
+# Downloads
+# ------------------------------------------------------------------------------
+MAX_USER_DOWNLOAD_SPEED = env.int("MAX_USER_DOWNLOAD_SPEED", default=32 * 1024 * 1024)
+MAX_BUCKET_DOWNLOAD_SPEED = env.int("MAX_BUCKET_DOWNLOAD_SPEED", default=512 * 1024 * 1024)
 
 # Fallbacks
 # ------------------------------------------------------------------------------
@@ -491,7 +496,7 @@ if DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP or DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP
 
 # Aruna Settings to create collections
 # ------------------------------------------------------------------------------
-DJANGO_UPLOAD_TOOLS_CREATE_COLLECTION = env.bool("DJANGO_UPLOAD_TOOLS_CREATE_COLLECTION", default=False)
+DJANGO_UPLOAD_TOOLS_CREATE_PROJECT = env.bool("DJANGO_UPLOAD_TOOLS_CREATE_PROJECT", default=False)
 # The gRPC server endpoint to connect to (e.g. grpc.aruna-storage.org)
 DJANGO_UPLOAD_TOOLS_AOS_HOST = env("DJANGO_UPLOAD_TOOLS_AOS_HOST", default="")
 # Authentication token, prefixed by Bearer: Bearer <token>. Can be created on https://aruna-storage.org/
