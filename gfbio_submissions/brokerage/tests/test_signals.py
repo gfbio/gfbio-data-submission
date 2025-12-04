@@ -12,7 +12,7 @@ from dt_upload.models import FileUploadRequest, MultiPartUpload
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.users.models import User
-
+from dt_upload.utils.storages import CloudStorage
 
 @override_settings(
     AWS_STORAGE_BUCKET_NAME="test-bucket",
@@ -43,6 +43,8 @@ class TestSignals(TestCase):
         )
         s3.create_bucket(Bucket=settings.AWS_STORAGE_BUCKET_NAME)
         cls._s3 = s3
+        field = FileUploadRequest._meta.get_field("uploaded_file")
+        field.storage = CloudStorage()
 
     @classmethod
     def tearDownClass(cls):
