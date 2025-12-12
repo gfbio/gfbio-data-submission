@@ -102,6 +102,10 @@ COPY --chown=django:django ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
+COPY ./compose/production/django/start-downloads /start-downloads
+RUN sed -i 's/\r$//g' /start-downloads
+RUN chmod +x /start-downloads
+
 COPY --chown=django:django ./compose/production/django/ci_start /ci_start
 RUN sed -i 's/\r$//g' /ci_start
 RUN chmod +x /ci_start

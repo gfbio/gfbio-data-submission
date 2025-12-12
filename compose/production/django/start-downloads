@@ -1,0 +1,13 @@
+#!/bin/bash
+set -o errexit
+set -o pipefail
+set -o nounset
+
+exec /usr/local/bin/gunicorn config.wsgi \
+  --bind 0.0.0.0:5001 \
+  --workers 2 \
+  --threads 8 \
+  --worker-class gthread \
+  --timeout 10800 \
+  --keep-alive 30 \
+  --chdir=/app
