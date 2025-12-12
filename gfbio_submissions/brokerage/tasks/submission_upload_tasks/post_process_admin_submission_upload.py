@@ -1,18 +1,17 @@
 import logging
 from django.conf import settings
-import os
 import hashlib
 
 from django.db import transaction
 
 from config.celery_app import app
 from dt_upload.models import FileUploadRequest
+from dt_upload.tasks.backup_task import save_to_redundant_storage_clientside_fileupload
 
 from ...models.task_progress_report import TaskProgressReport
 from ..submission_task import SubmissionTask
 
 logger = logging.getLogger(__name__)
-
 
 
 @app.task(
@@ -49,18 +48,55 @@ def post_process_admin_submission_upload_task(self, previous_task_result=None, f
 
 
 def move_file_and_update_file_upload(file_upload_request):
-    file_path_src = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{file_upload_request.uploaded_file.name}"
-    file_path_trg = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{file_upload_request.file_key}"
-    mv_cmd = f'mv -f "{file_path_src}" "{file_path_trg}"'
-    os.system(mv_cmd)
+    """
+    Recalculate size and checksums for the current uploaded_file and update metadata.
 
-    file_upload_request.uploaded_file.name = file_upload_request.file_key
-    file_upload_request.file_size = os.stat(file_path_trg).st_size
+    The file is assumed to already be stored at uploaded_file.name using CloudStorage
+    (upload_to of FileUploadRequest has already placed it under <submission_id>/<filename>).
+    """
 
-    if os.path.exists(file_path_trg):
-        with open(file_path_trg, 'rb') as f:
-            f_read = f.read()
-            file_upload_request.md5 = hashlib.md5(f_read).hexdigest()
-            file_upload_request.sha256 = hashlib.sha256(f_read).hexdigest()
-    file_upload_request.status = "COMPLETED"
+    field_file = file_upload_request.uploaded_file
+    if not field_file or not field_file.name:
+        logger.warning(
+            "move_file_and_update_file_upload: no uploaded_file for FileUploadRequest id=%s",
+            file_upload_request.pk,
+        )
+        return
+
+    storage = field_file.storage
+    name = field_file.name
+
+    file_upload_request.file_key = name
+
+    if not storage.exists(name):
+        logger.error(
+            "move_file_and_update_file_upload: storage object %r not found for FileUploadRequest id=%s",
+            name,
+            file_upload_request.pk,
+        )
+        file_upload_request.status = FileUploadRequest.FAILED
+        file_upload_request.save(update_fields=["status"])
+        return
+
+    file_size = storage.size(name)
+
+    md5 = hashlib.md5()
+    sha256 = hashlib.sha256()
+    with storage.open(name, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            if not chunk:
+                break
+            md5.update(chunk)
+            sha256.update(chunk)
+
+    file_upload_request.file_size = file_size
+    file_upload_request.md5 = md5.hexdigest()
+    file_upload_request.sha256 = sha256.hexdigest()
+
+    file_upload_request.status = FileUploadRequest.COMPLETED
     file_upload_request.save()
+
+    if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
+        save_to_redundant_storage_clientside_fileupload.apply_async(
+            kwargs={"file_upload_request_id": file_upload_request.id}
+        )
