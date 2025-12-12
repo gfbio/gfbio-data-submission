@@ -52,6 +52,11 @@ http:
         servers:
           - url: http://django:5000
 
+    downloads:
+      loadBalancer:
+        servers:
+          - url: http://downloads:5001
+
 providers:
   # https://docs.traefik.io/master/providers/file/
   file:
