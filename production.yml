@@ -43,6 +43,11 @@ services:
         target: /mnt/s3bucket
     command: /start
 
+  downloads:
+    <<: *django
+    image: disc3d_data_production_downloads
+    command: /start-downloads
+
   postgres:
     build:
       context: .
@@ -91,7 +96,7 @@ services:
 
   celery-transfer-worker:
     <<: *django
-    image: gfbio_submissions_production_celeryworker
+    image: gfbio_submissions_production_celery_transfer_worker
     logging:
       driver: syslog
       options:
