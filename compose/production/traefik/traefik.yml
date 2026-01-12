@@ -26,6 +26,13 @@ http:
         - csrf
       service: django
 
+    downloads-router:
+      rule: "Host(`submissions.gfbio.org`) || Host(`submission.gfbio.org`) && PathPrefix(`/api/downloads/`)"
+      entryPoints:
+        - web
+      service: downloads
+      priority: 100
+
   middlewares:
     redirect:
       # https://docs.traefik.io/master/middlewares/redirectscheme/
@@ -44,6 +51,11 @@ http:
       loadBalancer:
         servers:
           - url: http://django:5000
+
+    downloads:
+      loadBalancer:
+        servers:
+          - url: http://downloads:5001
 
 providers:
   # https://docs.traefik.io/master/providers/file/

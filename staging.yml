@@ -38,6 +38,12 @@ services:
         target: /mnt/s3bucket
     command: /start
 
+  downloads:
+    <<: *django
+    image: disc3d_data_production_downloads
+    container_name: gfbio-submission-downloads
+    command: /start-downloads
+
   postgres:
     build:
       context: .
@@ -74,7 +80,7 @@ services:
 
   celery-transfer-worker:
     <<: *django
-    image: gfbio_submissions_production_celeryworker
+    image: gfbio_submissions_production_celery_transfer_worker
     container_name: gfbio-celery-transfer-worker
     networks:
       - default

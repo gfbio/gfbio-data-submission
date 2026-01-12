@@ -130,7 +130,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         "customfield_10314": requirements.get("project_id", ""),
         "customfield_10202": GFBIO_LICENSE_MAPPINGS.get(requirements.get("license", "Other License")),
         "customfield_10600": requirements.get("download_url", ""),
-        "customfield_13100": f"{settings.HOST_URL_ROOT}api/submissions/{submission.broker_submission_id}/cloudupload/zip/",
+        "customfield_13100": f"{settings.HOST_URL_ROOT}api/downloads/submissions/{submission.broker_submission_id}/cloudupload/zip/",
         "customfield_13101": f"{settings.HOST_URL_ROOT}profile/ui/form/{submission.broker_submission_id}/",
     }
 

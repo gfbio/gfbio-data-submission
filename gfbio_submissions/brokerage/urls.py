@@ -11,7 +11,7 @@ from .views.submission_cloud_upload_view import SubmissionCloudUploadAbortView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadCompleteView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadUpdatePartView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView
-from .views.submission_cloud_upload_download_view import SubmissionCloudGetDownloadLinkView, SubmissionCloudZipAllFilesAndDownload
+from .views.submission_cloud_upload_download_view import SubmissionCloudGetDownloadLinkView, SubmissionCloudZipAllFilesAndDownload, SubmissionCloudZipAllFilesAndDownloadRedirect
 from .views.submission_comment_view import SubmissionCommentView
 from .views.submission_detail_view import SubmissionDetailView
 from .views.submission_report_view import SubmissionReportView
@@ -90,12 +90,17 @@ urlpatterns = [
         name="submissions_cloud_upload_patch",
     ),
     re_path(
-        route="submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/download_file/(?P<file_id>[0-9]+)/$",
+        route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/download_file/(?P<file_id>[0-9]+)/$",
         view=SubmissionCloudGetDownloadLinkView.as_view(),
         name="submissions_cloud_file_download"
     ),
     re_path(
         route="submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/zip/$",
+        view=SubmissionCloudZipAllFilesAndDownloadRedirect.as_view(),
+        name="submissions_cloud_zip_download_redirect"
+    ),
+    re_path(
+        route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/zip/$",
         view=SubmissionCloudZipAllFilesAndDownload.as_view(),
         name="submissions_cloud_zip_download"
     ),

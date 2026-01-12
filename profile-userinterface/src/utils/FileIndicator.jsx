@@ -57,7 +57,7 @@ const FileIndicator = ({
                                 brokerSubmissionId &&
                                 <button type="button" className="col-1 btn btn-download d-flex justify-content-end">
                                     <a className="col-1 d-flex justify-content-end"
-                                       href={`/api/submissions/${brokerSubmissionId}/cloudupload/download_file/${uploaded.pk}/`}
+                                       href={`/api/downloads/submissions/${brokerSubmissionId}/cloudupload/download_file/${uploaded.pk}/`}
                                        target="_blank">
                                         <i className="fa fa-download"></i>
                                     </a>
@@ -191,7 +191,7 @@ const FileIndicator = ({
                                     {
                                         brokerSubmissionId && (
                                             <div className="col-6 col-lg-4 btn-download-all d-flex flex-row-reverse align-items-center">
-                                                <a href={`/api/submissions/${brokerSubmissionId}/cloudupload/zip/`} target="_blank">
+                                                <a href={`/api/downloads/submissions/${brokerSubmissionId}/cloudupload/zip/`} target="_blank">
                                                     Download All 
                                                     <i className="px-2 fa fa-file-zip-o"></i>
                                                 </a>
