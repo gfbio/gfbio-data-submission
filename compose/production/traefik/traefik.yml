@@ -27,7 +27,7 @@ http:
       service: django
 
     downloads-router:
-      rule: "Host(`submissions.gfbio.org`) || Host(`submission.gfbio.org`) && PathPrefix(`/api/downloads/`)"
+      rule: "(Host(`submissions.gfbio.org`) || Host(`submission.gfbio.org`)) && PathPrefix(`/api/downloads/`)"
       entryPoints:
         - web
       service: downloads
