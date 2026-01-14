@@ -50,7 +50,8 @@ services:
 
   downloads:
     <<: *django
-    image: disc3d_data_production_downloads
+    image: gfbio_submissions_production_downloads
+    container_name: gfbio-submission-downloads
     command: /start-downloads
 
   postgres:
