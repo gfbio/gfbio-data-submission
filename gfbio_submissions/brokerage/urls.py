@@ -13,6 +13,7 @@ from .views.submission_cloud_upload_view import SubmissionCloudUploadUpdatePartV
 from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView
 from .views.submission_cloud_upload_download_view import SubmissionCloudGetDownloadLinkView, SubmissionCloudZipAllFilesAndDownload, SubmissionCloudZipAllFilesAndDownloadRedirect
 from .views.submission_comment_view import SubmissionCommentView
+from .views.curator_submissions_view import CuratorSubmissionsView, CuratorSubmissionDetailView
 from .views.submission_detail_view import SubmissionDetailView
 from .views.submission_report_view import SubmissionReportView
 from .views.submission_upload_detail_view import SubmissionUploadDetailView
@@ -23,6 +24,12 @@ from .views.submissions_view import SubmissionsView
 
 app_name = "brokerage"
 urlpatterns = [
+    re_path(route=r"curator/submissions/$", view=CuratorSubmissionsView.as_view(), name="curator_submissions"),
+    re_path(
+        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/$",
+        view=CuratorSubmissionDetailView.as_view(),
+        name="curator_submissions_detail",
+    ),
     re_path(route=r"submissions/$", view=SubmissionsView.as_view(), name="submissions"),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/$",
