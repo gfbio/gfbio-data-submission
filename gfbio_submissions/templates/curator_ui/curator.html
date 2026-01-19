@@ -1,0 +1,22 @@
+{% extends "base_content.html" %}
+{% load static %}
+
+{% block content %}
+    <script>
+        window.props = {{ parameters|safe }};
+    </script>
+    <div class="row">
+        <div class="col-lg-12">
+            <div id="curator-ui">
+                ... Loading
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block javascript %}
+    {{ block.super }}
+
+    <!-- Curator UI placeholder script -->
+    <script src="{% static 'js/curator.ui.js' %}"></script>
+{% endblock javascript %}
