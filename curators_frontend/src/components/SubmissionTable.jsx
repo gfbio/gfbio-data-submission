@@ -1,3 +1,5 @@
+import {Link} from "react-router-dom";
+
 const SubmissionTable = ({submissions, isLoading}) => {
   if (isLoading) {
     return <div className="alert alert-info">Loading submissions...</div>;
@@ -19,6 +21,7 @@ const SubmissionTable = ({submissions, isLoading}) => {
             <th>Release</th>
             <th>Embargo</th>
             <th>Modified</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -31,6 +34,14 @@ const SubmissionTable = ({submissions, isLoading}) => {
               <td>{submission.release ? "Yes" : "No"}</td>
               <td>{submission.embargo || "-"}</td>
               <td>{submission.modified || "-"}</td>
+              <td className="text-end">
+                <Link
+                  className="btn btn-outline-primary btn-sm"
+                  to={`/submissions/${submission.broker_submission_id}`}
+                >
+                  Details
+                </Link>
+              </td>
             </tr>
           ))}
         </tbody>

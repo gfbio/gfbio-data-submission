@@ -5,10 +5,16 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import DjangoModelPermissions
 
 from ..models.submission import Submission
+from ..models.submission_cloud_upload import SubmissionCloudUpload
+from ..models.submission_report import SubmissionReport
 from ..serializers.curator_submission_list_serializer import (
     CuratorSubmissionListSerializer,
 )
+from ..serializers.submission_cloud_upload_serializer import (
+    SubmissionCloudUploadSerializer,
+)
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
+from ..serializers.submission_report_serializer import SubmissionReportSerializer
 
 
 class CuratorSubmissionPagination(PageNumberPagination):
@@ -74,3 +80,32 @@ class CuratorSubmissionDetailView(generics.RetrieveAPIView):
     serializer_class = SubmissionDetailSerializer
     queryset = Submission.objects.all()
     lookup_field = "broker_submission_id"
+
+    def get(self, request, *args, **kwargs):
+        response = self.retrieve(request, *args, **kwargs)
+        response.data["accession_id"] = self.get_object().get_accession_id()
+        return response
+
+
+class CuratorSubmissionReportView(generics.ListAPIView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, DjangoModelPermissions)
+    serializer_class = SubmissionReportSerializer
+
+    def get_queryset(self):
+        return SubmissionReport.objects.filter(
+            submission__broker_submission_id=self.kwargs["broker_submission_id"]
+        ).order_by("-created")
+
+
+class CuratorSubmissionCloudUploadListView(generics.ListAPIView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, DjangoModelPermissions)
+    serializer_class = SubmissionCloudUploadSerializer
+
+    def get_queryset(self):
+        return (
+            SubmissionCloudUpload.objects.filter(submission__broker_submission_id=self.kwargs["broker_submission_id"])
+            .exclude(status=SubmissionCloudUpload.STATUS_DELETED)
+            .order_by("-modified")
+        )

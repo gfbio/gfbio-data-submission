@@ -13,7 +13,8 @@
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.12.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",
