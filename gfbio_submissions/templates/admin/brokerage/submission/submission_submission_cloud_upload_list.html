@@ -23,6 +23,7 @@
               <th scope="col">{% translate 'Last change date' %}</th>
               <th scope="col">{% translate 'Last change action' %}</th>
               <th scope="col">{% translate 'Go to history' %}</th>
+              <th scope="col">{% translate 'Rel. Task-Reps' %}</th>
             </tr>
           </thead>
           <tbody>
@@ -33,7 +34,7 @@
               {% for upload in uploads %}
                 <tr>
                   <th scope="row">
-                      <a href="/admin/brokerage/submissioncloudupload/{{ upload.pk }}/change/">
+                      <a href="{% url 'admin:index' %}brokerage/submissioncloudupload/{{ upload.pk }}/change/">
                           {{upload.name}}
                       </a>
                   </th>
@@ -41,10 +42,15 @@
                   <td>{{ upload.last_change_action_time|date:"DATETIME_FORMAT" }}</td>
                   <td>{{ upload.last_change_message }}</td>
                   <td scope="row">
-                    <a href="/admin/brokerage/submissioncloudupload/{{ upload.pk }}/history/">
+                    <a href="{% url 'admin:index' %}brokerage/submissioncloudupload/{{ upload.pk }}/history/">
                         view history
                     </a>
-                    </td>
+                  </td>
+                  <td>
+                    {% for related_task in upload.related_tasks %}
+                      <a href="{% url 'admin:index' %}brokerage/taskprogressreport/{{related_task.id}}/change/">{{related_task.status}}</a>
+                    {% endfor %}
+                  </td>
                 </tr>
               {% endfor %}
             {% endfor %}

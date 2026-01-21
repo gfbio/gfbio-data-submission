@@ -7,6 +7,7 @@ from django.db import transaction
 from config.celery_app import app
 from dt_upload.models import FileUploadRequest
 from dt_upload.tasks.backup_task import save_to_redundant_storage_clientside_fileupload
+from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 
 from ...models.task_progress_report import TaskProgressReport
 from ..submission_task import SubmissionTask
@@ -95,6 +96,11 @@ def move_file_and_update_file_upload(file_upload_request):
 
     file_upload_request.status = FileUploadRequest.COMPLETED
     file_upload_request.save()
+    
+    submission_cloud_upload = (
+        SubmissionCloudUpload.objects.filter(file_upload_id=file_upload_request.pk).select_related("submission").first()
+    )
+    submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
 
     if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
         save_to_redundant_storage_clientside_fileupload.apply_async(

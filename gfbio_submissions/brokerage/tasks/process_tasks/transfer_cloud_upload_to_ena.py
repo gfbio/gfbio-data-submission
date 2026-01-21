@@ -50,6 +50,8 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         logger.info(f"tasks.py | subprocess opened | execute proc={proc} | task_id={task.request.id}")
 
         stdout, stderr = proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
+        details["stdout"] = stdout
+        details["stderr"] = stderr
         logger.info(
             f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | "
             f"ascp stdout: {stdout.decode(errors='replace')} | task_id={task.request.id}")
@@ -72,7 +74,7 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         ]
         if proc.returncode != 0:
             stderr_str = stderr.decode(errors='replace').lower()
-            if submission_cloud_upload.status == SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
+            if submission_cloud_upload.status != SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
                 submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
                 submission_cloud_upload.save()
                 submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} due to {stderr_str}"]}}], user_id)
@@ -94,26 +96,28 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         else:
             res = True
     except Retry:
+        details["retry_raised"] = True
         raise
     except Exception as e:
         details['error'] = str(e)
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | task_id={task.request.id}")
-        if submission_cloud_upload.status == SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
+        if submission_cloud_upload.status != SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
             submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
             submission_cloud_upload.save()
             submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} due to {details['error']}"]}}], user_id)
         else:
             submission_cloud_upload.log_change([{"changed": {"fields": [f"status kept at {submission_cloud_upload.status} due to {details['error']}"]}}], user_id)
-
-    RequestLog.objects.create(
-        type=RequestLog.OUTGOING,
-        url=site_configuration.ena_aspera_server.url,
-        method=RequestLog.NONE,
-        user=submission.user,
-        submission_id=submission.broker_submission_id,
-        request_details=details,
-    )
+        raise
+    finally:
+        RequestLog.objects.create(
+            type=RequestLog.OUTGOING,
+            url=site_configuration.ena_aspera_server.url,
+            method=RequestLog.NONE,
+            user=submission.user,
+            submission_id=submission.broker_submission_id,
+            request_details=details,
+        )
     return res
 
 
