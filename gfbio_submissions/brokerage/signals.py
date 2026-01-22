@@ -116,4 +116,7 @@ def recalculate_checksums(sender, instance: FileUploadRequest, **kwargs):
     # This save will trigger post_save again, but _uploaded_file_changed will be False then.
     instance.save(update_fields=["status", "md5", "sha256", "file_size"])
 
+    submission_cloud_upload.status = SubmissionCloudUpload.STATUS_NEW
+    submission_cloud_upload.save()
+
     post_process_admin_submission_upload_task.apply_async(kwargs={"file_upload_request_id": str(instance.pk)})
