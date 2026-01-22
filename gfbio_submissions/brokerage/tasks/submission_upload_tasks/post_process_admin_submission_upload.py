@@ -101,6 +101,7 @@ def move_file_and_update_file_upload(file_upload_request):
         SubmissionCloudUpload.objects.filter(file_upload_id=file_upload_request.pk).select_related("submission").first()
     )
     submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
+    submission_cloud_upload.save()
 
     if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
         save_to_redundant_storage_clientside_fileupload.apply_async(
