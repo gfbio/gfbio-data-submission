@@ -424,7 +424,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         submission_cloud_upload_ids = [
             upload.pk for upload in obj.submissioncloudupload_set.all()
-            if upload.status not in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED, SubmissionCloudUpload.DELETED] and any(upload.file_upload.file_key.lower().endswith(ext) for ext in allowed_types)
+            if upload.status not in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED, SubmissionCloudUpload.STATUS_DELETED] and any(upload.file_upload.file_key.lower().endswith(ext) for ext in allowed_types)
         ]
         parallel_transfers = [
             transfer_cloud_upload_to_ena_task.s(
@@ -583,7 +583,7 @@ class SubmissionAdmin(admin.ModelAdmin):
                     scu_id = task_kwargs["submission_cloud_upload_id"]
                     if scu_id not in tasks_by_upload:
                         tasks_by_upload[scu_id] = []
-                    tasks_by_upload[scu_id].append({"id": task_report.pk, "status": task_report.status[0:1]})
+                    tasks_by_upload[scu_id].append({"id": task_report.pk, "status": task_report.task_return_value[0:1]})
             if not scu_found:
                 non_upload_tasks.append(task_report)
 

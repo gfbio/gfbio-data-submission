@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
 import subprocess
@@ -32,7 +33,7 @@ def ensure_folder_with_keep(path):
             f.write("")
 
 
-def perform_ascp_file_transfer(task, file_path, site_configuration, submission, submission_cloud_upload, user_id):
+def perform_ascp_file_transfer(task, file_path, site_configuration, submission, submission_cloud_upload, user_id, report):
     # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
     aspera_host = site_configuration.ena_aspera_server.url
     aspera_user = site_configuration.ena_aspera_server.username
@@ -93,6 +94,8 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
                     f"tasks.py | transfer_cloud_upload_to_ena_task | general error | "
                     f"stderr_str={stderr_str} | proc.returncode={proc.returncode} | task_id={task.request.id}"
                 )
+                report.task_exception = "Bad response from Aspera: " + json.dumps(details)
+                report.save()
         else:
             res = True
     except Retry:
@@ -182,12 +185,16 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
             f"tasks.py | transfer_cloud_upload_to_ena_task | previous task reported={TaskProgressReport.CANCELLED} | "
             f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
         return TaskProgressReport.CANCELLED
+    
+    report, created = TaskProgressReport.objects.create_initial_report(submission=submission, task=self)
     try:
         submission_cloud_upload = SubmissionCloudUpload.objects.get(pk=submission_cloud_upload_id)
     except SubmissionCloudUpload.DoesNotExist:
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | no valid SubmissionCloudUpload available | "
             f"submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
+        report.task_exception = "no valid SubmissionCloudUpload available"
+        report.save()
         return TaskProgressReport.CANCELLED
     
     file_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission_cloud_upload.file_upload.file_key}"
@@ -195,6 +202,8 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | no valid file_path available | file_path={file_path} | task_id={self.request.id}"
         )
+        report.task_exception = f"no valid file_path available | file_path={file_path} "
+        report.save()
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
         submission_cloud_upload.save()
         submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status} (File not found in bucket)"]}}], user_id)
@@ -203,7 +212,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
     folder_path = f"{settings.S3FS_MOUNT_POINT}{os.path.sep}{submission.broker_submission_id}"
     ensure_folder_with_keep(folder_path)
 
-    transfer_result = perform_ascp_file_transfer(self, file_path, site_configuration, submission, submission_cloud_upload, user_id)
+    transfer_result = perform_ascp_file_transfer(self, file_path, site_configuration, submission, submission_cloud_upload, user_id, report)
     if transfer_result == True:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_IS_TRANSFERRED
         submission_cloud_upload.save()
