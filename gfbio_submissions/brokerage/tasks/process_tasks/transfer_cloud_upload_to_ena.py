@@ -51,8 +51,8 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         logger.info(f"tasks.py | subprocess opened | execute proc={proc} | task_id={task.request.id}")
 
         stdout, stderr = proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
-        details["stdout"] = stdout
-        details["stderr"] = stderr
+        details["stdout"] = stdout.decode("utf-8")
+        details["stderr"] = stderr.decode("utf-8")
         logger.info(
             f"tasks.py | transfer_cloud_upload_to_ena_task | after communicate password | "
             f"ascp stdout: {stdout.decode(errors='replace')} | task_id={task.request.id}")
@@ -98,6 +98,9 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
                 report.save()
         else:
             res = True
+            # save the space, if no error occured
+            del details["stdout"]
+            del details["stderr"]
     except Retry:
         details["retry_raised"] = True
         raise
