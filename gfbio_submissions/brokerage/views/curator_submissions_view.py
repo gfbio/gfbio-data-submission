@@ -7,6 +7,7 @@ from rest_framework.permissions import DjangoModelPermissions
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..models.submission_report import SubmissionReport
+from ..models.task_progress_report import TaskProgressReport
 from ..serializers.curator_submission_list_serializer import (
     CuratorSubmissionListSerializer,
 )
@@ -15,6 +16,7 @@ from ..serializers.submission_cloud_upload_serializer import (
 )
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 from ..serializers.submission_report_serializer import SubmissionReportSerializer
+from ..serializers.task_progress_report_serializer import TaskProgressReportSerializer
 
 
 class CuratorSubmissionPagination(PageNumberPagination):
@@ -109,3 +111,14 @@ class CuratorSubmissionCloudUploadListView(generics.ListAPIView):
             .exclude(status=SubmissionCloudUpload.STATUS_DELETED)
             .order_by("-modified")
         )
+
+
+class CuratorSubmissionTaskProgressReportView(generics.ListAPIView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, DjangoModelPermissions)
+    serializer_class = TaskProgressReportSerializer
+
+    def get_queryset(self):
+        return TaskProgressReport.objects.filter(
+            submission__broker_submission_id=self.kwargs["broker_submission_id"]
+        ).order_by("-modified")

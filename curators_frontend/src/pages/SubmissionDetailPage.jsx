@@ -1,16 +1,19 @@
 import {useEffect, useState} from "react";
 import {Link, useParams} from "react-router-dom";
 import getCuratorSubmissionDetail from "../api/getCuratorSubmissionDetail.jsx";
-import getCuratorSubmissionReports from "../api/getCuratorSubmissionReports.jsx";
+import getCuratorSubmissionTaskProgressReports from "../api/getCuratorSubmissionTaskProgressReports.jsx";
 import getCuratorSubmissionCloudUploads from "../api/getCuratorSubmissionCloudUploads.jsx";
+
+const TASK_REFRESH_INTERVAL_MS = 10000;
 
 const SubmissionDetailPage = () => {
   const {brokerSubmissionId} = useParams();
   const [detail, setDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [reports, setReports] = useState([]);
+  const [taskReports, setTaskReports] = useState([]);
   const [uploads, setUploads] = useState([]);
-  const [isReportsLoading, setIsReportsLoading] = useState(false);
+  const [isTaskReportsLoading, setIsTaskReportsLoading] = useState(false);
+  const [isTaskReportsRefreshing, setIsTaskReportsRefreshing] = useState(false);
   const [isUploadsLoading, setIsUploadsLoading] = useState(false);
 
   useEffect(() => {
@@ -24,14 +27,65 @@ const SubmissionDetailPage = () => {
   }, [brokerSubmissionId]);
 
   useEffect(() => {
-    const fetchReports = async () => {
-      setIsReportsLoading(true);
-      const data = await getCuratorSubmissionReports(brokerSubmissionId);
-      setReports(data);
-      setIsReportsLoading(false);
+    let isMounted = true;
+    const fetchTaskReports = async (isInitial = false) => {
+      if (!brokerSubmissionId) {
+        return;
+      }
+      if (isInitial) {
+        setIsTaskReportsLoading(true);
+      } else {
+        setIsTaskReportsRefreshing(true);
+      }
+      const data = await getCuratorSubmissionTaskProgressReports(
+        brokerSubmissionId
+      );
+      if (isMounted) {
+        setTaskReports(data);
+        setIsTaskReportsLoading(false);
+        setIsTaskReportsRefreshing(false);
+      }
     };
-    fetchReports();
+
+    fetchTaskReports(true);
+    const interval = window.setInterval(
+      () => fetchTaskReports(false),
+      TASK_REFRESH_INTERVAL_MS
+    );
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
   }, [brokerSubmissionId]);
+
+  const formatTaskPayload = (value) => {
+    if (!value) {
+      return "-";
+    }
+    try {
+      const parsed = JSON.parse(value);
+      return JSON.stringify(parsed, null, 2);
+    } catch (error) {
+      return value;
+    }
+  };
+
+  const statusBadgeClass = (status) => {
+    if (!status) {
+      return "bg-secondary";
+    }
+    if (status.toUpperCase() === "SUCCESS") {
+      return "bg-success";
+    }
+    if (status.toUpperCase() === "RUNNING") {
+      return "bg-info";
+    }
+    if (status.toUpperCase() === "CANCELLED") {
+      return "bg-secondary";
+    }
+    return "bg-danger";
+  };
 
   useEffect(() => {
     const fetchUploads = async () => {
@@ -106,30 +160,79 @@ const SubmissionDetailPage = () => {
       </div>
 
       <div className="card mb-4">
-        <div className="card-header">Reports</div>
+        <div className="card-header d-flex align-items-center justify-content-between">
+          <span>Task Progress Reports</span>
+          <span className="text-muted small">
+            {isTaskReportsRefreshing ? "Updating..." : "Auto-refresh 10s"}
+          </span>
+        </div>
         <div className="card-body">
-          {isReportsLoading && (
-            <div className="alert alert-info">Loading reports...</div>
+          {isTaskReportsLoading && (
+            <div className="alert alert-info">Loading task progress...</div>
           )}
-          {!isReportsLoading && reports.length === 0 && (
-            <div className="alert alert-secondary">No reports available.</div>
+          {!isTaskReportsLoading && taskReports.length === 0 && (
+            <div className="alert alert-secondary">
+              No task progress reports available.
+            </div>
           )}
-          {!isReportsLoading && reports.length > 0 && (
+          {!isTaskReportsLoading && taskReports.length > 0 && (
             <div className="table-responsive">
               <table className="table table-sm table-striped align-middle">
                 <thead>
                   <tr>
-                    <th>Category</th>
-                    <th>Report</th>
-                    <th>Created</th>
+                    <th>Task</th>
+                    <th>Status</th>
+                    <th>Modified</th>
+                    <th>Details</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {reports.map((report) => (
-                    <tr key={report.id}>
-                      <td>{report.report_category}</td>
-                      <td>{report.report}</td>
-                      <td>{report.created}</td>
+                  {taskReports.map((report) => (
+                    <tr key={report.task_id}>
+                      <td>{report.task_name}</td>
+                      <td>
+                        <span className={`badge ${statusBadgeClass(report.status)}`}>
+                          {report.status}
+                        </span>
+                      </td>
+                      <td>{report.modified}</td>
+                      <td>
+                        <details>
+                          <summary>View details</summary>
+                          <div className="mt-2">
+                            <div className="mb-2">
+                              <strong>Return Value</strong>
+                              <pre className="bg-light p-2 border rounded">
+                                {formatTaskPayload(report.task_return_value)}
+                              </pre>
+                            </div>
+                            <div className="mb-2">
+                              <strong>Exception</strong>
+                              <pre className="bg-light p-2 border rounded">
+                                {formatTaskPayload(report.task_exception)}
+                              </pre>
+                            </div>
+                            <div className="mb-2">
+                              <strong>Exception Info</strong>
+                              <pre className="bg-light p-2 border rounded">
+                                {formatTaskPayload(report.task_exception_info)}
+                              </pre>
+                            </div>
+                            <div className="mb-2">
+                              <strong>Args</strong>
+                              <pre className="bg-light p-2 border rounded">
+                                {formatTaskPayload(report.task_args)}
+                              </pre>
+                            </div>
+                            <div>
+                              <strong>Kwargs</strong>
+                              <pre className="bg-light p-2 border rounded">
+                                {formatTaskPayload(report.task_kwargs)}
+                              </pre>
+                            </div>
+                          </div>
+                        </details>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

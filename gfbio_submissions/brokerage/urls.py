@@ -6,6 +6,7 @@ from .views.curator_submissions_view import (
     CuratorSubmissionCloudUploadListView,
     CuratorSubmissionDetailView,
     CuratorSubmissionReportView,
+    CuratorSubmissionTaskProgressReportView,
     CuratorSubmissionsView,
 )
 from .views.jira_issue_update_view import JiraIssueUpdateView
@@ -50,6 +51,11 @@ urlpatterns = [
         route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-uploads/$",
         view=CuratorSubmissionCloudUploadListView.as_view(),
         name="curator_submissions_cloud_uploads",
+    ),
+    re_path(
+        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/task-progress-reports/$",
+        view=CuratorSubmissionTaskProgressReportView.as_view(),
+        name="curator_submissions_task_progress_reports",
     ),
     re_path(route=r"submissions/$", view=SubmissionsView.as_view(), name="submissions"),
     re_path(

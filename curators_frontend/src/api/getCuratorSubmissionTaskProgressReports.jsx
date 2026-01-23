@@ -1,11 +1,11 @@
 import axios from "axios";
 import getToken from "./utils/getToken.jsx";
 
-const getCuratorSubmissionReports = async (brokerSubmissionId) => {
+const getCuratorSubmissionTaskProgressReports = async (brokerSubmissionId) => {
   if (!brokerSubmissionId) {
     return [];
   }
-  const url = `/api/curator/submissions/${brokerSubmissionId}/reports/`;
+  const url = `/api/curator/submissions/${brokerSubmissionId}/task-progress-reports/`;
   try {
     const response = await axios.get(url, {
       headers: {
@@ -14,9 +14,9 @@ const getCuratorSubmissionReports = async (brokerSubmissionId) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error retrieving submission reports:", error);
+    console.error("Error retrieving task progress reports:", error);
   }
   return [];
 };
 
-export default getCuratorSubmissionReports;
+export default getCuratorSubmissionTaskProgressReports;
