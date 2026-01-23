@@ -3,6 +3,8 @@ import {Link, useParams} from "react-router-dom";
 import getCuratorSubmissionDetail from "../api/getCuratorSubmissionDetail.jsx";
 import getCuratorSubmissionTaskProgressReports from "../api/getCuratorSubmissionTaskProgressReports.jsx";
 import getCuratorSubmissionCloudUploads from "../api/getCuratorSubmissionCloudUploads.jsx";
+import getCuratorSubmissionActions from "../api/getCuratorSubmissionActions.jsx";
+import runCuratorSubmissionAction from "../api/runCuratorSubmissionAction.jsx";
 
 const TASK_REFRESH_INTERVAL_MS = 10000;
 
@@ -15,6 +17,9 @@ const SubmissionDetailPage = () => {
   const [isTaskReportsLoading, setIsTaskReportsLoading] = useState(false);
   const [isTaskReportsRefreshing, setIsTaskReportsRefreshing] = useState(false);
   const [isUploadsLoading, setIsUploadsLoading] = useState(false);
+  const [actions, setActions] = useState([]);
+  const [isActionsLoading, setIsActionsLoading] = useState(false);
+  const [actionStates, setActionStates] = useState({});
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -96,6 +101,43 @@ const SubmissionDetailPage = () => {
     };
     fetchUploads();
   }, [brokerSubmissionId]);
+
+  useEffect(() => {
+    const fetchActions = async () => {
+      setIsActionsLoading(true);
+      const data = await getCuratorSubmissionActions(brokerSubmissionId);
+      setActions(data);
+      setIsActionsLoading(false);
+    };
+    fetchActions();
+  }, [brokerSubmissionId]);
+
+  const handleAction = async (action) => {
+    if (!action?.key) {
+      return;
+    }
+    setActionStates((current) => ({
+      ...current,
+      [action.key]: {status: "running"},
+    }));
+    const result = await runCuratorSubmissionAction(
+      brokerSubmissionId,
+      action
+    );
+    setActionStates((current) => ({
+      ...current,
+      [action.key]: result,
+    }));
+  };
+
+  const groupedActions = actions.reduce((acc, action) => {
+    const group = action.group || "Other";
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(action);
+    return acc;
+  }, {});
 
   return (
     <div className="container mt-4">
@@ -279,6 +321,51 @@ const SubmissionDetailPage = () => {
               </table>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header">Actions</div>
+        <div className="card-body">
+          {isActionsLoading && (
+            <div className="alert alert-info">Loading actions...</div>
+          )}
+          {!isActionsLoading && actions.length === 0 && (
+            <div className="alert alert-secondary">
+              No actions available.
+            </div>
+          )}
+          {!isActionsLoading &&
+            Object.entries(groupedActions).map(([group, groupActions]) => (
+              <div className="mb-3" key={group}>
+                <div className="fw-semibold mb-2">{group}</div>
+                <div className="d-flex flex-wrap gap-2">
+                  {groupActions.map((action) => {
+                    const state = actionStates[action.key];
+                    const isRunning = state?.status === "running";
+                    return (
+                      <div key={action.key} className="d-flex flex-column">
+                        <button
+                          className={`btn btn-sm ${
+                            action.danger ? "btn-danger" : "btn-outline-primary"
+                          }`}
+                          onClick={() => handleAction(action)}
+                          disabled={isRunning}
+                        >
+                          {isRunning ? "Running..." : action.label}
+                        </button>
+                        {state?.message && (
+                          <small className="text-muted">{state.message}</small>
+                        )}
+                        {state?.error && (
+                          <small className="text-danger">{state.error}</small>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
