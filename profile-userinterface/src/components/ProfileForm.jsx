@@ -267,7 +267,15 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                     setProcessing(false);
                 });
         } else {
-            postSubmission(profileData.target, embargoDate, filteredValues)
+            var submissionTarget = profileData.target;
+            var targetCenterOptions = profileData.form_fields.find(ff => ff.field.field_id == "target_data_center")?.field.options;
+            if (targetCenterOptions) {
+                var targetCenterDescription = targetCenterOptions.find(o => o.option == filteredValues["target_data_center"])["description"];
+                if (targetCenterDescription in ["ENA", "ENA_PANGAEA", "ATAX", "GENERIC"]) {
+                    submissionTarget = targetCenterDescription;
+                }
+            }
+            postSubmission(submissionTarget, embargoDate, filteredValues)
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
