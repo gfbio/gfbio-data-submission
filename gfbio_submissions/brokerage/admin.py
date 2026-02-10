@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 import tempfile
 import zipfile
+import json
 from wsgiref.util import FileWrapper
 
+from django.urls import reverse
 import requests
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.utils.encoding import smart_bytes
+from django.utils.safestring import mark_safe    
 from django.utils.translation import gettext as _
 from django_reverse_admin import ReverseModelAdmin
-from dt_upload.models import DTUpload
+from dt_upload import admin as dt_admin
+from dt_upload.models import DTUpload, FileUploadRequest
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
@@ -420,7 +424,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         submission_cloud_upload_ids = [
             upload.pk for upload in obj.submissioncloudupload_set.all()
-            if any(upload.file_upload.file_key.lower().endswith(ext) for ext in allowed_types)
+            if upload.status not in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED, SubmissionCloudUpload.STATUS_DELETED] and any(upload.file_upload.file_key.lower().endswith(ext) for ext in allowed_types)
         ]
         parallel_transfers = [
             transfer_cloud_upload_to_ena_task.s(
@@ -567,6 +571,23 @@ class SubmissionAdmin(admin.ModelAdmin):
         submission_cloud_uploads = list(SubmissionCloudUpload.objects.filter(submission__pk=object_id))
         submission_cloud_uploads.sort(key=lambda x: orderlist.index(x.status))
 
+        submission_tasks_reports = TaskProgressReport.objects.filter(submission__pk=object_id)
+        tasks_by_upload = {}
+        non_upload_tasks = []
+        for task_report in submission_tasks_reports:
+            scu_found = False
+            if task_report.task_kwargs:
+                task_kwargs = json.loads(task_report.task_kwargs)
+                if "submission_cloud_upload_id" in task_kwargs:
+                    scu_found = True
+                    scu_id = task_kwargs["submission_cloud_upload_id"]
+                    if scu_id not in tasks_by_upload:
+                        tasks_by_upload[scu_id] = []
+                    tasks_by_upload[scu_id].append({"id": task_report.pk, "status": task_report.task_return_value[0:1]})
+            if not scu_found:
+                non_upload_tasks.append(task_report)
+
+
         cloud_upload_list = {}
         for cloud_upload in submission_cloud_uploads:
             last_action = (
@@ -585,7 +606,8 @@ class SubmissionAdmin(admin.ModelAdmin):
                 "name": str(cloud_upload),
                 "status": status,
                 "last_change_action_time": last_action.action_time if last_action else cloud_upload.modified,
-                "last_change_message": last_action.get_change_message() if last_action else ""
+                "last_change_message": last_action.get_change_message() if last_action else "",
+                "related_tasks": tasks_by_upload[cloud_upload.pk] if cloud_upload.pk in tasks_by_upload else []
             })
 
         context = {
@@ -822,10 +844,16 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
     inline_reverse = [
         ("file_upload", {"fields": ["uploaded_file", "original_filename", "file_key", "status", "s3_location"]}),
     ]
+    readonly_fields = ["file_upload_link"]
     actions = [
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
     ]
+    def file_upload_link(self, obj):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            reverse("admin:index") + f"dt_upload/fileuploadrequest/{obj.file_upload.pk}/change/",
+            "File upload request"
+        ))
 
 
 try:
@@ -837,6 +865,16 @@ try:
     admin.site.unregister(DTUploadMirror)
 except admin.sites.NotRegistered:
     pass
+
+try:
+    admin.site.unregister(FileUploadRequest)
+except admin.sites.NotRegistered:
+    pass
+
+class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
+    search_fields = ["submissioncloudupload__submission__broker_submission_id", "original_filename"]
+
+admin.site.register(FileUploadRequest, FileUploadRequestAdmin)
 
 
 admin.site.register(Submission, SubmissionAdmin)
