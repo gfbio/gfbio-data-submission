@@ -44,7 +44,7 @@ export const MAX_UPLOAD_ITEMS = 20;
 
 export const MAX_TOTAL_UPLOAD_SIZE = 200000000;  // 200 MB = 200000000 bytes;
 
-export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 10000000000;  // 10 GB = 10000000000 bytes
+export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 100 * 1024 * 1024 * 1024;  // 100 GiB
 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
 
