@@ -16,7 +16,7 @@ const UploadMessage = ({
                 </Container>
                 <Text>
                     If you need to upload more than{" "}
-                    {filesize(maxTotalUploadSize, { base: 10 })}, either provide a URL
+                    {filesize(maxTotalUploadSize, { base: 2 })}, either provide a URL
                     in the field below, or leave a comment for the curator at the bottom.
                 </Text>
             </Container>
