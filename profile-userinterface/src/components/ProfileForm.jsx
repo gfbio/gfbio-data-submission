@@ -267,11 +267,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                     setProcessing(false);
                 });
         } else {
-            var submissionTarget = profileData.target;
-            if (submissionTarget == "GENERIC" && filteredValues["target_data_center"].indexOf("ENA") >= 0) {
-                submissionTarget = "ENA";
-            }
-            postSubmission(submissionTarget, embargoDate, filteredValues)
+            postSubmission(profileData.target, embargoDate, filteredValues)
                 .then((result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
