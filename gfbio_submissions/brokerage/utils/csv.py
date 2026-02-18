@@ -4,6 +4,8 @@ import csv
 import json
 import logging
 import os
+import requests
+import tempfile
 from collections import OrderedDict
 
 import dpath.util as dpath
@@ -528,37 +530,46 @@ def parse_molecular_csv_with_encoding_detection(path, submission):
         return parse_molecular_csv(csv_file, submission)
 
 
-def check_minimum_header_cols(meta_data):
-    with open(meta_data.file.path, "r") as file:
-        line = file.readline()
-        dialect = csv.Sniffer().sniff(smart_str(line))
-        delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-        splitted = line.replace('"', "").lower().split(delimiter)
+def check_minimum_header_cols(cloud_upload_file, messages):
+    try:
+        with SubmissionCloudUploadOpener().csv_reader(cloud_upload_file) as csv_file:
+            line = csv_file.readline()
+            dialect = csv.Sniffer().sniff(smart_str(line))
+            delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
+            splitted = line.replace('"', "").lower().split(delimiter)
 
-        res = {col in splitted for col in SUBMISSION_MIN_COLS}
-        if len(res) == 1 and (True in res):
+            res = {col in splitted for col in SUBMISSION_MIN_COLS}
+            if len(res) == 1 and (True in res):
+                return True
+            else:
+                messages.append(f"Info: {cloud_upload_file} is not a valid file-list.")
+                return False
+    except Exception as e:
+        messages.append(f"Error: Exception on parsing file {cloud_upload_file}: {e}.")
+        return False
+
+
+def check_metadata_rule(submission, messages):
+    meta_data = submission.submissioncloudupload_set.filter(meta_data=True)
+    if len(meta_data) == 1:
+        if check_minimum_header_cols(meta_data.first(), messages):
             return True
         else:
+            messages.append(f"Warning: There is a file {meta_data.first} marked as meta-data, but invalid structured.")
             return False
-
-
-def check_metadata_rule(submission):
-    meta_data = submission.submissionupload_set.filter(meta_data=True)
-    if len(meta_data) == 1:
-        return check_minimum_header_cols(meta_data.first())
     else:
         return False
 
 
-def check_csv_file_rule(submission):
-    csv_uploads = submission.submissionupload_set.filter(file__endswith=".csv")
-
+def check_csv_file_rule(submission, messages):
+    csv_uploads = submission.submissioncloudupload_set.filter(file_upload__original_filename__endswith=".csv")
     if len(csv_uploads):
         for csv_file in csv_uploads:
-            is_meta = check_minimum_header_cols(csv_file)
+            is_meta = check_minimum_header_cols(csv_file, messages)
             if is_meta:
                 csv_file.meta_data = True
                 csv_file.save()
+                messages.append(f"Info: File {csv_file} was recognized and marked as the meta-data-file.")
                 return is_meta
         return False
     else:
@@ -577,38 +588,19 @@ def check_for_molecular_content(submission):
     messages = []
     check_performed = False
 
-    # FIXME: this is redundant to method below
-    if check_metadata_rule(submission):
-        status = True
-        check_performed = True
-        submission.target = ENA
-        submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
-        submission.save()
-        logger.info(
-            msg="check_for_molecular_content  | check_csv_file_rule=True | "
-                "return status={0} messages={1} "
-                "molecular_data_check_performed={2}".format(status, messages, check_performed)
-        )
+    if check_metadata_rule(submission, messages):
+        status, check_performed = set_submission_target_to_ENA(submission, messages, "check_metadata_rule")
+    elif check_csv_file_rule(submission, messages):
+        status, check_performed = set_submission_target_to_ENA(submission, messages, "check_csv_file_rule")
+    else:
+        messages.append("Info: There is no valid meta-data-file in this submission.")
 
-    # FIXME: this is redundant to method above
-    elif check_csv_file_rule(submission):
-        status = True
-        check_performed = True
-        submission.target = ENA
-        submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
-        submission.save()
-        logger.info(
-            msg="check_for_molecular_content  | check_metadata_rule=True | "
-                "return status={0} messages={1} "
-                "molecular_data_check_performed={2}".format(status, messages, check_performed)
-        )
-
-    if submission.release and submission.data.get("requirements", {}).get("data_center", "").count("ENA"):
+    if submission.release and (check_performed or submission.data.get("requirements", {}).get("target_data_center", "").count("ENA")):
         check_performed = True
         submission.target = ENA
         submission.save()
 
-        meta_data_files = submission.submissionupload_set.filter(meta_data=True)
+        meta_data_files = submission.submissioncloudupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
 
         if no_of_meta_data_files != 1:
@@ -621,8 +613,14 @@ def check_for_molecular_content(submission):
             return status, messages, check_performed
 
         meta_data_file = meta_data_files.first()
-        molecular_requirements = parse_molecular_csv_with_encoding_detection(
-            meta_data_file.file.path, submission)
+
+        molecular_requirements = {}
+        with tempfile.NamedTemporaryFile() as tf:
+            with requests.get(meta_data_file.file_upload.uploaded_file.url, stream=True) as r:
+                r.raise_for_status()
+                tf.write(r.content)
+                tf.flush()
+                molecular_requirements = parse_molecular_csv_with_encoding_detection(tf.name, submission)
         submission.data.get("requirements", {}).update(molecular_requirements)
         path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
@@ -643,7 +641,24 @@ def check_for_molecular_content(submission):
             msg="check_for_molecular_content  | finished | return status={0} "
                 "messages={1} molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
+    else:
+        messages.append("Info: Since there were neither meta-data-files nor was the target ENA, this process"
+                        "deemed it a non-molecular submission and no further checks were performed.")
     return status, messages, check_performed
+
+def set_submission_target_to_ENA(submission, messages, rule):
+    status = True
+    check_performed = True
+    submission.target = ENA
+    submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
+    submission.save()
+    messages.append(f"Info: The submission-target was set to ENA, based on the {rule}-rule")
+    logger.info(
+            msg="check_for_molecular_content  | {0} | "
+                "return status={1} messages={2} "
+                "molecular_data_check_performed={3}".format(rule, status, messages, check_performed)
+        )
+    return status, check_performed
 
 
 # search for specimen meta data for ATAX submission
