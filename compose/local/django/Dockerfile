@@ -38,6 +38,9 @@ WORKDIR ${APP_HOME}
 RUN mkdir -p /usr/share/man/man1
 
 
+# needed for python requests-library
+ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
+
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
