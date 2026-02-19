@@ -1,6 +1,8 @@
 FROM python:3.10-slim-bullseye
 
 ENV PYTHONUNBUFFERED 1
+# needed for python requests-library
+ENV REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 
 RUN apt-get update \
   # dependencies for building Python packages
