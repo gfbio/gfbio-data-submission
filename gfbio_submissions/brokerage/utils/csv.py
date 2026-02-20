@@ -595,7 +595,7 @@ def check_for_molecular_content(submission):
     else:
         messages.append("Info: There is no valid meta-data-file in this submission.")
 
-    if submission.release and (check_performed or submission.data.get("requirements", {}).get("target_data_center", "").count("ENA")):
+    if submission.release and submission.data.get("requirements", {}).get("data_center", "").count("ENA"):
         check_performed = True
         submission.target = ENA
         submission.save()
@@ -615,12 +615,8 @@ def check_for_molecular_content(submission):
         meta_data_file = meta_data_files.first()
 
         molecular_requirements = {}
-        with tempfile.NamedTemporaryFile() as tf:
-            with requests.get(meta_data_file.file_upload.uploaded_file.url, stream=True) as r:
-                r.raise_for_status()
-                tf.write(r.content)
-                tf.flush()
-                molecular_requirements = parse_molecular_csv_with_encoding_detection(tf.name, submission)
+        with SubmissionCloudUploadOpener().csv_reader(meta_data_file) as csv_reader:
+            molecular_requirements = parse_molecular_csv(csv_reader, submission)
         submission.data.get("requirements", {}).update(molecular_requirements)
         path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(

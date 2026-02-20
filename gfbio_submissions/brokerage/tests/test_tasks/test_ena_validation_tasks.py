@@ -42,7 +42,8 @@ def run_test_with_fake_submission_upload(submission, user, file_name, local_file
             file_key=f"{submission.broker_submission_id}/{file_name}",
             file_type="tif",
             status="COMPLETE",
-            user=user
+            user=user,
+            uploaded_file=SimpleUploadedFile(file_name, content=file_content)
         )
         cloud_upload = SubmissionCloudUpload.objects.create(
             submission=submission,
@@ -54,7 +55,7 @@ def run_test_with_fake_submission_upload(submission, user, file_name, local_file
         #    file_to_copy = os.path.join(_get_test_data_dir_path(), "csv_files/specimen_table_Platypelis_wrong_sc_name.csv")
         #    os.system(f"cp {file_to_copy} /mnt/s3bucket/{submission.broker_submission_id}/specimen_table_Platypelis_wrong_sc_name.csv")
 
-        test_to_run()
+        test_to_run(submission, cloud_upload)
     finally:
         if os.path.exists(dir_path):
             os.system(f"rm -rf {dir_path}")

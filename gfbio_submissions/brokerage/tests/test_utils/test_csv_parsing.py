@@ -1208,7 +1208,7 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         self.assertEqual(1, len(submission.submissionupload_set.filter(file__endswith=".csv")))
         self.assertTrue(
-            check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first())
+            check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first(), [])
         )
 
     def test_check_minimum_header_cols_fail(self):
@@ -1223,12 +1223,12 @@ class TestCSVParsing(TestCase):
         )
         self.assertEqual(1, len(submission.submissionupload_set.filter(file__endswith=".csv")))
         self.assertFalse(
-            check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first())
+            check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first(), [])
         )
 
     def test_check_metadata_rule(self):
         submission = Submission.objects.first()
-        self.assertTrue(check_metadata_rule(submission))
+        self.assertTrue(check_metadata_rule(submission, []))
 
     def test_check_metadata_rule_multiple_csvs(self):
         submission = Submission.objects.first()
@@ -1239,11 +1239,11 @@ class TestCSVParsing(TestCase):
             file=SimpleUploadedFile("test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"),
         )
         self.assertEqual(2, len(submission.submissionupload_set.filter(file__endswith=".csv")))
-        self.assertFalse(check_metadata_rule(submission))
+        self.assertFalse(check_metadata_rule(submission, []))
 
     def test_check_csv_file_rule(self):
         submission = Submission.objects.first()
-        self.assertTrue(check_csv_file_rule(submission))
+        self.assertTrue(check_csv_file_rule(submission, []))
 
     def test_check_csv_file_rule_multiple_csvs(self):
         submission = Submission.objects.first()
@@ -1257,7 +1257,7 @@ class TestCSVParsing(TestCase):
             file=SimpleUploadedFile("test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"),
         )
         self.assertEqual(2, len(submission.submissionupload_set.filter(file__endswith=".csv")))
-        self.assertTrue(check_csv_file_rule(submission))
+        self.assertTrue(check_csv_file_rule(submission, []))
 
     # # TODO: remove ?
     # def test_check_content_metadata_rules(self):
