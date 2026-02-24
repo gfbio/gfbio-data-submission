@@ -126,7 +126,7 @@ class MolecularContentChecker():
                 logger.info(msg="check_for_molecular_content | valid data from csv | return=True")
                 self.status = True
             else:
-                self.messages.append([e.message for e in full_errors])
+                self.messages += [e.message for e in full_errors]
                 self.submission.data.update({"validation": self.messages})
                 logger.info(msg="check_for_molecular_content  | invalid data from csv | return=False")
 
