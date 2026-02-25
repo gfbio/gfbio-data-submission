@@ -110,9 +110,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_on_hold_status_task",
             "tasks.check_submittable_taxon_id_task",
         ]
-        print([t.task_name for t in task_reports])
         self.assertEqual(8, len(task_reports))
         for t in task_reports:
+            # print(t.task_name)
             self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate

@@ -165,13 +165,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
         responses.add(responses.POST, url, json={}, status=200)
-#        data = self._create_test_meta_data()
-#
-#        response = self.api_client.post(url, data, format="multipart")
-#
-#        self.assertEqual(201, response.status_code)
-#        self.assertEqual(1, len(submission.submissionupload_set.all()))
-#        self.assertTrue(submission.submissionupload_set.first().meta_data)
 
         def test_update(submission, cloud_upload):
             self._create_ena_taxa_query_response()
