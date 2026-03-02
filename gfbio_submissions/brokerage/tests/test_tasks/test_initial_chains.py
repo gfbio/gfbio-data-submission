@@ -112,6 +112,7 @@ class TestInitialChainTasks(TestCase):
         ]
         self.assertEqual(8, len(task_reports))
         for t in task_reports:
+            # print(t.task_name)
             self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
@@ -273,7 +274,6 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_submittable_taxon_id_task",
         ]
         for t in task_reports:
-            # print(t.task_name)
             self.assertIn(t.task_name, expected_tasknames)
         self.assertEqual(14, len(task_reports))
 

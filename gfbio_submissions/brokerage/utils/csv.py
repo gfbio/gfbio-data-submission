@@ -8,12 +8,12 @@ from collections import OrderedDict
 
 import dpath.util as dpath
 from django.utils.encoding import smart_str
+from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmissionCloudUploadOpener, SubmissionUploadOpener, SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
-from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS, SUBMISSION_UPLOAD_RETRY_DELAY
+from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
+from ..configuration.settings import ATAX, ENA, SUBMISSION_UPLOAD_RETRY_DELAY
 from ..utils.encodings import sniff_encoding
-from ..utils.schema_validation import validate_data_full
 
 logger = logging.getLogger(__name__)
 
@@ -528,124 +528,6 @@ def parse_molecular_csv_with_encoding_detection(path, submission):
         return parse_molecular_csv(csv_file, submission)
 
 
-def check_minimum_header_cols(meta_data):
-    with open(meta_data.file.path, "r") as file:
-        line = file.readline()
-        dialect = csv.Sniffer().sniff(smart_str(line))
-        delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-        splitted = line.replace('"', "").lower().split(delimiter)
-
-        res = {col in splitted for col in SUBMISSION_MIN_COLS}
-        if len(res) == 1 and (True in res):
-            return True
-        else:
-            return False
-
-
-def check_metadata_rule(submission):
-    meta_data = submission.submissionupload_set.filter(meta_data=True)
-    if len(meta_data) == 1:
-        return check_minimum_header_cols(meta_data.first())
-    else:
-        return False
-
-
-def check_csv_file_rule(submission):
-    csv_uploads = submission.submissionupload_set.filter(file__endswith=".csv")
-
-    if len(csv_uploads):
-        for csv_file in csv_uploads:
-            is_meta = check_minimum_header_cols(csv_file)
-            if is_meta:
-                csv_file.meta_data = True
-                csv_file.save()
-                return is_meta
-        return False
-    else:
-        return False
-
-
-# TODO: may move to other location, perhaps model, serializer or manager method
-def check_for_molecular_content(submission):
-    logger.info(
-        msg="check_for_molecular_content | "
-            "process submission={0} | target={1} | release={2}"
-            "".format(submission.broker_submission_id, submission.target, submission.release)
-    )
-
-    status = False
-    messages = []
-    check_performed = False
-
-    # FIXME: this is redundant to method below
-    if check_metadata_rule(submission):
-        status = True
-        check_performed = True
-        submission.target = ENA
-        submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
-        submission.save()
-        logger.info(
-            msg="check_for_molecular_content  | check_csv_file_rule=True | "
-                "return status={0} messages={1} "
-                "molecular_data_check_performed={2}".format(status, messages, check_performed)
-        )
-
-    # FIXME: this is redundant to method above
-    elif check_csv_file_rule(submission):
-        status = True
-        check_performed = True
-        submission.target = ENA
-        submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
-        submission.save()
-        logger.info(
-            msg="check_for_molecular_content  | check_metadata_rule=True | "
-                "return status={0} messages={1} "
-                "molecular_data_check_performed={2}".format(status, messages, check_performed)
-        )
-
-    if submission.release and submission.data.get("requirements", {}).get("data_center", "").count("ENA"):
-        check_performed = True
-        submission.target = ENA
-        submission.save()
-
-        meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-        no_of_meta_data_files = len(meta_data_files)
-
-        if no_of_meta_data_files != 1:
-            logger.info(
-                msg="check_for_molecular_content | "
-                    "invalid no. of meta_data_files, {0} | return=False"
-                    "".format(no_of_meta_data_files)
-            )
-            messages = ["invalid no. of meta_data_files, " "{0}".format(no_of_meta_data_files)]
-            return status, messages, check_performed
-
-        meta_data_file = meta_data_files.first()
-        molecular_requirements = parse_molecular_csv_with_encoding_detection(
-            meta_data_file.file.path, submission)
-        submission.data.get("requirements", {}).update(molecular_requirements)
-        path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
-        valid, full_errors = validate_data_full(
-            data=submission.data,
-            target=ENA_PANGAEA,
-            schema_location=path,
-        )
-        if valid:
-            logger.info(msg="check_for_molecular_content | valid data from csv | return=True")
-            status = True
-        else:
-            messages = [e.message for e in full_errors]
-            submission.data.update({"validation": messages})
-            logger.info(msg="check_for_molecular_content  | invalid data from csv | return=False")
-
-        submission.save()
-        logger.info(
-            msg="check_for_molecular_content  | finished | return status={0} "
-                "messages={1} molecular_data_check_performed={2}".format(status, messages, check_performed)
-        )
-    return status, messages, check_performed
-
-
 # search for specimen meta data for ATAX submission
 def search_for_specimen_meta_data(meta_data_files):
     specimen_cols = ["specimen identifier", "basis of record", "scientific name"]
@@ -676,7 +558,7 @@ def check_submittable_taxon_id(submission):
             "process submission={0} | target={1} | release={2}"
             "".format(submission.broker_submission_id, submission.target, submission.release)
     )
-    file_opener = SubmissionCloudUploadOpener() if submission.submissioncloudupload_set.count() > 0 else SubmissionUploadOpener()
+    file_opener = create_submission_file_opener(submission)
     submittable_data_handler_class = SubmittableTaxIdHandler if submission.target == ENA else (SubmittableScientificNameHandler if submission.target == ATAX else SubmittableDataHandler)
     submittable_data_handler = submittable_data_handler_class(file_opener)
 
