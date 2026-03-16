@@ -144,7 +144,9 @@ class Enalizer(object):
         except Submission.DoesNotExist:
             logger.warning(
                 "ena.py | Enalizer | set_submission_state_to_error | Submission with pk {} does not exist".format(
-                    self.submission_id))
+                    self.submission_id
+                )
+            )
 
     def create_submission_xml(self, action="VALIDATE", hold_date=None, outgoing_request_id="add_outgoing_id"):
         logger.info(msg="Enalizer create_submission_xml. action={} hold_date={}".format(action, hold_date))
@@ -221,16 +223,10 @@ class Enalizer(object):
         for s in sample_attributes:
             value = s.get("value", "no_value_found").strip().lower()
             tag = s.get("tag", "no_tag_found")
-            if (
-                tag == "environmental package"
-                and value in checklist_mappings_keys
-            ):
+            if tag == "environmental package" and value in checklist_mappings_keys:
                 add_checklist = CHECKLIST_ACCESSION_MAPPING.get(s.get("value", ""), "")
                 break
-            elif (
-                tag == "environmental package"
-                and value not in checklist_mappings_keys
-            ):
+            elif tag == "environmental package" and value not in checklist_mappings_keys:
                 self.samples_with_checklist_errors.append((sample_title, sample_alias, value))
 
         if "NO_VAL" not in renamed_additional_checklist_tag:
@@ -284,12 +280,10 @@ class Enalizer(object):
         res["description"] = s.pop("sample_description", "")
         res.update(s)
         if len(sample_attributes):
-            self.append_environmental_package_attributes(sample_attributes, sample_title=res["title"],
-                                                         sample_alias=res["sample_alias"])
-            res["sample_attributes"] = [
-                OrderedDict([(k.upper(), v) for k, v in s.items()])
-                for s in sample_attributes
-            ]
+            self.append_environmental_package_attributes(
+                sample_attributes, sample_title=res["title"], sample_alias=res["sample_alias"]
+            )
+            res["sample_attributes"] = [OrderedDict([(k.upper(), v) for k, v in s.items()]) for s in sample_attributes]
         return res
 
     def add_if_existing(self, ordered_dict, key, data_dict):
@@ -546,24 +540,35 @@ class Enalizer(object):
         is_cloud_uploader_submission = self.submission.submissioncloudupload_set.count() > 0
         if checksum_method in valid_checksum_methods:
             submission_cloud_upload = self.submission.submissioncloudupload_set.filter(
-                file_upload__original_filename=filename).first()
+                file_upload__original_filename=filename
+            ).first()
             if is_cloud_uploader_submission and submission_cloud_upload:
-                if checksum_method == "MD5" and submission_cloud_upload.file_upload.md5 is not None and len(
-                    submission_cloud_upload.file_upload.md5) > 0:
+                if (
+                    checksum_method == "MD5"
+                    and submission_cloud_upload.file_upload.md5 is not None
+                    and len(submission_cloud_upload.file_upload.md5) > 0
+                ):
                     file_checksum = submission_cloud_upload.file_upload.md5
-                elif checksum_method == "SHA256" and submission_cloud_upload.file_upload.sha256 is not None and len(
-                    submission_cloud_upload.file_upload.sha256) > 0:
+                elif (
+                    checksum_method == "SHA256"
+                    and submission_cloud_upload.file_upload.sha256 is not None
+                    and len(submission_cloud_upload.file_upload.sha256) > 0
+                ):
                     file_checksum = submission_cloud_upload.file_upload.sha256
                 else:
                     file_checksum = calculate_checksum_locally(checksum_method.lower(), submission_cloud_upload)
                 if metadata_checksum and file_checksum != metadata_checksum:
-                    raise Exception(f"For the referenced file '{filename}' exists a checksum in the metadata-file ({metadata_checksum}), that does not match the checksum of the cloud-upload ({file_checksum}).")
+                    raise Exception(
+                        f"For the referenced file '{filename}' exists a checksum in the metadata-file ({metadata_checksum}), that does not match the checksum of the cloud-upload ({file_checksum})."
+                    )
                 checksum = file_checksum
             else:
                 if metadata_checksum:
                     checksum = metadata_checksum
                 elif is_cloud_uploader_submission:
-                    raise Exception(f"For the referenced file '{filename}' exists no checksum in the metadata-file and no cloud-upload was found.")
+                    raise Exception(
+                        f"For the referenced file '{filename}' exists no checksum in the metadata-file and no cloud-upload was found."
+                    )
         file["checksum"] = checksum
         file_element.set("checksum", checksum)
         file["checksum_method"] = checksum_method
@@ -602,7 +607,7 @@ class Enalizer(object):
             "filetype",
             # TODO: DASS-2607
             "checksum_method",
-            "checksum"
+            "checksum",
         ]
         errors = []
         for r in self.run:
@@ -692,6 +697,7 @@ def prepare_ena_data(submission):
         submission.save()
 
         from gfbio_submissions.brokerage.utils.task_utils import _safe_get_site_config
+
         site_configuration = _safe_get_site_config(submission)
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.add_comment(
@@ -702,14 +708,13 @@ def prepare_ena_data(submission):
         raise Exception(f"Errors occured during preparation of ena-data:\n\n{ex}")
 
 
-
 def store_ena_data_as_auditable_text_data(submission, data):
     for d in data:
         filename, filecontent = data[d]
         logger.info(
             msg="store_ena_data_as_auditable_text_data create "
-                "AuditableTextData | submission_pk={0} filename={1}"
-                "".format(submission.pk, filename)
+            "AuditableTextData | submission_pk={0} filename={1}"
+            "".format(submission.pk, filename)
         )
         with transaction.atomic():
             AuditableTextData.objects.create(name=filename, submission=submission, text_data=filecontent)
@@ -930,30 +935,43 @@ class md5ChecksumCalculator:
     def __init__(self):
         self.checksum = ""
         self.md5 = hashlib.md5()
-    
+
     def calculate_checksum(self, bytes):
         self.checksum = self.md5.update(bytes)
-    
+
     def get_checksum(self):
         return self.md5.hexdigest()
 
 
 def open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, submission_cloud_upload):
+    """
+    Download file from ENA via FTP and calculate checksum.
+    For cloud uploads, files are transferred with original_filename, so the ENA path
+    is broker_submission_id/original_filename.
+    """
     checksum = ""
     transmission_report = []
     checksumCalculator = md5ChecksumCalculator()
 
     ftp = None
 
+    # Cloud uploads are transferred with original_filename to match metadata; use that path on ENA
+    submission = submission_cloud_upload.submission
+    original_filename = submission_cloud_upload.file_upload.original_filename
+    if original_filename:
+        ena_file_path = f"{submission.broker_submission_id}/{original_filename}"
+    else:
+        ena_file_path = submission_cloud_upload.file_upload.file_key
+
     try:
         ftp_rc = site_configuration.ena_ftp
         with FTP(ftp_rc.url) as ftp:
             transmission_report.append(ftp.login(user=ftp_rc.username, passwd=ftp_rc.password))
-            transmission_report.append(ftp.retrbinary("RETR " + submission_cloud_upload.file_upload.file_key, checksumCalculator.calculate_checksum))
+            transmission_report.append(ftp.retrbinary("RETR " + ena_file_path, checksumCalculator.calculate_checksum))
             checksum = checksumCalculator.get_checksum()
     except Exception as ex:
         transmission_report.append(str(ex))
-    
+
     return checksum, transmission_report
 
 
@@ -980,12 +998,12 @@ def update_embargo_date_in_submissions(hold_date, study_pid):
                     submission.save()
                     logger.info(
                         msg="update_embargo_date_in_submissions | "
-                            "ENA hold date does not match Submission embargo | "
-                            "submission date: {} | "
-                            "submission id: {} | "
-                            "persistent_identifier_date: {} | "
-                            "persistent_identifier_id: {}"
-                            "".format(
+                        "ENA hold date does not match Submission embargo | "
+                        "submission date: {} | "
+                        "submission id: {} | "
+                        "persistent_identifier_date: {} | "
+                        "persistent_identifier_id: {}"
+                        "".format(
                             submission.embargo,
                             submission.broker_submission_id,
                             study.hold_date,
