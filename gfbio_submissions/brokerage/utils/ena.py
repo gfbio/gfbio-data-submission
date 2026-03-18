@@ -38,6 +38,7 @@ from ..models.auditable_text_data import AuditableTextData
 from ..models.ena_report import EnaReport
 from ..models.persistent_identifier import PersistentIdentifier
 from ..models.submission import Submission
+from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..utils.csv import find_correct_platform_and_model
 
 logger = logging.getLogger(__name__)
@@ -545,8 +546,9 @@ class Enalizer(object):
         checksum = ""
         is_cloud_uploader_submission = self.submission.submissioncloudupload_set.count() > 0
         if checksum_method in valid_checksum_methods:
-            submission_cloud_upload = self.submission.submissioncloudupload_set.filter(
-                file_upload__original_filename=filename).first()
+            submission_cloud_upload = self.submission.submissioncloudupload_set.exclude(
+                status=SubmissionCloudUpload.STATUS_DELETED
+            ).filter(file_upload__original_filename=filename).first()
             if is_cloud_uploader_submission and submission_cloud_upload:
                 if checksum_method == "MD5" and submission_cloud_upload.file_upload.md5 is not None and len(
                     submission_cloud_upload.file_upload.md5) > 0:
@@ -575,6 +577,13 @@ class Enalizer(object):
             data_block = SubElement(run_root, "DATA_BLOCK")
             files = SubElement(data_block, "FILES")
             for file in run.get("data_block", {}).get("files", []):
+                # Skip deleted cloud uploads to remove them from run.xml
+                filename = file.get("filename", "")
+                if self.submission.submissioncloudupload_set.filter(
+                    status=SubmissionCloudUpload.STATUS_DELETED,
+                    file_upload__original_filename=filename,
+                ).exists():
+                    continue
                 file_element = SubElement(files, "FILE")
                 for attrib in file_attributes:
                     try:
