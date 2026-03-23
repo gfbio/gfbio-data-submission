@@ -222,14 +222,14 @@ class Enalizer(object):
             value = s.get("value", "no_value_found").strip().lower()
             tag = s.get("tag", "no_tag_found")
             if (
-                tag == "environmental package"
-                and value in checklist_mappings_keys
+                    tag == "environmental package"
+                    and value in checklist_mappings_keys
             ):
                 add_checklist = CHECKLIST_ACCESSION_MAPPING.get(s.get("value", ""), "")
                 break
             elif (
-                tag == "environmental package"
-                and value not in checklist_mappings_keys
+                    tag == "environmental package"
+                    and value not in checklist_mappings_keys
             ):
                 self.samples_with_checklist_errors.append((sample_title, sample_alias, value))
 
@@ -549,21 +549,23 @@ class Enalizer(object):
                 file_upload__original_filename=filename).first()
             if is_cloud_uploader_submission and submission_cloud_upload:
                 if checksum_method == "MD5" and submission_cloud_upload.file_upload.md5 is not None and len(
-                    submission_cloud_upload.file_upload.md5) > 0:
+                        submission_cloud_upload.file_upload.md5) > 0:
                     file_checksum = submission_cloud_upload.file_upload.md5
                 elif checksum_method == "SHA256" and submission_cloud_upload.file_upload.sha256 is not None and len(
-                    submission_cloud_upload.file_upload.sha256) > 0:
+                        submission_cloud_upload.file_upload.sha256) > 0:
                     file_checksum = submission_cloud_upload.file_upload.sha256
                 else:
                     file_checksum = calculate_checksum_locally(checksum_method.lower(), submission_cloud_upload)
                 if metadata_checksum and file_checksum != metadata_checksum:
-                    raise Exception(f"For the referenced file '{filename}' exists a checksum in the metadata-file ({metadata_checksum}), that does not match the checksum of the cloud-upload ({file_checksum}).")
+                    raise Exception(
+                        f"For the referenced file '{filename}' exists a checksum in the metadata-file ({metadata_checksum}), that does not match the checksum of the cloud-upload ({file_checksum}).")
                 checksum = file_checksum
             else:
                 if metadata_checksum:
                     checksum = metadata_checksum
                 elif is_cloud_uploader_submission:
-                    raise Exception(f"For the referenced file '{filename}' exists no checksum in the metadata-file and no cloud-upload was found.")
+                    raise Exception(
+                        f"For the referenced file '{filename}' exists no checksum in the metadata-file and no cloud-upload was found.")
         file["checksum"] = checksum
         file_element.set("checksum", checksum)
         file["checksum_method"] = checksum_method
@@ -700,7 +702,6 @@ def prepare_ena_data(submission):
             is_internal=True,
         )
         raise Exception(f"Errors occured during preparation of ena-data:\n\n{ex}")
-
 
 
 def store_ena_data_as_auditable_text_data(submission, data):
@@ -930,30 +931,43 @@ class md5ChecksumCalculator:
     def __init__(self):
         self.checksum = ""
         self.md5 = hashlib.md5()
-    
+
     def calculate_checksum(self, bytes):
         self.checksum = self.md5.update(bytes)
-    
+
     def get_checksum(self):
         return self.md5.hexdigest()
 
 
 def open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, submission_cloud_upload):
+    """
+    Download file from ENA via FTP and calculate checksum.
+    For cloud uploads, files are transferred with original_filename, so the ENA path
+    is broker_submission_id/original_filename.
+    """
     checksum = ""
     transmission_report = []
     checksumCalculator = md5ChecksumCalculator()
 
     ftp = None
 
+    # Cloud uploads are transferred with original_filename to match metadata; use that path on ENA
+    submission = submission_cloud_upload.submission
+    original_filename = submission_cloud_upload.file_upload.original_filename
+    if original_filename:
+        ena_file_path = f"{submission.broker_submission_id}/{os.path.basename(original_filename)}"
+    else:
+        ena_file_path = submission_cloud_upload.file_upload.file_key
+
     try:
         ftp_rc = site_configuration.ena_ftp
         with FTP(ftp_rc.url) as ftp:
             transmission_report.append(ftp.login(user=ftp_rc.username, passwd=ftp_rc.password))
-            transmission_report.append(ftp.retrbinary("RETR " + submission_cloud_upload.file_upload.file_key, checksumCalculator.calculate_checksum))
+            transmission_report.append(ftp.retrbinary("RETR " + ena_file_path, checksumCalculator.calculate_checksum))
             checksum = checksumCalculator.get_checksum()
     except Exception as ex:
         transmission_report.append(str(ex))
-    
+
     return checksum, transmission_report
 
 
@@ -1105,7 +1119,7 @@ def execute_update_accession_objects_chain(name_on_error=""):
     from ..tasks.ena_report_tasks.update_resolver_accessions import update_resolver_accessions_task
 
     (
-        fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY)
-        | update_resolver_accessions_task.s().set(countdown=SUBMISSION_DELAY)
-        | update_persistent_identifier_report_status_task.s().set(countdown=SUBMISSION_DELAY)
+            fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY)
+            | update_resolver_accessions_task.s().set(countdown=SUBMISSION_DELAY)
+            | update_persistent_identifier_report_status_task.s().set(countdown=SUBMISSION_DELAY)
     )()
