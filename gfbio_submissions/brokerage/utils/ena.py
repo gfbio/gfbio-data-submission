@@ -579,10 +579,16 @@ class Enalizer(object):
             for file in run.get("data_block", {}).get("files", []):
                 # Skip deleted cloud uploads to remove them from run.xml
                 filename = file.get("filename", "")
-                if self.submission.submissioncloudupload_set.filter(
+                has_active_cloud_upload = self.submission.submissioncloudupload_set.exclude(
                     status=SubmissionCloudUpload.STATUS_DELETED,
-                    file_upload__original_filename=filename,
-                ).exists():
+                ).filter(file_upload__original_filename=filename).exists()
+                if (
+                    not has_active_cloud_upload
+                    and self.submission.submissioncloudupload_set.filter(
+                        status=SubmissionCloudUpload.STATUS_DELETED,
+                        file_upload__original_filename=filename,
+                    ).exists()
+                ):
                     continue
                 file_element = SubElement(files, "FILE")
                 for attrib in file_attributes:
