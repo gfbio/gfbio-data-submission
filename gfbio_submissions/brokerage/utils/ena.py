@@ -959,7 +959,7 @@ def open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, sub
     submission = submission_cloud_upload.submission
     original_filename = submission_cloud_upload.file_upload.original_filename
     if original_filename:
-        ena_file_path = f"{submission.broker_submission_id}/{original_filename}"
+        ena_file_path = f"{submission.broker_submission_id}/{os.path.basename(original_filename)}"
     else:
         ena_file_path = submission_cloud_upload.file_upload.file_key
 

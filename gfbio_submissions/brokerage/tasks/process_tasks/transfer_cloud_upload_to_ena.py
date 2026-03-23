@@ -39,7 +39,9 @@ def perform_ascp_file_transfer(
     task, file_path, site_configuration, submission, submission_cloud_upload, user_id, report, target_filename=None
 ):
     # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
-    # ascp can rename on transfer by specifying the target filename in the destination path
+    # Rename on upload: put the final name in the remote path (…/submission_id/original_filename).
+    if target_filename:
+        target_filename = os.path.basename(target_filename)
     aspera_host = site_configuration.ena_aspera_server.url
     aspera_user = site_configuration.ena_aspera_server.username
     aspera_target_path = (
@@ -48,8 +50,7 @@ def perform_ascp_file_transfer(
         else f"/{submission.broker_submission_id}/"
     )
     remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
-    # TODO: check explicit -d option
-    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", "-d", file_path, remote_dest]
+    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd} | task_id={task.request.id}")
     res = TaskProgressReport.CANCELLED
     details = {"cmd": cmd}
@@ -293,12 +294,14 @@ def transfer_cloud_upload_to_ena_task(
     ensure_folder_with_keep(folder_path)
 
     original_filename = submission_cloud_upload.file_upload.original_filename
+    key_basename = os.path.basename(file_path)
+    orig_basename = os.path.basename(original_filename) if original_filename else ""
     target_filename = None
-    if original_filename and os.path.basename(file_path) != original_filename:
-        target_filename = original_filename
+    if orig_basename and key_basename != orig_basename:
+        target_filename = orig_basename
         logger.info(
             f"tasks.py | transfer_cloud_upload_to_ena_task | transfer with original_filename | "
-            f"original={original_filename} | file_key_basename={os.path.basename(file_path)} | task_id={self.request.id}"
+            f"original={orig_basename} | file_key_basename={key_basename} | task_id={self.request.id}"
         )
 
     transfer_result = perform_ascp_file_transfer(
