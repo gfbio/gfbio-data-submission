@@ -11,7 +11,7 @@ import textwrap
 import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
-from ftplib import FTP
+from ftplib import FTP, error_perm
 from uuid import uuid4
 from xml.etree.ElementTree import Element, SubElement
 
@@ -952,6 +952,37 @@ class md5ChecksumCalculator:
 
     def get_checksum(self):
         return self.md5.hexdigest()
+
+
+def ensure_ena_webin_submission_folder_via_ftp(site_configuration, broker_submission_id):
+    """
+    Ensures that the submission folder exists on the ENA FTP server by creating it if necessary.
+    If the folder already exists, it simply navigates into it.
+    """
+    ftp_rc = site_configuration.ena_ftp
+    if not ftp_rc:
+        logger.warning("ena.py | ensure_ena_webin_submission_folder_via_ftp | skip: no ena_ftp")
+        raise ValueError("ENA FTP is not configured on the site.")
+
+    folder = str(broker_submission_id)
+    with FTP(ftp_rc.url) as ftp:
+        ftp.login(user=ftp_rc.username, passwd=ftp_rc.password)
+        try:
+            ftp.cwd("/")
+        except error_perm:
+            pass
+        try:
+            ftp.cwd(folder)
+            return
+        except error_perm:
+            pass
+        try:
+            ftp.mkd(folder)
+        except error_perm as mkd_err:
+            try:
+                ftp.cwd(folder)
+            except error_perm:
+                raise mkd_err
 
 
 def open_ftp_to_ena_download_file_and_calculate_checksum(site_configuration, submission_cloud_upload):

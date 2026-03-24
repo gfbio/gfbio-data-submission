@@ -6,7 +6,7 @@ from wsgiref.util import FileWrapper
 
 from django.urls import reverse
 import requests
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Count
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
@@ -47,7 +47,7 @@ from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import 
     parse_csv_to_update_clean_submission_cloud_upload_task,
     parse_csv_to_update_clean_submission_task,
 )
-from .utils.ena import release_study_on_ena
+from .utils.ena import ensure_ena_webin_submission_folder_via_ftp, release_study_on_ena
 from .utils.submission_process import SubmissionProcessHandler
 from .utils.task_utils import _safe_get_site_config, jira_cancel_issue
 
@@ -418,6 +418,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
     from .tasks.process_tasks.notify_admin_on_ena_transfer_completed import notify_admin_on_ena_transfer_completed_task
     from celery import chord
+    from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
     allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ]
 
@@ -426,6 +427,32 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
             upload.pk for upload in obj.submissioncloudupload_set.all()
             if upload.status not in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM, SubmissionCloudUpload.STATUS_DELETED] and any(upload.file_upload.original_filename.lower().endswith(ext) for ext in allowed_types)
         ]
+        if submission_cloud_upload_ids:
+            site_config = _safe_get_site_config(obj)
+            if not site_config:
+                modeladmin.message_user(
+                    request,
+                    _(
+                        "Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user."
+                    )
+                    % {"sid": obj.broker_submission_id},
+                    level=messages.WARNING,
+                )
+                continue
+            if not site_config.ena_ftp_id:
+                hosting_config = SiteConfiguration.objects.get_hosting_site_configuration()
+                if hosting_config.ena_ftp_id:
+                    site_config = hosting_config
+            try:
+                ensure_ena_webin_submission_folder_via_ftp(site_config, obj.broker_submission_id)
+            except Exception as exc:
+                modeladmin.message_user(
+                    request,
+                    _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
+                    % {"sid": obj.broker_submission_id, "err": exc},
+                    level=messages.ERROR,
+                )
+                continue
         parallel_transfers = [
             transfer_cloud_upload_to_ena_task.s(
                 submission_cloud_upload_id=upload_id, submission_id=obj.pk, user_id=request.user.id
