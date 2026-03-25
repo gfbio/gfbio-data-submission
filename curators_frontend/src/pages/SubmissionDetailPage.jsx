@@ -20,6 +20,7 @@ const SubmissionDetailPage = () => {
   const [actions, setActions] = useState([]);
   const [isActionsLoading, setIsActionsLoading] = useState(false);
   const [actionStates, setActionStates] = useState({});
+  const [actionMessages, setActionMessages] = useState([]);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -112,9 +113,33 @@ const SubmissionDetailPage = () => {
     fetchActions();
   }, [brokerSubmissionId]);
 
+  const addActionMessage = (message) => {
+    const id = `${message.type}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setActionMessages((current) => [...current, {...message, id}]);
+    window.setTimeout(() => {
+      setActionMessages((current) => current.filter((entry) => entry.id !== id));
+    }, 6000);
+  };
+
   const handleAction = async (action) => {
     if (!action?.key) {
       return;
+    }
+    if (action.danger) {
+      const confirmed = window.confirm(
+        `Are you sure you want to run "${action.label}"?`
+      );
+      if (!confirmed) {
+        setActionStates((current) => ({
+          ...current,
+          [action.key]: {status: "cancelled", message: "Cancelled by user."},
+        }));
+        addActionMessage({
+          type: "secondary",
+          text: "Action cancelled.",
+        });
+        return;
+      }
     }
     setActionStates((current) => ({
       ...current,
@@ -128,6 +153,17 @@ const SubmissionDetailPage = () => {
       ...current,
       [action.key]: result,
     }));
+    if (result?.status === "error") {
+      addActionMessage({
+        type: "danger",
+        text: result.error || "Action failed.",
+      });
+    } else {
+      addActionMessage({
+        type: "success",
+        text: result.message || "Action queued.",
+      });
+    }
   };
 
   const groupedActions = actions.reduce((acc, action) => {
@@ -147,6 +183,29 @@ const SubmissionDetailPage = () => {
         </Link>
         <h1 className="h4 m-0">Submission Details</h1>
       </div>
+
+      {actionMessages.length > 0 && (
+        <div className="mb-3">
+          {actionMessages.map((message) => (
+            <div
+              key={message.id}
+              className={`alert alert-${message.type} d-flex justify-content-between align-items-center`}
+            >
+              <span>{message.text}</span>
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() =>
+                  setActionMessages((current) =>
+                    current.filter((entry) => entry.id !== message.id)
+                  )
+                }
+              >
+                Dismiss
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="card mb-4">
         <div className="card-body">
@@ -343,6 +402,7 @@ const SubmissionDetailPage = () => {
                   {groupActions.map((action) => {
                     const state = actionStates[action.key];
                     const isRunning = state?.status === "running";
+                    const isCancelled = state?.status === "cancelled";
                     return (
                       <div key={action.key} className="d-flex flex-column">
                         <button
@@ -354,6 +414,9 @@ const SubmissionDetailPage = () => {
                         >
                           {isRunning ? "Running..." : action.label}
                         </button>
+                        {isCancelled && (
+                          <small className="text-muted">Cancelled.</small>
+                        )}
                         {state?.message && (
                           <small className="text-muted">{state.message}</small>
                         )}

@@ -3,6 +3,9 @@ import logging
 
 import celery
 
+from ..models.submission import Submission
+from ..models.submission_cloud_upload import SubmissionCloudUpload
+from ..models.submission_upload import SubmissionUpload
 from ..models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
@@ -19,6 +22,42 @@ class SubmissionTask(celery.Task):
     # def __init__(self):
     #     super(SubmissionTask, self).__init__()
 
+    def _resolve_submission_for_report(self, args, kwargs):
+        submission_id = kwargs.get("submission_id")
+        if submission_id:
+            return Submission.objects.filter(pk=submission_id).first()
+
+        broker_submission_id = kwargs.get("broker_submission_id")
+        if broker_submission_id:
+            return Submission.objects.filter(broker_submission_id=broker_submission_id).first()
+
+        submission_upload_id = kwargs.get("submission_upload_id")
+        if submission_upload_id:
+            upload = SubmissionUpload.objects.select_related("submission").filter(pk=submission_upload_id).first()
+            if upload:
+                return upload.submission
+
+        submission_cloud_upload_id = kwargs.get("submission_cloud_upload_id")
+        if submission_cloud_upload_id:
+            cloud_upload = (
+                SubmissionCloudUpload.objects.select_related("submission")
+                .filter(pk=submission_cloud_upload_id)
+                .first()
+            )
+            if cloud_upload:
+                return cloud_upload.submission
+
+        return None
+
+    def _backfill_report_submission(self, task_id, args, kwargs):
+        submission = self._resolve_submission_for_report(args, kwargs)
+        if not submission:
+            return
+        report = TaskProgressReport.objects.filter(task_id=task_id).first()
+        if report and report.submission_id is None:
+            report.submission = submission
+            report.save(update_fields=["submission"])
+
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         logger.info("tasks.py | SubmissionTask | on_retry | task_id={0} | " "name={1}".format(task_id, self.name))
         # TODO: capture this idea of reporting to sentry
@@ -26,6 +65,7 @@ class SubmissionTask(celery.Task):
         TaskProgressReport.objects.update_report_on_exception(
             "RETRY", exc, task_id, args, kwargs, einfo, task_name=self.name
         )
+        self._backfill_report_submission(task_id, args, kwargs)
         super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -37,6 +77,7 @@ class SubmissionTask(celery.Task):
         TaskProgressReport.objects.update_report_on_exception(
             "FAILURE", exc, task_id, args, kwargs, einfo, task_name=self.name
         )
+        self._backfill_report_submission(task_id, args, kwargs)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
     def on_success(self, retval, task_id, args, kwargs):
@@ -45,6 +86,7 @@ class SubmissionTask(celery.Task):
             "name={1} | retval={2}".format(task_id, self.name, retval)
         )
         TaskProgressReport.objects.update_report_on_success(retval, task_id, args, kwargs, task_name=self.name)
+        self._backfill_report_submission(task_id, args, kwargs)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
@@ -54,4 +96,5 @@ class SubmissionTask(celery.Task):
             "retval={5}".format(task_id, self.name, args, kwargs, einfo, retval)
         )
         TaskProgressReport.objects.update_report_after_return(status, task_id, task_name=self.name)
+        self._backfill_report_submission(task_id, args, kwargs)
         super(SubmissionTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
