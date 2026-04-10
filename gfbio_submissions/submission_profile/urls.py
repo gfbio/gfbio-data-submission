@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from django.urls import path, re_path
+from django.urls import path, re_path, reverse
 
-from .views.profile_frontend_view import ProfileFrontendView
 from .views.profile_list_view import ProfileListView
 from .views.profile_select_and_activate_view import ProfileSelectAndActivateView
 from .views.profile_view import ProfileDetailView
+from django.views.generic.base import RedirectView
+from .views.profile_view_redirect import submission_update_ui_redirect_view
 
 app_name = "profile"
 
@@ -24,9 +25,16 @@ urlpatterns = [
         view=ProfileSelectAndActivateView.as_view(),
         name="profile_select_and_activate",
     ),
-    re_path(
-        route=r"^ui/",  # TODO: needed to shorten url to this, otherwise conflict with url above.
-        view=ProfileFrontendView.as_view(),
-        name="profile_ui",
+    path(
+        route="ui/form/",
+        view=RedirectView.as_view(pattern_name='create_submission_ui', permanent=True),
+    ),
+    path(
+        route="ui/",
+        view=RedirectView.as_view(pattern_name='list_submission_ui', permanent=True),
+    ),
+    path(
+        route="ui/form/<uuid:submission_id>/",
+        view=submission_update_ui_redirect_view,
     ),
 ]

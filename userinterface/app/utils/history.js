@@ -1,5 +1,5 @@
 import createHistory from 'history/createBrowserHistory';
 const history = createHistory({
-  basename: '/ui/submission',
+  basename: '/ui/legacy/submission',
 });
 export default history;

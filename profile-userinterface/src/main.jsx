@@ -7,7 +7,7 @@ import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
 
 // eslint-disable-next-line no-unused-vars
-import {DEFAULT_PROFILE_NAME, ROUTER_BASE_URL, LOCAL_ROUTER_BASE_URL} from "./settings.jsx";
+import {DEFAULT_PROFILE_NAME, ROUTER_URL_CREATE, ROUTER_URL_LIST, ROUTER_URL_FORM, LOCAL_ROUTER_BASE_URL} from "./settings.jsx";
 
 import {loader as submissionsLoader} from "./utils/SubmissionsLoader.jsx";
 
@@ -20,8 +20,7 @@ localStorage.setItem("profileName", profileName);
 
 // TODO: switch to LOCAL_ROUTER_BASE_URL for local development with hot reloading via, npm run dev
 //  and use PROFILE_URL_PREFIX etc. for django served app in dev & production
-const base = ROUTER_BASE_URL;
-// const base = LOCAL_ROUTER_BASE_URL;
+const base = LOCAL_ROUTER_BASE_URL;
 
 const router = createBrowserRouter([
     {
@@ -30,13 +29,13 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage/>,
         children: [
             {
-                index: true,
+                path: ROUTER_URL_LIST,
                 element: <SubmissionList baseUrl={base}/>,
                 loader: submissionsLoader,
             },
-            {path: base + "form/", element: <ProfileFormWrapper/>},
+            {path: ROUTER_URL_CREATE, element: <ProfileFormWrapper/>},
             {
-                path: base + "form/:brokerageId/",
+                path: ROUTER_URL_FORM + ":brokerageId/",
                 element: <ProfileFormWrapper/>,
             },
         ],
