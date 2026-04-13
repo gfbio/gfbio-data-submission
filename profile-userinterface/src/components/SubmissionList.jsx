@@ -1,16 +1,14 @@
 import {Collapse} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
-import PropTypes from "prop-types";
 import {useEffect, useState} from "react";
 import {Link, useLoaderData, useLocation} from "react-router-dom";
 import deleteSubmission from "../api/deleteSubmission";
 import SimpleModal from "./simpleModal";
 import NavigationMenu from './NavigationMenu.jsx';
+import {ROUTER_URL_CREATE, ROUTER_URL_EDIT} from "../settings.jsx";
 
 // SubmissionList component
 const SubmissionList = (props) => {
-    const baseUrl = props.baseUrl;
-    const formUrl = baseUrl + "form/";
     const {state} = useLocation();
     const {submissions: initialSubmissions} = useLoaderData();
     const [submissions, setSubmissions] = useState(initialSubmissions);
@@ -106,7 +104,7 @@ const SubmissionList = (props) => {
                         <div className="container my-auto">
                             <div className="row g-0 text-center">
                                 <div className="col-md-10 ps-3 align-middle">
-                                    <Link to={formUrl} className="nav-link list-start">
+                                    <Link to={ROUTER_URL_CREATE} className="nav-link list-start">
                                         <p>You have no submissions yet.</p>
                                         <p>Start a new submission</p>
                                     </Link>
@@ -140,7 +138,7 @@ const SubmissionList = (props) => {
                                     <div className="row g-0">
                                         <div className="col-md-10">
                                             <Link
-                                                to={formUrl + submission.broker_submission_id}
+                                                to={ROUTER_URL_EDIT + submission.broker_submission_id}
                                                 className="row g-0"
                                             >
                                                 <div className="col-md-8 col-sm-12 align-self-center">
@@ -157,7 +155,7 @@ const SubmissionList = (props) => {
                                         </div>
                                         <div className="col-md-2 col-sm-12 align-self-center actions">
                                             <Link
-                                                to={formUrl + submission.broker_submission_id}
+                                                to={ROUTER_URL_EDIT + submission.broker_submission_id}
                                                 className="action h-100 d-inline-block pe-4 btn btn-link"
                                             >
                                                 <i className="icon ion-md-create"/> Edit
@@ -184,10 +182,6 @@ const SubmissionList = (props) => {
             </div>
         </>
     );
-};
-
-SubmissionList.propTypes = {
-    baseUrl: PropTypes.string,
 };
 
 export default SubmissionList;
