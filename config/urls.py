@@ -46,7 +46,7 @@ urlpatterns = [
         name="create_submission_ui",
     ),
     re_path(
-        route=r"^form/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})", 
+        route=r"^edit/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})", 
         view=ProfileFrontendView.as_view(),
         name="update_submission_ui",
     ),

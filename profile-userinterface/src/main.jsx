@@ -7,7 +7,7 @@ import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
 
 // eslint-disable-next-line no-unused-vars
-import {DEFAULT_PROFILE_NAME, ROUTER_URL_CREATE, ROUTER_URL_LIST, ROUTER_URL_FORM, LOCAL_ROUTER_BASE_URL} from "./settings.jsx";
+import {DEFAULT_PROFILE_NAME, ROUTER_URL_CREATE, ROUTER_URL_LIST, ROUTER_URL_EDIT, LOCAL_ROUTER_BASE_URL} from "./settings.jsx";
 
 import {loader as submissionsLoader} from "./utils/SubmissionsLoader.jsx";
 
@@ -30,12 +30,12 @@ const router = createBrowserRouter([
         children: [
             {
                 path: ROUTER_URL_LIST,
-                element: <SubmissionList baseUrl={base}/>,
+                element: <SubmissionList />,
                 loader: submissionsLoader,
             },
             {path: ROUTER_URL_CREATE, element: <ProfileFormWrapper/>},
             {
-                path: ROUTER_URL_FORM + ":brokerageId/",
+                path: ROUTER_URL_EDIT + ":brokerageId/",
                 element: <ProfileFormWrapper/>,
             },
         ],

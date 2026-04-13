@@ -44,10 +44,16 @@ class TestProfileFrontendView(TestCase):
         c = Client()
         c.login(username="kevin", password="password")
         response = c.get("/profile/ui/", {"username": "joe", "password": "password"})
+        self.assertEqual(301, response.status_code)
+        self.assertEqual("/list/", response.headers["location"])
+        response = c.get(response.headers["location"], {"username": "joe", "password": "password"})
         self.assertEqual(200, response.status_code)
 
     def test_frontend_view_with_staff_login(self):
         c = Client()
         c.login(username="joe", password="password")
         response = c.get("/profile/ui/", {"username": "joe", "password": "password"})
+        self.assertEqual(301, response.status_code)
+        self.assertEqual("/list/", response.headers["location"])
+        response = c.get(response.headers["location"], {"username": "joe", "password": "password"})
         self.assertEqual(200, response.status_code)

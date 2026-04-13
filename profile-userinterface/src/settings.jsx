@@ -2,8 +2,6 @@
 export const SERVER_ROOT = "";
 //export const SERVER_ROOT = 'http://127.0.0.1:8000';
 
-// use as base url for router in main.jsx to allow development with hot reload
-//  and "npm run dev"
 export const LOCAL_ROUTER_BASE_URL = "/";
 // local token, if you want to develop locally with hot-reloading in a javascript only environment
 export const LOCAL_API_TOKEN = "6e9f1d95d5bb666d327b59c16534591250ee4d60";
@@ -11,10 +9,9 @@ export const LOCAL_API_TOKEN = "6e9f1d95d5bb666d327b59c16534591250ee4d60";
 export const PROFILE_URL_PREFIX = "/profile/";
 
 // TODO: router base before making profile ui the new standard for submissions
-export const ROUTER_BASE_URL = "/"; //PROFILE_URL_PREFIX + "ui/";
 export const ROUTER_URL_CREATE = "/new/"
 export const ROUTER_URL_LIST = "/list/"
-export const ROUTER_URL_FORM = "/form/"
+export const ROUTER_URL_EDIT = "/edit/";
 
 // TODO: handle dynamic, get default from server (global default field there ?)
 export const DEFAULT_PROFILE_NAME = "gfbio";
