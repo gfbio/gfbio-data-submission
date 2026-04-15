@@ -15,7 +15,6 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
 
 
-@extend_schema(exclude=True)
 class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer

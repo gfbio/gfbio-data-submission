@@ -13,7 +13,6 @@ from ..serializers.submission_upload_list_serializer import (
 )
 
 
-@extend_schema(exclude=True)
 class SubmissionUploadListView(generics.ListAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadListSerializer
