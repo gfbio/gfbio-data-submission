@@ -11,6 +11,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
+@extend_schema(tags=["cloud-uploads"])
 class SubmissionCloudUploadListView(generics.ListAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
