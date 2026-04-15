@@ -10,7 +10,7 @@ from .views.submission_cloud_upload_patch_view import SubmissionCloudUploadPatch
 from .views.submission_cloud_upload_view import SubmissionCloudUploadAbortView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadCompleteView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadUpdatePartView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView
+from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView, SubmissionCloudUploadSingleCallView
 from .views.submission_cloud_upload_download_view import SubmissionCloudGetDownloadLinkView, SubmissionCloudZipAllFilesAndDownload, SubmissionCloudZipAllFilesAndDownloadRedirect
 from .views.submission_comment_view import SubmissionCommentView
 from .views.submission_detail_view import SubmissionDetailView
@@ -38,6 +38,11 @@ urlpatterns = [
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
         view=SubmissionCloudUploadView.as_view(),
         name="submissions_cloud_upload",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/file/$",
+        view=SubmissionCloudUploadSingleCallView.as_view(),
+        name="submissions_cloud_upload_single_call",
     ),
     path(
         route="submissions/cloudupload/<str:upload_id>/part/",
