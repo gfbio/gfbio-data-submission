@@ -371,6 +371,10 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "2.0.0",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "PREPROCESSING_HOOKS": ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
+        "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "config.settings.base.add_curl_codesamples_postprocessing_hook_func",
+    ],
     "SORT_OPERATIONS": False,
     "TAGS": [
         {"name": "authentication", "description": "Endpoints for obtaining API credentials."},
@@ -435,6 +439,154 @@ def whitelist_api_endpoints_preprocessing_hook(endpoints):
 
 
 whitelist_api_endpoints_preprocessing_hook_func = whitelist_api_endpoints_preprocessing_hook
+
+def _build_placeholder_path(path):
+    # Convert OpenAPI path templates to visible placeholders in examples.
+    return path.replace("{", "<").replace("}", ">")
+
+def _resolve_schema(schema_obj, components):
+    if not isinstance(schema_obj, dict):
+        return {}
+    ref = schema_obj.get("$ref")
+    if not ref:
+        return schema_obj
+    prefix = "#/components/schemas/"
+    if ref.startswith(prefix):
+        schema_name = ref[len(prefix):]
+        return components.get("schemas", {}).get(schema_name, {})
+    return schema_obj
+
+
+def _build_example_value(field_schema, components):
+    resolved = _resolve_schema(field_schema, components)
+
+    if "example" in resolved:
+        return resolved["example"]
+    if "default" in resolved:
+        return resolved["default"]
+    if "enum" in resolved and resolved["enum"]:
+        return resolved["enum"][0]
+
+    field_type = resolved.get("type")
+    field_format = resolved.get("format")
+
+    if field_type == "boolean":
+        return True
+    if field_type == "integer":
+        return 0
+    if field_type == "number":
+        return 0.0
+    if field_type == "array":
+        item_schema = resolved.get("items", {})
+        return [_build_example_value(item_schema, components)]
+    if field_type == "object":
+        obj = {}
+        for nested_name, nested_schema in (resolved.get("properties") or {}).items():
+            obj[nested_name] = _build_example_value(nested_schema, components)
+        return obj
+
+    if field_format == "uuid":
+        return "00000000-0000-0000-0000-000000000000"
+    if field_format == "date":
+        return "2026-01-01"
+    if field_format == "date-time":
+        return "2026-01-01T00:00:00Z"
+    if field_format in ("uri", "url"):
+        return "https://example.org"
+    if field_format in ("email",):
+        return "user@example.org"
+    if field_format in ("password",):
+        return "<password>"
+    if field_format in ("binary", "byte"):
+        return "<binary>"
+
+    return "<value>"
+
+
+def _build_request_fragment(operation, components):
+    request_body = operation.get("requestBody") or {}
+    content = request_body.get("content") or {}
+    if not content:
+        return ""
+    if "multipart/form-data" in content:
+        schema = content.get("multipart/form-data", {}).get("schema", {})
+        schema = _resolve_schema(schema, components)
+        properties = schema.get("properties", {})
+        if not properties:
+            return "  -F \"<field>=<value>\""
+        fragments = []
+        for field_name, field_schema in properties.items():
+            if field_schema.get("format") == "binary" or field_name.lower() == "file":
+                fragments.append(f"  -F \"{field_name}=@<file>\"")
+            else:
+                fragments.append(f"  -F \"{field_name}=<value>\"")
+        return " \\\n".join(fragments)
+    if "application/json" in content:
+        schema = content.get("application/json", {}).get("schema", {})
+        schema = _resolve_schema(schema, components)
+        properties = schema.get("properties", {})
+        if properties:
+            parts = []
+            for field_name, field_schema in properties.items():
+                value = _build_example_value(field_schema, components)
+                if isinstance(value, str):
+                    parts.append(f"\"{field_name}\":\"{value}\"")
+                elif isinstance(value, bool):
+                    parts.append(f"\"{field_name}\":{'true' if value else 'false'}")
+                elif value is None:
+                    parts.append(f"\"{field_name}\":null")
+                else:
+                    import json
+                    parts.append(f"\"{field_name}\":{json.dumps(value)}")
+            payload = "{" + ",".join(parts) + "}"
+            return f"  -H \"Content-Type: application/json\" \\\n  -d '{payload}'"
+        return "  -H \"Content-Type: application/json\" \\\n  -d '{\"<field>\": \"<value>\"}'"
+    # Fallback for uncommon content-types
+    content_type = next(iter(content.keys()), "application/json")
+    return f"  -H \"Content-Type: {content_type}\" \\\n  -d '<payload>'"
+
+def _build_auth_fragment(operation):
+    security = operation.get("security", [])
+    if not security:
+        return ""
+    # If token auth is available, prefer showing token usage first.
+    for sec_req in security:
+        if "tokenAuth" in sec_req:
+            return "  -H \"Authorization: Token <token>\""
+    # Fallback: if any auth is required but token is not present, show basic auth.
+    return "  -u \"<username>:<password>\""
+
+def add_curl_codesamples_postprocessing_hook(result, generator, request, public):
+    host = "http://127.0.0.1:8000"
+    components = result.get("components", {})
+    paths = result.get("paths", {})
+    for path, path_item in paths.items():
+        if not isinstance(path_item, dict):
+            continue
+        for method in ("get", "post", "put", "patch", "delete"):
+            operation = path_item.get(method)
+            if not isinstance(operation, dict):
+                continue
+            auth_fragment = _build_auth_fragment(operation)
+            request_fragment = _build_request_fragment(operation, components)
+            safe_path = _build_placeholder_path(path)
+            base = f"curl -X {method.upper()} \"{host}{safe_path}\""
+            parts = [base]
+            if auth_fragment:
+                parts.append(auth_fragment)
+            if request_fragment:
+                parts.append(request_fragment)
+            curl_cmd = " \\\n".join(parts)
+            operation["x-codeSamples"] = [
+                {
+                    "lang": "curl",
+                    "label": "cURL",
+                    "source": curl_cmd,
+                }
+            ]
+    return result
+
+add_curl_codesamples_postprocessing_hook_func = add_curl_codesamples_postprocessing_hook
 
 IS_PROD_ENV = env.bool("IS_PROD_ENV", False)
 
