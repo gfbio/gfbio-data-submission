@@ -1,6 +1,19 @@
 {% extends "base_redoc.html" %}
 {# Bootstrap-4-compatible variant of base_content for ReDoc pages #}
 
+{% block extra_css %}
+    {{ block.super }}
+    <style>
+      #redoc-wrapper pre {
+        color: #f8f9fa !important;
+      }
+      #redoc-wrapper pre code,
+      #redoc-wrapper pre code span {
+        color: inherit !important;
+      }
+    </style>
+{% endblock extra_css %}
+
 {% block navigation %}
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light sticky-top"
