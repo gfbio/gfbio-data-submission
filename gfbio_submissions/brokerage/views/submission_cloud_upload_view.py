@@ -24,6 +24,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -113,12 +114,36 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
             )
         return response
 
+    @extend_schema(
+        operation_id="cloud upload multipart 1 initialize",
+        summary="Advanced multipart step 1: initialize cloud upload",
+        description="Start a cloud multipart upload for a submission and create upload metadata.",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to upload a file to (UUID, RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID,
+            )
+        ],
+        request=SubmissionCloudUploadSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="Cloud upload initialized successfully.",
+                response=SubmissionCloudUploadSerializer(many=False),
+            ),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Submission does not exist."),
+        },
+    )
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
 
 # TODO: this is a test for potential custom code that could be inserted into dt_upload workflows. can be
 #  replaced by the dt_upload view for this via urls.py
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -132,16 +157,54 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
         
         return response
 
+    @extend_schema(
+        operation_id="cloud upload multipart 2 create part url",
+        summary="Advanced multipart step 2: create pre-signed part URL",
+        description="Create a pre-signed URL for uploading the next multipart chunk.",
+        responses={
+            200: OpenApiResponse(description="Pre-signed URL returned."),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Upload id not found."),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
+
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploadPartView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
 
+    @extend_schema(
+        operation_id="cloud upload multipart 3 confirm part",
+        summary="Advanced multipart step 3: confirm uploaded part",
+        description="Mark an uploaded multipart chunk as completed and store its ETag.",
+        responses={
+            200: OpenApiResponse(description="Part status updated."),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Upload id or part not found."),
+        },
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
 
+
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
+    @extend_schema(
+        operation_id="cloud upload multipart 4 complete",
+        summary="Advanced multipart step 4: complete upload",
+        description="Finalize multipart upload and trigger checksum verification workflow.",
+        responses={
+            200: OpenApiResponse(description="Multipart upload completed."),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Upload id not found."),
+        },
+    )
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
         try:
@@ -166,9 +229,22 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
         return response
 
 
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+
+    @extend_schema(
+        operation_id="cloud upload multipart 5 abort",
+        summary="Advanced multipart optional step: abort upload",
+        description="Abort an active multipart upload and release temporary upload state.",
+        responses={
+            204: OpenApiResponse(description="Multipart upload aborted."),
+            404: OpenApiResponse(description="Upload id not found."),
+        },
+    )
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
 
 
 class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
@@ -178,6 +254,7 @@ class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
     part_size = serializers.IntegerField(required=False, default=100 * 1024 * 1024, min_value=5 * 1024 * 1024)
 
 
+@extend_schema(tags=["cloud-upload"])
 class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSingleCallSerializer
@@ -218,10 +295,12 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         return md5_hash.hexdigest(), sha256_hash.hexdigest()
 
     @extend_schema(
-        operation_id="create submission cloud upload single call",
+        operation_id="create submission cloud upload single request",
+        summary="Recommended: single-request cloud upload",
         description=(
-                "Upload one file via a single API call. "
-                "The backend handles multipart upload start, part uploads, and completion."
+                "Upload one file via a single API request. This is the recommended endpoint for clients. "
+                "It internally performs the multipart flow (initialize upload, upload parts, confirm parts, and complete upload). "
+                "Use the `cloud-upload-multipart` endpoints only if you need manual control over those steps."
         ),
         parameters=[
             OpenApiParameter(

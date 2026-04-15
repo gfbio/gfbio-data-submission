@@ -8,13 +8,44 @@ from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView, RedirectView
 from django.views.static import serve
-from drf_spectacular.views import SpectacularAPIView
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework import parsers, permissions, serializers
 from rest_framework.authtoken.views import obtain_auth_token
 
 from gfbio_submissions.submission_ui.views import HomeView
 from gfbio_submissions.submission_profile.views.profile_frontend_view import ProfileFrontendView
 
 admin.site.site_header = 'GFBio administration version: {}'.format(settings.VERSION)
+
+
+@extend_schema(
+    tags=["authentication"],
+    operation_id="create auth token",
+    auth=[],
+    description="Create a DRF token for API authentication. Use the returned token in the `Authorization: Token <token>` header.",
+    request=inline_serializer(
+        name="AuthTokenRequest",
+        fields={
+            "username": serializers.CharField(),
+            "password": serializers.CharField(),
+        },
+    ),
+    responses={
+        200: OpenApiResponse(
+            description="Token created successfully.",
+            response=inline_serializer(
+                name="AuthTokenResponse",
+                fields={"token": serializers.CharField()},
+            ),
+        ),
+        400: OpenApiResponse(description="Invalid credentials."),
+    },
+)
+class AuthTokenView(ObtainAuthToken):
+    parser_classes = (parsers.JSONParser,)
+    authentication_classes = ()
+    permission_classes = (permissions.AllowAny,)
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
@@ -46,7 +77,7 @@ urlpatterns = [
         name="create_submission_ui",
     ),
     re_path(
-        route=r"^edit/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})", 
+        route=r"^edit/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})",
         view=ProfileFrontendView.as_view(),
         name="update_submission_ui",
     ),
