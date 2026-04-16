@@ -379,9 +379,8 @@ SPECTACULAR_SETTINGS = {
     "TAGS": [
         {"name": "authentication", "description": "Endpoints for obtaining API credentials."},
         {"name": "submissions", "description": "Create, list and manage submissions."},
-        {"name": "cloud-uploads", "description": "Cloud upload listing endpoints."},
-        {"name": "cloud-upload", "description": "Recommended cloud upload API. Use the single-request endpoint to upload a file end-to-end."},
-        {"name": "cloud-upload-multipart", "description": "Advanced multipart upload steps used by backend workflows (can be called manually if needed)."},
+        {"name": "upload", "description": "Recommended cloud upload API. Use the single-request endpoint to upload a file end-to-end."},
+        {"name": "upload-multipart", "description": "Advanced multipart upload steps used by backend workflows (can be called manually if needed)."},
     ],
 }
 

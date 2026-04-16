@@ -16,7 +16,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
-@extend_schema(tags=["cloud-upload"])
+@extend_schema(tags=["upload"])
 class SubmissionCloudUploadDetailView(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -33,8 +33,8 @@ class SubmissionCloudUploadDetailView(
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
-        operation_id="update submission cloud upload",
-        description="Updates an existing cloud-upload file associated with a submission.",
+        operation_id="update submission upload",
+        description="Updates an existing upload file associated with a submission.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
@@ -115,8 +115,8 @@ class SubmissionCloudUploadDetailView(
         return response
 
     @extend_schema(
-        operation_id="delete submission cloud upload",
-        description="Deletes a cloud-upload file associated with a submission.",
+        operation_id="delete submission upload",
+        description="Deletes an upload file associated with a submission.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
