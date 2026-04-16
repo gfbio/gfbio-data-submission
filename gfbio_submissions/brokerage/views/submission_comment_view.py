@@ -19,6 +19,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 
 
+@extend_schema(tags=["submissions"])
 class SubmissionCommentView(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
