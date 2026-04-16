@@ -557,7 +557,7 @@ def _build_auth_fragment(operation):
     return "  -u \"<username>:<password>\""
 
 def add_curl_codesamples_postprocessing_hook(result, generator, request, public):
-    host = "http://127.0.0.1:8000"
+    host = HOST_URL_ROOT.rstrip("/") if HOST_URL_ROOT else "https://submissions.gfbio.org"
     components = result.get("components", {})
     paths = result.get("paths", {})
     for path, path_item in paths.items():
