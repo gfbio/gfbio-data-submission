@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.urls import re_path, path
 from django.views.generic import TemplateView
+from drf_spectacular.views import SpectacularSwaggerView
 from dt_upload.views import backend_based_upload_views
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
@@ -127,21 +128,10 @@ urlpatterns = [
         ),
         name="api_molecular_documentation",
     ),
-    re_path(
-        "",
-        TemplateView.as_view(
-            template_name="pages/api.html",
-            extra_context={"schema_url": "api-schema"},
-        ),
-        name="api_documentation",
-    ),
     re_path(r'molecular/$', TemplateView.as_view(
         template_name='pages/api_molecular.html',
         extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
     ), name='api_molecular_documentation'),
-    re_path('', TemplateView.as_view(
-        template_name='pages/api.html',
-        extra_context={'schema_url': 'api-schema'}
-    ), name='api_documentation'),
-
+    # acts also as a default view if nothing above applies
+    re_path('', SpectacularSwaggerView.as_view(url_name="api-schema"), name='api_documentation')
 ]

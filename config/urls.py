@@ -8,7 +8,7 @@ from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView, RedirectView
 from django.views.static import serve
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.views import SpectacularAPIView
 from rest_framework.authtoken.views import obtain_auth_token
 
 from gfbio_submissions.submission_ui.views import HomeView
@@ -70,17 +70,11 @@ if settings.DEBUG:
 
 # API URLS
 urlpatterns += [
-    # API base url
-    path("api/", include("config.api_router")),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
     path('api-auth/', include('rest_framework.urls')),
     path("api-schema/", SpectacularAPIView.as_view(), name="api-schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="api-schema"),
-        name="api-docs",
-    ),
+
 ]
 
 if settings.DEBUG:
