@@ -14,6 +14,7 @@ import responses
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from dt_upload.models import MultiPartUpload
@@ -406,3 +407,41 @@ class TestSubmissionCloudUploadView(TestCase):
         )
         response = self.client.post(url, self.test_file_data, format="json")
         self.assertEqual(response.status_code, 500)
+
+    def test_single_call_upload(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload_single_call",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+
+        self.s3_client_mock.create_multipart_upload.return_value = {
+            "UploadId": self.mock_upload_id
+        }
+        self.s3_client_mock.upload_part.return_value = {
+            "ETag": '"part-etag-1"'
+        }
+        self.s3_client_mock.complete_multipart_upload.return_value = {
+            "Location": "https://test-bucket.s3.amazonaws.com/test-file"
+        }
+
+        file_content = b"hello-cloud-upload"
+        upload_file = SimpleUploadedFile("test.bin", file_content, content_type="application/octet-stream")
+        data = {
+            "file": upload_file,
+            "attach_to_ticket": "false",
+            "meta_data": "true",
+            "part_size": 5 * 1024 * 1024,
+        }
+
+        response = self.client.post(url, data=data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["status"], SubmissionCloudUpload.STATUS_UPLOADED)
+        self.assertEqual(str(response.data["broker_submission_id"]), str(submission.broker_submission_id))
+
+        submission_cloud_upload = SubmissionCloudUpload.objects.get(submission=submission)
+        self.assertEqual(submission_cloud_upload.status, SubmissionCloudUpload.STATUS_UPLOADED)
+        self.assertEqual(submission_cloud_upload.file_upload.status, "COMPLETED")
+
+        self.s3_client_mock.upload_part.assert_called()
+        self.s3_client_mock.complete_multipart_upload.assert_called_once()
