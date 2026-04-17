@@ -24,6 +24,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -113,12 +114,36 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
             )
         return response
 
+    @extend_schema(
+        operation_id="cloud upload multipart 1 initialize",
+        summary="Advanced multipart step 1: initialize cloud upload",
+        description="Start a cloud multipart upload for a submission and create upload metadata.",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to upload a file to (UUID, RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID,
+            )
+        ],
+        request=SubmissionCloudUploadSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="Cloud upload initialized successfully.",
+                response=SubmissionCloudUploadSerializer(many=False),
+            ),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Submission does not exist."),
+        },
+    )
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
 
 # TODO: this is a test for potential custom code that could be inserted into dt_upload workflows. can be
 #  replaced by the dt_upload view for this via urls.py
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -132,16 +157,54 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
         
         return response
 
+    @extend_schema(
+        operation_id="cloud upload multipart 2 create part url",
+        summary="Advanced multipart step 2: create pre-signed part URL",
+        description="Create a pre-signed URL for uploading the next multipart chunk.",
+        responses={
+            200: OpenApiResponse(description="Pre-signed URL returned."),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Upload id not found."),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
+
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploadPartView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
 
+    @extend_schema(
+        operation_id="cloud upload multipart 3 confirm part",
+        summary="Advanced multipart step 3: confirm uploaded part",
+        description="Mark an uploaded multipart chunk as completed and store its ETag.",
+        responses={
+            200: OpenApiResponse(description="Part status updated."),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Upload id or part not found."),
+        },
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
 
+
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
+    @extend_schema(
+        operation_id="cloud upload multipart 4 complete",
+        summary="Advanced multipart step 4: complete upload",
+        description="Finalize multipart upload and trigger checksum verification workflow.",
+        responses={
+            200: OpenApiResponse(description="Multipart upload completed."),
+            400: OpenApiResponse(description="Validation error."),
+            404: OpenApiResponse(description="Upload id not found."),
+        },
+    )
     def put(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
         try:
@@ -166,18 +229,32 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
         return response
 
 
+@extend_schema(tags=["cloud-upload-multipart"])
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
+    @extend_schema(
+        operation_id="cloud upload multipart 5 abort",
+        summary="Advanced multipart optional step: abort upload",
+        description="Abort an active multipart upload and release temporary upload state.",
+        responses={
+            204: OpenApiResponse(description="Multipart upload aborted."),
+            404: OpenApiResponse(description="Upload id not found."),
+        },
+    )
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
 
 class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
-    file = serializers.FileField(required=True)
+    files = serializers.ListField(child=serializers.FileField(), required=True, allow_empty=False)
     attach_to_ticket = serializers.BooleanField(required=False, default=False)
     meta_data = serializers.BooleanField(required=False, default=False)
     part_size = serializers.IntegerField(required=False, default=100 * 1024 * 1024, min_value=5 * 1024 * 1024)
 
 
+@extend_schema(tags=["cloud-upload"])
 class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSingleCallSerializer
@@ -217,75 +294,14 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         uploaded_file.seek(0)
         return md5_hash.hexdigest(), sha256_hash.hexdigest()
 
-    @extend_schema(
-        operation_id="create submission cloud upload single call",
-        description=(
-                "Upload one file via a single API call. "
-                "The backend handles multipart upload start, part uploads, and completion."
-        ),
-        parameters=[
-            OpenApiParameter(
-                name="broker_submission_id",
-                description="Unique submission ID of the submission to upload to (UUID, RFC4122).",
-                location="path",
-                required=True,
-                type=OpenApiTypes.UUID
-            )
-        ],
-        request=SubmissionCloudUploadSingleCallSerializer,
-        responses={
-            201: OpenApiResponse(
-                description="Single-call cloud upload completed successfully.",
-                response=inline_serializer(
-                    name="SubmissionCloudUploadSingleCallResponse",
-                    fields={
-                        "id": serializers.IntegerField(),
-                        "broker_submission_id": serializers.UUIDField(),
-                        "upload_id": serializers.CharField(),
-                        "file_name": serializers.CharField(),
-                        "file_size": serializers.IntegerField(),
-                        "md5": serializers.CharField(allow_null=True),
-                        "sha256": serializers.CharField(allow_null=True),
-                        "meta_data": serializers.BooleanField(),
-                        "attach_to_ticket": serializers.BooleanField(),
-                        "status": serializers.CharField(),
-                        "location": serializers.CharField(allow_null=True),
-                    }
-                )
-            ),
-            400: OpenApiResponse(description="Validation or workflow constraint error."),
-            404: OpenApiResponse(description="Submission does not exist."),
-        },
-    )
-    def post(self, request, *args, **kwargs):
-        broker_submission_id = kwargs.get("broker_submission_id", uuid4())
-        sub, not_found_response = self._get_submission_or_response(broker_submission_id)
-        if not_found_response is not None:
-            return not_found_response
-
-        if sub.target == ATAX and sub.status == Submission.SUBMITTED:
-            return Response(
-                data={
-                    "broker_submission_id": sub.broker_submission_id,
-                    "status": sub.status,
-                    "embargo": sub.embargo,
-                    "error": "no uploads allowed with current submission status",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        uploaded_file = serializer.validated_data["file"]
+    def _upload_single_file(self, submission, uploaded_file, part_size, attach_to_ticket=False, meta_data=False):
         file_name = os.path.basename(uploaded_file.name)
         file_size = uploaded_file.size
         file_type = getattr(uploaded_file, "content_type", None) or "application/octet-stream"
-        part_size = serializer.validated_data["part_size"]
         total_parts = max(1, math.ceil(file_size / part_size))
-        attach_to_ticket = serializer.validated_data["attach_to_ticket"]
-        meta_data = serializer.validated_data["meta_data"]
         md5, sha256 = self._calculate_hashes(uploaded_file)
+
+        key_prefix = f"{submission.broker_submission_id}/"
 
         start_payload = {
             "filename": file_name,
@@ -299,16 +315,15 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=start_payload)
         upload_serializer.is_valid(raise_exception=True)
 
-        prefix_with_folder = f"{broker_submission_id}/"
         dt_upload_response_status, dt_upload_data, file_upload_request = backend_based_upload_mixins.generate_multipart_upload_objects(
-            request,
+            self.request,
             upload_serializer,
-            file_key_prefix=prefix_with_folder
+            file_key_prefix=key_prefix
         )
 
         submission_cloud_upload = SubmissionCloudUpload.objects.create(
             user=self.request.user,
-            submission=sub,
+            submission=submission,
             file_upload=file_upload_request,
             meta_data=meta_data,
             attach_to_ticket=attach_to_ticket,
@@ -352,7 +367,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
                 file_upload_request.status = "FAILED"
                 file_upload_request.save(update_fields=["status"])
                 payload = complete_data if isinstance(complete_data, dict) else {"detail": complete_data}
-                return Response(payload, status=complete_status)
+                return payload, complete_status
 
         except Exception:
             s3_client.abort_multipart_upload(
@@ -365,7 +380,6 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             raise
 
         file_upload_request.refresh_from_db()
-
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED
         submission_cloud_upload.save(update_fields=["status"])
         submission_cloud_upload.log_change(
@@ -383,7 +397,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
 
         response_data = {
             "id": submission_cloud_upload.pk,
-            "broker_submission_id": sub.broker_submission_id,
+            "broker_submission_id": submission.broker_submission_id,
             "upload_id": upload_id,
             "file_name": file_upload_request.original_filename,
             "file_size": file_upload_request.file_size,
@@ -395,6 +409,113 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             "location": complete_data.get("location"),
         }
         response_status = max(status.HTTP_201_CREATED, dt_upload_response_status)
+        return response_data, response_status
+
+    @extend_schema(
+        operation_id="create submission cloud upload single request",
+        summary="Recommended: request-based cloud upload",
+        description=(
+                "Upload one or multiple files via a single API request. This is the recommended endpoint for clients. "
+                "It internally performs the multipart flow (initialize upload, upload parts, confirm parts, and complete upload). "
+                "Use the `cloud-upload-multipart` endpoints only if you need manual control over those steps."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of the submission to upload to (UUID, RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        request=SubmissionCloudUploadSingleCallSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="Upload completed successfully.",
+                response=inline_serializer(
+                    name="SubmissionCloudUploadBatchResponse",
+                    fields={
+                        "broker_submission_id": serializers.UUIDField(),
+                        "total_files": serializers.IntegerField(),
+                        "uploaded_files": serializers.IntegerField(),
+                        "failed_files": serializers.IntegerField(),
+                        "results": serializers.ListField(
+                            child=inline_serializer(
+                                name="SubmissionCloudUploadBatchResultItem",
+                                fields={
+                                    "file_name": serializers.CharField(),
+                                    "status_code": serializers.IntegerField(),
+                                    "result": serializers.JSONField(required=False),
+                                    "error": serializers.CharField(required=False),
+                                },
+                            ),
+                        ),
+                    }
+                )
+            ),
+            207: OpenApiResponse(description="Partial success: at least one file failed."),
+            400: OpenApiResponse(description="Validation or workflow constraint error."),
+            404: OpenApiResponse(description="Submission does not exist."),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get("broker_submission_id", uuid4())
+        sub, not_found_response = self._get_submission_or_response(broker_submission_id)
+        if not_found_response is not None:
+            return not_found_response
+
+        if sub.target == ATAX and sub.status == Submission.SUBMITTED:
+            return Response(
+                data={
+                    "broker_submission_id": sub.broker_submission_id,
+                    "status": sub.status,
+                    "embargo": sub.embargo,
+                    "error": "no uploads allowed with current submission status",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uploaded_files = serializer.validated_data["files"]
+        part_size = serializer.validated_data["part_size"]
+        attach_to_ticket = serializer.validated_data["attach_to_ticket"]
+        meta_data = serializer.validated_data["meta_data"]
+
+        results = []
+        has_failures = False
+        for item in uploaded_files:
+            try:
+                item_data, item_status = self._upload_single_file(
+                    submission=sub,
+                    uploaded_file=item,
+                    part_size=part_size,
+                    attach_to_ticket=attach_to_ticket,
+                    meta_data=meta_data,
+                )
+                has_failures = has_failures or item_status >= status.HTTP_400_BAD_REQUEST
+                results.append({
+                    "file_name": item.name,
+                    "status_code": item_status,
+                    "result": item_data,
+                })
+            except Exception as exc:
+                has_failures = True
+                results.append({
+                    "file_name": item.name,
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": str(exc),
+                })
+
+        response_status = status.HTTP_207_MULTI_STATUS if has_failures else status.HTTP_201_CREATED
+        response_data = {
+            "broker_submission_id": sub.broker_submission_id,
+            "total_files": len(uploaded_files),
+            "uploaded_files": len([item for item in results if item["status_code"] < status.HTTP_400_BAD_REQUEST]),
+            "failed_files": len([item for item in results if item["status_code"] >= status.HTTP_400_BAD_REQUEST]),
+            "results": results,
+        }
         response = Response(response_data, status=response_status)
 
         with transaction.atomic():
