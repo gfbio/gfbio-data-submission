@@ -428,7 +428,7 @@ class TestSubmissionCloudUploadView(TestCase):
         file_content = b"hello-cloud-upload"
         upload_file = SimpleUploadedFile("test.bin", file_content, content_type="application/octet-stream")
         data = {
-            "files": [upload_file],
+            "file": upload_file,
             "attach_to_ticket": "false",
             "meta_data": "true",
             "part_size": 5 * 1024 * 1024,
@@ -436,8 +436,8 @@ class TestSubmissionCloudUploadView(TestCase):
 
         response = self.client.post(url, data=data, format="multipart")
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data["uploaded_files"], 1)
-        self.assertEqual(response.data["failed_files"], 0)
+        self.assertEqual(response.data["meta_data"], True)
+        self.assertEqual(response.data["attach_to_ticket"], False)
         self.assertEqual(str(response.data["broker_submission_id"]), str(submission.broker_submission_id))
 
         submission_cloud_upload = SubmissionCloudUpload.objects.get(submission=submission)
@@ -450,7 +450,7 @@ class TestSubmissionCloudUploadView(TestCase):
     def test_multi_file_upload(self):
         submission = Submission.objects.first()
         url = reverse(
-            "brokerage:submissions_cloud_upload_single_call",
+            "brokerage:submissions_cloud_upload_batch_call",
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
 
@@ -469,9 +469,6 @@ class TestSubmissionCloudUploadView(TestCase):
         file_b = SimpleUploadedFile("sample2.fastq.gz", b"content-b", content_type="application/x-gzip")
         data = {
             "files": [file_a, file_b],
-            "attach_to_ticket": "false",
-            "meta_data": "false",
-            "part_size": 5 * 1024 * 1024,
         }
 
         response = self.client.post(url, data=data, format="multipart")
@@ -483,3 +480,23 @@ class TestSubmissionCloudUploadView(TestCase):
 
         self.assertEqual(SubmissionCloudUpload.objects.filter(submission=submission).count(), 2)
         self.assertTrue(self.s3_client_mock.upload_part.called)
+
+    def test_batch_upload_sets_meta_and_attach_to_false(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload_batch_call",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+        file_a = SimpleUploadedFile("sample1.fastq.gz", b"content-a", content_type="application/x-gzip")
+        file_b = SimpleUploadedFile("sample2.fastq.gz", b"content-b", content_type="application/x-gzip")
+        data = {
+            "files": [file_a, file_b],
+        }
+
+        response = self.client.post(url, data=data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["failed_files"], 0)
+
+        for upload in SubmissionCloudUpload.objects.filter(submission=submission):
+            self.assertFalse(upload.meta_data)
+            self.assertFalse(upload.attach_to_ticket)

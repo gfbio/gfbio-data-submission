@@ -248,10 +248,14 @@ class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUp
 
 
 class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
-    files = serializers.ListField(child=serializers.FileField(), required=True, allow_empty=False)
+    file = serializers.FileField(required=True)
     attach_to_ticket = serializers.BooleanField(required=False, default=False)
     meta_data = serializers.BooleanField(required=False, default=False)
     part_size = serializers.IntegerField(required=False, default=100 * 1024 * 1024, min_value=5 * 1024 * 1024)
+
+
+class SubmissionCloudUploadBatchSerializer(serializers.Serializer):
+    files = serializers.ListField(child=serializers.FileField(), required=True, allow_empty=False)
 
 
 @extend_schema(tags=["upload"])
@@ -413,9 +417,9 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
 
     @extend_schema(
         operation_id="create submission cloud upload single request",
-        summary="Recommended: request-based cloud upload",
+        summary="Recommended: single-file upload",
         description=(
-                "Upload one or multiple files via a single API request. This is the recommended endpoint for clients. "
+                "Upload one file via a single API request. "
                 "It internally performs the multipart flow (initialize upload, upload parts, confirm parts, and complete upload). "
                 "Use the `cloud-upload-multipart` endpoints only if you need manual control over those steps."
         ),
@@ -433,26 +437,97 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             201: OpenApiResponse(
                 description="Upload completed successfully.",
                 response=inline_serializer(
-                    name="SubmissionCloudUploadBatchResponse",
+                    name="SubmissionCloudUploadSingleCallResponse",
                     fields={
+                        "id": serializers.IntegerField(),
                         "broker_submission_id": serializers.UUIDField(),
-                        "total_files": serializers.IntegerField(),
-                        "uploaded_files": serializers.IntegerField(),
-                        "failed_files": serializers.IntegerField(),
-                        "results": serializers.ListField(
-                            child=inline_serializer(
-                                name="SubmissionCloudUploadBatchResultItem",
-                                fields={
-                                    "file_name": serializers.CharField(),
-                                    "status_code": serializers.IntegerField(),
-                                    "result": serializers.JSONField(required=False),
-                                    "error": serializers.CharField(required=False),
-                                },
-                            ),
-                        ),
+                        "upload_id": serializers.CharField(),
+                        "file_name": serializers.CharField(),
+                        "file_size": serializers.IntegerField(),
+                        "md5": serializers.CharField(allow_null=True),
+                        "sha256": serializers.CharField(allow_null=True),
+                        "meta_data": serializers.BooleanField(),
+                        "attach_to_ticket": serializers.BooleanField(),
+                        "status": serializers.CharField(),
+                        "location": serializers.CharField(allow_null=True),
                     }
                 )
             ),
+            400: OpenApiResponse(description="Validation or workflow constraint error."),
+            404: OpenApiResponse(description="Submission does not exist."),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get("broker_submission_id", uuid4())
+        sub, not_found_response = self._get_submission_or_response(broker_submission_id)
+        if not_found_response is not None:
+            return not_found_response
+
+        if sub.target == ATAX and sub.status == Submission.SUBMITTED:
+            return Response(
+                data={
+                    "broker_submission_id": sub.broker_submission_id,
+                    "status": sub.status,
+                    "embargo": sub.embargo,
+                    "error": "no uploads allowed with current submission status",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uploaded_file = serializer.validated_data["file"]
+        part_size = serializer.validated_data["part_size"]
+        attach_to_ticket = serializer.validated_data["attach_to_ticket"]
+        meta_data = serializer.validated_data["meta_data"]
+        response_data, response_status = self._upload_single_file(
+            submission=sub,
+            uploaded_file=uploaded_file,
+            part_size=part_size,
+            attach_to_ticket=attach_to_ticket,
+            meta_data=meta_data,
+        )
+        response = Response(response_data, status=response_status)
+
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                url="brokerage:submissions_cloud_upload_single_call",
+                method=RequestLog.POST,
+                user=sub.user,
+                submission_id=sub.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+            )
+        return response
+
+
+@extend_schema(tags=["upload"])
+class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
+    serializer_class = SubmissionCloudUploadBatchSerializer
+
+    @extend_schema(
+        operation_id="create submission cloud upload batch request",
+        summary="Batch upload",
+        description="Upload multiple files in one request. `attach_to_ticket` and `meta_data` are fixed to false for all files.",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of the submission to upload to (UUID, RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        request=inline_serializer(
+            name="SubmissionCloudUploadBatchRequest",
+            fields={
+                "files": serializers.ListField(child=serializers.FileField(), allow_empty=False),
+            },
+        ),
+        responses={
+            201: OpenApiResponse(description="All files uploaded successfully."),
             207: OpenApiResponse(description="Partial success: at least one file failed."),
             400: OpenApiResponse(description="Validation or workflow constraint error."),
             404: OpenApiResponse(description="Submission does not exist."),
@@ -479,9 +554,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         uploaded_files = serializer.validated_data["files"]
-        part_size = serializer.validated_data["part_size"]
-        attach_to_ticket = serializer.validated_data["attach_to_ticket"]
-        meta_data = serializer.validated_data["meta_data"]
+        part_size = 100 * 1024 * 1024
 
         results = []
         has_failures = False
@@ -491,8 +564,8 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
                     submission=sub,
                     uploaded_file=item,
                     part_size=part_size,
-                    attach_to_ticket=attach_to_ticket,
-                    meta_data=meta_data,
+                    attach_to_ticket=False,
+                    meta_data=False,
                 )
                 has_failures = has_failures or item_status >= status.HTTP_400_BAD_REQUEST
                 results.append({
@@ -521,7 +594,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
-                url="brokerage:submissions_cloud_upload_single_call",
+                url="brokerage:submissions_cloud_upload_batch_call",
                 method=RequestLog.POST,
                 user=sub.user,
                 submission_id=sub.broker_submission_id,
