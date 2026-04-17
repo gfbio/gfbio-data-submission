@@ -1,10 +1,20 @@
-{% extends "base_content_redoc.html" %}
+{% extends "base_content.html" %}
 {% load static %}
 
 {% block content-wrapper %}
-  <div id="redoc-wrapper">
-    <redoc spec-url='{% url schema_url %}'></redoc>
-  </div>
+    {% block section %}
+
+        <section id="mainSection">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <redoc spec-url='{% url schema_url %}'></redoc>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    {% endblock section %}
 {% endblock content-wrapper %}
 
 {% block thirdPartyJavaScript %}
