@@ -487,6 +487,16 @@ class TestSubmissionCloudUploadView(TestCase):
             "brokerage:submissions_cloud_upload_batch_call",
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
+        self.s3_client_mock.create_multipart_upload.side_effect = [
+            {"UploadId": f"{self.mock_upload_id}-1"},
+            {"UploadId": f"{self.mock_upload_id}-2"},
+        ]
+        self.s3_client_mock.upload_part.return_value = {
+            "ETag": '"part-etag-1"'
+        }
+        self.s3_client_mock.complete_multipart_upload.return_value = {
+            "Location": "https://test-bucket.s3.amazonaws.com/test-file"
+        }
         file_a = SimpleUploadedFile("sample1.fastq.gz", b"content-a", content_type="application/x-gzip")
         file_b = SimpleUploadedFile("sample2.fastq.gz", b"content-b", content_type="application/x-gzip")
         data = {
