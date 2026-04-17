@@ -17,6 +17,7 @@ from ..utils.task_utils import jira_cancel_issue
 from ...generic.models.request_log import RequestLog
 
 
+@extend_schema(tags=["submissions"])
 class SubmissionDetailView(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,

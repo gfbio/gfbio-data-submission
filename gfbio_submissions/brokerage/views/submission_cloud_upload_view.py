@@ -24,7 +24,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
-@extend_schema(tags=["cloud-upload-multipart"])
+@extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -115,9 +115,9 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         return response
 
     @extend_schema(
-        operation_id="cloud upload multipart 1 initialize",
-        summary="Advanced multipart step 1: initialize cloud upload",
-        description="Start a cloud multipart upload for a submission and create upload metadata.",
+        operation_id="upload multipart 1 initialize",
+        summary="Advanced multipart step 1: initialize upload",
+        description="Start a multipart upload for a submission and create upload metadata.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
@@ -143,7 +143,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
 # TODO: this is a test for potential custom code that could be inserted into dt_upload workflows. can be
 #  replaced by the dt_upload view for this via urls.py
-@extend_schema(tags=["cloud-upload-multipart"])
+@extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -158,7 +158,7 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
         return response
 
     @extend_schema(
-        operation_id="cloud upload multipart 2 create part url",
+        operation_id="upload multipart 2 create part url",
         summary="Advanced multipart step 2: create pre-signed part URL",
         description="Create a pre-signed URL for uploading the next multipart chunk.",
         responses={
@@ -171,13 +171,13 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
         return super().create(request, *args, **kwargs)
 
 
-@extend_schema(tags=["cloud-upload-multipart"])
+@extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploadPartView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
 
     @extend_schema(
-        operation_id="cloud upload multipart 3 confirm part",
+        operation_id="upload multipart 3 confirm part",
         summary="Advanced multipart step 3: confirm uploaded part",
         description="Mark an uploaded multipart chunk as completed and store its ETag.",
         responses={
@@ -190,13 +190,13 @@ class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploa
         return super().put(request, *args, **kwargs)
 
 
-@extend_schema(tags=["cloud-upload-multipart"])
+@extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
-        operation_id="cloud upload multipart 4 complete",
+        operation_id="upload multipart 4 complete",
         summary="Advanced multipart step 4: complete upload",
         description="Finalize multipart upload and trigger checksum verification workflow.",
         responses={
@@ -229,13 +229,13 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
         return response
 
 
-@extend_schema(tags=["cloud-upload-multipart"])
+@extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
-        operation_id="cloud upload multipart 5 abort",
+        operation_id="upload multipart 5 abort",
         summary="Advanced multipart optional step: abort upload",
         description="Abort an active multipart upload and release temporary upload state.",
         responses={
@@ -254,7 +254,7 @@ class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
     part_size = serializers.IntegerField(required=False, default=100 * 1024 * 1024, min_value=5 * 1024 * 1024)
 
 
-@extend_schema(tags=["cloud-upload"])
+@extend_schema(tags=["upload"])
 class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSingleCallSerializer

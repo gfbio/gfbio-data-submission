@@ -11,6 +11,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
+@extend_schema(tags=["submissions"])
 class SubmissionCloudUploadListView(generics.ListAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -46,7 +47,7 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
         ],
         responses={
             200: OpenApiResponse(
-                description="List of submission cloud upload files",
+                description="List of submission upload files",
                 response=SubmissionCloudUploadSerializer(many=False)
             ),
         }

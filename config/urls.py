@@ -9,8 +9,8 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView, RedirectView
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView
-from rest_framework.authtoken.views import obtain_auth_token
 
+from config.views import AuthTokenView
 from gfbio_submissions.submission_ui.views import HomeView
 from gfbio_submissions.submission_profile.views.profile_frontend_view import ProfileFrontendView
 
@@ -46,7 +46,7 @@ urlpatterns = [
         name="create_submission_ui",
     ),
     re_path(
-        route=r"^edit/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})", 
+        route=r"^edit/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})",
         view=ProfileFrontendView.as_view(),
         name="update_submission_ui",
     ),
@@ -71,7 +71,7 @@ if settings.DEBUG:
 # API URLS
 urlpatterns += [
     # DRF auth token
-    path("auth-token/", obtain_auth_token),
+    path("auth-token/", AuthTokenView.as_view(), name="auth-token"),
     path('api-auth/', include('rest_framework.urls')),
     path("api-schema/", SpectacularAPIView.as_view(), name="api-schema"),
 

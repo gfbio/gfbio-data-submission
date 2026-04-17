@@ -368,9 +368,20 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "submission.gfbio.org API",
     "DESCRIPTION": "Documentation of API endpoints of submission.gfbio.org",
-    "VERSION": "1.0.0",
+    "VERSION": "2.0.0",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "COMPONENT_SPLIT_REQUEST": True,
     "PREPROCESSING_HOOKS": ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+    ],
+    "SORT_OPERATIONS": False,
+    "TAGS": [
+        {"name": "authentication", "description": "Endpoints for obtaining API credentials."},
+        {"name": "submissions", "description": "Create, list and manage submissions."},
+        {"name": "upload", "description": "Recommended cloud upload API. Use the single-request endpoint to upload a file end-to-end."},
+        {"name": "upload-multipart", "description": "Advanced multipart upload steps used by backend workflows (can be called manually if needed)."},
+    ],
 }
 
 # Your stuff...
@@ -421,7 +432,7 @@ def whitelist_api_endpoints_preprocessing_hook(endpoints):
     # your modifications to the list of operations that are exposed in the schema
     visibleEndpoints = []
     for path, path_regex, method, callback in endpoints:
-        if path.startswith("/api/submissions/"):
+        if path.startswith("/api/submissions/") or path.startswith("/auth-token/"):
             visibleEndpoints.append((path, path_regex, method, callback))
     return visibleEndpoints
 
