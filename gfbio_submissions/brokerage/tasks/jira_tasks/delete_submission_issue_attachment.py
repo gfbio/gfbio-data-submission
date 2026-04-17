@@ -36,9 +36,10 @@ def delete_submission_issue_attachment_task(self, kwargs=None, submission_id=Non
     jira_client = JiraClient(
         resource=site_configuration.helpdesk_server,
     )
-    jira_client.delete_attachment(attachment_id)
-    return jira_error_auto_retry(
-        jira_client=jira_client,
-        task=self,
-        broker_submission_id=submission.broker_submission_id,
-    )
+    if attachment_id:
+        jira_client.delete_attachment(attachment_id)
+        return jira_error_auto_retry(
+            jira_client=jira_client,
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+        )
