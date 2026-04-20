@@ -43,3 +43,4 @@ def delete_submission_issue_attachment_task(self, kwargs=None, submission_id=Non
             task=self,
             broker_submission_id=submission.broker_submission_id,
         )
+    return False
