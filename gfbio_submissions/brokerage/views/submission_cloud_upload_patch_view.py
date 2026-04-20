@@ -17,6 +17,7 @@ from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUplo
 from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
 
 
+@extend_schema(tags=["upload"])
 class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -29,7 +30,7 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
 
     @extend_schema(
         operation_id="patch-update submission upload",
-        description="Updates an existing file associated with a submission.",
+        description="Partially updates an existing upload file associated with a submission.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
