@@ -141,17 +141,18 @@ class SubmissionCloudUploadDetailView(
     )
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
-        from ..tasks.jira_tasks.delete_submission_issue_attachment import (
-            delete_submission_issue_attachment_task,
-        )
+        if obj.attachment_id:
+            from ..tasks.jira_tasks.delete_submission_issue_attachment import (
+                delete_submission_issue_attachment_task,
+            )
 
-        delete_submission_issue_attachment_task.apply_async(
-            kwargs={
-                "submission_id": obj.submission.pk,
-                "attachment_id": obj.attachment_id,
-            },
-            countdown=SUBMISSION_DELAY,
-        )
+            delete_submission_issue_attachment_task.apply_async(
+                kwargs={
+                    "submission_id": obj.submission.pk,
+                    "attachment_id": obj.attachment_id,
+                },
+                countdown=SUBMISSION_DELAY,
+            )
         return self.destroy(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
