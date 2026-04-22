@@ -2,7 +2,7 @@
 from uuid import uuid4
 
 from rest_framework import generics, parsers, permissions
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
 
@@ -19,7 +19,7 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def get_queryset(self):

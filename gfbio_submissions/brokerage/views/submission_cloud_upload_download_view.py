@@ -6,7 +6,7 @@ from django.conf import settings
 from django.views import View
 from django.http import HttpResponseRedirect, HttpResponseForbidden, StreamingHttpResponse
 from rest_framework import permissions
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from zipstream import ZipStream
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 
@@ -25,7 +25,7 @@ def get_file_stream(url):
 
 
 class SubmissionCloudGetDownloadLinkView(View):
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated)
 
     

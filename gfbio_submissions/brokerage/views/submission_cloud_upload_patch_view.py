@@ -3,7 +3,7 @@ from uuid import uuid4, UUID
 
 from django.db import transaction
 from rest_framework import mixins, generics, parsers, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
@@ -25,7 +25,7 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(

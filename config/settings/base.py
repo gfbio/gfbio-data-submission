@@ -375,6 +375,21 @@ SPECTACULAR_SETTINGS = {
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.hooks.postprocess_schema_enums",
     ],
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+        "withCredentials": True,
+        "requestInterceptor": """
+function (request) {
+    const csrfMatch = document.cookie.match(/(?:^|;\\s*)csrftoken=([^;]+)/);
+    const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : null;
+    const method = (request.method || "").toLowerCase();
+    if (csrfToken && ["post", "put", "patch", "delete"].includes(method)) {
+        request.headers["X-CSRFToken"] = csrfToken;
+    }
+    return request;
+}
+""",
+    },
     "SORT_OPERATIONS": False,
     "TAGS": [
         {"name": "authentication", "description": "Endpoints for obtaining API credentials."},

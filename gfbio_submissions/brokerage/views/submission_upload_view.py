@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from django.db import transaction
 from rest_framework import mixins, generics, parsers, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
 from drf_spectacular.types import OpenApiTypes
@@ -25,7 +25,7 @@ class SubmissionUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
 
     # TODO: add permission class that checks if access to associated
     #  submission is granted for request.user (this request, upload only)
