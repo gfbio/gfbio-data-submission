@@ -13,8 +13,8 @@ export const JIRA_ROOT = 'https://helpdesk.gfbio.org/browse/';
 
 // TODO: merge redundant code of api-access-code like in this file
 export const SUBMISSIONS = '/api/submissions/';
-export const UPLOAD = '/upload/';
-export const UPLOADS = '/uploads/';
+export const UPLOAD = '/legacy-uploads/create/';
+export const UPLOADS = '/legacy-uploads/';
 export const UPLOAD_PATCH = 'patch/';
 export const COMMENT = '/comment/';
 

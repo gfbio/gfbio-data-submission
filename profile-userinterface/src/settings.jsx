@@ -30,15 +30,15 @@ export const JIRA_ROOT = "https://helpdesk.gfbio.org/browse/";
 
 export const JIRA_COMMENT = "/comment/";
 
-export const UPLOAD = "/upload/";
+export const UPLOAD = "/legacy-upload/";
 
 export const UPLOAD_PATCH = "patch/";
 
-export const UPLOADS = "/uploads/";
+export const UPLOADS = "/legacy-uploads/";
 
-export const CLOUD_UPLOADS = "/cloud-uploads/";
+export const CLOUD_UPLOADS = "/uploads/list/";
 
-export const CLOUD_UPLOAD = "/cloud-upload/";
+export const CLOUD_UPLOAD = "/uploads/";
 
 export const MAX_UPLOAD_ITEMS = 20;
 

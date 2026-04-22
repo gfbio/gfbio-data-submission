@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import hashlib
 import math
 import os
@@ -24,7 +24,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
-@extend_schema(tags=["upload-multipart"])
+@extend_schema(exclude=True)
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -143,7 +143,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
 # TODO: this is a test for potential custom code that could be inserted into dt_upload workflows. can be
 #  replaced by the dt_upload view for this via urls.py
-@extend_schema(tags=["upload-multipart"])
+@extend_schema(exclude=True)
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -171,7 +171,7 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
         return super().create(request, *args, **kwargs)
 
 
-@extend_schema(tags=["upload-multipart"])
+@extend_schema(exclude=True)
 class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploadPartView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
@@ -190,7 +190,7 @@ class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploa
         return super().put(request, *args, **kwargs)
 
 
-@extend_schema(tags=["upload-multipart"])
+@extend_schema(exclude=True)
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -229,7 +229,7 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
         return response
 
 
-@extend_schema(tags=["upload-multipart"])
+@extend_schema(exclude=True)
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -249,7 +249,6 @@ class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUp
 
 class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
-    attach_to_ticket = serializers.BooleanField(required=False, default=False)
     meta_data = serializers.BooleanField(required=False, default=False)
     part_size = serializers.IntegerField(required=False, default=100 * 1024 * 1024, min_value=5 * 1024 * 1024)
 
@@ -258,7 +257,7 @@ class SubmissionCloudUploadBatchSerializer(serializers.Serializer):
     files = serializers.ListField(child=serializers.FileField(), required=True, allow_empty=False)
 
 
-@extend_schema(tags=["upload"])
+@extend_schema(tags=["uploads"])
 class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSingleCallSerializer
@@ -298,7 +297,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         uploaded_file.seek(0)
         return md5_hash.hexdigest(), sha256_hash.hexdigest()
 
-    def _upload_single_file(self, submission, uploaded_file, part_size, attach_to_ticket=False, meta_data=False):
+    def _upload_single_file(self, submission, uploaded_file, part_size, meta_data=False):
         file_name = os.path.basename(uploaded_file.name)
         file_size = uploaded_file.size
         file_type = getattr(uploaded_file, "content_type", None) or "application/octet-stream"
@@ -330,7 +329,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             submission=submission,
             file_upload=file_upload_request,
             meta_data=meta_data,
-            attach_to_ticket=attach_to_ticket,
+            attach_to_ticket=False,
         )
         upload_id = dt_upload_data["upload_id"]
         bucket_name, s3_client = backend_based_upload_mixins.get_s3_client()
@@ -408,7 +407,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             "md5": file_upload_request.md5,
             "sha256": file_upload_request.sha256,
             "meta_data": meta_data,
-            "attach_to_ticket": attach_to_ticket,
+            "attach_to_ticket": False,
             "status": submission_cloud_upload.status,
             "location": complete_data.get("location"),
         }
@@ -479,13 +478,11 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
 
         uploaded_file = serializer.validated_data["file"]
         part_size = serializer.validated_data["part_size"]
-        attach_to_ticket = serializer.validated_data["attach_to_ticket"]
         meta_data = serializer.validated_data["meta_data"]
         response_data, response_status = self._upload_single_file(
             submission=sub,
             uploaded_file=uploaded_file,
             part_size=part_size,
-            attach_to_ticket=attach_to_ticket,
             meta_data=meta_data,
         )
         response = Response(response_data, status=response_status)
@@ -503,7 +500,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         return response
 
 
-@extend_schema(tags=["upload"])
+@extend_schema(tags=["uploads"])
 class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
     serializer_class = SubmissionCloudUploadBatchSerializer
 
@@ -564,7 +561,6 @@ class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
                     submission=sub,
                     uploaded_file=item,
                     part_size=part_size,
-                    attach_to_ticket=False,
                     meta_data=False,
                 )
                 has_failures = has_failures or item_status >= status.HTTP_400_BAD_REQUEST
