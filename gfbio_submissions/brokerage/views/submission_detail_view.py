@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 from django.db import transaction
 from django.urls import reverse
@@ -26,7 +26,7 @@ class SubmissionDetailView(
 ):
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     lookup_field = "broker_submission_id"
@@ -214,3 +214,4 @@ class SubmissionDetailView(
         instance.save()
         jira_cancel_issue(submission_id=instance.pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
+

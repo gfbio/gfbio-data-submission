@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4
 
 from rest_framework import generics, parsers, permissions
@@ -21,7 +21,7 @@ class SubmissionUploadListView(generics.ListAPIView):
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def get_queryset(self):

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import hashlib
 import math
 import os
@@ -28,7 +28,7 @@ from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUplo
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission, file_upload_request, meta_data, attach_to_ticket):
@@ -145,7 +145,7 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 #  replaced by the dt_upload view for this via urls.py
 @extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def create(self, request, *args, **kwargs):
@@ -173,7 +173,7 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
 
 @extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploadPartView):
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
 
     @extend_schema(
@@ -192,7 +192,7 @@ class SubmissionCloudUploadUpdatePartView(backend_based_upload_views.UpdateUploa
 
 @extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMultiPartUploadView):
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
@@ -231,7 +231,7 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
 
 @extend_schema(tags=["upload-multipart"])
 class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUploadView):
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
@@ -266,7 +266,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def _get_submission_or_response(self, broker_submission_id):
@@ -602,3 +602,4 @@ class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
                 response_status=response.status_code,
             )
         return response
+

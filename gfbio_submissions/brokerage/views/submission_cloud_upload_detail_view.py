@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4, UUID
 
 from django.db import transaction
@@ -29,7 +29,7 @@ class SubmissionCloudUploadDetailView(
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
@@ -162,3 +162,4 @@ class SubmissionCloudUploadDetailView(
         instance.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+

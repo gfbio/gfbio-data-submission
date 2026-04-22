@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 from uuid import uuid4
 
@@ -21,7 +21,7 @@ from ..serializers.submission_detail_serializer import SubmissionDetailSerialize
 
 @extend_schema(tags=["submissions"])
 class SubmissionCommentView(generics.GenericAPIView):
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     lookup_field = "broker_submission_id"
     queryset = Submission.objects.all()
@@ -114,3 +114,4 @@ class SubmissionCommentView(generics.GenericAPIView):
                 response_status=response.status_code,
             )
         return response
+

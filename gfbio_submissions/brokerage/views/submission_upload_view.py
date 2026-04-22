@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4
 
 from django.db import transaction
@@ -25,7 +25,7 @@ class SubmissionUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
 
     # TODO: add permission class that checks if access to associated
     #  submission is granted for request.user (this request, upload only)
@@ -120,3 +120,4 @@ class SubmissionUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
     )
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+

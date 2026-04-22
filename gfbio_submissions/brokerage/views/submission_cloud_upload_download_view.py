@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from django.urls import reverse
 import requests
 
@@ -25,7 +25,7 @@ def get_file_stream(url):
 
 
 class SubmissionCloudGetDownloadLinkView(View):
-    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated)
 
     

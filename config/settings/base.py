@@ -355,8 +355,8 @@ SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     # "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
@@ -378,17 +378,35 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         "persistAuthorization": True,
         "withCredentials": True,
+        "onComplete": """
+            function () {
+                const sessionMatch = document.cookie.match(/(?:^|;\\s*)sessionid=([^;]+)/);
+                const sessionId = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
+                if (!sessionId || !window.ui || typeof window.ui.preauthorizeApiKey !== "function") {
+                    return;
+                }
+            
+                // Keep the lock icon in sync for cookie-based/session auth.
+                const candidateSchemes = ["cookieAuth", "sessionAuth", "SessionAuthentication"];
+                candidateSchemes.forEach((scheme) => {
+                    try {
+                        window.ui.preauthorizeApiKey(scheme, sessionId);
+                    } catch (error) {
+                    }
+                });
+            }
+        """,
         "requestInterceptor": """
-function (request) {
-    const csrfMatch = document.cookie.match(/(?:^|;\\s*)csrftoken=([^;]+)/);
-    const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : null;
-    const method = (request.method || "").toLowerCase();
-    if (csrfToken && ["post", "put", "patch", "delete"].includes(method)) {
-        request.headers["X-CSRFToken"] = csrfToken;
-    }
-    return request;
-}
-""",
+            function (request) {
+                const csrfMatch = document.cookie.match(/(?:^|;\\s*)csrftoken=([^;]+)/);
+                const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : null;
+                const method = (request.method || "").toLowerCase();
+                if (csrfToken && ["post", "put", "patch", "delete"].includes(method)) {
+                    request.headers["X-CSRFToken"] = csrfToken;
+                }
+                return request;
+            }
+        """,
     },
     "SORT_OPERATIONS": False,
     "TAGS": [
