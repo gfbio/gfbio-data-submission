@@ -195,15 +195,6 @@ sentry_sdk.init(
 
 # django-rest-framework
 # -------------------------------------------------------------------------------
-# Tools that generate code samples can use SERVERS to point to the correct domain
-default_spectacular_server_url = env("HOST_URL_ROOT", default="https://submission.gfbio.org").rstrip("/")
-
-SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa F405
-    {
-        "url": env("SPECTACULAR_SERVER_URL", default=default_spectacular_server_url),
-        "description": env("SPECTACULAR_SERVER_DESCRIPTION", default="Production server"),
-    }
-]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
