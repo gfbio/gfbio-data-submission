@@ -1,6 +1,5 @@
 import logging
 import sys
-import re
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -90,20 +89,17 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 EMAIL_SENDER_DISPLAY_NAME = env("DJANGO_EMAIL_SENDER_DISPLAY_NAME", default=None)
 if EMAIL_SENDER_DISPLAY_NAME is None:
     normalized_host_url_root = HOST_URL_ROOT.strip().rstrip("/")
+    normalized_allowed_hosts = [str(host).strip().lower() for host in ALLOWED_HOSTS if str(host).strip()]
+    is_webtest_host = any(".test.gfbio.dev" in host for host in normalized_allowed_hosts)
 
     if IS_PROD_ENV and normalized_host_url_root == "https://submissions.gfbio.org":
         EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions"
+    elif is_webtest_host and normalized_host_url_root == "https://submissions.gfbio.dev":
+        EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions (Webtest)"
     elif normalized_host_url_root == "https://submissions.gfbio.dev":
         EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions (Staging)"
     else:
-        host_match = re.match(r"^https?://([^/]+)", normalized_host_url_root)
-        host_name = host_match.group(1) if host_match else normalized_host_url_root
-        webtest_match = re.match(r"^([^.]+)\.test\..+$", host_name)
-        if webtest_match:
-            webtest_identifier = webtest_match.group(1)
-            EMAIL_SENDER_DISPLAY_NAME = f"Webtest {webtest_identifier}"
-        else:
-            EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions (Non-Prod)"
+        EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions (Non-Prod)"
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
