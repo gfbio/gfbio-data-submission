@@ -86,10 +86,29 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # EMAIL
 # ------------------------------------------------------------------------------
+# Environment-aware sender label so non-production mails are clearly distinguishable.
+EMAIL_SENDER_DISPLAY_NAME = env("DJANGO_EMAIL_SENDER_DISPLAY_NAME", default=None)
+if EMAIL_SENDER_DISPLAY_NAME is None:
+    normalized_host_url_root = HOST_URL_ROOT.strip().rstrip("/")
+
+    if IS_PROD_ENV and normalized_host_url_root == "https://submissions.gfbio.org":
+        EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions"
+    elif normalized_host_url_root == "https://submissions.gfbio.dev":
+        EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions (Staging)"
+    else:
+        host_match = re.match(r"^https?://([^/]+)", normalized_host_url_root)
+        host_name = host_match.group(1) if host_match else normalized_host_url_root
+        webtest_match = re.match(r"^([^.]+)\.test\..+$", host_name)
+        if webtest_match:
+            webtest_identifier = webtest_match.group(1)
+            EMAIL_SENDER_DISPLAY_NAME = f"Webtest {webtest_identifier}"
+        else:
+            EMAIL_SENDER_DISPLAY_NAME = "GFBio Submissions (Non-Prod)"
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL",
-    default="GFBio Submissions <brokeragent@gfbio.org>"
+    default=f"{EMAIL_SENDER_DISPLAY_NAME} <brokeragent@gfbio.org>"
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)

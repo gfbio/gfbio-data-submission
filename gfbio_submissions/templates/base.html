@@ -330,6 +330,13 @@
 
   <footer>
     <div class="container">
+      {% if settings.EMAIL_SENDER_DISPLAY_NAME %}
+        <div class="row mb-3">
+          <div class="col-sm-12 text-end text-muted">
+            <small>Environment: {{ settings.EMAIL_SENDER_DISPLAY_NAME }}</small>
+          </div>
+        </div>
+      {% endif %}
       <div class="row">
         <div class="col-md-3 col-sm-6">
 
