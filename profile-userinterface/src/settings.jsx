@@ -36,7 +36,7 @@ export const UPLOAD_PATCH = "patch/";
 
 export const UPLOADS = "/legacy-uploads/";
 
-export const CLOUD_UPLOADS = "/uploads/list/";
+export const CLOUD_UPLOADS = "/uploads/";
 
 export const CLOUD_UPLOAD = "/uploads/";
 

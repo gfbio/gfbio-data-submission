@@ -279,7 +279,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             with transaction.atomic():
                 RequestLog.objects.create(
                     type=RequestLog.INCOMING,
-                    url="brokerage:submissions_cloud_upload_single_call",
+                    url="brokerage:submissions_cloud_uploads_collection",
                     method=RequestLog.POST,
                     submission_id=broker_submission_id,
                     response_content=response.data,
@@ -490,7 +490,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
-                url="brokerage:submissions_cloud_upload_single_call",
+                url="brokerage:submissions_cloud_uploads_collection",
                 method=RequestLog.POST,
                 user=sub.user,
                 submission_id=sub.broker_submission_id,
@@ -598,3 +598,38 @@ class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
                 response_status=response.status_code,
             )
         return response
+
+
+@extend_schema(tags=["uploads"])
+class SubmissionCloudUploadCollectionView(SubmissionCloudUploadSingleCallView):
+    # Keep POST before GET in generated operation ordering for this shared endpoint.
+    http_method_names = ["post", "get", "head", "options"]
+
+    @extend_schema(
+        operation_id="get uploads of a submission",
+        description="Returns a list of files, belonging to the given broker_submission_id.",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID, which uploads will be returned as a result (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="List of submission upload files",
+                response=SubmissionCloudUploadSerializer(many=True)
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get("broker_submission_id", uuid4())
+        queryset = SubmissionCloudUpload.objects.filter(
+            submission__broker_submission_id=broker_submission_id
+        ).exclude(
+            status=SubmissionCloudUpload.STATUS_DELETED
+        )
+        serializer = SubmissionCloudUploadSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
