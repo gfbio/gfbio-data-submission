@@ -32,6 +32,7 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
 
     @extend_schema(
         operation_id="get uploads of a submission",
+        summary="List uploaded files for a submission",
         description="Returns a list of files, belonging to the given broker_submission_id.",
         request=OpenApiRequest(
             request=SubmissionCloudUploadSerializer(many=False)

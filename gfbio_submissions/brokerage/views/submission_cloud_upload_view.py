@@ -416,11 +416,9 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
 
     @extend_schema(
         operation_id="create submission cloud upload single request",
-        summary="Recommended: single-file upload",
+        summary="Upload a single file to a submission",
         description=(
-                "Upload one file via a single API request. "
-                "It internally performs the multipart flow (initialize upload, upload parts, confirm parts, and complete upload). "
-                "Use the `cloud-upload-multipart` endpoints only if you need manual control over those steps."
+                "Upload one file to a submission in a single API request."
         ),
         parameters=[
             OpenApiParameter(
@@ -507,7 +505,7 @@ class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
     @extend_schema(
         operation_id="create submission cloud upload batch request",
         summary="Batch upload",
-        description="Upload multiple files in one request. `attach_to_ticket` and `meta_data` are fixed to false for all files.",
+        description="Upload multiple files in one request. `meta_data` is fixed to false for all files.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
@@ -607,6 +605,7 @@ class SubmissionCloudUploadCollectionView(SubmissionCloudUploadSingleCallView):
 
     @extend_schema(
         operation_id="get uploads of a submission",
+        summary="List uploaded files for a submission",
         description="Returns a list of files, belonging to the given broker_submission_id.",
         parameters=[
             OpenApiParameter(

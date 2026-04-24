@@ -85,6 +85,7 @@ class SubmissionCloudUploadDetailView(
 
     @extend_schema(
         operation_id="delete submission upload",
+        summary="Delete an uploaded file",
         description="Deletes an upload file associated with a submission.",
         parameters=[
             OpenApiParameter(

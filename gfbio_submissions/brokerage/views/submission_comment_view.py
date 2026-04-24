@@ -53,6 +53,7 @@ class SubmissionCommentView(generics.GenericAPIView):
 
     @extend_schema(
         operation_id="add comment to submission",
+        summary="Add a comment to a submission",
         description="Adds a comment to the referenced submission.",
         request=OpenApiRequest(
             request=inline_serializer(

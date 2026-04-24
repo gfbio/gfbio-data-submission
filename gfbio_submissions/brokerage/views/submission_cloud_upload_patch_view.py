@@ -35,6 +35,7 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
 
     @extend_schema(
         operation_id="patch-update submission upload",
+        summary="Update metadata status of a file",
         description="Partially updates an existing upload file associated with a submission.",
         parameters=[
             OpenApiParameter(
