@@ -415,7 +415,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
         return response_data, response_status
 
     @extend_schema(
-        operation_id="create submission cloud upload single request",
+        operation_id="create submission upload request",
         summary="Upload a single file to a submission",
         description=(
                 "Upload one file to a submission in a single API request."
@@ -503,7 +503,7 @@ class SubmissionCloudUploadBatchCallView(SubmissionCloudUploadSingleCallView):
     serializer_class = SubmissionCloudUploadBatchSerializer
 
     @extend_schema(
-        operation_id="create submission cloud upload batch request",
+        operation_id="create submission upload batch request",
         summary="Batch upload",
         description="Upload multiple files in one request. `meta_data` is fixed to false for all files.",
         parameters=[
