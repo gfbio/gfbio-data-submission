@@ -369,6 +369,9 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "submission.gfbio.org API",
     "DESCRIPTION": "Documentation of API endpoints of submission.gfbio.org",
     "VERSION": "2.0.0",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+    },
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "COMPONENT_SPLIT_REQUEST": True,
     "PREPROCESSING_HOOKS": ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
