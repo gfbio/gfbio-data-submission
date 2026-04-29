@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import mixins, generics, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest
 
 from gfbio_submissions.generic.models.request_log import RequestLog
@@ -16,7 +16,7 @@ from ..serializers.submission_detail_serializer import SubmissionDetailSerialize
 class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
@@ -111,3 +111,4 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         # TODO: is this still needed ? user is not used
         # user = User.objects.get(username=request.user)
         return self.create(request, *args, **kwargs)
+

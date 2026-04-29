@@ -16,6 +16,11 @@
 
 {% block content-wrapper %}
     {% block body %}
+    <div class="alert alert-warning alert-dismissible fade show text-center" role="alert">
+      If you are signed in to this website, API requests can use your active session, so the <strong>Authorize</strong> button is optional.
+      If you are not signed in, use <strong>Authorize</strong> with <strong>BasicAuth</strong> or <strong>TokenAuth</strong> to authenticate your requests.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     <div id="swagger-ui"></div>
     <script src="{{ swagger_ui_bundle }}"></script>
     <script src="{{ swagger_ui_standalone }}"></script>
