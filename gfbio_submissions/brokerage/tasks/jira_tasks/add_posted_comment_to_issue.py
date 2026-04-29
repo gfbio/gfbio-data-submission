@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 from ...tasks.submission_task import SubmissionTask
 from ...utils.jira import JiraClient
 from ...utils.task_utils import (
-    get_submission_and_site_configuration,
+    get_any_submission_and_site_configuration,
     jira_error_auto_retry,
     retry_no_ticket_available_exception,
 )
@@ -31,8 +31,8 @@ from ...utils.task_utils import (
     retry_jitter=True,
 )
 def add_posted_comment_to_issue_task(self, prev_task_result=None, submission_id=None, comment="", user_values={}):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
+    submission, site_configuration = get_any_submission_and_site_configuration(
+        submission_id=submission_id, task=self
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
