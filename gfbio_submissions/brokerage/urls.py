@@ -75,12 +75,12 @@ urlpatterns = [
         name="submissions_uploads",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-upload/(?P<pk>[0-9]+)$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-upload/(?P<pk>[0-9]+)/$",
         view=SubmissionUploadDetailView.as_view(),
         name="submissions_upload_detail",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/$",
         view=SubmissionCloudUploadDetailView.as_view(),
         name="submissions_clou_upload_detail",
     ),
