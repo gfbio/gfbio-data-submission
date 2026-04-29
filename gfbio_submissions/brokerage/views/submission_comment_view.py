@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 from uuid import uuid4
 
@@ -7,7 +7,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest, \
     inline_serializer
 from rest_framework import generics, permissions, status, serializers
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models.request_log import RequestLog
@@ -21,7 +21,7 @@ from ..serializers.submission_detail_serializer import SubmissionDetailSerialize
 
 @extend_schema(tags=["submissions"])
 class SubmissionCommentView(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     lookup_field = "broker_submission_id"
     queryset = Submission.objects.all()
@@ -115,3 +115,4 @@ class SubmissionCommentView(generics.GenericAPIView):
                 response_status=response.status_code,
             )
         return response
+
