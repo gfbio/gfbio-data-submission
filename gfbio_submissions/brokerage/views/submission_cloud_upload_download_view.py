@@ -57,4 +57,4 @@ class SubmissionCloudZipAllFilesAndDownload(View):
     
 class SubmissionCloudZipAllFilesAndDownloadRedirect(View):
     def get(self, request, broker_submission_id):
-        return HttpResponseRedirect(f"/api/downloads/submissions/{broker_submission_id}/cloudupload/zip/")
+        return HttpResponseRedirect(f"/api/downloads/submissions/{broker_submission_id}/uploads/zip/")

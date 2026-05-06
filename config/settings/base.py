@@ -370,6 +370,9 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "submission.gfbio.org API",
     "DESCRIPTION": "Documentation of API endpoints of submission.gfbio.org",
     "VERSION": "2.0.0",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+    },
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "COMPONENT_SPLIT_REQUEST": True,
     "PREPROCESSING_HOOKS": ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
@@ -388,8 +391,7 @@ SPECTACULAR_SETTINGS = {
     "TAGS": [
         {"name": "authentication", "description": "Endpoints for obtaining API credentials."},
         {"name": "submissions", "description": "Create, list and manage submissions."},
-        {"name": "upload", "description": "Recommended cloud upload API. Use the single-request endpoint to upload a file end-to-end."},
-        {"name": "upload-multipart", "description": "Advanced multipart upload steps used by backend workflows (can be called manually if needed)."},
+        {"name": "uploads", "description": "Create, list and manage uploads."},
     ],
 }
 

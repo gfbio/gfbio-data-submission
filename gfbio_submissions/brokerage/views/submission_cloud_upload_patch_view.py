@@ -5,22 +5,27 @@ from django.db import transaction
 from rest_framework import mixins, generics, parsers, permissions, status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
+from rest_framework import serializers
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..models import SubmissionCloudUpload
 from ..models.submission import Submission
-from ..models.submission_upload import SubmissionUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
-from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
 
 
-@extend_schema(tags=["upload"])
+class SubmissionCloudUploadPatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionCloudUpload
+        fields = ("meta_data",)
+
+
+@extend_schema(tags=["uploads"])
 class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = SubmissionCloudUpload.objects.all()
-    serializer_class = SubmissionCloudUploadSerializer
+    serializer_class = SubmissionCloudUploadPatchSerializer
     parser_classes = (
         parsers.MultiPartParser,
         parsers.FormParser,
@@ -30,18 +35,12 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
 
     @extend_schema(
         operation_id="patch-update submission upload",
+        summary="Update metadata status of a file",
         description="Partially updates an existing upload file associated with a submission.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
                 description="Unique submission ID of the submission whose file is to be updated (A UUID specified by RFC4122).",
-                location="path",
-                required=True,
-                type=OpenApiTypes.UUID
-            ),
-            OpenApiParameter(
-                name="primary_key",
-                description="Unique id of file associated with a submission.",
                 location="path",
                 required=True,
                 type=OpenApiTypes.UUID

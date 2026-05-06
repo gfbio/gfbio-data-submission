@@ -53,6 +53,7 @@ class SubmissionDetailView(
 
     @extend_schema(
         operation_id="get submission by id",
+        summary="Get submission details",
         description="Retrieve the Submission with the given submission_id",
         parameters=[
             OpenApiParameter(
@@ -77,6 +78,7 @@ class SubmissionDetailView(
 
     @extend_schema(
         operation_id="update submission",
+        summary="Update a submission",
         description="Updates the referenced submission.",
         parameters=[
             OpenApiParameter(
@@ -192,6 +194,7 @@ class SubmissionDetailView(
 
     @extend_schema(
         operation_id="cancel submission",
+        summary="Cancel a submission",
         description="Cancels a Submission",
         parameters=[
             OpenApiParameter(

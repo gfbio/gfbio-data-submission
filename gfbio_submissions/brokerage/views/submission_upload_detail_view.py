@@ -34,6 +34,7 @@ class SubmissionUploadDetailView(
 
     @extend_schema(
         operation_id="update submission upload",
+        summary="Update an uploaded file",
         description="Updates an existing file associated with a submission.",
         parameters=[
             OpenApiParameter(
@@ -116,6 +117,7 @@ class SubmissionUploadDetailView(
 
     @extend_schema(
         operation_id="delete submission upload",
+        summary="Delete an uploaded file",
         description="Deletes a file associated with a submission",
         parameters=[
             OpenApiParameter(

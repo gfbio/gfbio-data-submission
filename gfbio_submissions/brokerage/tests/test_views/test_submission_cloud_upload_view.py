@@ -411,7 +411,7 @@ class TestSubmissionCloudUploadView(TestCase):
     def test_single_call_upload(self):
         submission = Submission.objects.first()
         url = reverse(
-            "brokerage:submissions_cloud_upload_single_call",
+            "brokerage:submissions_cloud_uploads_collection",
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
 

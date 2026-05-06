@@ -16,7 +16,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
-@extend_schema(tags=["upload"])
+@extend_schema(tags=["uploads"])
 class SubmissionCloudUploadDetailView(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -32,38 +32,7 @@ class SubmissionCloudUploadDetailView(
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
-    @extend_schema(
-        operation_id="update submission upload",
-        description="Updates an existing upload file associated with a submission.",
-        parameters=[
-            OpenApiParameter(
-                name="broker_submission_id",
-                description="Unique submission ID of the submission whose file is to be updated (A UUID specified by RFC4122).",
-                location="path",
-                required=True,
-                type=OpenApiTypes.UUID
-            ),
-            OpenApiParameter(
-                name="primary_key",
-                description="Unique id of file associated with a submission.",
-                location="path",
-                required=True,
-                type=OpenApiTypes.UUID
-            )
-        ],
-        responses={
-            200: OpenApiResponse(
-                description="SubmissionUpload response",
-                response=SubmissionCloudUploadSerializer(many=False)
-            ),
-            400: OpenApiResponse(
-                description="Validation error",
-            ),
-            404: OpenApiResponse(
-                description="No submission with given submission id",
-            )
-        }
-    )
+    @extend_schema(exclude=True)
     def put(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get("broker_submission_id", uuid4())
         instance = self.get_object()
@@ -116,6 +85,7 @@ class SubmissionCloudUploadDetailView(
 
     @extend_schema(
         operation_id="delete submission upload",
+        summary="Delete an uploaded file",
         description="Deletes an upload file associated with a submission.",
         parameters=[
             OpenApiParameter(

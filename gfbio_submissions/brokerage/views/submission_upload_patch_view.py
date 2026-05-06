@@ -28,6 +28,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView
 
     @extend_schema(
         operation_id="patch-update submission upload",
+        summary="Partially update an uploaded file",
         description="Updates an existing file associated with a submission.",
         parameters=[
             OpenApiParameter(

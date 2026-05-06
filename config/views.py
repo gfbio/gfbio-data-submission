@@ -7,6 +7,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
     post=extend_schema(
         tags=["authentication"],
         operation_id="create auth token",
+        summary="Create an authentication token",
         auth=[],
         description="Create a DRF token for API authentication. Use the returned token in the `Authorization: Token <token>` header.",
         request=inline_serializer(
