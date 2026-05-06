@@ -14,6 +14,7 @@ import responses
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from dt_upload.models import MultiPartUpload
@@ -406,3 +407,106 @@ class TestSubmissionCloudUploadView(TestCase):
         )
         response = self.client.post(url, self.test_file_data, format="json")
         self.assertEqual(response.status_code, 500)
+
+    def test_single_call_upload(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_uploads_collection",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+
+        self.s3_client_mock.create_multipart_upload.return_value = {
+            "UploadId": self.mock_upload_id
+        }
+        self.s3_client_mock.upload_part.return_value = {
+            "ETag": '"part-etag-1"'
+        }
+        self.s3_client_mock.complete_multipart_upload.return_value = {
+            "Location": "https://test-bucket.s3.amazonaws.com/test-file"
+        }
+
+        file_content = b"hello-cloud-upload"
+        upload_file = SimpleUploadedFile("test.bin", file_content, content_type="application/octet-stream")
+        data = {
+            "file": upload_file,
+            "attach_to_ticket": "false",
+            "meta_data": "true",
+            "part_size": 5 * 1024 * 1024,
+        }
+
+        response = self.client.post(url, data=data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["meta_data"], True)
+        self.assertEqual(response.data["attach_to_ticket"], False)
+        self.assertEqual(str(response.data["broker_submission_id"]), str(submission.broker_submission_id))
+
+        submission_cloud_upload = SubmissionCloudUpload.objects.get(submission=submission)
+        self.assertEqual(submission_cloud_upload.status, SubmissionCloudUpload.STATUS_UPLOADED)
+        self.assertEqual(submission_cloud_upload.file_upload.status, "COMPLETED")
+
+        self.s3_client_mock.upload_part.assert_called()
+        self.s3_client_mock.complete_multipart_upload.assert_called_once()
+
+    def test_multi_file_upload(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload_batch_call",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+
+        self.s3_client_mock.create_multipart_upload.side_effect = [
+            {"UploadId": f"{self.mock_upload_id}-1"},
+            {"UploadId": f"{self.mock_upload_id}-2"},
+        ]
+        self.s3_client_mock.upload_part.return_value = {
+            "ETag": '"part-etag-1"'
+        }
+        self.s3_client_mock.complete_multipart_upload.return_value = {
+            "Location": "https://test-bucket.s3.amazonaws.com/test-file"
+        }
+
+        file_a = SimpleUploadedFile("sample1.fastq.gz", b"content-a", content_type="application/x-gzip")
+        file_b = SimpleUploadedFile("sample2.fastq.gz", b"content-b", content_type="application/x-gzip")
+        data = {
+            "files": [file_a, file_b],
+        }
+
+        response = self.client.post(url, data=data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["total_files"], 2)
+        self.assertEqual(response.data["uploaded_files"], 2)
+        self.assertEqual(response.data["failed_files"], 0)
+        self.assertEqual(len(response.data["results"]), 2)
+
+        self.assertEqual(SubmissionCloudUpload.objects.filter(submission=submission).count(), 2)
+        self.assertTrue(self.s3_client_mock.upload_part.called)
+
+    def test_batch_upload_sets_meta_and_attach_to_false(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload_batch_call",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+        self.s3_client_mock.create_multipart_upload.side_effect = [
+            {"UploadId": f"{self.mock_upload_id}-1"},
+            {"UploadId": f"{self.mock_upload_id}-2"},
+        ]
+        self.s3_client_mock.upload_part.return_value = {
+            "ETag": '"part-etag-1"'
+        }
+        self.s3_client_mock.complete_multipart_upload.return_value = {
+            "Location": "https://test-bucket.s3.amazonaws.com/test-file"
+        }
+        file_a = SimpleUploadedFile("sample1.fastq.gz", b"content-a", content_type="application/x-gzip")
+        file_b = SimpleUploadedFile("sample2.fastq.gz", b"content-b", content_type="application/x-gzip")
+        data = {
+            "files": [file_a, file_b],
+        }
+
+        response = self.client.post(url, data=data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["failed_files"], 0)
+
+        for upload in SubmissionCloudUpload.objects.filter(submission=submission):
+            self.assertFalse(upload.meta_data)
+            self.assertFalse(upload.attach_to_ticket)

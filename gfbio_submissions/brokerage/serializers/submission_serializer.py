@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
-from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
+from datetime import timedelta
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample, extend_schema_field
 from rest_framework import serializers
+from django.utils import timezone
 
 from ..models.submission import Submission
 from ..utils.schema_validation import validate_data_full, validate_data_min
+
+SCHEMA_DEFAULT_EMBARGO = (timezone.now().date() + timedelta(days=365)).isoformat()
 
 
 @extend_schema_serializer(
@@ -16,7 +22,7 @@ from ..utils.schema_validation import validate_data_full, validate_data_min
                 "release": True,
                 "submitting_user": 1,
                 "download_url": "https://www.example.de/study",
-                "embargo": "2024-12-15",
+                "embargo": SCHEMA_DEFAULT_EMBARGO,
                 "data": {
                     "requirements": {
                         "license": "CC BY-NC 4.0",
@@ -102,7 +108,7 @@ from ..utils.schema_validation import validate_data_full, validate_data_min
                         ]
                     }
                 },
-                "embargo": "2024-12-15",
+                "embargo": SCHEMA_DEFAULT_EMBARGO,
                 "download_url": "https://www.example.de/study",
                 "accession_id": []
             },
@@ -119,7 +125,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
     issue = serializers.SerializerMethodField()
 
-    def get_issue(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_issue(self, obj) -> str:
         ref = obj.get_primary_helpdesk_reference()
         return ref.reference_key if ref else ""
 

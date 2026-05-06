@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 
@@ -39,3 +40,10 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
             "token": str(token),
         }
         return context
+    
+    def get(self, request, *args, **kwargs):
+        if self.request.user.is_superuser:
+            return super().get(request, *args, **kwargs)
+        else:
+            return redirect(reverse("list_submission_ui"))
+

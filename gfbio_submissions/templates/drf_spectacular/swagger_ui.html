@@ -1,0 +1,39 @@
+{% extends "base_content.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}GFBio Submissions - Swagger UI{% endblock title %}
+{% block extra_css %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% if favicon_href %}<link rel="icon" href="{{ favicon_href }}">{% endif %}
+    <link rel="stylesheet" href="{{ swagger_ui_css }}">
+    <style>
+      html { box-sizing: border-box; overflow-y: scroll; }
+      *, *:after, *:before { box-sizing: inherit; }
+      body { background: #fafafa; margin: 0; }
+    </style>
+{% endblock extra_css %}
+
+{% block content-wrapper %}
+    {% block body %}
+    <div class="alert alert-warning alert-dismissible fade show text-center" role="alert">
+      If you are signed in to this website, API requests can use your active session, so the <strong>Authorize</strong> button is optional.
+      If you are not signed in, use <strong>Authorize</strong> with <strong>BasicAuth</strong> or <strong>TokenAuth</strong> to authenticate your requests.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div id="swagger-ui"></div>
+    <script src="{{ swagger_ui_bundle }}"></script>
+    <script src="{{ swagger_ui_standalone }}"></script>
+    {% if script_url %}
+    <script src="{{ script_url }}"></script>
+    {% else %}
+    <script>
+    {% include template_name_js %}
+    </script>
+    {% endif %}
+    {% endblock %}
+{% endblock content-wrapper %}
+
+{% block thirdPartyJavaScript %}
+{% endblock thirdPartyJavaScript %}
+

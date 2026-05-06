@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from django.urls import reverse
 import requests
 
@@ -6,7 +6,7 @@ from django.conf import settings
 from django.views import View
 from django.http import HttpResponseRedirect, HttpResponseForbidden, StreamingHttpResponse
 from rest_framework import permissions
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from zipstream import ZipStream
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 
@@ -25,7 +25,7 @@ def get_file_stream(url):
 
 
 class SubmissionCloudGetDownloadLinkView(View):
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated)
 
     
@@ -57,4 +57,4 @@ class SubmissionCloudZipAllFilesAndDownload(View):
     
 class SubmissionCloudZipAllFilesAndDownloadRedirect(View):
     def get(self, request, broker_submission_id):
-        return HttpResponseRedirect(f"/api/downloads/submissions/{broker_submission_id}/cloudupload/zip/")
+        return HttpResponseRedirect(f"/api/downloads/submissions/{broker_submission_id}/uploads/zip/")

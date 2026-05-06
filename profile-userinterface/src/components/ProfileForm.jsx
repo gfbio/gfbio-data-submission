@@ -9,7 +9,7 @@ import putSubmission from "../api/putSubmission.jsx";
 import {uploadFileToS3} from "../api/s3UploadSubmission.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
-import {ROUTER_BASE_URL, USE_LOCAL_UPLOAD_ONLY} from "../settings.jsx";
+import {ROUTER_URL_LIST, USE_LOCAL_UPLOAD_ONLY} from "../settings.jsx";
 import {formatDateToYYYYMMDD} from "../utils/dateUtils";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
@@ -247,7 +247,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
                             sessionStorage.removeItem("successMessageShown");
-                            navigate(pendingNavigation || ROUTER_BASE_URL, {
+                            navigate(pendingNavigation || ROUTER_URL_LIST, {
                                 state: { update: true },
                             });
                         });
@@ -287,7 +287,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                         return Promise.all(fileUploadPromises).then(() => {
                             setShowLeaveDialog(false); // Close dialog after successful submission
                             sessionStorage.removeItem("successMessageShown");
-                            navigate(pendingNavigation || ROUTER_BASE_URL, {
+                            navigate(pendingNavigation || ROUTER_URL_LIST, {
                                 state: { create: true },
                             });
                         });

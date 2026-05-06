@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4, UUID
 
 from django.db import transaction
 from rest_framework import mixins, generics, parsers, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
@@ -16,6 +16,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
+@extend_schema(tags=["uploads"])
 class SubmissionCloudUploadDetailView(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -28,41 +29,10 @@ class SubmissionCloudUploadDetailView(
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
-    @extend_schema(
-        operation_id="update submission upload",
-        description="Updates an existing file associated with a submission.",
-        parameters=[
-            OpenApiParameter(
-                name="broker_submission_id",
-                description="Unique submission ID of the submission whose file is to be updated (A UUID specified by RFC4122).",
-                location="path",
-                required=True,
-                type=OpenApiTypes.UUID
-            ),
-            OpenApiParameter(
-                name="primary_key",
-                description="Unique id of file associated with a submission.",
-                location="path",
-                required=True,
-                type=OpenApiTypes.UUID
-            )
-        ],
-        responses={
-            200: OpenApiResponse(
-                description="SubmissionUpload response",
-                response=SubmissionCloudUploadSerializer(many=False)
-            ),
-            400: OpenApiResponse(
-                description="Validation error",
-            ),
-            404: OpenApiResponse(
-                description="No submission with given submission id",
-            )
-        }
-    )
+    @extend_schema(exclude=True)
     def put(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get("broker_submission_id", uuid4())
         instance = self.get_object()
@@ -115,7 +85,8 @@ class SubmissionCloudUploadDetailView(
 
     @extend_schema(
         operation_id="delete submission upload",
-        description="Deletes a file associated with a submission",
+        summary="Delete an uploaded file",
+        description="Deletes an upload file associated with a submission.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
@@ -140,17 +111,18 @@ class SubmissionCloudUploadDetailView(
     )
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
-        from ..tasks.jira_tasks.delete_submission_issue_attachment import (
-            delete_submission_issue_attachment_task,
-        )
+        if obj.attachment_id:
+            from ..tasks.jira_tasks.delete_submission_issue_attachment import (
+                delete_submission_issue_attachment_task,
+            )
 
-        delete_submission_issue_attachment_task.apply_async(
-            kwargs={
-                "submission_id": obj.submission.pk,
-                "attachment_id": obj.attachment_id,
-            },
-            countdown=SUBMISSION_DELAY,
-        )
+            delete_submission_issue_attachment_task.apply_async(
+                kwargs={
+                    "submission_id": obj.submission.pk,
+                    "attachment_id": obj.attachment_id,
+                },
+                countdown=SUBMISSION_DELAY,
+            )
         return self.destroy(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
@@ -160,3 +132,4 @@ class SubmissionCloudUploadDetailView(
         instance.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+

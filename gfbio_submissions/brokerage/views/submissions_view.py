@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import mixins, generics, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest
 
 from gfbio_submissions.generic.models.request_log import RequestLog
@@ -12,10 +12,11 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 
 
+@extend_schema(tags=["submissions"])
 class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
@@ -79,6 +80,7 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
 
     @extend_schema(
         operation_id="list submissions",
+        summary="List submissions",
         description="List all submissions you have permission to access.",
         responses={
             200: OpenApiResponse(
@@ -92,7 +94,8 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
 
     @extend_schema(
         operation_id="create submission",
-        description="Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload a CSV file containing the needed meta-data. To perform the upload refer to the <a href='#operation/create%20submission%20upload'>'create submission upload'</a> documentation below.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li><li><a href='xxx'>WIKI ?</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</br>For dedicated information on this, please refer to:<ul><li><a href='/api/molecular/'>Submit molecular data in pure JSON</a></li></ul></li></ul>",
+        summary="Create a submission",
+        description="Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload files containing the needed meta-data. To perform the upload refer to the <a href='#/uploads/create%20submission%20upload%20request'>upload</a> endpoint.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</br>For dedicated information on this, please refer to:<ul><li><a href='/api/molecular/'>Submit molecular data in pure JSON</a></li></ul></li></ul>",
         request=OpenApiRequest(
             request=SubmissionDetailSerializer(many=False)
         ),
@@ -110,3 +113,4 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         # TODO: is this still needed ? user is not used
         # user = User.objects.get(username=request.user)
         return self.create(request, *args, **kwargs)
+

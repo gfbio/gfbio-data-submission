@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from django.urls import re_path, path
 from django.views.generic import TemplateView
+from drf_spectacular.views import SpectacularSwaggerView
 from dt_upload.views import backend_based_upload_views
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
 from .views.submission_cloud_upload_detail_view import SubmissionCloudUploadDetailView
-from .views.submission_cloud_upload_list_view import SubmissionCloudUploadListView
 from .views.submission_cloud_upload_patch_view import SubmissionCloudUploadPatchView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadAbortView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadCompleteView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadUpdatePartView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView
+from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView, SubmissionCloudUploadSingleCallView, SubmissionCloudUploadBatchCallView, SubmissionCloudUploadCollectionView
 from .views.submission_cloud_upload_download_view import SubmissionCloudGetDownloadLinkView, SubmissionCloudZipAllFilesAndDownload, SubmissionCloudZipAllFilesAndDownloadRedirect
 from .views.submission_comment_view import SubmissionCommentView
 from .views.submission_detail_view import SubmissionDetailView
@@ -30,77 +30,82 @@ urlpatterns = [
         name="submissions_detail",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-upload/$",
         view=SubmissionUploadView.as_view(),
         name="submissions_upload",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/start-uploads/$",
         view=SubmissionCloudUploadView.as_view(),
         name="submissions_cloud_upload",
     ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
+        view=SubmissionCloudUploadCollectionView.as_view(),
+        name="submissions_cloud_uploads_collection",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/batch/$",
+        view=SubmissionCloudUploadBatchCallView.as_view(),
+        name="submissions_cloud_upload_batch_call",
+    ),
     path(
-        route="submissions/cloudupload/<str:upload_id>/part/",
+        route="submissions/uploads/<str:upload_id>/part/",
         view=SubmissionCloudUploadPartURLView.as_view(),
         name="submissions_cloud_upload_part",
     ),
     path(
-        route="submissions/cloudupload/<str:upload_id>/update-part/",
+        route="submissions/uploads/<str:upload_id>/update-part/",
         view=SubmissionCloudUploadUpdatePartView.as_view(),
         name="submissions_cloud_upload_part_update",
     ),
     path(
-        route="submissions/cloudupload/<str:upload_id>/complete/",
+        route="submissions/uploads/<str:upload_id>/complete/",
         view=SubmissionCloudUploadCompleteView.as_view(),
         name="submissions_cloud_upload_complete"
     ),
     path(
-        route="submissions/cloudupload/<str:upload_id>/abort/",
+        route="submissions/uploads/<str:upload_id>/abort/",
         view=SubmissionCloudUploadAbortView.as_view(),
         name="submissions_cloud_upload_abort"
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-uploads/$",
         view=SubmissionUploadListView.as_view(),
         name="submissions_uploads",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-uploads/$",
-        view=SubmissionCloudUploadListView.as_view(),
-        name="submissions_cloud_uploads",
-    ),
-    re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/(?P<pk>[0-9]+)$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-upload/(?P<pk>[0-9]+)/$",
         view=SubmissionUploadDetailView.as_view(),
         name="submissions_upload_detail",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-upload/(?P<pk>[0-9]+)$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/$",
         view=SubmissionCloudUploadDetailView.as_view(),
         name="submissions_clou_upload_detail",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/patch/(?P<pk>[0-9]+)/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-upload/patch/(?P<pk>[0-9]+)/$",
         view=SubmissionUploadPatchView.as_view(),
         name="submissions_upload_patch",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-upload/patch/(?P<pk>[0-9]+)/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/$",
         view=SubmissionCloudUploadPatchView.as_view(),
         name="submissions_cloud_upload_patch",
     ),
     re_path(
-        route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/download_file/(?P<file_id>[0-9]+)/$",
+        route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/download_file/(?P<file_id>[0-9]+)/$",
         view=SubmissionCloudGetDownloadLinkView.as_view(),
         name="submissions_cloud_file_download"
     ),
     re_path(
-        route="submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/zip/$",
+        route="submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/zip/$",
         view=SubmissionCloudZipAllFilesAndDownloadRedirect.as_view(),
         name="submissions_cloud_zip_download_redirect"
     ),
     re_path(
-        route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/zip/$",
+        route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/zip/$",
         view=SubmissionCloudZipAllFilesAndDownload.as_view(),
         name="submissions_cloud_zip_download"
     ),
@@ -127,21 +132,10 @@ urlpatterns = [
         ),
         name="api_molecular_documentation",
     ),
-    re_path(
-        "",
-        TemplateView.as_view(
-            template_name="pages/api.html",
-            extra_context={"schema_url": "api-schema"},
-        ),
-        name="api_documentation",
-    ),
     re_path(r'molecular/$', TemplateView.as_view(
         template_name='pages/api_molecular.html',
         extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
     ), name='api_molecular_documentation'),
-    re_path('', TemplateView.as_view(
-        template_name='pages/api.html',
-        extra_context={'schema_url': 'api-schema'}
-    ), name='api_documentation'),
-
+    # acts also as a default view if nothing above applies
+    re_path('', SpectacularSwaggerView.as_view(url_name="api-schema"), name='api_documentation')
 ]

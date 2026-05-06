@@ -120,7 +120,7 @@ AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 # LOGIN_REDIRECT_URL = "users:redirect"
 
-LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", "/profile/ui/")
+LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", "/list/")
 LOGOUT_REDIRECT_URL = "/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
@@ -355,8 +355,9 @@ SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     # "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
@@ -368,9 +369,30 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "submission.gfbio.org API",
     "DESCRIPTION": "Documentation of API endpoints of submission.gfbio.org",
-    "VERSION": "1.0.0",
+    "VERSION": "2.0.0",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+    },
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "COMPONENT_SPLIT_REQUEST": True,
     "PREPROCESSING_HOOKS": ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+    ],
+    # Hide SessionAuthentication from Swagger's manual authorize dialog.
+    "AUTHENTICATION_WHITELIST": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+    },
+    "SORT_OPERATIONS": False,
+    "TAGS": [
+        {"name": "authentication", "description": "Endpoints for obtaining API credentials."},
+        {"name": "submissions", "description": "Create, list and manage submissions."},
+        {"name": "uploads", "description": "Create, list and manage uploads."},
+    ],
 }
 
 # Your stuff...
@@ -421,7 +443,7 @@ def whitelist_api_endpoints_preprocessing_hook(endpoints):
     # your modifications to the list of operations that are exposed in the schema
     visibleEndpoints = []
     for path, path_regex, method, callback in endpoints:
-        if path.startswith("/api/submissions/"):
+        if path.startswith("/api/submissions/") or path.startswith("/auth-token/"):
             visibleEndpoints.append((path, path_regex, method, callback))
     return visibleEndpoints
 

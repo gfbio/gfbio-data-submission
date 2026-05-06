@@ -8,10 +8,11 @@ from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView, RedirectView
 from django.views.static import serve
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework.authtoken.views import obtain_auth_token
+from drf_spectacular.views import SpectacularAPIView
 
+from config.views import AuthTokenView
 from gfbio_submissions.submission_ui.views import HomeView
+from gfbio_submissions.submission_profile.views.profile_frontend_view import ProfileFrontendView
 
 admin.site.site_header = 'GFBio administration version: {}'.format(settings.VERSION)
 
@@ -39,6 +40,21 @@ urlpatterns = [
 
     re_path(r'favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
     re_path(r'sw\.js$', RedirectView.as_view(url='/static/js/sw.js')),
+    path(
+        route="new/",
+        view=ProfileFrontendView.as_view(),
+        name="create_submission_ui",
+    ),
+    re_path(
+        route=r"^edit/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})",
+        view=ProfileFrontendView.as_view(),
+        name="update_submission_ui",
+    ),
+    path(
+        route="list/",
+        view=ProfileFrontendView.as_view(),
+        name="list_submission_ui",
+    ),
 
 ]
 
@@ -54,17 +70,11 @@ if settings.DEBUG:
 
 # API URLS
 urlpatterns += [
-    # API base url
-    path("api/", include("config.api_router")),
     # DRF auth token
-    path("auth-token/", obtain_auth_token),
+    path("auth-token/", AuthTokenView.as_view(), name="auth-token"),
     path('api-auth/', include('rest_framework.urls')),
     path("api-schema/", SpectacularAPIView.as_view(), name="api-schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="api-schema"),
-        name="api-docs",
-    ),
+
 ]
 
 if settings.DEBUG:
