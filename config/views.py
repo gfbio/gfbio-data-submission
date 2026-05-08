@@ -1,35 +1,32 @@
-from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view, inline_serializer
-from rest_framework import parsers, permissions, serializers
-from rest_framework.authtoken.views import ObtainAuthToken
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import permissions, serializers, status
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
-@extend_schema_view(
-    post=extend_schema(
-        tags=["authentication"],
-        operation_id="create auth token",
-        summary="Create an authentication token",
-        auth=[],
-        description="Create a DRF token for API authentication. Use the returned token in the `Authorization: Token <token>` header.",
-        request=inline_serializer(
-            name="AuthTokenRequest",
-            fields={
-                "username": serializers.CharField(),
-                "password": serializers.CharField(),
-            },
-        ),
-        responses={
-            200: OpenApiResponse(
-                description="Token created successfully.",
-                response=inline_serializer(
-                    name="AuthTokenResponse",
-                    fields={"token": serializers.CharField()},
-                ),
+@extend_schema(
+    tags=["authentication"],
+    operation_id="create auth token",
+    summary="Create an authentication token",
+    description=(
+        "Create a DRF token for API authentication. Use the returned token in the `Authorization: Token <token>` header."
+    ),
+    request=None,
+    responses={
+        200: OpenApiResponse(
+            description="Token created successfully.",
+            response=inline_serializer(
+                name="AuthTokenSessionResponse",
+                fields={"token": serializers.CharField()},
             ),
-            400: OpenApiResponse(description="Invalid credentials."),
-        },
-    )
+        ),
+        401: OpenApiResponse(description="Authentication credentials were not provided."),
+    },
 )
-class AuthTokenView(ObtainAuthToken):
-    parser_classes = (parsers.JSONParser,)
-    authentication_classes = ()
-    permission_classes = (permissions.AllowAny,)
+class AuthTokenView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        token, _ = Token.objects.get_or_create(user=request.user)
+        return Response({"token": token.key}, status=status.HTTP_200_OK)
