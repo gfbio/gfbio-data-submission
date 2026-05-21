@@ -17,12 +17,12 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import \
     verify_file_upload_request_checksum_in_bucket_task
-from ..configuration.settings import ATAX, SUBMISSION_DELAY
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
+from ..configuration.settings import ATAX, SUBMISSION_DELAY, ENA
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
-
 
 @extend_schema(exclude=True)
 class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -226,6 +226,15 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
             )
             if hasattr(mpu.file_upload_request, "submissioncloudupload"):
                 mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
+
+            if submission_cloud_upload.meta_data and mpu.file_upload_request.submissioncloudupload.submission.target == ENA:
+                add_metadata_file_validation_task.apply_async(
+                    kwargs={
+                        "submission_id": "{0}".format(mpu.file_upload_request.submissioncloudupload.submission.pk),
+                        "submission_upload_id": "{0}".format(submission_cloud_upload.pk),
+                    },
+                    countdown=SUBMISSION_DELAY,
+                )
         return response
 
 

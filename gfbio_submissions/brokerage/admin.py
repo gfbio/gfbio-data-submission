@@ -18,6 +18,7 @@ from dt_upload import admin as dt_admin
 from dt_upload.models import DTUpload, FileUploadRequest
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
+from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport, ValidationFinding, ValidationTaskReport
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
     check_submittable_taxon_id_task,
 )
@@ -717,6 +718,36 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
+class ValidationFindingInlineAdmin(admin.TabularInline):
+    model = ValidationFinding
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 1
+
+
+class ValidationTaskReportAdmin(admin.ModelAdmin):
+    inlines = (
+        ValidationFindingInlineAdmin,
+    )
+
+
+class ValidationTaskReportInlineAdmin(admin.TabularInline):
+    model = ValidationTaskReport
+    fields = ('task_name', 'status')
+    readonly_fields = ('task_name', 'status')
+    show_change_link = True
+    can_delete = False
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 0
+
+
+class MetadataValidationReportAdmin(admin.ModelAdmin):
+    inlines = (
+        ValidationTaskReportInlineAdmin,
+    )
+
+
 def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
     for obj in queryset:
         submission_upload_id = obj.id
@@ -922,3 +953,5 @@ admin.site.register(JiraMessage, JiraMessageAdmin)
 admin.site.register(AbcdConversionResult, AbcdConversionResultAdmin)
 
 admin.site.register(SubmissionCloudUpload, SubmissionCloudUploadAdmin)
+admin.site.register(MetadataValidationReport, MetadataValidationReportAdmin)
+admin.site.register(ValidationTaskReport, ValidationTaskReportAdmin)
