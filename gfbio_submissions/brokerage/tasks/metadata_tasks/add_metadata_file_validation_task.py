@@ -22,8 +22,8 @@ def add_metadata_file_validation_task(self, previous_task_result=None, submissio
 
     metadata_file = SubmissionCloudUpload.objects.get(pk=submission_upload_id)
     if metadata_file and submission.target == ENA:
-        if not MetadataValidationReport.objects.filter(submission_id=submission_id, upload_file=metadata_file):
-            new_report = MetadataValidationReport.objects.create(submission_id=submission_id, upload_file=metadata_file)
+        if not MetadataValidationReport.objects.filter(submission_id=submission_id, upload_file=metadata_file, file_md5_checksum=metadata_file.file_upload.md5):
+            new_report = MetadataValidationReport.objects.create(submission_id=submission_id, upload_file=metadata_file, file_md5_checksum=metadata_file.file_upload.md5)
             new_report.save()
             parallel_checks = [
                 test_check_task.s(report_id=new_report.id).set(

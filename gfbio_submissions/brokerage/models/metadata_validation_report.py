@@ -7,6 +7,7 @@ from .submission_cloud_upload import SubmissionCloudUpload
 class MetadataValidationReport(TimeStampedModel):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     upload_file = models.ForeignKey(SubmissionCloudUpload, on_delete=models.CASCADE)
+    file_md5_checksum = models.CharField(max_length=255)
 
 
 class ValidationTaskReport(TimeStampedModel):
