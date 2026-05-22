@@ -306,6 +306,7 @@ class TestSubmissionCloudUploadView(TestCase):
             file_key=self.mock_file_key,
             file_type=self.test_file_data["filetype"],
             status="PENDING",
+            md5="c0ffee",
             user=self.user
         )
 
