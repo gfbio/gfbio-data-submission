@@ -7,7 +7,9 @@ from django.db import transaction
 from config.celery_app import app
 from dt_upload.models import FileUploadRequest
 from dt_upload.tasks.backup_task import save_to_redundant_storage_clientside_fileupload
+from gfbio_submissions.brokerage.configuration.settings import ENA, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 
 from ...models.task_progress_report import TaskProgressReport
 from ..submission_task import SubmissionTask
@@ -102,6 +104,15 @@ def move_file_and_update_file_upload(file_upload_request):
     )
     submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
     submission_cloud_upload.save()
+
+    if submission_cloud_upload.submission.target == ENA and submission_cloud_upload.meta_data:
+        add_metadata_file_validation_task.apply_async(
+            kwargs={
+                "submission_id": "{0}".format(submission_cloud_upload.submission.pk),
+                "submission_upload_id": "{0}".format(submission_cloud_upload.pk),
+            },
+            countdown=SUBMISSION_DELAY,
+        )
 
     if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
         save_to_redundant_storage_clientside_fileupload.apply_async(
