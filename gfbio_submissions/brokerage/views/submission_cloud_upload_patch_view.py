@@ -112,6 +112,7 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
                 kwargs={
                     "submission_id": "{0}".format(instance.submission.pk),
                     "submission_upload_id": "{0}".format(instance.pk),
+                    "triggered_by_user_id": request.user.pk,
                 },
                 countdown=SUBMISSION_DELAY,
             )

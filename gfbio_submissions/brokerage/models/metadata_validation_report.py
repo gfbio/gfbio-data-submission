@@ -1,13 +1,24 @@
 from django.db import models
 from model_utils.models import TimeStampedModel
 
+from config.settings.base import AUTH_USER_MODEL
+
 from .submission import Submission
 from .submission_cloud_upload import SubmissionCloudUpload
+
 
 class MetadataValidationReport(TimeStampedModel):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     upload_file = models.ForeignKey(SubmissionCloudUpload, on_delete=models.CASCADE)
     file_md5_checksum = models.CharField(max_length=255)
+    triggered_by = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="metadata_validation_reports_triggered",
+        help_text="User who triggered validation. Submitter notifications are sent when this matches submission.user.",
+    )
 
 
 class ValidationTaskReport(TimeStampedModel):
