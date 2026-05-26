@@ -105,7 +105,7 @@ def move_file_and_update_file_upload(file_upload_request):
     submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
     submission_cloud_upload.save()
 
-    if submission_cloud_upload.submission.target == ENA:
+    if submission_cloud_upload.submission.target == ENA and submission_cloud_upload.meta_data:
         add_metadata_file_validation_task.apply_async(
             kwargs={
                 "submission_id": "{0}".format(submission_cloud_upload.submission.pk),
