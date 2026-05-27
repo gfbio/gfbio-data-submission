@@ -38,6 +38,7 @@ jsonschema==4.17.3 # https://github.com/Julian/jsonschema
 xmlschema==2.1.1 # https://github.com/sissaschool/xmlschema
 
 requests==2.28.1 # https://github.com/psf/requests
+charset-normalizer==2.1.1 # https://github.com/Ousret/charset_normalizer (also a transitive dep of requests; pinned for direct use in encoding detection)
 
 # TODO: remove. used by AuditableTestData: gitpython==2.1.13 # https://github.com/gitpython-developers/GitPython
 
