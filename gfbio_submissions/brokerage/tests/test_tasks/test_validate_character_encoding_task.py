@@ -34,6 +34,11 @@ class _FakeRaisingOpener:
         raise UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
 
 
+class _FakeMissingFileOpener:
+    def csv_reader(self, cloud_upload):
+        raise FileNotFoundError(2, "No such file or directory", "meta.csv-key")
+
+
 class TestValidateCharacterEncodingTask(TestTasks):
     def _create_report(self):
         submission = Submission.objects.first()
@@ -102,3 +107,19 @@ class TestValidateCharacterEncodingTask(TestTasks):
         self.assertEqual("ERROR", task_report.status)
         finding = task_report.validationfinding_set.get()
         self.assertEqual("ERROR", finding.status)
+
+    @patch(_OPENER_PATH)
+    def test_unreadable_file_yields_error_finding(self, mock_opener):
+        # The file is not available on the mounted storage (e.g. cloud upload
+        # whose object is not yet present). The task must record an error
+        # finding instead of letting the OSError crash the validation chord.
+        report = self._create_report()
+        mock_opener.return_value = _FakeMissingFileOpener()
+
+        self._run(report)
+
+        task_report = report.validationtaskreport_set.get()
+        self.assertEqual("ERROR", task_report.status)
+        finding = task_report.validationfinding_set.get()
+        self.assertEqual("ERROR", finding.status)
+        self.assertIn("could not be opened", finding.message)

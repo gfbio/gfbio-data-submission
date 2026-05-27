@@ -78,6 +78,27 @@ def validate_character_encoding_task(self, previous_task_result=None, report_id=
         )
         report.save()
         return True
+    except OSError as e:
+        # The file could not be opened (e.g. it is not yet available on the
+        # mounted storage). Record the problem instead of crashing the task so
+        # the validation report still completes and the user is notified.
+        logger.warning(
+            "validate_character_encoding_task: could not open metadata file "
+            "of submission '%s': %s",
+            submission.broker_submission_id,
+            e,
+        )
+        task_report = report.validationtaskreport_set.create(
+            task_name=TASK_NAME, status="ERROR"
+        )
+        task_report.validationfinding_set.create(
+            status="ERROR",
+            message="The uploaded metadata file could not be opened for validation.",
+            help_text="Please try uploading the file again. If the problem "
+            "persists, contact the helpdesk.",
+        )
+        report.save()
+        return True
 
     lines = content.splitlines()
     delimiter = _detect_delimiter(lines[0]) if lines else ";"
