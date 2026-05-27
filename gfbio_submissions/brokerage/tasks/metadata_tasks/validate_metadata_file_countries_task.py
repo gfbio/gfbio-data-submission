@@ -71,9 +71,9 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, repor
                         if len(close_names) == 1:
                             help_text += " Did you maybe mean " + close_names[0] + "?"
                         elif len(close_names) > 1:
-                            help_text += " Did you maybe mean one of these:" + ", ".join(close_names) + "?"
+                            help_text += " Did you maybe mean one of these: " + ", ".join(close_names) + "?"
                         validation_task_report.validationfinding_set.create(
-                            message="The Geographic Location does not match the ENA-vocabulary (https://www.insdc.org/submitting-standards/geo_loc_name-qualifier-vocabulary/).",
+                            message=f"The Geographic Location '{sanitized_location_name}' does not match the ENA-vocabulary (https://www.insdc.org/submitting-standards/geo_loc_name-qualifier-vocabulary/).",
                             help_text=help_text,
                             column_name=column_name,
                             status = "ERROR",
