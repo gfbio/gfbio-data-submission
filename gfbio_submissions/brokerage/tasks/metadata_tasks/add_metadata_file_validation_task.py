@@ -33,7 +33,7 @@ def add_metadata_file_validation_task(self, previous_task_result=None, submissio
                 ),
                 check_ena_mandatory_fields_task.s(report_id=new_report.id).set(
                     countdown=SUBMISSION_DELAY
-                )
+                ),
                 validate_character_encoding_task.s(report_id=new_report.id).set(
                     countdown=SUBMISSION_DELAY
                 ),
