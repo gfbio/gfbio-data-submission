@@ -7,6 +7,8 @@ from gfbio_submissions.brokerage.models.metadata_validation_report import Metada
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.tasks.metadata_tasks.check_ena_mandatory_fields_task import check_ena_mandatory_fields_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.notify_on_report_completed_task import notify_on_report_completed_task
+from gfbio_submissions.brokerage.tasks.metadata_tasks.test_check_task import test_check_task
+from gfbio_submissions.brokerage.tasks.metadata_tasks.validate_character_encoding_task import validate_character_encoding_task
 from ...configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, ENA
 from ...tasks.submission_task import SubmissionTask
 from ...utils.task_utils import get_submission_and_site_configuration
@@ -26,9 +28,15 @@ def add_metadata_file_validation_task(self, previous_task_result=None, submissio
             new_report = MetadataValidationReport.objects.create(submission_id=submission_id, upload_file=metadata_file, file_md5_checksum=metadata_file.file_upload.md5)
             new_report.save()
             parallel_checks = [
+                test_check_task.s(report_id=new_report.id).set(
+                    countdown=SUBMISSION_DELAY
+                ),
                 check_ena_mandatory_fields_task.s(report_id=new_report.id).set(
                     countdown=SUBMISSION_DELAY
                 )
+                validate_character_encoding_task.s(report_id=new_report.id).set(
+                    countdown=SUBMISSION_DELAY
+                ),
             ]
             chord(parallel_checks).apply_async(
                 kwargs={

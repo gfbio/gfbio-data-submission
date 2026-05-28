@@ -522,10 +522,20 @@ def parse_molecular_csv(csv_file, submission):
 
 def parse_molecular_csv_with_encoding_detection(path, submission):
     encoding = sniff_encoding(path)
-    with open(
-        path, "r", encoding=encoding
-    ) as csv_file:
-        return parse_molecular_csv(csv_file, submission)
+    try:
+        with open(path, "r", encoding=encoding, errors="strict") as csv_file:
+            return parse_molecular_csv(csv_file, submission)
+    except (UnicodeDecodeError, LookupError) as e:
+        # The file cannot be decoded as text with the detected encoding. Do not
+        # silently mangle the bytes (the original DASS-3527 bug); return empty
+        # requirements. The user-facing error is raised by the metadata
+        # validation report (see validate_character_encoding_task).
+        logger.warning(
+            "parse_molecular_csv_with_encoding_detection: could not decode '%s' "
+            "as '%s': %s",
+            path, encoding, e,
+        )
+        return {"samples": [], "experiments": []}
 
 
 # search for specimen meta data for ATAX submission
