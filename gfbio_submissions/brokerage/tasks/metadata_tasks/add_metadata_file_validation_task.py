@@ -6,6 +6,9 @@ from config.celery_app import app
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.tasks.metadata_tasks.check_ena_mandatory_fields_task import check_ena_mandatory_fields_task
+from gfbio_submissions.brokerage.tasks.metadata_tasks.check_ena_submittable_taxon_ids_task import (
+    check_ena_submittable_taxon_ids_task,
+)
 from gfbio_submissions.brokerage.tasks.metadata_tasks.notify_on_report_completed_task import notify_on_report_completed_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.test_check_task import test_check_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.validate_character_encoding_task import validate_character_encoding_task
@@ -32,6 +35,9 @@ def add_metadata_file_validation_task(self, previous_task_result=None, submissio
                     countdown=SUBMISSION_DELAY
                 ),
                 check_ena_mandatory_fields_task.s(report_id=new_report.id).set(
+                    countdown=SUBMISSION_DELAY
+                ),
+                check_ena_submittable_taxon_ids_task.s(report_id=new_report.id).set(
                     countdown=SUBMISSION_DELAY
                 ),
                 validate_character_encoding_task.s(report_id=new_report.id).set(
