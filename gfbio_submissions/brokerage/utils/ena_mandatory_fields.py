@@ -114,6 +114,8 @@ def validate_ena_mandatory_fields(csv_file):
         )
         return findings
 
+    # TODO: Replace with "delimiter = detect_delimiter(header_line)" from DASS-3526 and check for return -
+    # returns ";" instead of an exception in detect_delimiter
     dialect = csv.Sniffer().sniff(smart_str(header_line))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
