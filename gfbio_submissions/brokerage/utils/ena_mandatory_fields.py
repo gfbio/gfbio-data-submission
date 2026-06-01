@@ -23,8 +23,6 @@ PAIRED_MANDATORY_FIELDS = [
     "reverse_read_file_checksum",
 ]
 
-SINGLE_FORBIDDEN_FIELDS = PAIRED_MANDATORY_FIELDS
-
 FIELD_HELP_TEXT = {
     "sample_title": (
         "A unique label for your samples, preferably one you can use to map to any other data "
@@ -116,6 +114,8 @@ def validate_ena_mandatory_fields(csv_file):
         )
         return findings
 
+    # TODO: Replace with "delimiter = detect_delimiter(header_line)" from DASS-3526 and check for return -
+    # returns ";" instead of an exception in detect_delimiter
     dialect = csv.Sniffer().sniff(smart_str(header_line))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
@@ -236,7 +236,7 @@ def validate_ena_mandatory_fields(csv_file):
                         }
                     )
         elif layout == "single":
-            for field_name in SINGLE_FORBIDDEN_FIELDS:
+            for field_name in PAIRED_MANDATORY_FIELDS:
                 if field_name not in present_fields:
                     continue
                 if _has_value(row.get(field_name)):
