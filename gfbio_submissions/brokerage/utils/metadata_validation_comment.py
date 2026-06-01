@@ -2,9 +2,18 @@ from gfbio_submissions.brokerage.models.metadata_validation_report import Metada
 
 
 def should_notify_submitter_for_report(report: MetadataValidationReport) -> bool:
-    if report.triggered_by_id is None or report.submission.user_id is None:
+    """Post validation results to Jira only when the submitter uploaded the metadata file."""
+    submitter_id = report.submission.user_id
+    triggered_by_id = report.triggered_by_id
+
+    if submitter_id is None:
         return False
-    return report.triggered_by_id == report.submission.user_id
+    if triggered_by_id is None:
+        return False
+    if triggered_by_id != submitter_id:
+        return False
+
+    return True
 
 
 def build_metadata_validation_report_comment(report: MetadataValidationReport) -> str:
