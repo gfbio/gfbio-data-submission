@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 
 from config.celery_app import app

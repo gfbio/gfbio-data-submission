@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 
 

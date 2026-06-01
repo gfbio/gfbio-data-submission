@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
