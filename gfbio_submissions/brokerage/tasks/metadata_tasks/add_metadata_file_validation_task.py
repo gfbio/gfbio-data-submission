@@ -11,6 +11,7 @@ from gfbio_submissions.brokerage.tasks.metadata_tasks.check_ena_submittable_taxo
 )
 from gfbio_submissions.brokerage.tasks.metadata_tasks.notify_on_report_completed_task import notify_on_report_completed_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.test_check_task import test_check_task
+from gfbio_submissions.brokerage.tasks.metadata_tasks.validate_metadata_file_countries_task import validate_metadata_file_countries_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.validate_character_encoding_task import validate_character_encoding_task
 from ...configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, ENA
 from ...tasks.submission_task import SubmissionTask
@@ -48,6 +49,9 @@ def add_metadata_file_validation_task(
                     countdown=SUBMISSION_DELAY
                 ),
                 check_ena_mandatory_fields_task.s(report_id=new_report.id).set(
+                    countdown=SUBMISSION_DELAY
+                ),
+                validate_metadata_file_countries_task.s(report_id=new_report.id).set(
                     countdown=SUBMISSION_DELAY
                 ),
                 check_ena_submittable_taxon_ids_task.s(report_id=new_report.id).set(
