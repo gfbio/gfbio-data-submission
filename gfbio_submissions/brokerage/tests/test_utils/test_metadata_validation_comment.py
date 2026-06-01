@@ -10,7 +10,8 @@ from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.utils.metadata_validation_comment import (
     build_metadata_validation_report_comment,
-    should_notify_submitter_for_report,
+    is_internal_metadata_validation_jira_comment,
+    should_post_metadata_validation_jira_comment,
 )
 from gfbio_submissions.users.models import User
 
@@ -28,23 +29,33 @@ class TestMetadataValidationComment(TestCase):
             meta_data=True,
         )
 
-    def test_should_notify_submitter_when_triggered_by_submitter(self):
+    def test_should_post_jira_comment_when_triggered_by_submitter(self):
         report = MetadataValidationReport.objects.create(
             submission=self.submission,
             upload_file=self.submitter_upload,
             file_md5_checksum="abc",
             triggered_by=self.submitter,
         )
-        self.assertTrue(should_notify_submitter_for_report(report))
+        self.assertTrue(should_post_metadata_validation_jira_comment(report))
+        self.assertFalse(is_internal_metadata_validation_jira_comment(report))
 
-    def test_should_not_notify_submitter_when_triggered_by_admin(self):
+    def test_should_post_internal_jira_comment_when_triggered_by_admin(self):
         report = MetadataValidationReport.objects.create(
             submission=self.submission,
             upload_file=self.submitter_upload,
             file_md5_checksum="abc",
             triggered_by=self.admin,
         )
-        self.assertFalse(should_notify_submitter_for_report(report))
+        self.assertTrue(should_post_metadata_validation_jira_comment(report))
+        self.assertTrue(is_internal_metadata_validation_jira_comment(report))
+
+    def test_should_not_post_jira_comment_without_triggered_by(self):
+        report = MetadataValidationReport.objects.create(
+            submission=self.submission,
+            upload_file=self.submitter_upload,
+            file_md5_checksum="abc",
+        )
+        self.assertFalse(should_post_metadata_validation_jira_comment(report))
 
     def test_build_comment_includes_findings(self):
         report = MetadataValidationReport.objects.create(

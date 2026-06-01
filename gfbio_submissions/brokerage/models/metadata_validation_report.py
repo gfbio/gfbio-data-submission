@@ -17,7 +17,7 @@ class MetadataValidationReport(TimeStampedModel):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="metadata_validation_reports_triggered",
-        help_text="User who triggered validation. Submitter notifications are sent when this matches submission.user.",
+        help_text="User who triggered validation. Jira comments are public when this matches submission.user, otherwise internal.",
     )
 
 

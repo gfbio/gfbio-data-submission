@@ -8,7 +8,8 @@ from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.metadata_validation_comment import (
     build_metadata_validation_report_comment,
-    should_notify_submitter_for_report,
+    is_internal_metadata_validation_jira_comment,
+    should_post_metadata_validation_jira_comment,
 )
 from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
 
@@ -29,16 +30,15 @@ def notify_on_report_completed_task(self, previous_task_result=None, report_id=N
         "upload_file__file_upload",
     ).get(pk=report_id)
 
-    if not should_notify_submitter_for_report(report):
+    if not should_post_metadata_validation_jira_comment(report):
         logger.info(
-            "Skipping metadata validation notification for report %s (triggered_by=%s, submitter=%s).",
+            "Skipping metadata validation Jira comment for report %s (no triggered_by user).",
             report_id,
-            report.triggered_by_id,
-            report.submission.user_id,
         )
         return True
 
     comment = build_metadata_validation_report_comment(report)
+    is_internal = is_internal_metadata_validation_jira_comment(report)
 
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=report.submission_id,
@@ -51,7 +51,7 @@ def notify_on_report_completed_task(self, previous_task_result=None, report_id=N
     reference = submission.get_primary_helpdesk_reference()
     if reference and site_configuration and site_configuration.helpdesk_server:
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-        jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
+        jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=is_internal)
         return jira_error_auto_retry(
             jira_client=jira_client,
             task=self,

@@ -1,16 +1,21 @@
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 
 
-def should_notify_submitter_for_report(report: MetadataValidationReport) -> bool:
-    """Post validation results to Jira only when the submitter uploaded the metadata file."""
+def should_post_metadata_validation_jira_comment(report: MetadataValidationReport) -> bool:
+    """Post validation results to Jira when the report has a known trigger user."""
+    return report.triggered_by_id is not None
+
+
+def is_internal_metadata_validation_jira_comment(report: MetadataValidationReport) -> bool:
+    """Internal comments hide validation results from the submitter (e.g. curator/admin checks)."""
     submitter_id = report.submission.user_id
     triggered_by_id = report.triggered_by_id
 
     if submitter_id is None:
-        return False
-    if triggered_by_id is None:
-        return False
-    if triggered_by_id != submitter_id:
+        return True
+
+    triggered_by_submitter = triggered_by_id == submitter_id
+    if triggered_by_submitter:
         return False
 
     return True
