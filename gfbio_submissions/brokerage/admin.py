@@ -18,6 +18,7 @@ from dt_upload import admin as dt_admin
 from dt_upload.models import DTUpload, FileUploadRequest
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
+from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport, ValidationFinding, ValidationTaskReport
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
     check_submittable_taxon_id_task,
 )
@@ -717,6 +718,36 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
+class ValidationFindingInlineAdmin(admin.TabularInline):
+    model = ValidationFinding
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 1
+
+
+class ValidationTaskReportAdmin(admin.ModelAdmin):
+    inlines = (
+        ValidationFindingInlineAdmin,
+    )
+
+
+class ValidationTaskReportInlineAdmin(admin.TabularInline):
+    model = ValidationTaskReport
+    fields = ('task_name', 'status')
+    readonly_fields = ('task_name', 'status')
+    show_change_link = True
+    can_delete = False
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 0
+
+
+class MetadataValidationReportAdmin(admin.ModelAdmin):
+    inlines = (
+        ValidationTaskReportInlineAdmin,
+    )
+
+
 def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
     for obj in queryset:
         submission_upload_id = obj.id
@@ -876,6 +907,12 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
     ]
+
+    def save_model(self, request, obj, form, change):
+        if obj.file_upload_id:
+            obj.file_upload._validation_triggered_by_user_id = request.user.pk
+        super().save_model(request, obj, form, change)
+
     def file_upload_link(self, obj):
         return mark_safe('<a href="{}">{}</a>'.format(
             reverse("admin:index") + f"dt_upload/fileuploadrequest/{obj.file_upload.pk}/change/",
@@ -901,6 +938,11 @@ except admin.sites.NotRegistered:
 class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
     search_fields = ["submissioncloudupload__submission__broker_submission_id", "original_filename"]
 
+    def save_model(self, request, obj, form, change):
+        obj._validation_triggered_by_user_id = request.user.pk
+        super().save_model(request, obj, form, change)
+
+
 admin.site.register(FileUploadRequest, FileUploadRequestAdmin)
 
 
@@ -922,3 +964,6 @@ admin.site.register(JiraMessage, JiraMessageAdmin)
 admin.site.register(AbcdConversionResult, AbcdConversionResultAdmin)
 
 admin.site.register(SubmissionCloudUpload, SubmissionCloudUploadAdmin)
+
+admin.site.register(MetadataValidationReport, MetadataValidationReportAdmin)
+admin.site.register(ValidationTaskReport, ValidationTaskReportAdmin)

@@ -90,7 +90,7 @@ urlpatterns = [
         name="submissions_upload_patch",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/patch/$",
         view=SubmissionCloudUploadPatchView.as_view(),
         name="submissions_cloud_upload_patch",
     ),

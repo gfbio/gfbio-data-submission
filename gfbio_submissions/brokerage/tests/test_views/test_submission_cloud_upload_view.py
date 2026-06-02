@@ -26,6 +26,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
 )
 from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_ATTACHMENT_SUB_URL,
+    JIRA_COMMENT_SUB_URL,
     JIRA_ISSUE_URL,
 )
 from gfbio_submissions.brokerage.tests.utils import (
@@ -180,6 +181,18 @@ class TestSubmissionCloudUploadView(TestCase):
             "{0}{1}/{2}/{3}".format(
                 site_config.helpdesk_server.url,
                 JIRA_ISSUE_URL,
+                "FAKE_KEY",
+                JIRA_COMMENT_SUB_URL,
+            ),
+            json={"id": "10000", "body": "metadata validation report"},
+            status=201,
+        )
+
+        responses.add(
+            responses.POST,
+            "{0}{1}/{2}/{3}".format(
+                site_config.helpdesk_server.url,
+                JIRA_ISSUE_URL,
                 "SAND-1661",
                 JIRA_ATTACHMENT_SUB_URL,
             ),
@@ -306,6 +319,7 @@ class TestSubmissionCloudUploadView(TestCase):
             file_key=self.mock_file_key,
             file_type=self.test_file_data["filetype"],
             status="PENDING",
+            md5="c0ffee",
             user=self.user
         )
 
