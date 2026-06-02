@@ -3,7 +3,6 @@ import logging
 import math as m
 import os
 
-from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import submission_task
@@ -125,8 +124,7 @@ def atax_submission_parse_csv_upload_to_xml_task(
         else:
             # no success while csv to xml  transformation:
             # is ERROR status correct here?
-            submission_upload.submission.status = Submission.ERROR
-            submission_upload.submission.save()
+            submission_upload.submission.fail()
 
             logger.info(
                 msg="atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data.  | "
