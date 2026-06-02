@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import csv
 from collections import defaultdict
 
-from django.utils.encoding import smart_str
+from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
 
 ALWAYS_MANDATORY_FIELDS = [
     "sample_title",
@@ -114,14 +113,9 @@ def validate_ena_mandatory_fields(csv_file):
         )
         return findings
 
-    # TODO: Replace with "delimiter = detect_delimiter(header_line)" from DASS-3526 and check for return -
-    # returns ";" instead of an exception in detect_delimiter
-    dialect = csv.Sniffer().sniff(smart_str(header_line))
     csv_file.seek(0)
-    delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-    csv_reader = csv.DictReader(
+    csv_reader, _csv_format = open_csv_reader(
         csv_file,
-        delimiter=delimiter,
         quotechar='"',
         skipinitialspace=True,
     )
