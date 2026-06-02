@@ -6,8 +6,8 @@ import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
 
 import xmlschema
-from django.utils.encoding import smart_str
 
+from ..utils.csv_format import open_csv_reader
 from ..utils.csv_atax import (
     add_unit_data,
     add_data_set,
@@ -277,15 +277,10 @@ class Ataxer(object):
         return self.root, units
 
     def read_and_map_specimen_csv(self, csv_file):
-        header = csv_file.readline()
-        dialect = csv.Sniffer().sniff(smart_str(header))
-        csv_file.seek(0)
-        delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
         # read the csv data from file:
-        csv_reader = csv.DictReader(
+        csv_reader, _csv_format = open_csv_reader(
             csv_file,
             quoting=csv.QUOTE_ALL,
-            delimiter=delimiter,
             quotechar='"',
             skipinitialspace=True,
             restkey="extra_columns_found",
@@ -302,17 +297,12 @@ class Ataxer(object):
         return csv_data
 
     def read_and_map_measurement_csv(self, csv_file):
-        header = csv_file.readline()
-        dialect = csv.Sniffer().sniff(smart_str(header))
-        csv_file.seek(0)
-        delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
         known_tags = ["UnitID", "MeasuredBy", "MeasurementDateTime", "Method"]
         extra_tags = ["AppliesTo"]
         delimiters = "(|["
-        csv_reader = csv.DictReader(
+        csv_reader, _csv_format = open_csv_reader(
             csv_file,
             quoting=csv.QUOTE_ALL,
-            delimiter=delimiter,
             quotechar='"',
             skipinitialspace=True,
             restkey="extra_columns_found",
@@ -377,14 +367,9 @@ class Ataxer(object):
         return csv_data
 
     def read_and_map_multimedia_csv(self, csv_file):
-        header = csv_file.readline()
-        dialect = csv.Sniffer().sniff(smart_str(header))
-        csv_file.seek(0)
-        delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-        csv_reader = csv.DictReader(
+        csv_reader, _csv_format = open_csv_reader(
             csv_file,
             quoting=csv.QUOTE_ALL,
-            delimiter=delimiter,
             quotechar='"',
             skipinitialspace=True,
             restkey="extra_columns_found",
