@@ -21,15 +21,28 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(base=SubmissionTask, bind=True, name="tasks.add_metadata_file_validation_task")
-def add_metadata_file_validation_task(self, previous_task_result=None, submission_id=None, submission_upload_id=None):
+def add_metadata_file_validation_task(
+    self,
+    previous_task_result=None,
+    submission_id=None,
+    submission_upload_id=None,
+    triggered_by_user_id=None,
+):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
 
     metadata_file = SubmissionCloudUpload.objects.get(pk=submission_upload_id)
     if metadata_file and metadata_file.meta_data and submission.target == ENA:
+        if triggered_by_user_id is None:
+            triggered_by_user_id = metadata_file.user_id
         if not MetadataValidationReport.objects.filter(submission_id=submission_id, upload_file=metadata_file, file_md5_checksum=metadata_file.file_upload.md5):
-            new_report = MetadataValidationReport.objects.create(submission_id=submission_id, upload_file=metadata_file, file_md5_checksum=metadata_file.file_upload.md5)
+            new_report = MetadataValidationReport.objects.create(
+                submission_id=submission_id,
+                upload_file=metadata_file,
+                file_md5_checksum=metadata_file.file_upload.md5,
+                triggered_by_id=triggered_by_user_id,
+            )
             new_report.save()
             parallel_checks = [
                 test_check_task.s(report_id=new_report.id).set(

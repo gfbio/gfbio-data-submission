@@ -907,6 +907,12 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
     ]
+
+    def save_model(self, request, obj, form, change):
+        if obj.file_upload_id:
+            obj.file_upload._validation_triggered_by_user_id = request.user.pk
+        super().save_model(request, obj, form, change)
+
     def file_upload_link(self, obj):
         return mark_safe('<a href="{}">{}</a>'.format(
             reverse("admin:index") + f"dt_upload/fileuploadrequest/{obj.file_upload.pk}/change/",
@@ -931,6 +937,11 @@ except admin.sites.NotRegistered:
 
 class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
     search_fields = ["submissioncloudupload__submission__broker_submission_id", "original_filename"]
+
+    def save_model(self, request, obj, form, change):
+        obj._validation_triggered_by_user_id = request.user.pk
+        super().save_model(request, obj, form, change)
+
 
 admin.site.register(FileUploadRequest, FileUploadRequestAdmin)
 

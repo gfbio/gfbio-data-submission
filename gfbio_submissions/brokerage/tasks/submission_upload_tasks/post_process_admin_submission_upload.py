@@ -22,7 +22,12 @@ logger = logging.getLogger(__name__)
     bind=True,
     name="tasks.post_process_admin_submission_upload_task",
 )
-def post_process_admin_submission_upload_task(self, previous_task_result=None, file_upload_request_id=None):
+def post_process_admin_submission_upload_task(
+    self,
+    previous_task_result=None,
+    file_upload_request_id=None,
+    triggered_by_user_id=None,
+):
     report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     file_upload_request = FileUploadRequest.objects.filter(id=file_upload_request_id).first()
 
@@ -43,14 +48,14 @@ def post_process_admin_submission_upload_task(self, previous_task_result=None, f
         return TaskProgressReport.CANCELLED
 
     with transaction.atomic():
-        move_file_and_update_file_upload(file_upload_request)
+        move_file_and_update_file_upload(file_upload_request, triggered_by_user_id=triggered_by_user_id)
 
     with transaction.atomic():
         report.save()
     return True
 
 
-def move_file_and_update_file_upload(file_upload_request):
+def move_file_and_update_file_upload(file_upload_request, triggered_by_user_id=None):
     """
     Recalculate size and checksums for the current uploaded_file and update metadata.
 
@@ -110,6 +115,7 @@ def move_file_and_update_file_upload(file_upload_request):
             kwargs={
                 "submission_id": "{0}".format(submission_cloud_upload.submission.pk),
                 "submission_upload_id": "{0}".format(submission_cloud_upload.pk),
+                "triggered_by_user_id": triggered_by_user_id,
             },
             countdown=SUBMISSION_DELAY,
         )
