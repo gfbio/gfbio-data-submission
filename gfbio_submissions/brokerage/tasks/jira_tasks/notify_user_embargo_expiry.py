@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from config.celery_app import app
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 from ...utils.jira import JiraClient
 from ...utils.task_utils import (
     get_jira_comment_template,
@@ -17,15 +15,7 @@ from ...utils.task_utils import (
 )
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.notify_user_embargo_expiry_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.notify_user_embargo_expiry_task")
 def notify_user_embargo_expiry_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
