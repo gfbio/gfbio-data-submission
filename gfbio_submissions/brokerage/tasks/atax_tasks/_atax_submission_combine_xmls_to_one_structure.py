@@ -2,31 +2,17 @@
 import logging
 import math as m
 
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.auditable_text_data import AuditableTextData
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
-from ...utils.atax import (
-    update_specimen_with_measurements_abcd_xml,
-    update_specimen_with_multimedia_abcd_xml,
-)
+from ...tasks.submission_task import submission_task
+from ...utils.atax import update_specimen_with_measurements_abcd_xml, update_specimen_with_multimedia_abcd_xml
 from ...utils.csv_atax import store_atax_data_as_auditable_text_data
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.atax_submission_combine_xmls_to_one_structure_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.atax_submission_combine_xmls_to_one_structure_task")
 def atax_submission_combine_xmls_to_one_structure_task(
     self, previous_task_result=None, submission_id=None, submission_upload_id=None
 ):

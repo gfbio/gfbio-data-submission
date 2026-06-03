@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from config.celery_app import app
-from ...configuration.settings import (
-    SUBMISSION_MAX_RETRIES,
-    SUBMISSION_RETRY_DELAY,
-    SUBMISSION_COMMENT_TEMPLATE,
-)
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...configuration.settings import SUBMISSION_COMMENT_TEMPLATE
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
-from ...tasks.submission_task import SubmissionTask
 from ...utils.jira import JiraClient
 from ...utils.task_utils import (
     get_any_submission_and_site_configuration,
@@ -21,19 +15,9 @@ from ...utils.task_utils import (
 )
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.add_posted_comment_to_issue_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.add_posted_comment_to_issue_task")
 def add_posted_comment_to_issue_task(self, prev_task_result=None, submission_id=None, comment="", user_values={}):
-    submission, site_configuration = get_any_submission_and_site_configuration(
-        submission_id=submission_id, task=self
-    )
+    submission, site_configuration = get_any_submission_and_site_configuration(submission_id=submission_id, task=self)
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
