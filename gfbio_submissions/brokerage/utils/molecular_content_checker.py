@@ -4,7 +4,8 @@ import os
 
 from django.utils.encoding import smart_str
 
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_DELAY, SUBMISSION_MIN_COLS
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
 
@@ -134,6 +135,14 @@ class MolecularContentChecker():
             logger.info(
                 msg="check_for_molecular_content  | finished | return status={0} "
                     "messages={1} molecular_data_check_performed={2}".format(self.status, self.messages, self.check_performed)
+            )
+            add_metadata_file_validation_task.apply_async(
+                kwargs={
+                    "submission_id": "{0}".format(self.submission.pk),
+                    "submission_upload_id": "{0}".format(meta_data_file.pk),
+                    "triggered_by_user_id": self.submission.user.pk,
+                },
+                countdown=SUBMISSION_DELAY,
             )
         else:
             self.infos.append("Info: Since there were neither meta-data-files nor was the target ENA, this process "

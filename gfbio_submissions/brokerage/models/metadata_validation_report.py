@@ -20,6 +20,9 @@ class MetadataValidationReport(TimeStampedModel):
         help_text="User who triggered validation. Jira comments are public when this matches submission.user, otherwise internal.",
     )
 
+    def __str__(self):
+        return f"Report for sub '{self.submission.broker_submission_id.__str__()[0:8]}...', file '{self.upload_file.file_upload.original_filename}' ({self.file_md5_checksum[0:8]}...)"
+
 
 class ValidationTaskReport(TimeStampedModel):
     STATUSES = (
@@ -32,6 +35,8 @@ class ValidationTaskReport(TimeStampedModel):
     status = models.CharField(choices=STATUSES, max_length=10, default="PENDING")
     task_name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f"Report {self.task_name}, status {self.status}"
 
 class ValidationFinding(models.Model):
     STATUSES = (
@@ -45,3 +50,6 @@ class ValidationFinding(models.Model):
     column_name = models.CharField(max_length=255, null=True)
     message = models.TextField()
     help_text = models.TextField()
+
+    def __str__(self):
+        return f"Finding with status {self.status}; {self.message[0:25]}..."

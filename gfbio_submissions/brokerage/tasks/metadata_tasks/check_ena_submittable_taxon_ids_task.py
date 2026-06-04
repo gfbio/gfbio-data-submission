@@ -140,7 +140,7 @@ def _fallback_findings_from_messages(messages):
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def check_ena_submittable_taxon_ids_task(self, previous_task_result=None, report_id=None):
+def check_ena_submittable_taxon_ids_task(self, previous_task_result=None, submission_id=None, report_id=None):
     report = MetadataValidationReport.objects.select_related(
         "submission",
         "upload_file__file_upload",

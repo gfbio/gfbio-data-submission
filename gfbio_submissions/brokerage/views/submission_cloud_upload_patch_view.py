@@ -107,14 +107,13 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
                 response_status=response.status_code,
             )
 
-        if instance.submission.target == ENA:
-            add_metadata_file_validation_task.apply_async(
-                kwargs={
-                    "submission_id": "{0}".format(instance.submission.pk),
-                    "submission_upload_id": "{0}".format(instance.pk),
-                    "triggered_by_user_id": request.user.pk,
-                },
-                countdown=SUBMISSION_DELAY,
-            )
+        add_metadata_file_validation_task.apply_async(
+            kwargs={
+                "submission_id": "{0}".format(instance.submission.pk),
+                "submission_upload_id": "{0}".format(instance.pk),
+                "triggered_by_user_id": request.user.pk,
+            },
+            countdown=SUBMISSION_DELAY,
+        )
         return response
 

@@ -64,7 +64,10 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
                         location_parts.append(f"column {finding.column}")
                     location = ", ".join(location_parts)
                     prefix = f"- {location}: " if location else "- "
-                    lines.append(f"{prefix}{finding.message}")
+                    help_text = ""
+                    if finding.help_text:
+                        help_text = f" ({finding.help_text})"
+                    lines.append(f"{prefix}{finding.message}{help_text}")
             lines.append("")
 
     if has_errors:

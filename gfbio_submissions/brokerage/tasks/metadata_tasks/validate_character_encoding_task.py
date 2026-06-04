@@ -49,7 +49,7 @@ def _non_ascii_characters(value):
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def validate_character_encoding_task(self, previous_task_result=None, report_id=None):
+def validate_character_encoding_task(self, previous_task_result=None, submission_id=None, report_id=None):
     report = MetadataValidationReport.objects.get(pk=report_id)
     submission = report.submission
     cloud_upload = report.upload_file
