@@ -401,6 +401,91 @@ class TestSubmissionCloudUploadView(TestCase):
         # Assert S3 client called correctly
         self.s3_client_mock.abort_multipart_upload.assert_called_once()
 
+    def test_restart_multipart_upload(self):
+        """Restart uses the same FileUploadRequest / file_key with a new upload_id."""
+        submission = Submission.objects.first()
+        file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
+            original_filename=self.test_file_data["filename"],
+            file_key=f"{submission.broker_submission_id}/{self.test_file_data['filename']}",
+            file_type=self.test_file_data["filetype"],
+            file_size=self.test_file_data["total_size"],
+            status="PENDING",
+            user=self.user,
+        )
+        submission_cloud_upload = SubmissionCloudUpload.objects.create(
+            submission=submission,
+            user=self.user,
+            file_upload=file_upload,
+            meta_data=False,
+            attach_to_ticket=False,
+        )
+        multipart = backend_based_upload_models.MultiPartUpload.objects.create(
+            upload_id=self.mock_upload_id,
+            file_upload_request=file_upload,
+            parts_expected=self.test_file_data["total_parts"],
+        )
+        backend_based_upload_models.UploadPart.objects.create(
+            multipart_upload=multipart,
+            part_number=1,
+            completed=True,
+            etag="'old-etag'",
+        )
+
+        new_upload_id = "restarted-upload-id"
+        second_upload_id = "restarted-upload-id-2"
+        self.s3_client_mock.abort_multipart_upload.return_value = {}
+        self.s3_client_mock.create_multipart_upload.return_value = {"UploadId": new_upload_id}
+
+        url = reverse(
+            "brokerage:submissions_cloud_upload_restart_multipart",
+            kwargs={
+                "broker_submission_id": submission.broker_submission_id,
+                "pk": submission_cloud_upload.pk,
+            },
+        )
+        response = self.client.post(url, self.test_file_data, format="json")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["upload_id"], new_upload_id)
+        self.assertEqual(response.data["id"], submission_cloud_upload.pk)
+        self.assertEqual(SubmissionCloudUpload.objects.filter(submission=submission).count(), 1)
+        self.assertEqual(backend_based_upload_models.FileUploadRequest.objects.count(), 1)
+        file_upload.refresh_from_db()
+        self.assertEqual(file_upload.status, "PENDING")
+        self.assertEqual(
+            backend_based_upload_models.MultiPartUpload.objects.filter(file_upload_request=file_upload).count(),
+            1,
+        )
+        original_multipart_pk = multipart.pk
+        multipart.refresh_from_db()
+        self.assertEqual(multipart.pk, original_multipart_pk)
+        self.assertEqual(multipart.upload_id, new_upload_id)
+        self.assertEqual(
+            backend_based_upload_models.UploadPart.objects.filter(multipart_upload=multipart).count(),
+            self.test_file_data["total_parts"],
+        )
+        self.assertFalse(
+            backend_based_upload_models.UploadPart.objects.filter(
+                multipart_upload=multipart,
+                completed=True,
+            ).exists(),
+        )
+        self.s3_client_mock.abort_multipart_upload.assert_called_once()
+        self.s3_client_mock.create_multipart_upload.assert_called_once()
+
+        self.s3_client_mock.abort_multipart_upload.reset_mock()
+        self.s3_client_mock.create_multipart_upload.reset_mock()
+        self.s3_client_mock.create_multipart_upload.return_value = {"UploadId": second_upload_id}
+        response2 = self.client.post(url, self.test_file_data, format="json")
+        self.assertEqual(response2.status_code, 201)
+        self.assertEqual(response2.data["upload_id"], second_upload_id)
+        self.assertEqual(
+            backend_based_upload_models.MultiPartUpload.objects.filter(file_upload_request=file_upload).count(),
+            1,
+        )
+        multipart.refresh_from_db()
+        self.assertEqual(multipart.upload_id, second_upload_id)
+
     def test_error_handling(self):
         """Test error handling scenarios"""
         # Test invalid upload ID
