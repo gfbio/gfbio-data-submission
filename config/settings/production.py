@@ -1,6 +1,5 @@
 import logging
 import sys
-import re
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -94,9 +93,20 @@ DEFAULT_FROM_EMAIL = env(
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
-EMAIL_SUBJECT_PREFIX = env(
-    "DJANGO_EMAIL_SUBJECT_PREFIX", default="[GFBio Submissions]"
-)
+EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default=None)
+if EMAIL_SUBJECT_PREFIX is None:
+    normalized_host_url_root = HOST_URL_ROOT.strip().rstrip("/")
+    normalized_allowed_hosts = [str(host).strip().lower() for host in ALLOWED_HOSTS if str(host).strip()]
+    is_webtest_host = any(".test.gfbio.dev" in host for host in normalized_allowed_hosts)
+
+    if IS_PROD_ENV and normalized_host_url_root == "https://submissions.gfbio.org":
+        EMAIL_SUBJECT_PREFIX = "[Prod] "
+    elif is_webtest_host and normalized_host_url_root == "https://submissions.gfbio.dev":
+        EMAIL_SUBJECT_PREFIX = "[Dev] "
+    elif normalized_host_url_root == "https://submissions.gfbio.dev":
+        EMAIL_SUBJECT_PREFIX = "[Stage] "
+    else:
+        EMAIL_SUBJECT_PREFIX = "[Non-Prod] "
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'mail.sd-datasolutions.de'
 EMAIL_HOST_USER = 'gfbio-broker'
@@ -195,10 +205,6 @@ sentry_sdk.init(
 
 # django-rest-framework
 # -------------------------------------------------------------------------------
-# Tools that generate code samples can use SERVERS to point to the correct domain
-SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa F405
-    {"url": "https://submission.gfbio.org", "description": "Production server"}
-]
 
 # Your stuff...
 # ------------------------------------------------------------------------------

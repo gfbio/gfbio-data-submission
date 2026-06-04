@@ -11,6 +11,7 @@ from moto import mock_s3
 from dt_upload.models import FileUploadRequest, MultiPartUpload
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 from dt_upload.utils.storages import CloudStorage
 
@@ -57,6 +58,8 @@ class TestSignals(TestCase):
         submission_id = "00c0ffee-c0ff-c0ff-c0ff-c0ffeec0ffee"
 
         user = User.objects.create(username="user1")
+        user.site_configuration = SiteConfiguration.objects.create()
+        user.save()
 
         submission = Submission.objects.create(
             broker_submission_id=submission_id,

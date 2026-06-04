@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ROUTER_BASE_URL as base } from "../settings.jsx";
+import { ROUTER_URL_CREATE, ROUTER_URL_LIST } from "../settings.jsx";
 
 const NavigationMenu = (props) => {
 
@@ -8,11 +8,11 @@ const NavigationMenu = (props) => {
             <div className="row">
                 <div className="col-sm-12 px-0">
                     <nav className="nav">
-                        <Link to={base} className="nav-link">
+                        <Link to={ROUTER_URL_LIST} className="nav-link">
                             <i className="icon ion-ios-list"/>
                             My Submissions
                         </Link>
-                        <Link to={base + "form/"} className="nav-link">
+                        <Link to={ROUTER_URL_CREATE} className="nav-link">
                             <i className="icon ion-ios-add-circle-outline"/>
                             Create Submission
                         </Link>

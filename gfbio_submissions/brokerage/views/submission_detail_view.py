@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 from django.db import transaction
 from django.urls import reverse
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
 from rest_framework import mixins, generics, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
 from ..configuration.settings import SUBMISSION_DELAY
@@ -17,6 +17,7 @@ from ..utils.task_utils import jira_cancel_issue
 from ...generic.models.request_log import RequestLog
 
 
+@extend_schema(tags=["submissions"])
 class SubmissionDetailView(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -25,7 +26,7 @@ class SubmissionDetailView(
 ):
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     lookup_field = "broker_submission_id"
@@ -52,6 +53,7 @@ class SubmissionDetailView(
 
     @extend_schema(
         operation_id="get submission by id",
+        summary="Get submission details",
         description="Retrieve the Submission with the given submission_id",
         parameters=[
             OpenApiParameter(
@@ -76,6 +78,7 @@ class SubmissionDetailView(
 
     @extend_schema(
         operation_id="update submission",
+        summary="Update a submission",
         description="Updates the referenced submission.",
         parameters=[
             OpenApiParameter(
@@ -191,6 +194,7 @@ class SubmissionDetailView(
 
     @extend_schema(
         operation_id="cancel submission",
+        summary="Cancel a submission",
         description="Cancels a Submission",
         parameters=[
             OpenApiParameter(
@@ -213,3 +217,4 @@ class SubmissionDetailView(
         instance.save()
         jira_cancel_issue(submission_id=instance.pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
+

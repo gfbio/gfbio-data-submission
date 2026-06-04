@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4, UUID
 
 from django.db import transaction
 from rest_framework import mixins, generics, parsers, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
@@ -15,6 +15,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
 
 
+@extend_schema(exclude=True)
 class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
@@ -22,11 +23,12 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
         operation_id="patch-update submission upload",
+        summary="Partially update an uploaded file",
         description="Updates an existing file associated with a submission.",
         parameters=[
             OpenApiParameter(
@@ -103,3 +105,4 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView
                 response_status=response.status_code,
             )
         return response
+

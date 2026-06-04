@@ -8,7 +8,7 @@ const patchSubmissionCloudUpload = (brokerSubmissionId, fileKey, data) => {
             Authorization: `Token ${getToken()}`,
         },
     };
-    const url = `${SUBMISSIONS_API}${brokerSubmissionId}${CLOUD_UPLOAD}${UPLOAD_PATCH}${fileKey}/`;
+    const url = `${SUBMISSIONS_API}${brokerSubmissionId}${CLOUD_UPLOAD}${fileKey}/${UPLOAD_PATCH}`;
 
     return axios.patch(url, data, config)
         .then(response => {

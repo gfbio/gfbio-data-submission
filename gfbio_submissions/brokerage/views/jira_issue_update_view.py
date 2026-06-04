@@ -14,6 +14,7 @@ from ..permissions.api_allowed_hosts import APIAllowedHosts
 
 logger = logging.getLogger(__name__)
 
+@extend_schema(exclude=True)
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     permission_classes = (APIAllowedHosts,)
     serializer_class = JiraHookRequestSerializer

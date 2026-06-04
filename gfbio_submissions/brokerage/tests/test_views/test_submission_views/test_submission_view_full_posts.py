@@ -5,6 +5,7 @@ import os
 import shutil
 from uuid import UUID
 
+from gfbio_submissions.brokerage.tests.test_tasks.test_ena_validation_tasks import run_test_with_fake_submission_upload
 import responses
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
@@ -164,79 +165,77 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_test_meta_data()
 
-        response = self.api_client.post(url, data, format="multipart")
-
-        self.assertEqual(201, response.status_code)
-        self.assertEqual(1, len(submission.submissionupload_set.all()))
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
-
-        self._create_ena_taxa_query_response()
-        response = self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            {
-                "target": "GENERIC",
-                "release": True,
-                "data": {
-                    "requirements": {
-                        "title": title,
-                        "description": "A Description",
-                        "data_center": "ENA – European Nucleotide Archive",
-                    }
+        def test_update(submission, cloud_upload):
+            self._create_ena_taxa_query_response()
+            response = self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                {
+                    "target": "GENERIC",
+                    "release": True,
+                    "data": {
+                        "requirements": {
+                            "title": title,
+                            "description": "A Description",
+                            "data_center": "ENA – European Nucleotide Archive",
+                        }
+                    },
                 },
-            },
-            format="json",
-        )
-        self.assertEqual(200, response.status_code)
-        submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        self.assertNotIn("validation", submission.data.keys())
+                format="json",
+            )
+            self.assertEqual(200, response.status_code)
+            submission = Submission.objects.first()
+            self.assertEqual(ENA, submission.target)
+            self.assertNotIn("validation", submission.data.keys())
 
-        expected_task_names = [
-            "tasks.get_gfbio_helpdesk_username_task",
-            "tasks.create_submission_issue_task",
-            "tasks.jira_initial_comment_task",
-            "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_process",
-            "tasks.check_issue_existing_for_submission_task",
-            "tasks.get_gfbio_helpdesk_username_task",
-            "tasks.update_submission_issue_task",
-            "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_process_for_updates",
-            "tasks.check_on_hold_status_task",
-            "tasks.create_broker_objects_from_submission_data_task",
-            "tasks.prepare_ena_submission_data_task",
-            "tasks.check_submittable_taxon_id_task",
-            "tasks.add_general_comment_to_issue_task",
-        ]
-        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
-        for a in all_task_reports:
-            self.assertIn(a, expected_task_names)
+            expected_task_names = [
+                "tasks.get_gfbio_helpdesk_username_task",
+                "tasks.create_submission_issue_task",
+                "tasks.jira_initial_comment_task",
+                "tasks.check_for_molecular_content_in_submission_task",
+                "tasks.trigger_submission_process",
+                "tasks.check_issue_existing_for_submission_task",
+                "tasks.get_gfbio_helpdesk_username_task",
+                "tasks.update_submission_issue_task",
+                "tasks.check_for_molecular_content_in_submission_task",
+                "tasks.trigger_submission_process_for_updates",
+                "tasks.check_on_hold_status_task",
+                "tasks.create_broker_objects_from_submission_data_task",
+                "tasks.prepare_ena_submission_data_task",
+                "tasks.check_submittable_taxon_id_task",
+                "tasks.add_general_comment_to_issue_task",
+            ]
+            all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
+            for a in all_task_reports:
+                self.assertIn(a, expected_task_names)
 
-        self.assertEqual(1, len(submission.brokerobject_set.filter(type="study")))
-        study = submission.brokerobject_set.filter(type="study").first()
-        self.assertEqual(title, study.data.get("study_title", ""))
+            self.assertEqual(1, len(submission.brokerobject_set.filter(type="study")))
+            study = submission.brokerobject_set.filter(type="study").first()
+            self.assertEqual(title, study.data.get("study_title", ""))
 
-        self.assertEqual(3, len(submission.brokerobject_set.filter(type="sample")))
-        sample = submission.brokerobject_set.filter(type="sample").first()
-        self.assertEqual("Sample No. 1", sample.data.get("sample_title", ""))
+            self.assertEqual(3, len(submission.brokerobject_set.filter(type="sample")))
+            sample = submission.brokerobject_set.filter(type="sample").first()
+            self.assertEqual("Sample No. 1", sample.data.get("sample_title", ""))
 
-        self.assertEqual(3, len(submission.brokerobject_set.filter(type="experiment")))
-        experiment = submission.brokerobject_set.filter(type="experiment").first()
-        self.assertIn("files", experiment.data.keys())
+            self.assertEqual(3, len(submission.brokerobject_set.filter(type="experiment")))
+            experiment = submission.brokerobject_set.filter(type="experiment").first()
+            self.assertIn("files", experiment.data.keys())
 
-        submission_text_data = list(
-            submission.auditabletextdata_set.values_list("name", flat=True).order_by("created")
-        )
-        expected_text_data_names = [
-            "study.xml",
-            "sample.xml",
-            "experiment.xml",
-            "run.xml",
-        ]
-        for s in submission_text_data:
-            self.assertIn(s, expected_text_data_names)
+            submission_text_data = list(
+                submission.auditabletextdata_set.values_list("name", flat=True).order_by("created")
+            )
+            expected_text_data_names = [
+                "study.xml",
+                "sample.xml",
+                "experiment.xml",
+                "run.xml",
+            ]
+            for s in submission_text_data:
+                self.assertIn(s, expected_text_data_names)
+        
+        
+        run_test_with_fake_submission_upload(submission, submission.user, "molecular_metadata.csv", "csv_files/molecular_metadata.csv", True, test_update)
+
 
     # TODO: move to dedicatet test class
     @responses.activate
@@ -265,85 +264,79 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_test_meta_data()
-        self._create_ena_taxa_query_response()
-        self.api_client.post(url, data, format="multipart")
-        self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            {
-                "target": "GENERIC",
-                "release": True,
-                "data": {
-                    "requirements": {
-                        "title": title,
-                        "description": "A Description",
-                        "data_center": "ENA – European Nucleotide Archive",
-                    }
+        def test_update(submission, submission_cloud_upload):
+            self._create_ena_taxa_query_response()
+            self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                {
+                    "target": "GENERIC",
+                    "release": True,
+                    "data": {
+                        "requirements": {
+                            "title": title,
+                            "description": "A Description",
+                            "data_center": "ENA – European Nucleotide Archive",
+                        }
+                    },
                 },
-            },
-            format="json",
-        )
-        submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
+                format="json",
+            )
+            submission = Submission.objects.first()
+            self.assertEqual(ENA, submission.target)
+            submission_cloud_upload.meta_data = False
+            submission_cloud_upload.save()
 
-        data = self._create_test_meta_data(delete=False, update=True)
-        self.api_client.post(url, data, format="multipart")
-        self.assertEqual(2, len(submission.submissionupload_set.all()))
-        original_upload = submission.submissionupload_set.get(
-            file="{0}/molecular_metadata.csv".format(submission.broker_submission_id)
-        )
-        update_upload = submission.submissionupload_set.get(
-            file="{0}/molecular_metadata_for_update.csv".format(submission.broker_submission_id)
-        )
-        original_upload.meta_data = False
-        original_upload.save()
-        self.assertFalse(original_upload.meta_data)
-        self.assertTrue(update_upload.meta_data)
+        def test_update2(submission, submission_cloud_upload):
+            self.assertEqual(10, len(submission.brokerobject_set.all()))
+            self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
-        self.assertEqual(10, len(submission.brokerobject_set.all()))
-        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
-
-        self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            {
-                "target": "GENERIC",
-                "release": True,
-                "data": {
-                    "requirements": {
-                        "title": title,
-                        "description": "A Description",
-                        "data_center": "ENA – European Nucleotide Archive",
-                    }
+            self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                {
+                    "target": "GENERIC",
+                    "release": True,
+                    "data": {
+                        "requirements": {
+                            "title": title,
+                            "description": "A Description",
+                            "data_center": "ENA – European Nucleotide Archive",
+                        }
+                    },
                 },
-            },
-            format="json",
-        )
-        submission = Submission.objects.first()
-        sample = submission.brokerobject_set.filter(type="sample").first()
-        self.assertEqual("Update-Sample No. 1", sample.data.get("sample_title", ""))
+                format="json",
+            )
+            submission = Submission.objects.first()
+            sample = submission.brokerobject_set.filter(type="sample").first()
+            self.assertEqual("Update-Sample No. 1", sample.data.get("sample_title", ""))
 
-        self.assertEqual(10, len(submission.brokerobject_set.all()))
-        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
+            self.assertEqual(10, len(submission.brokerobject_set.all()))
+            self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
-        data = self._create_test_meta_data(delete=True, invalid=True)
-        self.api_client.post(url, data, format="multipart")
-        self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            {
-                "target": "GENERIC",
-                "release": True,
-                "data": {
-                    "requirements": {
-                        "title": title,
-                        "description": "A Description",
-                        "data_center": "ENA – European Nucleotide Archive",
-                    }
-                },
-            },
-            format="json",
-        )
-        submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
+            def test_update3(submission, submission_cloud_upload):
+                submission_cloud_upload.status = "DELETED"
+                self.api_client.put(
+                    "/api/submissions/{0}/".format(submission.broker_submission_id),
+                    {
+                        "target": "GENERIC",
+                        "release": True,
+                        "data": {
+                            "requirements": {
+                                "title": title,
+                                "description": "A Description",
+                                "data_center": "ENA – European Nucleotide Archive",
+                            }
+                        },
+                    },
+                    format="json",
+                )
+                submission = Submission.objects.first()
+                self.assertEqual(ENA, submission.target)
+
+                run_test_with_fake_submission_upload(submission, submission.user, "invalid_molecular_metadata.csv", "csv_files/invalid_molecular_metadata.csv", True, test_update3)
+
+        run_test_with_fake_submission_upload(submission, submission.user, "molecular_metadata.csv", "csv_files/molecular_metadata.csv", True, test_update)
+        run_test_with_fake_submission_upload(submission, submission.user, "molecular_metadata_for_update.csv", "csv_files/molecular_metadata_for_update.csv", True, test_update2)
+
 
     # TODO: move to dedicatet test class
     @responses.activate
@@ -376,63 +369,62 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_test_meta_data(invalid=True)
-        response = self.api_client.post(url, data, format="multipart")
-        self.assertEqual(201, response.status_code)
-        self.assertEqual(1, len(submission.submissionupload_set.all()))
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
-        self._create_ena_taxa_query_response()
+        #data = self._create_test_meta_data(invalid=True)
+        def test_update(submission, submission_cloud_upload):
+            self._create_ena_taxa_query_response()
 
-        response = self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            {
-                "target": "GENERIC",
-                "release": True,
-                "data": {
-                    "requirements": {
-                        "title": title,
-                        "description": "A Description",
-                        "data_center": "ENA – European Nucleotide Archive",
-                    }
+            response = self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                {
+                    "target": "GENERIC",
+                    "release": True,
+                    "data": {
+                        "requirements": {
+                            "title": title,
+                            "description": "A Description",
+                            "data_center": "ENA – European Nucleotide Archive",
+                        }
+                    },
                 },
-            },
-            format="json",
-        )
-        self.assertEqual(200, response.status_code)
-        submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        self.assertIn("validation", submission.data.keys())
-        self.assertEqual(2, len(submission.data.get("validation", [])))
+                format="json",
+            )
+            self.assertEqual(200, response.status_code)
+            submission = Submission.objects.first()
+            self.assertEqual(ENA, submission.target)
+            self.assertIn("validation", submission.data.keys())
+            self.assertEqual(2, len(submission.data.get("validation", [])))
 
-        expected_task_names = [
-            "tasks.get_gfbio_helpdesk_username_task",
-            "tasks.create_submission_issue_task",
-            "tasks.jira_initial_comment_task",
-            "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_process",
-            "tasks.check_issue_existing_for_submission_task",
-            "tasks.get_gfbio_helpdesk_username_task",
-            "tasks.update_submission_issue_task",
-            "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_process_for_updates",
-            "tasks.check_on_hold_status_task",
-            "tasks.create_broker_objects_from_submission_data_task",
-            "tasks.prepare_ena_submission_data_task",
-            "tasks.check_submittable_taxon_id_task",
-            "tasks.add_general_comment_to_issue_task",
-        ]
-        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
-        for a in all_task_reports:
-            self.assertIn(a, expected_task_names)
+            expected_task_names = [
+                "tasks.get_gfbio_helpdesk_username_task",
+                "tasks.create_submission_issue_task",
+                "tasks.jira_initial_comment_task",
+                "tasks.check_for_molecular_content_in_submission_task",
+                "tasks.trigger_submission_process",
+                "tasks.check_issue_existing_for_submission_task",
+                "tasks.get_gfbio_helpdesk_username_task",
+                "tasks.update_submission_issue_task",
+                "tasks.check_for_molecular_content_in_submission_task",
+                "tasks.trigger_submission_process_for_updates",
+                "tasks.check_on_hold_status_task",
+                "tasks.create_broker_objects_from_submission_data_task",
+                "tasks.prepare_ena_submission_data_task",
+                "tasks.check_submittable_taxon_id_task",
+                "tasks.add_general_comment_to_issue_task",
+            ]
+            all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
+            for a in all_task_reports:
+                self.assertIn(a, expected_task_names)
 
-        self.assertEqual(10, len(submission.brokerobject_set.all()))
-        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
+            self.assertEqual(10, len(submission.brokerobject_set.all()))
+            self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
-        check_tasks = TaskProgressReport.objects.filter(
-            task_name="tasks.check_for_molecular_content_in_submission_task"
-        )
-        for c in check_tasks:
-            self.assertIn("messages", c.task_return_value)
+            check_tasks = TaskProgressReport.objects.filter(
+                task_name="tasks.check_for_molecular_content_in_submission_task"
+            )
+            for c in check_tasks:
+                self.assertIn("messages", c.task_return_value)
+        run_test_with_fake_submission_upload(submission, submission.user, "invalid_molecular_metadata.csv", "csv_files/invalid_molecular_metadata.csv", True, test_update)
+
 
     @responses.activate
     def test_valid_max_post_with_data_url(self):

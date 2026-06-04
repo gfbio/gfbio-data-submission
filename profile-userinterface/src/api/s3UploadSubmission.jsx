@@ -59,7 +59,7 @@ export async function uploadFileToS3(
     ]);
 
     const startResponse = await axios.post(
-        `${SUBMISSIONS_API}${brokerSubmissionId}/cloudupload/`,
+        `${SUBMISSIONS_API}${brokerSubmissionId}/start-uploads/`,
         {
             filename: file.name,
             filetype: fileType,
@@ -117,7 +117,7 @@ export async function uploadFileToS3(
 
     completedParts.sort((a, b) => a.PartNumber - b.PartNumber);
     await axios.put(
-        `${SUBMISSIONS_API}cloudupload/${upload_id}/complete/`,
+        `${SUBMISSIONS_API}uploads/${upload_id}/complete/`,
         { parts: completedParts },
         {
             headers: {
@@ -185,7 +185,7 @@ async function uploadOnePart(
     token,
 ) {
     const partResponse = await axios.post(
-        `${SUBMISSIONS_API}cloudupload/${upload_id}/part/`,
+        `${SUBMISSIONS_API}uploads/${upload_id}/part/`,
         {
             part_number: partNumber,
         },
@@ -216,7 +216,7 @@ async function uploadOnePart(
     }
 
     await axios.put(
-        `${SUBMISSIONS_API}cloudupload/${upload_id}/update-part/`,
+        `${SUBMISSIONS_API}uploads/${upload_id}/update-part/`,
         {
             part_number: partNumber,
             etag,

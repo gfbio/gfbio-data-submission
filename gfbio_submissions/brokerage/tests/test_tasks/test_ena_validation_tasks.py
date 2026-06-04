@@ -42,7 +42,7 @@ def run_test_with_fake_submission_upload(submission, user, file_name, local_file
             file_key=f"{submission.broker_submission_id}/{file_name}",
             file_type="tif",
             status="COMPLETE",
-            user=user
+            user=user,
         )
         cloud_upload = SubmissionCloudUpload.objects.create(
             submission=submission,
@@ -54,7 +54,7 @@ def run_test_with_fake_submission_upload(submission, user, file_name, local_file
         #    file_to_copy = os.path.join(_get_test_data_dir_path(), "csv_files/specimen_table_Platypelis_wrong_sc_name.csv")
         #    os.system(f"cp {file_to_copy} /mnt/s3bucket/{submission.broker_submission_id}/specimen_table_Platypelis_wrong_sc_name.csv")
 
-        test_to_run()
+        test_to_run(submission, cloud_upload)
     finally:
         if os.path.exists(dir_path):
             os.system(f"rm -rf {dir_path}")
@@ -232,7 +232,7 @@ class TestEnaValidationTasks(TestCase):
         self.submission_atax.status = Submission.OPEN
         self.submission_atax.save()
 
-        def test_to_run():
+        def test_to_run(submission, cloud_upload):
             result = check_submittable_taxon_id_task.apply_async(kwargs={"submission_id": self.submission_atax.pk})
 
             self.assertTrue(result.successful())
@@ -257,7 +257,7 @@ class TestEnaValidationTasks(TestCase):
 
         run_test_with_fake_submission_upload(
             submission=self.submission_atax,
-            user=self.user2,
+            user=self.submission_atax.user,
             file_name="specimen_table_Platypelis_wrong_sc_name.csv",
             local_file_path="csv_files/specimen_table_Platypelis_wrong_sc_name.csv",
             is_meta_data=True,

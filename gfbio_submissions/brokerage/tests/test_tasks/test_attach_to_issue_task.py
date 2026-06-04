@@ -139,13 +139,13 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         url = "{0}{1}/{2}".format(
             site_config.helpdesk_server.url,
             JIRA_ATTACHMENT_URL,
-            submission_upload.attachment_id,
+            5454,
         )
         responses.add(responses.DELETE, url, body=b"", status=204)
         result = delete_submission_issue_attachment_task.apply_async(
             kwargs={
                 "submission_id": submission.pk,
-                "attachment_id": SubmissionUpload.objects.first().attachment_id,
+                "attachment_id": 5454,
             }
         )
         self.assertTrue(result.successful())

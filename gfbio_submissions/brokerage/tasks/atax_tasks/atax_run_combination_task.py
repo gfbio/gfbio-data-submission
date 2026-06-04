@@ -2,39 +2,26 @@
 import logging
 import os
 
-from abcd_converter_gfbio_org import abcd_conversion, handlers, file_validation
+from abcd_converter_gfbio_org import abcd_conversion, file_validation, handlers
 from django.conf import settings
 from dt_upload.views.backend_based_upload_mixins import get_s3_client
 
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.abcd_conversion_result import AbcdConversionResult
 from ...models.submission import Submission
 from ...models.submission_cloud_upload import SubmissionCloudUpload
 from ...models.submission_upload import SubmissionUpload
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.atax_run_combination_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.atax_run_combination_task")
 def atax_run_combination_task(
     self,
     previous_task_result=None,
     submission_id=None,
 ):
-    logger.info(
-        "tasks.py | atax_run_combination_task"
-    )
+    logger.info("tasks.py | atax_run_combination_task")
     submission = Submission.objects.get(pk=submission_id)
     submission_upload_files = SubmissionUpload.objects.filter(submission_id=submission_id)
 
@@ -65,8 +52,9 @@ def atax_run_combination_task(
 
     atax_xml_valid = False
     try:
-        xml = abcd_conversion.convert_csv_to_abcd(spec_file.file.path, measurements_file.file.path,
-                                                  multimedia_file.file.path, handlings)
+        xml = abcd_conversion.convert_csv_to_abcd(
+            spec_file.file.path, measurements_file.file.path, multimedia_file.file.path, handlings
+        )
         atax_xml_valid = True if xml else False
 
         AbcdConversionResult.objects.create(
@@ -83,7 +71,9 @@ def atax_run_combination_task(
         AbcdConversionResult.objects.create(
             submission=submission,
             atax_xml_valid=False,
-            xml=handlings.resultFileHandler.result[0]["content"] if len(handlings.resultFileHandler.result) > 0 else "",
+            xml=handlings.resultFileHandler.result[0]["content"]
+            if len(handlings.resultFileHandler.result) > 0
+            else "",
             errors=error_handler.result,
             warnings=handlings.warning_handler.result,
             logs=handlings.logHandler.result,
@@ -92,23 +82,13 @@ def atax_run_combination_task(
     return atax_xml_valid
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.atax_run_combination_for_cloud_upload_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.atax_run_combination_for_cloud_upload_task")
 def atax_run_combination_for_cloud_upload_task(
     self,
     previous_task_result=None,
     submission_id=None,
 ):
-    logger.info(
-        "tasks.py | atax_run_combination_for_cloud_upload_task"
-    )
+    logger.info("tasks.py | atax_run_combination_for_cloud_upload_task")
     submission = Submission.objects.get(pk=submission_id)
     submission_upload_files = SubmissionCloudUpload.objects.filter(submission_id=submission_id)
 
@@ -142,19 +122,23 @@ def atax_run_combination_for_cloud_upload_task(
     bucket_name, s3_client = get_s3_client()
     local_spec_file = f"local-{spec_file.file_upload.file_key}"
     with open(local_spec_file, "wb") as f:
-        s3_client.download_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                                   Key=spec_file.file_upload.file_key, Fileobj=f)
+        s3_client.download_fileobj(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=spec_file.file_upload.file_key, Fileobj=f
+        )
     local_measurements_file = f"local-{measurements_file.file_upload.file_key}"
     with open(local_measurements_file, "wb") as f:
-        s3_client.download_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                                   Key=measurements_file.file_upload.file_key, Fileobj=f)
+        s3_client.download_fileobj(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=measurements_file.file_upload.file_key, Fileobj=f
+        )
     local_multimedia_file = f"local-{multimedia_file.file_upload.file_key}"
     with open(local_multimedia_file, "wb") as f:
-        s3_client.download_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                                   Key=multimedia_file.file_upload.file_key, Fileobj=f)
+        s3_client.download_fileobj(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=multimedia_file.file_upload.file_key, Fileobj=f
+        )
     try:
-        xml = abcd_conversion.convert_csv_to_abcd(local_spec_file, local_measurements_file,
-                                                  local_multimedia_file, handlings)
+        xml = abcd_conversion.convert_csv_to_abcd(
+            local_spec_file, local_measurements_file, local_multimedia_file, handlings
+        )
         atax_xml_valid = True if xml else False
 
         AbcdConversionResult.objects.create(
@@ -171,7 +155,9 @@ def atax_run_combination_for_cloud_upload_task(
         AbcdConversionResult.objects.create(
             submission=submission,
             atax_xml_valid=False,
-            xml=handlings.resultFileHandler.result[0]["content"] if len(handlings.resultFileHandler.result) > 0 else "",
+            xml=handlings.resultFileHandler.result[0]["content"]
+            if len(handlings.resultFileHandler.result) > 0
+            else "",
             errors=error_handler.result,
             warnings=handlings.warning_handler.result,
             logs=handlings.logHandler.result,
@@ -212,32 +198,40 @@ class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorI
         self.cloud_upload = cloud_upload
         if self.cloud_upload:
             self.submission_upload_list = list(
-                SubmissionCloudUpload.objects.filter(submission_id=submission_id).values_list(
-                    "file_upload__original_filename", flat=True).all())
+                SubmissionCloudUpload.objects.filter(submission_id=submission_id)
+                .values_list("file_upload__original_filename", flat=True)
+                .all()
+            )
         else:
             submission_upload_list = list(
-                SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True).all())
+                SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True).all()
+            )
             self.submission_upload_list = [entry.split("/")[1] for entry in submission_upload_list]
         self.file_extensions = file_validation.FILE_EXTENSIONS
         self.file_extensions["image"].append("tif")
 
     def validate(self, file_name, format, row):
         if not file_name:
-            self.io_handler.warning_handler.handle(f"File in row {row} has no name.",
-                                                   {"file": "multimedia", "row": row, "message": "File has no name"})
+            self.io_handler.warning_handler.handle(
+                f"File in row {row} has no name.", {"file": "multimedia", "row": row, "message": "File has no name"}
+            )
             return
 
         if not format:
-            self.io_handler.warning_handler.handle(f"File in row {row} has no format.",
-                                                   {"file": "multimedia", "row": row, "message": "File has no format"})
+            self.io_handler.warning_handler.handle(
+                f"File in row {row} has no format.",
+                {"file": "multimedia", "row": row, "message": "File has no format"},
+            )
         else:
             file_extension = file_name.rsplit(".")[1]
             if (format.lower() not in self.file_extensions and format.lower() != file_extension.lower()) or (
-                format.lower() in self.file_extensions and file_extension.lower() not in self.file_extensions[
-                format.lower()]):
+                format.lower() in self.file_extensions
+                and file_extension.lower() not in self.file_extensions[format.lower()]
+            ):
                 msg = f"File extension '{file_extension}' of {file_name} may not match the format description '{format}'."
-                self.io_handler.warning_handler.handle(msg, {"file": "multimedia", "row": row,
-                                                             "message": "Unrecognized file extension"})
+                self.io_handler.warning_handler.handle(
+                    msg, {"file": "multimedia", "row": row, "message": "Unrecognized file extension"}
+                )
 
         if not self.cloud_upload:
             file_name = file_name.replace(" ", "_")

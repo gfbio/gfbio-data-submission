@@ -196,7 +196,7 @@ class TestAttachCloudUploadToIssueTasks(TestHelpDeskTasksBase):
         self.assertEqual(10814, cloud_upload.attachment_id)
 
     @responses.activate
-    def test_delete_attachment_task(self):
+    def test_delete_attachment_task_with_none_id(self):
         self._prepare_responses()
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
@@ -212,6 +212,29 @@ class TestAttachCloudUploadToIssueTasks(TestHelpDeskTasksBase):
             kwargs={
                 "submission_id": submission.pk,
                 "attachment_id": SubmissionCloudUpload.objects.first().attachment_id,
+            }
+        )
+        self.assertEqual(None, submission_upload.attachment_id)
+        self.assertTrue(result.successful())
+        self.assertFalse(result.get())
+
+    @responses.activate
+    def test_delete_attachment_task(self):
+        self._prepare_responses()
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+
+        submission_upload = SubmissionCloudUpload.objects.first()
+        url = "{0}{1}/{2}".format(
+            site_config.helpdesk_server.url,
+            JIRA_ATTACHMENT_URL,
+            22,
+        )
+        responses.add(responses.DELETE, url, body=b"", status=204)
+        result = delete_submission_issue_attachment_task.apply_async(
+            kwargs={
+                "submission_id": submission.pk,
+                "attachment_id": 22,
             }
         )
         self.assertTrue(result.successful())

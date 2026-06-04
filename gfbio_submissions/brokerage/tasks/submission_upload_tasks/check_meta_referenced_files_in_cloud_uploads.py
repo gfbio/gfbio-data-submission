@@ -56,7 +56,7 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
     report.save()
 
     # Find meta CSV among cloud uploads
-    meta_qs = SubmissionCloudUpload.objects.filter(submission=submission, meta_data=True).order_by("-modified")
+    meta_qs = SubmissionCloudUpload.objects.exclude(status=SubmissionCloudUpload.STATUS_DELETED).filter(submission=submission, meta_data=True).order_by("-modified")
     if meta_qs.count() == 0:
         msg = "No meta CSV cloud upload found for this submission"
         logger.error(

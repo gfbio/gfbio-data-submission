@@ -1,25 +1,11 @@
 # -*- coding: utf-8 -*-
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 from ...utils.jira import JiraClient
-from ...utils.task_utils import (
-    get_submission_and_site_configuration,
-    jira_error_auto_retry,
-)
+from ...utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.update_submission_issue_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.update_submission_issue_task")
 def update_submission_issue_task(self, prev_task_result=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True

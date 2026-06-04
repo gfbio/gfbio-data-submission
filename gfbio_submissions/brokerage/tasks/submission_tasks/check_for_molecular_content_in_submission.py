@@ -2,12 +2,13 @@
 import logging
 
 from config.celery_app import app
+from gfbio_submissions.brokerage.utils.molecular_content_checker import MolecularContentChecker
+from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from ...models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
 
 from ...tasks.submission_task import SubmissionTask
-from ...utils.csv import check_for_molecular_content
 from ...utils.task_utils import get_submission_and_site_configuration
 
 
@@ -32,7 +33,9 @@ def check_for_molecular_content_in_submission_task(self, previous_task_result=No
         "process submission={}.".format(submission.broker_submission_id)
     )
 
-    molecular_data_available, messages, check_performed = check_for_molecular_content(submission)
+    file_opener = create_submission_file_opener(submission)
+    checker = MolecularContentChecker(submission, file_opener)
+    molecular_data_available, messages, check_performed, infos = checker.run_check()
 
     logger.info(
         msg="check_for_molecular_content_in_submission_task. "
@@ -44,4 +47,5 @@ def check_for_molecular_content_in_submission_task(self, previous_task_result=No
         "molecular_data_available": molecular_data_available,
         "messages": messages,
         "molecular_data_check_performed": check_performed,
+        "infos": infos
     }

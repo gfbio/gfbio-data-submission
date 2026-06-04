@@ -5,14 +5,11 @@ import os
 from django.conf import settings
 from dt_upload.views.backend_based_upload_mixins import get_s3_client
 
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
-from ...tasks.submission_task import SubmissionTask
 from ...utils.jira import JiraClient
 from ...utils.task_utils import (
     get_submission_and_site_configuration,
@@ -21,15 +18,7 @@ from ...utils.task_utils import (
 )
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.attach_to_submission_issue_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.attach_to_submission_issue_task")
 def attach_to_submission_issue_task(
     self,
     kwargs=None,
@@ -38,7 +27,7 @@ def attach_to_submission_issue_task(
 ):
     logger.info(
         msg="attach_to_submission_issue_task. submission_id={0} | submission_upload_id={1}"
-            "".format(submission_id, submission_upload_id)
+        "".format(submission_id, submission_upload_id)
     )
 
     submission, site_configuration = get_submission_and_site_configuration(
@@ -47,8 +36,8 @@ def attach_to_submission_issue_task(
     if submission == TaskProgressReport.CANCELLED:
         logger.info(
             msg="attach_to_submission_issue_task no Submission"
-                " found. return {2}. | submission_id={0} | submission_upload_id={1}"
-                "".format(submission_id, submission_upload_id, TaskProgressReport.CANCELLED)
+            " found. return {2}. | submission_id={0} | submission_upload_id={1}"
+            "".format(submission_id, submission_upload_id, TaskProgressReport.CANCELLED)
         )
         return TaskProgressReport.CANCELLED
 
@@ -108,15 +97,15 @@ def attach_to_submission_issue_task(
         else:
             logger.info(
                 msg="attach_to_submission_issue_task no SubmissionUpload"
-                    " found. submission_id={0} | submission_upload_id={1}"
-                    "".format(submission_id, submission_upload_id)
+                " found. submission_id={0} | submission_upload_id={1}"
+                "".format(submission_id, submission_upload_id)
             )
             return False
     else:
         logger.info(
             msg="attach_to_submission_issue_task no tickets found. "
-                "submission_id={0} | submission_upload_id={1}"
-                "".format(submission_id, submission_upload_id)
+            "submission_id={0} | submission_upload_id={1}"
+            "".format(submission_id, submission_upload_id)
         )
 
         return retry_no_ticket_available_exception(
@@ -126,24 +115,14 @@ def attach_to_submission_issue_task(
         )
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.attach_cloud_upload_to_submission_issue_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.attach_cloud_upload_to_submission_issue_task")
 def attach_cloud_upload_to_submission_issue_task(
     self,
     kwargs=None,
     submission_id=None,
     submission_upload_id=None,
 ):
-    logger.info(
-        msg=f"{self.name}. submission_id={submission_id} | submission_upload_id={submission_upload_id}"
-    )
+    logger.info(msg=f"{self.name}. submission_id={submission_id} | submission_upload_id={submission_upload_id}")
 
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -151,8 +130,8 @@ def attach_cloud_upload_to_submission_issue_task(
     if submission == TaskProgressReport.CANCELLED:
         logger.info(
             msg=f"attach_cloud_upload_to_submission_issue_task no Submission found. return "
-                f"{TaskProgressReport.CANCELLED}. | submission_id={submission_id} | "
-                f"submission_upload_id={submission_upload_id}"
+            f"{TaskProgressReport.CANCELLED}. | submission_id={submission_id} | "
+            f"submission_upload_id={submission_upload_id}"
         )
         return TaskProgressReport.CANCELLED
 
@@ -161,9 +140,12 @@ def attach_cloud_upload_to_submission_issue_task(
     logger.info(msg="attach_to_submission_issue_task | reference={0}".format(reference))
 
     if reference:
-
-        submission_cloud_upload = submission.submissioncloudupload_set.filter(attach_to_ticket=True).filter(
-            meta_data=True).filter(pk=submission_upload_id).first()
+        submission_cloud_upload = (
+            submission.submissioncloudupload_set.filter(attach_to_ticket=True)
+            .filter(meta_data=True)
+            .filter(pk=submission_upload_id)
+            .first()
+        )
 
         logger.info(msg=f"{self.name} | submission_cloud_upload={submission_cloud_upload}")
         if submission_cloud_upload:
@@ -174,9 +156,7 @@ def attach_cloud_upload_to_submission_issue_task(
                 do_attach = True
 
             if not do_attach:
-                logger.info(
-                    msg=f"{self.name} | do_attach={do_attach} | return {TaskProgressReport.CANCELLED}"
-                )
+                logger.info(msg=f"{self.name} | do_attach={do_attach} | return {TaskProgressReport.CANCELLED}")
                 return TaskProgressReport.CANCELLED
 
             jira_client = JiraClient(
@@ -195,12 +175,15 @@ def attach_cloud_upload_to_submission_issue_task(
             bucket_name, s3_client = get_s3_client()
             local_file = f"local-{submission_cloud_upload.file_upload.file_key}"
             with open(local_file, "wb") as f:
-                s3_client.download_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                                           Key=submission_cloud_upload.file_upload.file_key, Fileobj=f)
+                s3_client.download_fileobj(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=submission_cloud_upload.file_upload.file_key,
+                    Fileobj=f,
+                )
             with open(local_file, "rb") as f:
                 logger.info(
                     msg=f"{self.name} | attach local file {local_file} | downloaded from "
-                        f"{settings.AWS_STORAGE_BUCKET_NAME} with key {submission_cloud_upload.file_upload.file_key}"
+                    f"{settings.AWS_STORAGE_BUCKET_NAME} with key {submission_cloud_upload.file_upload.file_key}"
                 )
                 attachment = jira_client.add_attachment(
                     key=reference.reference_key,
@@ -225,13 +208,13 @@ def attach_cloud_upload_to_submission_issue_task(
         else:
             logger.info(
                 msg=f"attach_to_submission_issue_task no SubmissionUpload found. "
-                    f"submission_id={submission_id} | submission_upload_id={submission_upload_id}"
+                f"submission_id={submission_id} | submission_upload_id={submission_upload_id}"
             )
             return False
     else:
         logger.info(
             msg=f"attach_to_submission_issue_task no tickets found. submission_id={submission_id} | "
-                f"submission_upload_id={submission_upload_id}"
+            f"submission_upload_id={submission_upload_id}"
         )
 
         return retry_no_ticket_available_exception(

@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4
 
 from rest_framework import generics, parsers, permissions
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
 
@@ -11,6 +11,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
+@extend_schema(tags=["uploads"])
 class SubmissionCloudUploadListView(generics.ListAPIView):
     queryset = SubmissionCloudUpload.objects.all()
     serializer_class = SubmissionCloudUploadSerializer
@@ -18,7 +19,7 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def get_queryset(self):
@@ -31,6 +32,7 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
 
     @extend_schema(
         operation_id="get uploads of a submission",
+        summary="List uploaded files for a submission",
         description="Returns a list of files, belonging to the given broker_submission_id.",
         request=OpenApiRequest(
             request=SubmissionCloudUploadSerializer(many=False)
@@ -46,10 +48,11 @@ class SubmissionCloudUploadListView(generics.ListAPIView):
         ],
         responses={
             200: OpenApiResponse(
-                description="List of submission cloud upload files",
+                description="List of submission upload files",
                 response=SubmissionCloudUploadSerializer(many=False)
             ),
         }
     )
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+

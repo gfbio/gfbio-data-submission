@@ -7,7 +7,9 @@ from django.db import transaction
 from config.celery_app import app
 from dt_upload.models import FileUploadRequest
 from dt_upload.tasks.backup_task import save_to_redundant_storage_clientside_fileupload
+from gfbio_submissions.brokerage.configuration.settings import ENA, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 
 from ...models.task_progress_report import TaskProgressReport
 from ..submission_task import SubmissionTask
@@ -20,7 +22,12 @@ logger = logging.getLogger(__name__)
     bind=True,
     name="tasks.post_process_admin_submission_upload_task",
 )
-def post_process_admin_submission_upload_task(self, previous_task_result=None, file_upload_request_id=None):
+def post_process_admin_submission_upload_task(
+    self,
+    previous_task_result=None,
+    file_upload_request_id=None,
+    triggered_by_user_id=None,
+):
     report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     file_upload_request = FileUploadRequest.objects.filter(id=file_upload_request_id).first()
 
@@ -41,14 +48,14 @@ def post_process_admin_submission_upload_task(self, previous_task_result=None, f
         return TaskProgressReport.CANCELLED
 
     with transaction.atomic():
-        move_file_and_update_file_upload(file_upload_request)
+        move_file_and_update_file_upload(file_upload_request, triggered_by_user_id=triggered_by_user_id)
 
     with transaction.atomic():
         report.save()
     return True
 
 
-def move_file_and_update_file_upload(file_upload_request):
+def move_file_and_update_file_upload(file_upload_request, triggered_by_user_id=None):
     """
     Recalculate size and checksums for the current uploaded_file and update metadata.
 
@@ -102,6 +109,16 @@ def move_file_and_update_file_upload(file_upload_request):
     )
     submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
     submission_cloud_upload.save()
+
+    if submission_cloud_upload.submission.target == ENA and submission_cloud_upload.meta_data:
+        add_metadata_file_validation_task.apply_async(
+            kwargs={
+                "submission_id": "{0}".format(submission_cloud_upload.submission.pk),
+                "submission_upload_id": "{0}".format(submission_cloud_upload.pk),
+                "triggered_by_user_id": triggered_by_user_id,
+            },
+            countdown=SUBMISSION_DELAY,
+        )
 
     if getattr(settings, "DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", False):
         save_to_redundant_storage_clientside_fileupload.apply_async(

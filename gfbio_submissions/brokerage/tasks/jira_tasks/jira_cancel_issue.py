@@ -1,27 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 from ...utils.jira import JiraClient
 from ...utils.task_utils import jira_error_auto_retry
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.jira_cancel_issue_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.jira_cancel_issue_task")
 def jira_cancel_issue_task(self, submission_id=None, admin=False):
     logger.info("tasks.py | jira_cancel_issue_task | submission_id={} admin={}".format(submission_id, admin))
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)

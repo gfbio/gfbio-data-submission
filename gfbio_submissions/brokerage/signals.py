@@ -1,17 +1,15 @@
 import logging
-import os
+
 from django.conf import settings
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from dt_upload.models import FileUploadRequest
+
 from .models import SubmissionCloudUpload
 from .tasks.submission_upload_tasks.post_process_admin_submission_upload import (
-    post_process_admin_submission_upload_task,
     move_file_and_update_file_upload,
+    post_process_admin_submission_upload_task,
 )
-from builtins import getattr
-
-from dt_upload.models import FileUploadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +92,8 @@ def recalculate_checksums(sender, instance: FileUploadRequest, **kwargs):
     if not instance.uploaded_file or not instance.uploaded_file.name:
         return
 
+    triggered_by_user_id = getattr(instance, "_validation_triggered_by_user_id", None)
+
     is_celery_in_debug = getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False) or getattr(
         settings, "CELERY_TASK_EAGER_PROPAGATES", False
     )
@@ -104,7 +104,7 @@ def recalculate_checksums(sender, instance: FileUploadRequest, **kwargs):
             "recalculate_checksums: running inline for FileUploadRequest id=%s (eager Celery)",
             instance.pk,
         )
-        move_file_and_update_file_upload(instance)
+        move_file_and_update_file_upload(instance, triggered_by_user_id=triggered_by_user_id)
         return
 
     # In normal mode: mark as pending and schedule Celery task.
@@ -119,4 +119,9 @@ def recalculate_checksums(sender, instance: FileUploadRequest, **kwargs):
     submission_cloud_upload.status = SubmissionCloudUpload.STATUS_NEW
     submission_cloud_upload.save()
 
-    post_process_admin_submission_upload_task.apply_async(kwargs={"file_upload_request_id": str(instance.pk)})
+    post_process_admin_submission_upload_task.apply_async(
+        kwargs={
+            "file_upload_request_id": str(instance.pk),
+            "triggered_by_user_id": triggered_by_user_id,
+        }
+    )

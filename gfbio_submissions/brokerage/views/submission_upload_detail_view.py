@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from uuid import uuid4, UUID
 
 from django.db import transaction
 from rest_framework import mixins, generics, parsers, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
@@ -16,6 +16,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
 
 
+@extend_schema(exclude=True)
 class SubmissionUploadDetailView(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -28,11 +29,12 @@ class SubmissionUploadDetailView(
         parsers.MultiPartParser,
         parsers.FormParser,
     )
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     @extend_schema(
         operation_id="update submission upload",
+        summary="Update an uploaded file",
         description="Updates an existing file associated with a submission.",
         parameters=[
             OpenApiParameter(
@@ -115,6 +117,7 @@ class SubmissionUploadDetailView(
 
     @extend_schema(
         operation_id="delete submission upload",
+        summary="Delete an uploaded file",
         description="Deletes a file associated with a submission",
         parameters=[
             OpenApiParameter(
@@ -140,15 +143,17 @@ class SubmissionUploadDetailView(
     )
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
-        from ..tasks.jira_tasks.delete_submission_issue_attachment import (
-            delete_submission_issue_attachment_task,
-        )
+        if obj.attachment_id:
+            from ..tasks.jira_tasks.delete_submission_issue_attachment import (
+                delete_submission_issue_attachment_task,
+            )
 
-        delete_submission_issue_attachment_task.apply_async(
-            kwargs={
-                "submission_id": obj.submission.pk,
-                "attachment_id": obj.attachment_id,
-            },
-            countdown=SUBMISSION_DELAY,
-        )
+            delete_submission_issue_attachment_task.apply_async(
+                kwargs={
+                    "submission_id": obj.submission.pk,
+                    "attachment_id": obj.attachment_id,
+                },
+                countdown=SUBMISSION_DELAY,
+            )
         return self.destroy(request, *args, **kwargs)
+

@@ -1,21 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from config.celery_app import app
-from ...configuration.settings import (
-    SUBMISSION_MAX_RETRIES,
-    SUBMISSION_RETRY_DELAY,
-    ENA,
-    ENA_PANGAEA,
-    ATAX,
-)
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...configuration.settings import ATAX, ENA, ENA_PANGAEA
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 from ...utils.jira import JiraClient
 from ...utils.task_utils import (
-    get_submission_and_site_configuration,
     get_jira_comment_template,
+    get_submission_and_site_configuration,
     jira_comment_replace,
     jira_error_auto_retry,
 )
@@ -23,15 +15,7 @@ from ...utils.task_utils import (
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.jira_initial_comment_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.jira_initial_comment_task")
 def jira_initial_comment_task(self, prev=None, submission_id=None):
     logger.info("tasks.py | jira_initial_comment_task | submission_id={}".format(submission_id))
 
