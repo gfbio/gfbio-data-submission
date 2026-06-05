@@ -433,7 +433,7 @@ class TestSubmissionCloudUploadView(TestCase):
 
         new_upload_id = "restarted-upload-id"
         second_upload_id = "restarted-upload-id-2"
-        self.s3_client_mock.abort_multipart_upload.return_value = {}
+        self.s3_client_mock.abort_multipart_upload.returnTestRealWorldSubmissionCloudUploadView_value = {}
         self.s3_client_mock.create_multipart_upload.return_value = {"UploadId": new_upload_id}
 
         url = reverse(

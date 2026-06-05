@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-GFBio submission cloud upload CLI (same direct multipart flow as the profile UI).
+GFBio submission cloud upload CLI.
 
 Per file: compute MD5/SHA256, then ``POST …/start-uploads/`` (or ``POST …/restart-multipart/`` on
 resume/retry when a session exists). For each part: ``POST …/uploads/{upload_id}/part/`` (presigned URL),
-``PUT`` to S3, ``PUT …/update-part/``, then ``PUT …/complete/``. Up to 5 parts per file and up to 3 files
+``PUT`` to S3, ``PUT …/update-part/``, then ``PUT …/complete/``. Up to 2 parts per file (200 MiB) and up to 3 files
 upload in parallel (thread pools). Built-in HTTP retries per step and extra full-file retry passes.
-
-Uses only the Python standard library for HTTP (``urllib.request``). On Debian/Ubuntu use ``python3``.
-
-Process flow: ``scripts/gfbio_submissions_upload_progress_flow.md``.
 
 Example::
 
-  python3 scripts/gfbio_submissions_upload_progress.py sync \\
+  python3 scripts/gfbio_submissions_upload_progress.py upload \\
     --api-url=http://127.0.0.1:8000/ --broker-submission-id=UUID --token=TOKEN \\
     --recursive --output failures.json ./datadir
 
-  python3 scripts/gfbio_submissions_upload_progress.py sync \\
+  python3 scripts/gfbio_submissions_upload_progress.py upload \\
     --api-url=... --broker-submission-id=UUID --token=TOKEN \\
     --input failures.json --recursive ./datadir --output failures.json
 
@@ -48,8 +44,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
-# Default part size (500 MiB); keep in sync with gfbio_submissions.brokerage.upload_defaults.
-DEFAULT_MULTIPART_PART_SIZE_BYTES = 500 * 1024 * 1024
+DEFAULT_MULTIPART_PART_SIZE_BYTES = 200 * 1024 * 1024 #200 MiB
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +57,8 @@ HTTP_CONNECT_TIMEOUT_S = 30
 HTTP_READ_TIMEOUT_S = 600
 RETRYABLE_HTTP_STATUS = frozenset({429, 500, 502, 503, 504})
 DEFAULT_FILE_RETRY_ROUNDS = 3
-# Seconds to wait before tries 2, 3, and 4 (after try 1).
-DEFAULT_FILE_RETRY_DELAYS_S = (60, 300, 600)  # 1 min, 5 min, 10 min
-DEFAULT_MAX_PART_WORKERS = 5
+DEFAULT_FILE_RETRY_DELAYS_S = (60, 300, 600)  # 1 min, 5 min, 10 min waut times before retrying
+DEFAULT_MAX_PART_WORKERS = 2
 DEFAULT_MAX_FILE_WORKERS = 3
 UPLOAD_STATE_VERSION = 1
 _active_part_retries = DEFAULT_PART_RETRIES
@@ -82,13 +76,6 @@ def _format_bytes(num_bytes: int) -> str:
         if value < 1024.0 or unit == units[-1]:
             return f"{value:.1f} {unit}"
     return f"{value:.1f} TiB"
-
-
-def _format_speed(bytes_per_sec: float) -> str:
-    """Human-readable throughput (binary units per second)."""
-    if bytes_per_sec <= 0:
-        return "—"
-    return f"{_format_bytes(int(bytes_per_sec))}/s"
 
 
 def _progress_bar(pct: float, width: int = _PROGRESS_BAR_WIDTH) -> str:
@@ -114,12 +101,6 @@ class _ActiveFile:
     phase: str = "preparing"
     parts_done: int = 0
     parts_total: int = 0
-    upload_started_at: float | None = None
-    upload_ended_at: float | None = None
-    upload_avg_bps: float | None = None
-    speed_mark_bytes: int = 0
-    speed_mark_at: float | None = None
-    live_bps: float | None = None
 
 
 def _bytes_for_overall(st: _ActiveFile) -> int:
@@ -153,43 +134,11 @@ def _phase_detail(st: _ActiveFile) -> str:
     return st.phase
 
 
-def _update_live_speed(st: _ActiveFile, now: float) -> None:
-    """Rolling upload throughput from recent byte deltas (upload phase only)."""
-    if st.phase != "uploading" or st.speed_mark_at is None:
-        return
-    dt = now - st.speed_mark_at
-    if dt < 0.5:
-        return
-    db = st.file_bytes - st.speed_mark_bytes
-    if dt > 0:
-        st.live_bps = db / dt
-    st.speed_mark_at = now
-    st.speed_mark_bytes = st.file_bytes
-
-
-def _file_speed_suffix(st: _ActiveFile, now: float) -> str:
-    if st.phase == "preparing":
-        return ""
-    avg_bps: float | None = st.upload_avg_bps
-    if avg_bps is None and st.phase == "uploading" and st.upload_started_at is not None:
-        elapsed = now - st.upload_started_at
-        if elapsed > 0 and st.file_bytes > 0:
-            avg_bps = st.file_bytes / elapsed
-    live_bps = st.live_bps
-    parts: List[str] = []
-    if live_bps is not None and live_bps > 0:
-        parts.append(f"live {_format_speed(live_bps)}")
-    if avg_bps is not None and avg_bps > 0:
-        parts.append(f"avg {_format_speed(avg_bps)}")
-    return ("  " + "  ".join(parts)) if parts else ""
-
-
 class SyncProgressDisplay:
     """
     Live multi-line progress on stdout: one fixed overall line, then one line per
     in-flight file (removed when that file finishes).
 
-    With multiple concurrent file uploads, several current lines appear at once.
     """
 
     def __init__(self, *, total_files: int, total_bytes: int) -> None:
@@ -238,28 +187,10 @@ class SyncProgressDisplay:
                 self._completed_files += 1
                 self._completed_bytes += st.file_size
                 filename = st.filename
-                upload_avg_bps = st.upload_avg_bps
-                live_bps = st.live_bps
-                upload_seconds = (
-                    (st.upload_ended_at - st.upload_started_at)
-                    if st.upload_started_at is not None and st.upload_ended_at is not None
-                    else None
-                )
             else:
                 filename = os.path.basename(file_path)
-                upload_avg_bps = None
-                live_bps = None
-                upload_seconds = None
         self._render(force=True)
-        if upload_avg_bps is not None:
-            logger.info(
-                "%s upload: live %s  avg %s  (%.1fs)",
-                filename,
-                _format_speed(live_bps or upload_avg_bps),
-                _format_speed(upload_avg_bps),
-                upload_seconds or 0.0,
-            )
-        elif not self.use_tty:
+        if not self.use_tty:
             logger.info(
                 "[%d/%d] finished %s",
                 self._completed_files,
@@ -275,48 +206,26 @@ class SyncProgressDisplay:
         self._render(force=force)
 
     def start_upload(self, file_path: str) -> None:
-        now = time.monotonic()
         with self._lock:
             st = self._active[file_path]
             st.phase = "uploading"
             st.file_bytes = 0
             st.parts_done = 0
-            st.upload_started_at = now
-            st.upload_ended_at = None
-            st.upload_avg_bps = None
-            st.speed_mark_at = now
-            st.speed_mark_bytes = 0
-            st.live_bps = None
         self._render(force=True)
 
     def finish_upload(self, file_path: str) -> None:
-        now = time.monotonic()
         with self._lock:
             st = self._active[file_path]
             st.phase = "completing"
             st.file_bytes = st.file_size
-            st.upload_ended_at = now
-            if st.upload_started_at is not None:
-                elapsed = now - st.upload_started_at
-                if elapsed > 0:
-                    st.upload_avg_bps = st.file_size / elapsed
         self._render(force=True)
 
     def add_part_completed(self, file_path: str, start: int, end: int) -> None:
-        now = time.monotonic()
         with self._lock:
             st = self._active[file_path]
             st.phase = "uploading"
             st.parts_done += 1
             st.file_bytes += end - start
-            if st.speed_mark_at is not None:
-                dt = now - st.speed_mark_at
-                if dt > 0:
-                    db = st.file_bytes - st.speed_mark_bytes
-                    st.live_bps = db / dt
-                    if dt >= 0.5:
-                        st.speed_mark_at = now
-                        st.speed_mark_bytes = st.file_bytes
         self._render(force=True)
 
     def finish_sync(self) -> None:
@@ -330,10 +239,7 @@ class SyncProgressDisplay:
             self._saved_log_level = None
 
     def _build_lines(self) -> List[str]:
-        now = time.monotonic()
         with self._lock:
-            for st in self._active.values():
-                _update_live_speed(st, now)
             in_flight = sum(_bytes_for_overall(st) for st in self._active.values())
             overall_bytes = self._completed_bytes + in_flight
             completed_files = self._completed_files
@@ -355,10 +261,8 @@ class SyncProgressDisplay:
         for _path, st in rows:
             file_pct = _file_pct_display(st)
             detail = _phase_detail(st)
-            speeds = _file_speed_suffix(st, now)
             lines.append(
-                f"  {st.filename} {_progress_bar(file_pct, width=20)} {file_pct:5.1f}%"
-                f"{speeds}  ({detail})"
+                f"  {st.filename} {_progress_bar(file_pct, width=20)} {file_pct:5.1f}%  ({detail})"
             )
         return lines
 
@@ -468,12 +372,6 @@ def file_md5_sha256(
     return md5.hexdigest(), sha256.hexdigest()
 
 
-def _is_windows_zone_identifier_junk(path: Path) -> bool:
-    """Skip NTFS 'Zone.Identifier' sidecar files that often appear on WSL/Linux copies from Windows."""
-    name = path.name
-    return name == "Zone.Identifier" or name.endswith(":Zone.Identifier")
-
-
 def collect_upload_paths(path: str, *, recursive: bool) -> List[str]:
     """
     Resolve a single file or directory path to a sorted list of regular files.
@@ -486,17 +384,15 @@ def collect_upload_paths(path: str, *, recursive: bool) -> List[str]:
         if not p.exists():
             raise FileNotFoundError(f"not found: {raw}")
         if p.is_file():
-            if _is_windows_zone_identifier_junk(p):
-                continue
             out.append(p)
         elif p.is_dir():
             if recursive:
                 for child in p.rglob("*"):
-                    if child.is_file() and not _is_windows_zone_identifier_junk(child):
+                    if child.is_file():
                         out.append(child)
             else:
                 for child in p.iterdir():
-                    if child.is_file() and not _is_windows_zone_identifier_junk(child):
+                    if child.is_file():
                         out.append(child)
         else:
             raise ValueError(f"not a file or directory: {raw}")
@@ -1140,7 +1036,7 @@ def _run_upload_pass(
                 _record_result(future_map[fut], fut.result())
 
 
-def _resolve_sync_paths(
+def _resolve_upload_paths(
     args: argparse.Namespace,
 ) -> Tuple[List[str], bool, Dict[str, FileUploadSession], Dict[str, str]]:
     """
@@ -1190,8 +1086,8 @@ def _resolve_sync_paths(
     return [_normalize_path(p) for p in paths], False, {}, {}
 
 
-def _cmd_sync(args: argparse.Namespace) -> None:
-    paths, resume_from_state, sessions, errors = _resolve_sync_paths(args)
+def _cmd_upload(args: argparse.Namespace) -> None:
+    paths, resume_from_state, sessions, errors = _resolve_upload_paths(args)
     base = _api_base(args.api_url)
     api_url_normalized = normalize_site_api_base(args.api_url)
     total_files = len(paths)
@@ -1301,35 +1197,40 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_sync = sub.add_parser(
-        "sync",
+    p_upload = sub.add_parser(
+        "upload",
         help="Upload files under one PATH (file or directory; same flow as the profile UI).",
     )
-    p_sync.add_argument(
+    p_upload.add_argument(
         "--api-url",
         default=os.environ.get("API_BASE", ""),
-        help="Site root (trailing /api is stripped)",
+        help="Site root (e.g. https://submissions.gfbio.dev/ )",
     )
-    p_sync.add_argument("--broker-submission-id", required=True)
-    p_sync.add_argument("--token", default=os.environ.get("API_TOKEN", ""), help="Token (or set API_TOKEN)")
-    p_sync.add_argument(
+    p_upload.add_argument("--broker-submission-id", required=True)
+    p_upload.add_argument(
+        "--token",
+        default=os.environ.get("API_TOKEN", ""),
+        metavar="TOKEN",
+        help="API_TOKEN",
+    )
+    p_upload.add_argument(
         "path",
         nargs="?",
         metavar="PATH",
         help="File or directory to upload (optional with --input alone)",
     )
-    p_sync.add_argument(
+    p_upload.add_argument(
         "--output",
         metavar="FILE",
         help="Write JSON state (failed, sessions, errors) after the run",
     )
-    p_sync.add_argument(
+    p_upload.add_argument(
         "--input",
         metavar="FILE",
-        help="Resume: upload only failed paths from a prior --output file; optional path filters to a file or folder",
+        help="Resume: upload only failed paths from a prior --output file",
     )
-    p_sync.add_argument("--recursive", action="store_true", help="Recurse into directories")
-    p_sync.set_defaults(func=_cmd_sync)
+    p_upload.add_argument("--recursive", action="store_true", help="Recurse into directories")
+    p_upload.set_defaults(func=_cmd_upload)
 
     return parser
 

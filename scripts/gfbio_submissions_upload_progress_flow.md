@@ -1,6 +1,6 @@
 # GFBio submission cloud upload CLI — process flow
 
-Reference for `scripts/gfbio_submissions_upload_progress.py` (`sync` command): batch tries, per-file lifecycle, part-level retries, and API/S3 interactions. Intended for external documentation (e.g. Jira); not wired into the application docs.
+Reference for `scripts/gfbio_submissions_upload_progress.py` (`upload` command): batch tries, per-file lifecycle, part-level retries, and API/S3 interactions. Intended for external documentation (e.g. Jira); not wired into the application docs.
 
 **Related code:** `gfbio_submissions/brokerage/utils/cloud_upload_multipart.py` (`restart-multipart`).
 
@@ -16,11 +16,11 @@ The process exits **once** at the end: if failed files[] is non-empty → exit c
 
 ---
 
-## 1. Batch orchestration (`sync`)
+## 1. Batch orchestration (`upload`)
 
 ```mermaid
 flowchart TB
-    START([sync: resolve file list]) --> T1
+    START([upload: resolve file list]) --> T1
 
     subgraph TRY1["Try 1 — all files"]
         T1["_run_upload_pass<br/>restart_multipart = false"]
@@ -212,7 +212,7 @@ These values are fixed in the script so operators do not need to adjust them. Ch
 | File upload | `DEFAULT_MAX_FILE_WORKERS` | 3 | Files uploaded in parallel |
 | HTTP | `HTTP_READ_TIMEOUT_S` | 600s | Single `urllib` timeout per request (`HTTP_CONNECT_TIMEOUT_S` is defined but not wired separately) |
 
-### User-facing `sync` flags
+### User-facing `upload` flags
 
 | Flag | Purpose |
 |------|---------|
@@ -249,8 +249,6 @@ Per file, progress reflects **upload bytes only**:
 - **Preparing:** calculating checksums (MD5 + SHA256), then `start-uploads` / `restart-multipart` → bar stays at 0%
 - **Uploading:** parts completing → 0–100%
 - **Completing:** `complete` call → 100%
-
-Shows live (rolling) and average speed per file and in the log on finish.
 
 ---
 
@@ -299,8 +297,8 @@ Also stored: `version`, `broker_submission_id`, `api_url`. On resume, `broker_su
 
 ```mermaid
 flowchart LR
-    RUN1["sync … --output state.json"] --> OUT[state.json]
-    OUT --> RUN2["sync … --input state.json"]
+    RUN1["upload … --output state.json"] --> OUT[state.json]
+    OUT --> RUN2["upload … --input state.json"]
     RUN2 --> FILTER{path given?}
     FILTER -->|yes| SUB["Upload failed ∩ path"]
     FILTER -->|no| ALL["Upload all failed in state"]
@@ -312,17 +310,17 @@ flowchart LR
 
 ```bash
 # First run; write state for anything still failing
-python3 scripts/gfbio_submissions_upload_progress.py sync \
+python3 scripts/gfbio_submissions_upload_progress.py upload \
   --api-url=... --broker-submission-id=UUID --token=... \
   --recursive --output upload-state.json ./datadir
 
 # Later: only failed files that live under ./datadir
-python3 scripts/gfbio_submissions_upload_progress.py sync \
+python3 scripts/gfbio_submissions_upload_progress.py upload \
   --api-url=... --broker-submission-id=UUID --token=... \
   --input upload-state.json --recursive --output upload-state.json ./datadir
 
 # Or resume every failed path in the state file (no path argument)
-python3 scripts/gfbio_submissions_upload_progress.py sync \
+python3 scripts/gfbio_submissions_upload_progress.py upload \
   --api-url=... --broker-submission-id=UUID --token=... \
   --input upload-state.json --output upload-state.json
 ```
@@ -333,7 +331,7 @@ With `--input`, every path in the state file’s `failed` field (failed files[])
 
 ## 10. End-to-end overview (single diagram)
 
-Full `sync` flow in one view: CLI entry, resume, batch tries, per-file lifecycle (up to 3 files × 5 parts in parallel), HTTP/S3 steps with retries, progress, and a **single** exit check on the failed files[]. See sections 1–9 for detail.
+Full `upload` flow in one view: CLI entry, resume, batch tries, per-file lifecycle (up to 3 files × 5 parts in parallel), HTTP/S3 steps with retries, progress, and a **single** exit check on the failed files[]. See sections 1–9 for detail.
 
 ```mermaid
 %%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 52, 'curve': 'basis'}}}%%
@@ -341,7 +339,7 @@ flowchart LR
 
     subgraph C1["① CLI"]
         direction BT
-        RUN(["sync"])
+        RUN(["upload"])
     end
 
     subgraph C2["② Paths"]
