@@ -44,7 +44,7 @@ def _non_ascii_characters(value):
 @app.task(
     base=SubmissionTask,
     bind=True,
-    name="tasks.validate_character_encoding",
+    name="tasks.validate_character_encoding_task",
     retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,

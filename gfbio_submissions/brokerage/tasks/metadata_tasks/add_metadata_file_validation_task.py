@@ -31,7 +31,10 @@ def add_metadata_file_validation_task(
         submission_id=submission_id, task=self
     )
 
-    metadata_file = SubmissionCloudUpload.objects.get(pk=submission_upload_id)
+    try:
+        metadata_file = SubmissionCloudUpload.objects.get(pk=submission_upload_id)
+    except Exception as s:
+        return f"Couldn't find SubmissionCloudUpload with id {submission_upload_id}. Aborting further processing."
     if metadata_file and metadata_file.meta_data:
         if submission.target == ENA:
             if triggered_by_user_id is None:
@@ -73,15 +76,13 @@ def add_metadata_file_validation_task(
                     max_retries=SUBMISSION_MAX_RETRIES
                 )
             else:
-                raise Exception(
-                    (
-                        f"Their is already a validation-file for file {metadata_file.file_upload.original_filename} "
-                        f"with checksum {metadata_file.file_upload.md5}, "
-                        "so no validation-report was triggered."
-                    )
+                return (
+                    f"Their is already a validation-file for file {metadata_file.file_upload.original_filename} "
+                    f"with checksum {metadata_file.file_upload.md5}, "
+                    "so no validation-report was triggered."
                 )
         else:
-            raise Exception(f"The submission {submission_id} doesn't has the target ENA, so no validation-report was triggered.")
+            return f"The submission {submission_id} doesn't has the target ENA, so no validation-report was triggered."
     else:
-        raise Exception(f"The file {metadata_file.file_upload.original_filename} is not a meta-data-file, so no validation-report was triggered.")
+        return f"The file {metadata_file.file_upload.original_filename} is not a meta-data-file, so no validation-report was triggered."
     return True

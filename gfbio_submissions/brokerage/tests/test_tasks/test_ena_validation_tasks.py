@@ -43,6 +43,7 @@ def run_test_with_fake_submission_upload(submission, user, file_name, local_file
             file_type="tif",
             status="COMPLETE",
             user=user,
+            md5="stand-in-value"
         )
         cloud_upload = SubmissionCloudUpload.objects.create(
             submission=submission,
