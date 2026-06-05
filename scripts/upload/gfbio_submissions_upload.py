@@ -9,11 +9,11 @@ upload in parallel (thread pools). Built-in HTTP retries per step and extra full
 
 Example::
 
-  python3 scripts/gfbio_submissions_upload_progress.py upload \\
+  python3 scripts/gfbio_submissions_upload.py upload \\
     --api-url=http://127.0.0.1:8000/ --broker-submission-id=UUID --token=TOKEN \\
     --recursive --output failures.json ./datadir
 
-  python3 scripts/gfbio_submissions_upload_progress.py upload \\
+  python3 scripts/gfbio_submissions_upload.py upload \\
     --api-url=... --broker-submission-id=UUID --token=TOKEN \\
     --input failures.json --recursive ./datadir --output failures.json
 
