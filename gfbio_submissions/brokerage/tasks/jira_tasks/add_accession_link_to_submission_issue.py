@@ -1,34 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from config.celery_app import app
-from ...configuration.settings import (
-    SUBMISSION_MAX_RETRIES,
-    SUBMISSION_RETRY_DELAY,
-    ENA,
-    ENA_PANGAEA,
-)
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...configuration.settings import ENA, ENA_PANGAEA
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 from ...utils.jira import JiraClient
-from ...utils.task_utils import (
-    get_submission_and_site_configuration,
-    jira_error_auto_retry,
-)
+from ...utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.add_accession_link_submission_issue_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.add_accession_link_submission_issue_task")
 def add_accession_link_to_submission_issue_task(self, prev_task_result=None, submission_id=None, target_archive=None):
     if prev_task_result == TaskProgressReport.CANCELLED:
         logger.warning(

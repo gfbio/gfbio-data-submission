@@ -4,31 +4,18 @@ import logging
 from django.utils.encoding import smart_str
 from requests import ConnectionError, Response
 
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...configuration.settings import SUBMISSION_MAX_RETRIES
 from ...models.broker_object import BrokerObject
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
-from ...tasks.submission_task import SubmissionTask
 from ...utils.ena import register_study_at_ena
-from ...utils.task_utils import (
-    get_submission_and_site_configuration,
-    raise_transfer_server_exceptions,
-)
+from ...utils.task_utils import get_submission_and_site_configuration, raise_transfer_server_exceptions
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.register_study_at_ena_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.register_study_at_ena_task")
 def register_study_at_ena_task(
     self,
     previous_result=None,
