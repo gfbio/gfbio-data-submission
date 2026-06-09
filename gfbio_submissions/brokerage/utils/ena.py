@@ -140,8 +140,7 @@ class Enalizer(object):
     def set_submission_state_to_error(self):
         try:
             submission = Submission.objects.get(pk=self.submission_id)
-            submission.status = Submission.ERROR
-            submission.save()
+            submission.fail()
         except Submission.DoesNotExist:
             logger.warning(
                 "ena.py | Enalizer | set_submission_state_to_error | Submission with pk {} does not exist".format(
@@ -705,8 +704,7 @@ def prepare_ena_data(submission):
         enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         return enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
     except Exception as ex:
-        submission.status = Submission.ERROR
-        submission.save()
+        submission.fail(reason=str(ex))
 
         from gfbio_submissions.brokerage.utils.task_utils import _safe_get_site_config
         site_configuration = _safe_get_site_config(submission)
