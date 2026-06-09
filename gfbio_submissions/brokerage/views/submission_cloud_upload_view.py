@@ -15,6 +15,7 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.brokerage.utils.cloud_upload_multipart import restart_multipart_on_file_upload_request
 from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import \
     verify_file_upload_request_checksum_in_bucket_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
@@ -154,7 +155,7 @@ class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartU
         if upload:
             upload.file_upload_request.s3_presigned_url = response.data["presigned_url"]
             upload.file_upload_request.save()
-        
+
         return response
 
     @extend_schema(
@@ -254,6 +255,98 @@ class SubmissionCloudUploadAbortView(backend_based_upload_views.AbortMultiPartUp
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
+
+
+@extend_schema(exclude=True)
+class SubmissionCloudUploadRestartMultipartView(generics.GenericAPIView):
+    """
+    Start a new S3 multipart session for an existing SubmissionCloudUpload / FileUploadRequest.
+
+    Same ``file_key`` and DB rows as the initial ``start-uploads``; only ``upload_id`` changes.
+    """
+    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+
+    def post(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get("broker_submission_id")
+        cloud_upload_pk = kwargs.get("pk")
+        try:
+            sub = Submission.objects.get(broker_submission_id=broker_submission_id)
+        except Submission.DoesNotExist:
+            return Response(
+                {"submission": f"No submission for broker_submission_id: {broker_submission_id}"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if sub.target == ATAX and sub.status == Submission.SUBMITTED:
+            return Response(
+                data={
+                    "broker_submission_id": sub.broker_submission_id,
+                    "status": sub.status,
+                    "error": "no uploads allowed with current submission status",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            cloud_upload = SubmissionCloudUpload.objects.select_related("file_upload").get(
+                pk=cloud_upload_pk,
+                submission=sub,
+            )
+        except SubmissionCloudUpload.DoesNotExist:
+            return Response(
+                {"detail": "Submission cloud upload not found for this submission."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if cloud_upload.file_upload is None:
+            return Response(
+                {"detail": "No file upload request linked to this cloud upload."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        completed_status = getattr(
+            backend_based_upload_models.FileUploadRequest,
+            "COMPLETED",
+            "COMPLETED",
+        )
+        if cloud_upload.file_upload.status == completed_status:
+            return Response(
+                {"detail": "Upload already completed; restart is not allowed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=request.data)
+        upload_serializer.is_valid(raise_exception=True)
+
+        response_status, dt_upload_data, upload_id = restart_multipart_on_file_upload_request(
+            request,
+            cloud_upload.file_upload,
+            upload_serializer,
+        )
+        if response_status >= status.HTTP_400_BAD_REQUEST:
+            return Response(dt_upload_data, status=response_status)
+
+        if cloud_upload.status != SubmissionCloudUpload.STATUS_NEW:
+            cloud_upload.status = SubmissionCloudUpload.STATUS_ACTIVE
+            cloud_upload.save(update_fields=["status"])
+
+        response_data = {
+            "id": cloud_upload.pk,
+            "broker_submission_id": sub.broker_submission_id,
+            **dt_upload_data,
+        }
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                url="brokerage:submissions_cloud_upload_restart_multipart",
+                method=RequestLog.POST,
+                user=sub.user,
+                submission_id=sub.broker_submission_id,
+                response_content=response_data,
+                response_status=response_status,
+            )
+        return Response(response_data, status=response_status)
 
 
 class SubmissionCloudUploadSingleCallSerializer(serializers.Serializer):
