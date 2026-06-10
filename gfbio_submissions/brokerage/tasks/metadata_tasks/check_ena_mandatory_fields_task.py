@@ -21,7 +21,7 @@ TASK_NAME = "ENA mandatory fields"
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def check_ena_mandatory_fields_task(self, previous_task_result=None, report_id=None):
+def check_ena_mandatory_fields_task(self, previous_task_result=None, submission_id=None, report_id=None):
     report = MetadataValidationReport.objects.select_related("submission", "upload_file__file_upload").get(pk=report_id)
     validation_task_report = report.validationtaskreport_set.create(task_name=TASK_NAME, status="PENDING")
 

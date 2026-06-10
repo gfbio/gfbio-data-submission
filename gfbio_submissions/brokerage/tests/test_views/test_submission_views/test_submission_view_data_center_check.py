@@ -128,6 +128,12 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_submittable_taxon_id_task",
             "tasks.add_general_comment_to_issue_task",
+            "tasks.add_metadata_file_validation_task",
+            "tasks.check_ena_mandatory_fields_task",
+            "tasks.check_ena_submittable_taxon_ids_task",
+            "tasks.notify_on_report_completed_task",
+            "tasks.validate_metadata_file_countries_task",
+            "tasks.validate_character_encoding_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
@@ -197,6 +203,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_submittable_taxon_id_task",
+            "tasks.add_metadata_file_validation_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
@@ -264,6 +271,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_submittable_taxon_id_task",
+            "tasks.add_metadata_file_validation_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)

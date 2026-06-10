@@ -11,7 +11,7 @@ from gfbio_submissions.brokerage.utils.metadata_validation_comment import (
     is_internal_metadata_validation_jira_comment,
     should_post_metadata_validation_jira_comment,
 )
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
+from gfbio_submissions.brokerage.utils.task_utils import get_any_submission_and_site_configuration, jira_error_auto_retry
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def notify_on_report_completed_task(self, previous_task_result=None, report_id=None):
+def notify_on_report_completed_task(self, previous_task_result=None, submission_id=None, report_id=None):
     report = MetadataValidationReport.objects.select_related(
         "submission",
         "upload_file__file_upload",
@@ -40,10 +40,9 @@ def notify_on_report_completed_task(self, previous_task_result=None, report_id=N
     comment = build_metadata_validation_report_comment(report)
     is_internal = is_internal_metadata_validation_jira_comment(report)
 
-    submission, site_configuration = get_submission_and_site_configuration(
+    submission, site_configuration = get_any_submission_and_site_configuration(
         submission_id=report.submission_id,
         task=self,
-        include_closed=True,
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
