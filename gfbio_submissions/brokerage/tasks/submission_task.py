@@ -7,6 +7,9 @@ from config.celery_app import app
 
 from ..configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ..exceptions.transfer_exceptions import TransferClientError, TransferServerError
+from ..models.submission import Submission
+from ..models.submission_cloud_upload import SubmissionCloudUpload
+from ..models.submission_upload import SubmissionUpload
 from ..models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
