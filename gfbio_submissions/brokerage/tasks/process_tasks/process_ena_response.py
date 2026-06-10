@@ -3,7 +3,6 @@ import logging
 
 from config.celery_app import app
 from ...models.broker_object import BrokerObject
-from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
@@ -52,11 +51,11 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None, cl
     if success:
         BrokerObject.objects.append_pids_from_ena_response(parsed)
         if close_submission_on_success:
-            submission.status = Submission.CLOSED
+            submission.close(save=False)
         submission.save()
         return True
     else:
-        submission.status = Submission.ERROR
+        submission.fail(save=False)
         outgoing_request = RequestLog.objects.get(request_id=request_id)
         outgoing_request.request_details["parsed_ena_response"] = parsed
         outgoing_request.save()

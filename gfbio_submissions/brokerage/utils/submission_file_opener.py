@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-from gfbio_submissions.brokerage.utils.encodings import sniff_encoding
+from gfbio_submissions.brokerage.utils.csv_format import sniff_encoding
 
 
 class FileOpener:
@@ -46,7 +46,12 @@ class SubmissionUploadOpener(FileOpener):
         return metadata_file.file.name.endswith(".csv")
     
     def csv_reader(self, submission_upload):
-        return open(submission_upload.file.path, "r", encoding="utf-8-sig", newline="")
+        # Converged onto the shared encoding strategy (sniff_encoding) so local
+        # uploads detect Windows-1252 etc. like cloud uploads do, instead of
+        # hardcoding "utf-8-sig". Deliberate behaviour change - see DASS-3563.
+        file_path = submission_upload.file.path
+        encoding = sniff_encoding(file_path)
+        return open(file_path, "r", encoding=encoding, newline="")
 
 
 def create_submission_file_opener(submission):

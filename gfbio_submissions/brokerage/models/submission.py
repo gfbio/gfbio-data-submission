@@ -18,6 +18,22 @@ from ..configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 from ..managers.submission_manager import SubmissionManager
 
 
+class IllegalStatusTransition(Exception):
+    """Raised when a Submission status transition is not allowed.
+
+    The set of legal transitions is declared in
+    ``Submission.LEGAL_STATUS_TRANSITIONS`` and enforced by the named
+    transition methods (``submit``, ``close``, ``fail``, ``cancel``).
+    """
+
+    def __init__(self, source, target):
+        self.source = source
+        self.target = target
+        super().__init__(
+            "Illegal submission status transition: {0} -> {1}".format(source, target)
+        )
+
+
 class Submission(TimeStampedModel):
     OPEN = "OPEN"
     SUBMITTED = "SUBMITTED"
@@ -32,6 +48,31 @@ class Submission(TimeStampedModel):
         (ERROR, ERROR),
         (CLOSED, CLOSED),
     ]
+
+    # Legal status transitions, derived from the transitions actually
+    # performed across the brokerage today (ENA, atax, pangaea tasks,
+    # the submission serializer and the admin/detail cancel paths).
+    #
+    #   OPEN       -> SUBMITTED  (serializer, release=True)
+    #   OPEN       -> CLOSED     (pangaea/ena close on a submission that was
+    #                             never moved to SUBMITTED explicitly)
+    #   OPEN       -> ERROR      (early task failures)
+    #   SUBMITTED  -> CLOSED     (ENA success, pangaea DOI pull)
+    #   SUBMITTED  -> ERROR      (ENA/atax/taxon failures)
+    #   ERROR      -> CLOSED     (success on a re-run/retry after an error)
+    #   ERROR      -> SUBMITTED  (re-submission after an error)
+    #   ERROR      -> ERROR      (repeated failures; status set without a
+    #                             known source state, e.g. Enalizer)
+    #   any state  -> CANCELLED  (admin action / DELETE endpoint)
+    #
+    # CLOSED and CANCELLED are terminal: no transition leaves them.
+    LEGAL_STATUS_TRANSITIONS = {
+        OPEN: {SUBMITTED, CLOSED, ERROR, CANCELLED},
+        SUBMITTED: {CLOSED, ERROR, CANCELLED},
+        ERROR: {SUBMITTED, CLOSED, ERROR, CANCELLED},
+        CLOSED: set(),
+        CANCELLED: set(),
+    }
 
     TARGETS = (
         (ENA, ENA),
@@ -195,6 +236,40 @@ class Submission(TimeStampedModel):
 
     def get_primary_pangaea_reference(self):
         return self.get_primary_reference(PANGAEA_JIRA_TICKET)
+
+    # ------------------------------------------------------------------
+    # Status transitions
+    #
+    # The ``status`` field is treated as private to this implementation.
+    # Callers must go through the named transition methods below so that
+    # every status change is validated against LEGAL_STATUS_TRANSITIONS.
+    # ------------------------------------------------------------------
+    def _transition_to(self, target, save=True):
+        if target not in self.LEGAL_STATUS_TRANSITIONS.get(self.status, set()):
+            raise IllegalStatusTransition(self.status, target)
+        self.status = target
+        if save:
+            self.save()
+
+    def submit(self, save=True):
+        """Move the submission into the SUBMITTED state."""
+        self._transition_to(self.SUBMITTED, save=save)
+
+    def close(self, save=True):
+        """Move the submission into the terminal CLOSED state."""
+        self._transition_to(self.CLOSED, save=save)
+
+    def fail(self, reason=None, save=True):
+        """Move the submission into the ERROR state.
+
+        ``reason`` is accepted for call-site readability; surrounding code
+        remains responsible for persisting reports / Jira comments.
+        """
+        self._transition_to(self.ERROR, save=save)
+
+    def cancel(self, save=True):
+        """Move the submission into the terminal CANCELLED state."""
+        self._transition_to(self.CANCELLED, save=save)
 
     def __str__(self):
         return "{}_{}".format(self.pk, self.broker_submission_id)

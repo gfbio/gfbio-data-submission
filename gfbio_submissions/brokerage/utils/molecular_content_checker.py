@@ -1,11 +1,9 @@
-import csv
 import logging
 import os
 
-from django.utils.encoding import smart_str
-
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv
+from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
 
 logger = logging.getLogger(__name__)
@@ -24,9 +22,9 @@ class MolecularContentChecker():
         try:
             with self.file_opener.csv_reader(cloud_upload_file) as csv_file:
                 line = csv_file.readline()
-                dialect = csv.Sniffer().sniff(smart_str(line))
-                delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-                splitted = line.replace('"', "").lower().split(delimiter)
+                csv_file.seek(0)
+                _reader, csv_format = open_csv_reader(csv_file)
+                splitted = line.replace('"', "").lower().split(csv_format.delimiter)
 
                 res = {col in splitted for col in SUBMISSION_MIN_COLS}
                 if len(res) == 1 and (True in res):
