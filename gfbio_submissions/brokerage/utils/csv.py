@@ -47,6 +47,7 @@ unit_mapping = {
     "Depth": "m",
     "depth": "m",
     "elevation": "m",
+    "altitude": "m",
     "geographic location (altitude)": "m",
     "geographic location (depth)": "m",  # TODO: replace with depth DASS-2700
     "geographic location (elevation)": "m",
