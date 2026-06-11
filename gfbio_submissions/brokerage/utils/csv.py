@@ -10,6 +10,7 @@ import dpath.util as dpath
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from shortid import ShortId
 
+from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER_MAPPING
 from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
 from ..configuration.settings import ATAX, ENA, SUBMISSION_UPLOAD_RETRY_DELAY
 from ..utils.csv_format import detect_csv_format, open_csv_reader
@@ -230,14 +231,7 @@ attribute_value_blacklist = [
     "N/A",
 ]
 
-# TODO: DASS-2699: move to method
-ena_header_mapping = {
-    "geographic location (depth)": "depth",
-    "geographic location (elevation)": "elevation",
-    "environment (biome)": "broad-scale environmental context",
-    "environment (material)": "environmental medium",
-    "environment (feature)": "local environmental context",
-}
+ena_header_mapping = ENA_HEADER_MAPPING
 
 
 def replace_ena_header_attributes(sample_attributes):
