@@ -45,6 +45,7 @@ core_fields = sample_core_fields + experiment_core_fields
 unit_mapping = {
     "Depth": "m",
     "depth": "m",
+    "elevation": "m",
     "geographic location (altitude)": "m",
     "geographic location (depth)": "m",  # TODO: replace with depth DASS-2700
     "geographic location (elevation)": "m",
@@ -232,6 +233,7 @@ attribute_value_blacklist = [
 # TODO: DASS-2699: move to method
 ena_header_mapping = {
     "geographic location (depth)": "depth",
+    "geographic location (elevation)": "elevation",
     "environment (biome)": "broad-scale environmental context",
     "environment (material)": "environmental medium",
     "environment (feature)": "local environmental context",

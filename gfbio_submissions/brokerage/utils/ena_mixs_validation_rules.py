@@ -8,9 +8,6 @@ https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Tem
 
 Format validation patterns are taken from ENA checklist field definitions at
 https://www.ebi.ac.uk/ena/browser/checklists
-
-Validation logic (CSV parsing, finding generation) is implemented separately;
-this module only defines the rules to apply.
 """
 from __future__ import annotations
 
