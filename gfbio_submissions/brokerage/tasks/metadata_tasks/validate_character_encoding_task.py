@@ -44,12 +44,12 @@ def _non_ascii_characters(value):
 @app.task(
     base=SubmissionTask,
     bind=True,
-    name="tasks.validate_character_encoding",
+    name="tasks.validate_character_encoding_task",
     retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def validate_character_encoding_task(self, previous_task_result=None, report_id=None):
+def validate_character_encoding_task(self, previous_task_result=None, submission_id=None, report_id=None):
     report = MetadataValidationReport.objects.get(pk=report_id)
     submission = report.submission
     cloud_upload = report.upload_file

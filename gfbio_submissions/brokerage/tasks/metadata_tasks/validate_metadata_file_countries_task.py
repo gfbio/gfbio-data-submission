@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 @app.task(
     base=SubmissionTask,
     bind=True,
-    name="tasks.test_check",
+    name="tasks.validate_metadata_file_countries_task",
     retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def validate_metadata_file_countries_task(self, previous_task_result=None, report_id=None):
+def validate_metadata_file_countries_task(self, previous_task_result=None, submission_id=None, report_id=None):
     report = MetadataValidationReport.objects.get(pk=report_id)
     validation_task_report = report.validationtaskreport_set.create(task_name="Validate Metafile Geographic Locations")
 

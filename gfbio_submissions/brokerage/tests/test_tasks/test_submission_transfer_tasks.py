@@ -141,3 +141,23 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertTrue(ret_val)
         self.assertLess(0, len(PersistentIdentifier.objects.all()))
+        submission.refresh_from_db()
+        self.assertEqual(Submission.CLOSED, submission.status)
+
+    @responses.activate
+    def test_process_ena_response_task_error_reaches_error_status(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_error_xml_response(),
+        )
+        chain(
+            prepare_ena_submission_data_task.s(submission_id=submission.pk),
+            transfer_data_to_ena_task.s(submission_id=submission.pk),
+            process_ena_response_task.s(submission_id=submission.pk),
+        )()
+        submission.refresh_from_db()
+        self.assertEqual(Submission.ERROR, submission.status)
