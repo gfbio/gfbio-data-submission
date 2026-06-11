@@ -4,6 +4,7 @@ import re
 from django.test import SimpleTestCase
 
 from gfbio_submissions.brokerage.configuration.settings import CHECKLIST_ACCESSION_MAPPING
+from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER_MAPPING
 from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import (
     ALL_MIXS_ENVIRONMENTAL_PACKAGES,
     MIXS_COMMON_MANDATORY_FIELDS,
@@ -19,7 +20,6 @@ from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import (
     MIXS_HUMAN_ASSOCIATED_CHECKLIST_KEY,
     MIXS_MICROBIAL_MAT_BIOLFILM_CHECKLIST_KEY,
     MIXS_PLANT_ASSOCIATED_CHECKLIST_KEY,
-    MIXS_DEPTH_COLUMN_NAMES,
     MIXS_VALIDATION_RULES,
     environmental_package_matches,
     format_rule_value_matches,
@@ -142,8 +142,10 @@ class TestEnaMixsValidationRules(SimpleTestCase):
         self.assertEqual(list(range(1, 11)), [rule["rule_number"] for rule in MIXS_VALIDATION_RULES])
 
     def test_depth_column_names_include_legacy_header(self):
-        self.assertIn("depth", MIXS_DEPTH_COLUMN_NAMES)
-        self.assertIn("geographic location (depth)", MIXS_DEPTH_COLUMN_NAMES)
+        self.assertEqual("depth", ENA_HEADER_MAPPING["geographic location (depth)"])
+
+    def test_altitude_column_names_include_legacy_header(self):
+        self.assertEqual("altitude", ENA_HEADER_MAPPING["geographic location (altitude)"])
 
     def test_presence_rules_six_to_eight_and_ten(self):
         for rule_number in (6, 7, 8, 10):
