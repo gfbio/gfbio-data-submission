@@ -77,13 +77,6 @@ def _ebi_decimal_degrees_pattern() -> str:
     return f"{EBI_DECIMAL_DEGREES_PATTERN}|{INSDC_MISSING_VALUE_PATTERN}"
 
 
-# CSV column names that carry the depth field (legacy + current template).
-MIXS_DEPTH_COLUMN_NAMES = (
-    "depth",
-    "geographic location (depth)",
-)
-
-
 # ---------------------------------------------------------------------------
 # GFBIO template presence (header + row values)
 # ---------------------------------------------------------------------------
@@ -246,7 +239,7 @@ MIXS_FIELD_HELP_TEXT = {
         "MIxS environmental package name, e.g. 'water', 'sediment', or 'soil'. "
         "ENA checklist keys use spaces (e.g. 'host associated'); GSC hyphenated forms "
         "such as 'host-associated', 'human-associated', 'plant-associated', "
-        "'microbial mat biofilm', and 'microbial mat/biofilm' are also accepted. "
+        "as well as 'microbial mat biofilm', and 'microbial mat/biofilm' are also accepted. "
         "See https://genomicsstandardsconsortium.github.io/mixs/."
     ),
     "collection date": (
