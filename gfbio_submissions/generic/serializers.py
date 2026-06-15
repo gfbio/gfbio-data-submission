@@ -9,13 +9,19 @@ from django.core.mail import mail_admins
 from django.db.models import Q
 from rest_framework import serializers
 
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, GENERIC, GFBIO_HELPDESK_TICKET
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.configuration.settings import (
+    ENA,
+    ENA_PANGAEA,
+    GENERIC,
+    GFBIO_HELPDESK_TICKET,
+)
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
+
+EMBARGO_DATE_FIELD = "customfield_10200"
 
 
 class JiraHookRequestSerializer(serializers.Serializer):
@@ -63,18 +69,15 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
         return resp
 
-    def save(self):
-        try:
-            embargo_date = arrow.get(self._data_get(self.validated_data, ["issue", "fields", "customfield_10200"]))
-        except arrow.parser.ParserError as e:
-            logger.error(
-                msg="serializers.py | JiraHookRequestSerializer | " "unable to parse embargo date | {0}".format(e)
-            )
-            self.send_mail_to_admins(
-                reason="Submission update via Jira hook failed",
-                message="serializers.py | JiraHookRequestSerializer | " "unable to parse embargo date | {0}".format(e),
-            )
+    def has_embargo_date_changelog_item(self):
+        changelog_items = self.initial_data.get("changelog", {}).get("items", [])
+        return any(
+            item.get("fieldId") == EMBARGO_DATE_FIELD or item.get("field") == EMBARGO_DATE_FIELD
+            for item in changelog_items
+            if isinstance(item, dict)
+        )
 
+    def save(self):
         submission_id = self._data_get(self.validated_data, ["issue", "fields", "customfield_10303"])
         try:
             submission = Submission.objects.get(broker_submission_id=UUID(submission_id))
@@ -87,20 +90,36 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message="serializers.py | JiraHookRequestSerializer | " "unable to get submission | {0}".format(e),
             )
 
-        submission.embargo = embargo_date.date()
-        submission.save()
+        if self.has_embargo_date_changelog_item():
+            try:
+                embargo_date = arrow.get(self._data_get(self.validated_data, ["issue", "fields", EMBARGO_DATE_FIELD]))
+            except arrow.parser.ParserError as e:
+                logger.error(
+                    msg="serializers.py | JiraHookRequestSerializer | " "unable to parse embargo date | {0}".format(e)
+                )
+                self.send_mail_to_admins(
+                    reason="Submission update via Jira hook failed",
+                    message="serializers.py | JiraHookRequestSerializer | "
+                    "unable to parse embargo date | {0}".format(e),
+                )
+
+            submission.embargo = embargo_date.date()
+            submission.save()
 
         updating_user = self._data_get(self.validated_data, ["user", "emailAddress"])
 
         logger.info(msg="serializers.py | JiraHookRequestSerializer | " "updating user | {0}".format(updating_user))
-        # update ena
-        from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
+        if self.has_embargo_date_changelog_item():
+            # update ena
+            from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import (
+                update_ena_embargo_task,
+            )
 
-        update_ena_embargo_task.apply_async(
-            kwargs={
-                "submission_id": submission.pk,
-            }
-        )
+            update_ena_embargo_task.apply_async(
+                kwargs={
+                    "submission_id": submission.pk,
+                }
+            )
 
         try:
             reporter_dict = self.validated_data.get("issue", {}).get("fields", {}).get("reporter", {})
@@ -179,7 +198,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         return self._data_get(self.initial_data, ["issue", "fields", "customfield_10303"])
 
     def get_embargo_date_field_value(self):
-        return self._data_get(self.initial_data, ["issue", "fields", "customfield_10200"])
+        return self._data_get(self.initial_data, ["issue", "fields", EMBARGO_DATE_FIELD])
 
     def schema_validation(self, data):
         path = os.path.join(
@@ -424,9 +443,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def validate(self, data):
         self.schema_validation(data)
         submission = self.submission_existing_check()
-        key = self.submission_relation_check(submission)
         self.brokeragent_validation()
         self.reporter_email_validation()
-        self.embargo_date_validation(submission.embargo)
-        self.submission_type_constraints_check(submission, key)
+        if self.has_embargo_date_changelog_item():
+            key = self.submission_relation_check(submission)
+            self.embargo_date_validation(submission.embargo)
+            self.submission_type_constraints_check(submission, key)
         return data
