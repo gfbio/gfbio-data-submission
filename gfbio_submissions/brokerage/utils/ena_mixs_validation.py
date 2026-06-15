@@ -8,6 +8,7 @@ from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import (
     MIXS_ENVIRONMENTAL_PACKAGE_HEADER_FIELDS,
     MIXS_FIELD_HELP_TEXT,
     MIXS_HEADER_MANDATORY_FIELDS,
+    MIXS_PACKAGE_EXTRA_MANDATORY_FIELDS,
     MIXS_PRESENCE_RULES,
     MIXS_ROW_ALWAYS_MANDATORY_FIELDS,
     MIXS_ROW_ENVIRONMENTAL_PACKAGE_MANDATORY_FIELDS,
@@ -265,6 +266,60 @@ def _validate_format_rule(
     return findings
 
 
+def _validate_package_extra_mandatory_fields(
+    row,
+    row_number: int,
+    present_fields: set[str],
+    fieldnames: list[str],
+    row_package: str | None,
+    *,
+    rule_field_names: set[str],
+) -> list[dict]:
+    """Warn when package-specific mandatory fields from MIXS_PACKAGE_EXTRA_MANDATORY_FIELDS are missing."""
+    package = resolve_environmental_package(row_package)
+    if not package:
+        return []
+
+    extra_fields = MIXS_PACKAGE_EXTRA_MANDATORY_FIELDS.get(package, [])
+    if not extra_fields:
+        return []
+
+    findings: list[dict] = []
+    for field_name in extra_fields:
+        if field_name in rule_field_names:
+            continue
+
+        column_name = _resolve_column_name(field_name, present_fields)
+        if column_name is None:
+            findings.append(
+                _finding(
+                    row=row_number,
+                    column_name=field_name,
+                    message=(
+                        f"Required field '{field_name}' is missing for environmental package "
+                        f"'{package}' in row {row_number}."
+                    ),
+                    help_text=_field_help_text(field_name),
+                )
+            )
+            continue
+
+        if _is_missing_value(row.get(column_name)):
+            findings.append(
+                _finding(
+                    row=row_number,
+                    column=_column_index(fieldnames, column_name),
+                    column_name=column_name,
+                    message=(
+                        f"Required field '{field_name}' is empty for environmental package "
+                        f"'{package}' in row {row_number}."
+                    ),
+                    help_text=_field_help_text(field_name),
+                )
+            )
+    return findings
+
+
 def _validate_presence_rule(
     rule: MixsPresenceRule,
     rule_number: int,
@@ -389,5 +444,16 @@ def validate_mixs_metadata_fields(csv_file):
                 )
                 if finding:
                     findings.append(finding)
+
+        findings.extend(
+            _validate_package_extra_mandatory_fields(
+                row,
+                row_number,
+                present_fields,
+                fieldnames,
+                row_package,
+                rule_field_names=rule_field_names,
+            )
+        )
 
     return findings

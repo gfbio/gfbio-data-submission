@@ -104,3 +104,47 @@ class TestEnaMixsValidation(TestCase):
                 for f in findings
             )
         )
+
+    def test_missing_depth_on_sediment_row_does_not_duplicate_package_extra_warning(self):
+        row = VALID_WATER_ROW.replace("water", "sediment", 1).replace("12.5", "", 1)
+        csv_content = f"{VALID_HEADER}\n{row}\n"
+        findings = self._validate(csv_content)
+        depth_findings = [f for f in findings if f["column_name"] == "depth"]
+        self.assertEqual(1, len(depth_findings))
+        self.assertIn("MIxS rule 1", depth_findings[0]["message"])
+
+    def test_built_environment_missing_extra_mandatory_field_warns(self):
+        header = f"{VALID_HEADER};indoor space"
+        row = (
+            f"{VALID_WATER_ROW.replace('water', 'built environment', 1)};"
+        )
+        csv_content = f"{header}\n{row}\n"
+        findings = self._validate(csv_content)
+        self.assertTrue(
+            any(
+                f["status"] == "WARNING"
+                and f["column_name"] == "indoor space"
+                and "built environment" in f["message"]
+                and "empty" in f["message"]
+                for f in findings
+            )
+        )
+
+    def test_built_environment_missing_extra_mandatory_column_warns(self):
+        row = VALID_WATER_ROW.replace("water", "built environment", 1)
+        csv_content = f"{VALID_HEADER}\n{row}\n"
+        findings = self._validate(csv_content)
+        self.assertTrue(
+            any(
+                f["status"] == "WARNING"
+                and f["column_name"] == "indoor space"
+                and "built environment" in f["message"]
+                and "missing" in f["message"]
+                for f in findings
+            )
+        )
+
+    def test_water_row_does_not_warn_about_built_environment_fields(self):
+        csv_content = f"{VALID_HEADER}\n{VALID_WATER_ROW}\n"
+        findings = self._validate(csv_content)
+        self.assertFalse(any(f["column_name"] == "indoor space" for f in findings))
