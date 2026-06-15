@@ -12,8 +12,16 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
-from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer, _get_jira_hook_request_data
+from gfbio_submissions.brokerage.configuration.settings import (
+    ENA,
+    ENA_PANGAEA,
+    GENERIC,
+    GFBIO_HELPDESK_TICKET,
+)
+from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer,
+    _get_jira_hook_request_data,
+)
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
 
@@ -72,6 +80,33 @@ class TestJiraIssueUpdateView(APITestCase):
     def tearDownClass(cls):
         Submission.objects.first().additionalreference_set.all().delete()
         super(TestJiraIssueUpdateView, cls).tearDownClass()
+
+    def _jira_payload(self, submission, embargo_date=None, changelog=None):
+        if embargo_date is None:
+            embargo_date = arrow.now().shift(years=1)
+        if changelog is None:
+            changelog = self.embargo_changelog
+
+        return {
+            "user": {"emailAddress": "horst@horst.de"},
+            "issue": {
+                "key": "SAND-007",
+                "fields": {
+                    "customfield_10200": embargo_date.for_json(),
+                    "customfield_10303": "{}".format(submission.broker_submission_id),
+                    "reporter": {
+                        "name": "repo123_loginame",
+                        "emailAddress": "repo@repo.de",
+                    },
+                },
+            },
+            "changelog": changelog,
+        }
+
+    @staticmethod
+    def _delete_primary_accessions(submission):
+        for broker_object in submission.brokerobject_set.filter(type="study"):
+            broker_object.persistentidentifier_set.filter(archive="ENA", pid_type="PRJ").delete()
 
     def test_jira_invalid_request_data(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -363,6 +398,51 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(len(mail.outbox), 0)
         submission.refresh_from_db()
         self.assertEqual(original_embargo, submission.embargo)
+
+    def test_ena_embargo_changelog_missing_primary_accession_returns_400(self):
+        submission = Submission.objects.first()
+        submission.target = ENA
+        submission.save()
+        self._delete_primary_accessions(submission)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(b"submission without a primary accession", response.content)
+
+    def test_irrelevant_changelog_missing_primary_accession_does_not_warn(self):
+        submission = Submission.objects.first()
+        self._delete_primary_accessions(submission)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, changelog={"items": [{"field": "description"}]}),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertNotIn(b"submission without a primary accession", response.content)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_non_ena_embargo_changelog_missing_primary_accession_does_not_warn(self):
+        submission = Submission.objects.first()
+        submission.target = GENERIC
+        submission.save()
+        self._delete_primary_accessions(submission)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertNotIn(b"submission without a primary accession", response.content)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_no_issue_in_request(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -681,7 +761,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
-    def test_date_tomorrow(self):
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_date_tomorrow(self, notify_apply_async_mock):
         submission = Submission.objects.first()
         embargo_tomorrow = arrow.now().shift(days=1).format("YYYY-MM-DD")
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -707,12 +791,16 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
 
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
     @patch(
-        "gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo."
-        "update_ena_embargo_task.apply_async"
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
     )
-    def test_embargo_changelog_updates_submission_and_starts_ena_update(self, apply_async_mock):
+    def test_embargo_changelog_updates_submission_and_starts_ena_update(
+        self, notify_apply_async_mock, apply_async_mock
+    ):
         submission = Submission.objects.first()
         new_embargo = arrow.now().shift(days=14)
 
@@ -740,6 +828,99 @@ class TestJiraIssueUpdateView(APITestCase):
         submission.refresh_from_db()
         self.assertEqual(new_embargo.date(), submission.embargo)
         apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_ena_pangaea_near_embargo_changelog_notifies_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        submission.target = ENA_PANGAEA
+        submission.save()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, embargo_date=new_embargo),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_ena_embargo_changelog_after_fourteen_days_does_not_notify_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        new_embargo = arrow.now().shift(days=15)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, embargo_date=new_embargo),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_not_called()
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_non_ena_near_embargo_changelog_does_not_notify_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        submission.target = GENERIC
+        submission.save()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, embargo_date=new_embargo),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_not_called()
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_near_embargo_without_embargo_changelog_does_not_notify_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(
+                submission,
+                embargo_date=new_embargo,
+                changelog={"items": [{"field": "description"}]},
+            ),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_not_called()
+        notify_apply_async_mock.assert_not_called()
 
     def test_date_in_the_far_future(self):
         submission = Submission.objects.first()
@@ -797,7 +978,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
-    def test_embargo_is_identical(self):
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_embargo_is_identical(self, notify_apply_async_mock):
         submission = Submission.objects.first()
         embargo_date = arrow.now().shift(days=14).format("YYYY-MM-DD")
         embargo_date_hour_offset = arrow.now().shift(days=14, hours=1).format("YYYY-MM-DD")
@@ -825,6 +1010,7 @@ class TestJiraIssueUpdateView(APITestCase):
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertNotIn(b"'customfield_10200': no changes detected", response.content)
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
 
     def test_missing_issue_reference(self):
         submission = Submission.objects.first()
