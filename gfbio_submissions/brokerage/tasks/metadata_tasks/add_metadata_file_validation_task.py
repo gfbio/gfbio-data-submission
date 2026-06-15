@@ -6,6 +6,7 @@ from config.celery_app import app
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.tasks.metadata_tasks.check_ena_mandatory_fields_task import check_ena_mandatory_fields_task
+from gfbio_submissions.brokerage.tasks.metadata_tasks.check_mixs_metadata_task import check_mixs_metadata_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.check_ena_submittable_taxon_ids_task import (
     check_ena_submittable_taxon_ids_task,
 )
@@ -49,6 +50,9 @@ def add_metadata_file_validation_task(
                 new_report.save()
                 parallel_checks = [
                     check_ena_mandatory_fields_task.s(submission_id=submission_id, report_id=new_report.id).set(
+                        countdown=SUBMISSION_DELAY
+                    ),
+                    check_mixs_metadata_task.s(submission_id=submission_id, report_id=new_report.id).set(
                         countdown=SUBMISSION_DELAY
                     ),
                     validate_metadata_file_countries_task.s(submission_id=submission_id, report_id=new_report.id).set(

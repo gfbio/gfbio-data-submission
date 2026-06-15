@@ -130,6 +130,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.add_general_comment_to_issue_task",
             "tasks.add_metadata_file_validation_task",
             "tasks.check_ena_mandatory_fields_task",
+            "tasks.check_mixs_metadata_task",
             "tasks.check_ena_submittable_taxon_ids_task",
             "tasks.notify_on_report_completed_task",
             "tasks.validate_metadata_file_countries_task",
