@@ -1,6 +1,7 @@
 import json
 from pprint import pprint
 from unittest import skip
+from unittest.mock import patch
 
 import arrow
 import requests
@@ -21,6 +22,8 @@ from ...models.submission import Submission
 
 
 class TestJiraIssueUpdateView(APITestCase):
+    embargo_changelog = {"items": [{"fieldId": "customfield_10200"}]}
+
     @staticmethod
     def _create_user(username, email):
         user = User.objects.create_user(
@@ -101,7 +104,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -123,7 +126,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{0}".format(submission.broker_submission_id),
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -152,7 +155,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     },
                 },
             },
-            "changelog": {"items": [{}]},
+            "changelog": self.embargo_changelog,
         }
         self.client.post(self.url, post_data, format="json")
 
@@ -193,7 +196,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10303": "a260377d-8509-4bdc-b0bd-b859460d064d",
                 },
             },
-            "changelog": {"items": [{}]},
+            "changelog": self.embargo_changelog,
         }
 
         requests.post(
@@ -227,7 +230,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10303": "{0}".format(submission.broker_submission_id),
                 },
             },
-            "changelog": {"items": [{}]},
+            "changelog": self.embargo_changelog,
         }
         self.client.post(self.url, post_data, format="json")
 
@@ -284,7 +287,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -293,6 +296,9 @@ class TestJiraIssueUpdateView(APITestCase):
 
     def test_real_world_request(self):
         submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6).date()
+        submission.embargo = six_months
+        submission.save()
 
         hook_content = _get_jira_hook_request_data()
         payload = json.loads(hook_content)
@@ -305,10 +311,14 @@ class TestJiraIssueUpdateView(APITestCase):
         print(response.content)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
-        # TODO: check response content
+        submission.refresh_from_db()
+        self.assertEqual(six_months, submission.embargo)
 
     def test_real_world_request_no_changelog(self):
         submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6).date()
+        submission.embargo = six_months
+        submission.save()
 
         hook_content = _get_jira_hook_request_data(no_changelog=True)
         payload = json.loads(hook_content)
@@ -320,7 +330,39 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
-        # TODO: check response content
+        submission.refresh_from_db()
+        self.assertEqual(six_months, submission.embargo)
+
+    def test_irrelevant_changelog_skips_embargo_validation_and_warnings(self):
+        submission = Submission.objects.first()
+        original_embargo = arrow.now().shift(months=6).date()
+        submission.embargo = original_embargo
+        submission.save()
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {"emailAddress": "horst@horst.de"},
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2020-04-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
+                    },
+                },
+                "changelog": {"items": [{"field": "description"}]},
+            },
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(len(mail.outbox), 0)
+        submission.refresh_from_db()
+        self.assertEqual(original_embargo, submission.embargo)
 
     def test_no_issue_in_request(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -336,7 +378,7 @@ class TestJiraIssueUpdateView(APITestCase):
             {
                 "user": {"emailAddress": "horst@horst.de"},
                 "issue": {"key": "SAND-007"},
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -353,7 +395,7 @@ class TestJiraIssueUpdateView(APITestCase):
             {
                 "user": {"emailAddress": "horst@horst.de"},
                 "issue": {"key": "SAND-007", "fields": {}},
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -375,7 +417,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "",
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -404,7 +446,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "",
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -432,7 +474,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -462,7 +504,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -491,7 +533,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -526,7 +568,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -563,7 +605,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -595,7 +637,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -629,7 +671,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -658,13 +700,46 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
+
+    @patch(
+        "gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo."
+        "update_ena_embargo_task.apply_async"
+    )
+    def test_embargo_changelog_updates_submission_and_starts_ena_update(self, apply_async_mock):
+        submission = Submission.objects.first()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {"emailAddress": "horst@horst.de"},
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": new_embargo.for_json(),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
+                    },
+                },
+                "changelog": self.embargo_changelog,
+            },
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        submission.refresh_from_db()
+        self.assertEqual(new_embargo.date(), submission.embargo)
+        apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
 
     def test_date_in_the_far_future(self):
         submission = Submission.objects.first()
@@ -684,7 +759,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -712,7 +787,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -744,7 +819,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -770,7 +845,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -804,7 +879,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -832,7 +907,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -865,7 +940,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -895,7 +970,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -922,7 +997,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
