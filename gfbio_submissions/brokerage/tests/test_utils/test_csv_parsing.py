@@ -220,7 +220,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -295,7 +295,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -371,7 +371,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -447,7 +447,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -523,7 +523,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
