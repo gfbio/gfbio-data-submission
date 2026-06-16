@@ -340,9 +340,15 @@ class TestBrokerObjectManager(TestCase):
 
     def test_append_pid_with_corrupt_alias(self):
         broker_object = self._create_broker_object()
+        # Reference a broker-object id that is guaranteed not to exist (max + 1)
+        # rather than a hardcoded "666": under randomised order the broker-object
+        # id sequence (not rolled back) can climb past any fixed value, which
+        # would make the alias resolve to a real object and create a PID, breaking
+        # the "corrupt alias -> no PID" assertion. DASS-3577.
+        missing_id = BrokerObject.objects.order_by("id").last().id + 1
         study = {
             "accession": "ERP013438",
-            "alias": "666:f844738b-3304-4db7-858d-b7e47b293bb2",
+            "alias": "{0}:f844738b-3304-4db7-858d-b7e47b293bb2".format(missing_id),
             "holdUntilDate": "2016-03-05Z",
             "status": "PRIVATE",
         }
