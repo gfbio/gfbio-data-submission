@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 import responses
 from celery import chain
 from django.test import override_settings
@@ -116,20 +118,33 @@ class TestSubmissionTransferTasks(TestTasks):
             body="",
             status=200,
         )
-        submission = Submission.objects.first()
-        # fix ids to match ena_response.xml test-data aliases when running
-        # multiple tests
-        related_broker_objects = BrokerObject.objects.filter(submissions=submission)
-        for i in range(0, len(related_broker_objects)):
-            related_broker_objects[i].pk = i + 1
-            related_broker_objects[i].save()
-
-        conf = SiteConfiguration.objects.first()
+        submission = Submission.objects.order_by("id").first()
+        conf = SiteConfiguration.objects.order_by("id").first()
+        # Build the ENA response so its aliases carry this submission's ACTUAL
+        # broker-object PKs. process_ena_response matches each alias back to a
+        # BrokerObject by the pk encoded before the ":" in the alias. This
+        # replaces a former band-aid that force-reassigned broker-object PKs to
+        # 1..N to line up with the static fixture's "1:".."5:" aliases; under
+        # randomised order those forced PKs collided with other submissions'
+        # broker objects, raising an IntegrityError that dropped the test
+        # database and cascaded across the suite. DASS-3577.
+        related_broker_objects = list(
+            BrokerObject.objects.filter(submissions=submission).order_by("id")
+        )
+        pk_by_alias = {
+            str(i + 1): str(broker_object.id)
+            for i, broker_object in enumerate(related_broker_objects[:5])
+        }
+        response_body = re.sub(
+            r'alias="(\d+):',
+            lambda m: 'alias="{0}:'.format(pk_by_alias.get(m.group(1), m.group(1))),
+            _get_ena_xml_response(),
+        )
         responses.add(
             responses.POST,
             conf.ena_server.url,
             status=200,
-            body=_get_ena_xml_response(),
+            body=response_body,
         )
         self.assertEqual(0, len(PersistentIdentifier.objects.all()))
         result = chain(
@@ -146,8 +161,8 @@ class TestSubmissionTransferTasks(TestTasks):
 
     @responses.activate
     def test_process_ena_response_task_error_reaches_error_status(self):
-        submission = Submission.objects.first()
-        conf = SiteConfiguration.objects.first()
+        submission = Submission.objects.order_by("id").first()
+        conf = SiteConfiguration.objects.order_by("id").first()
         responses.add(
             responses.POST,
             conf.ena_server.url,
