@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from django.core.mail import mail_admins
-
 from config.celery_app import app
 from ...configuration.settings import (
     GFBIO_HELPDESK_TICKET,
@@ -10,6 +8,7 @@ from ...configuration.settings import (
     NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE,
 )
 from ...models.task_progress_report import TaskProgressReport
+from ...utils.email_curators import mail_curators
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ def check_issue_existing_for_submission_task(self, prev=None, submission_id=None
             "no helpdesk issue found for submission={0}  | "
             "submission_id={1}".format(submission.broker_submission_id, submission_id)
         )
-        mail_admins(
+        mail_curators(
             subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(submission.broker_submission_id),
             message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
                 submission.broker_submission_id, submission.user.username

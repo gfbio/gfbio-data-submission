@@ -5,17 +5,24 @@ from typing import List
 from uuid import UUID
 
 import arrow
-from django.core.mail import mail_admins
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import serializers
 
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, GENERIC, GFBIO_HELPDESK_TICKET
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.configuration.settings import (
+    ENA,
+    ENA_PANGAEA,
+    GENERIC,
+    GFBIO_HELPDESK_TICKET,
+)
 from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.utils.email_curators import mail_curators
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
+
+EMBARGO_DATE_FIELD = "customfield_10200"
 
 
 class JiraHookRequestSerializer(serializers.Serializer):
@@ -40,7 +47,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         submission_msg = f"Submission ID: {self.broker_submission_id}" if add_submission_id else ""
         issue_msg = f"Issue Key: {self.issue_key}" if add_issue_key else ""
         msg = "\n".join(filter(None, [message, submission_msg, issue_msg]))
-        mail_admins(subject=reason, message=msg)
+        mail_curators(subject=reason, message=msg)
 
     def _data_get(self, data: dict, keys: List[str]):
         resp = data
@@ -63,18 +70,34 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
         return resp
 
-    def save(self):
-        try:
-            embargo_date = arrow.get(self._data_get(self.validated_data, ["issue", "fields", "customfield_10200"]))
-        except arrow.parser.ParserError as e:
-            logger.error(
-                msg="serializers.py | JiraHookRequestSerializer | " "unable to parse embargo date | {0}".format(e)
-            )
-            self.send_mail_to_admins(
-                reason="Submission update via Jira hook failed",
-                message="serializers.py | JiraHookRequestSerializer | " "unable to parse embargo date | {0}".format(e),
-            )
+    def has_embargo_date_changelog_item(self):
+        changelog_items = self.initial_data.get("changelog", {}).get("items", [])
+        return any(
+            item.get("fieldId") == EMBARGO_DATE_FIELD or item.get("field") == EMBARGO_DATE_FIELD
+            for item in changelog_items
+            if isinstance(item, dict)
+        )
 
+    def get_jira_embargo_date(self):
+        if not hasattr(self, "_jira_embargo_date"):
+            jira_embargo_date = self.get_embargo_date_field_value()
+            self._jira_embargo_date = self.embargo_date_format_validation(self, jira_embargo_date)
+        return self._jira_embargo_date
+
+    def _embargo_days_from_today(self, embargo_date):
+        """Calendar-day distance from today (project timezone) to the embargo date."""
+        return (embargo_date.date() - timezone.localdate()).days
+
+    def should_notify_submitter_about_near_embargo(self, submission, embargo_date):
+        if not self.has_embargo_date_changelog_item():
+            return False
+        if submission.target not in [ENA, ENA_PANGAEA]:
+            return False
+
+        days_from_today = self._embargo_days_from_today(embargo_date)
+        return 1 <= days_from_today <= 14
+
+    def save(self):
         submission_id = self._data_get(self.validated_data, ["issue", "fields", "customfield_10303"])
         try:
             submission = Submission.objects.get(broker_submission_id=UUID(submission_id))
@@ -87,20 +110,31 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message="serializers.py | JiraHookRequestSerializer | " "unable to get submission | {0}".format(e),
             )
 
-        submission.embargo = embargo_date.date()
-        submission.save()
+        if self.has_embargo_date_changelog_item():
+            embargo_date = self.get_jira_embargo_date()
+            submission.embargo = embargo_date.date()
+            submission.save()
 
         updating_user = self._data_get(self.validated_data, ["user", "emailAddress"])
 
         logger.info(msg="serializers.py | JiraHookRequestSerializer | " "updating user | {0}".format(updating_user))
-        # update ena
-        from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
+        if self.has_embargo_date_changelog_item():
+            # update ena
+            from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import (
+                update_ena_embargo_task,
+            )
 
-        update_ena_embargo_task.apply_async(
-            kwargs={
-                "submission_id": submission.pk,
-            }
-        )
+            update_ena_embargo_task.apply_async(
+                kwargs={
+                    "submission_id": submission.pk,
+                }
+            )
+            if self.should_notify_submitter_about_near_embargo(submission, embargo_date):
+                from gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed import (
+                    notify_user_embargo_changed_task,
+                )
+
+                notify_user_embargo_changed_task.apply_async(kwargs={"submission_id": submission.pk})
 
         try:
             reporter_dict = self.validated_data.get("issue", {}).get("fields", {}).get("reporter", {})
@@ -179,7 +213,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         return self._data_get(self.initial_data, ["issue", "fields", "customfield_10303"])
 
     def get_embargo_date_field_value(self):
-        return self._data_get(self.initial_data, ["issue", "fields", "customfield_10200"])
+        return self._data_get(self.initial_data, ["issue", "fields", EMBARGO_DATE_FIELD])
 
     def schema_validation(self, data):
         path = os.path.join(
@@ -212,9 +246,9 @@ class JiraHookRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError({"issue": ["'customfield_10200': {0}".format(e)]})
         return embargo_date
 
-    def embargo_data_future_check(self, embargo_date, delta):
+    def embargo_data_future_check(self, embargo_date, days_from_today):
         # future, 1 year = 365 days, *2 = 730
-        if delta.days > 730:
+        if days_from_today > 730:
             self.send_mail_to_admins(
                 reason="WARNING: submission embargo date in the distant future",
                 message="WARNING: JIRA hook requested an Embargo Date in the distant future",
@@ -227,9 +261,9 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 }
             )
 
-    def embargo_date_past_check(self, embargo_date, delta):
+    def embargo_date_past_check(self, embargo_date, days_from_today):
         # past, 1 day granularity
-        if delta.days <= 0:
+        if days_from_today <= 0:
             self.send_mail_to_admins(
                 reason="WARNING: submission embargo date in the past",
                 message="WARNING: JIRA hook requested an Embargo Date in the past",
@@ -238,15 +272,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {"issue": ["'customfield_10200': embargo date in the past: {0}".format(embargo_date.for_json())]}
             )
 
-    def embargo_date_validation(self, submission_embargo):
-        # TODO: constant for customfield key !
-        jira_embargo_date = self.get_embargo_date_field_value()
-        embargo_date = self.embargo_date_format_validation(self, jira_embargo_date)
-
-        today = arrow.get(arrow.now().format("YYYY-MM-DD"))
-        delta = embargo_date - today
-        self.embargo_date_past_check(embargo_date, delta)
-        self.embargo_data_future_check(embargo_date, delta)
+    def embargo_date_validation(self):
+        embargo_date = self.get_jira_embargo_date()
+        days_from_today = self._embargo_days_from_today(embargo_date)
+        self.embargo_date_past_check(embargo_date, days_from_today)
+        self.embargo_data_future_check(embargo_date, days_from_today)
 
     def submission_existing_check(self):
         # TODO: constant for customfield key !
@@ -354,35 +384,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
             for s in studies:
                 primary_accession = s.persistentidentifier_set.filter(archive="ENA", pid_type="PRJ").first()
 
-                if not has_primary_accession and primary_accession is not None:
+                if primary_accession is not None:
                     has_primary_accession = True
-                else:
-                    logger.warning(
-                        msg="serializers.py | submission_type_constraints_check | "
-                        "no primary accession for submission {0}".format(submission.broker_submission_id)
-                    )
-                    self.send_mail_to_admins(
-                        reason="WARNING: submission missing primary accession",
-                        message=(
-                            "WARNING: JIRA hook requested update of Embargo Date for submission without a primary "
-                            "accession (i.e. BioProject ID). Submission target {0}"
-                        ).format(submission.target),
-                    )
-                    raise serializers.ValidationError(
-                        {
-                            "issue": [
-                                (
-                                    "'key': issue {0}. submission without a primary accession, submission {1} with "
-                                    "target {2}"
-                                ).format(
-                                    key,
-                                    submission.broker_submission_id,
-                                    submission.target,
-                                )
-                            ]
-                        }
-                    )
-                if not status:
                     status = primary_accession.status
 
                 allowed = s.persistentidentifier_set.filter(archive="ENA", pid_type="PRJ").filter(
@@ -391,6 +394,32 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 if allowed:
                     change_allowed = True
                     break
+            if not has_primary_accession:
+                logger.warning(
+                    msg="serializers.py | submission_type_constraints_check | "
+                    "no primary accession for submission {0}".format(submission.broker_submission_id)
+                )
+                self.send_mail_to_admins(
+                    reason="WARNING: submission missing primary accession",
+                    message=(
+                        "WARNING: JIRA hook requested update of Embargo Date for submission without a primary "
+                        "accession (i.e. BioProject ID). Submission target {0}"
+                    ).format(submission.target),
+                )
+                raise serializers.ValidationError(
+                    {
+                        "issue": [
+                            (
+                                "'key': issue {0}. submission without a primary accession, submission {1} with "
+                                "target {2}"
+                            ).format(
+                                key,
+                                submission.broker_submission_id,
+                                submission.target,
+                            )
+                        ]
+                    }
+                )
             if not change_allowed:
                 logger.warning(
                     msg="serializers.py | submission_type_constraints_check | "
@@ -424,9 +453,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def validate(self, data):
         self.schema_validation(data)
         submission = self.submission_existing_check()
-        key = self.submission_relation_check(submission)
         self.brokeragent_validation()
         self.reporter_email_validation()
-        self.embargo_date_validation(submission.embargo)
-        self.submission_type_constraints_check(submission, key)
+        if self.has_embargo_date_changelog_item():
+            key = self.submission_relation_check(submission)
+            self.embargo_date_validation()
+            self.submission_type_constraints_check(submission, key)
         return data
