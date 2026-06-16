@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from django.contrib.auth import get_user_model
+from faker import Faker as FakerGenerator
 from factory import Faker, post_generation
 from factory.django import DjangoModelFactory
 
@@ -16,14 +17,13 @@ class UserFactory(DjangoModelFactory):
         password = (
             extracted
             if extracted
-            else Faker(
-                "password",
+            else FakerGenerator().password(
                 length=42,
                 special_chars=True,
                 digits=True,
                 upper_case=True,
                 lower_case=True,
-            ).generate(extra_kwargs={})
+            )
         )
         self.set_password(password)
 
