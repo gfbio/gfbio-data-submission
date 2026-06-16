@@ -6,6 +6,7 @@ from unittest.mock import patch
 import arrow
 import requests
 import responses
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.urls import reverse
@@ -507,6 +508,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("horst@horst.de", mail.outbox[0].to)
+        self.assertEqual(
+            "{0}Submission update via jira hook failed".format(settings.EMAIL_SUBJECT_PREFIX),
+            mail.outbox[0].subject,
+        )
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
             "Data provided by Jira hook is not valid.\n{'issue': [\"customfield_10200 : '' is too short\", "
@@ -726,6 +732,13 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("horst@horst.de", mail.outbox[0].to)
+        self.assertEqual(
+            "{0}WARNING: no submission user change, reporter's Jira emailAddress is empty!".format(
+                settings.EMAIL_SUBJECT_PREFIX
+            ),
+            mail.outbox[0].subject,
+        )
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
             "WARNING: JIRA hook requested an user update, but reporter's Jira emailAddress is empty!\n"
@@ -1040,6 +1053,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("horst@horst.de", mail.outbox[0].to)
+        self.assertEqual(
+            "{0}WARNING: submission embargo date, issue not found".format(settings.EMAIL_SUBJECT_PREFIX),
+            mail.outbox[0].subject,
+        )
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
             "WARNING: JIRA hook requested an Embargo Date update, "

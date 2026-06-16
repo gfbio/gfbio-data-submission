@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from unittest.mock import patch
 
+from django.conf import settings
+from django.contrib.auth.models import Group
+from django.core import mail
+
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from ...models.broker_object import BrokerObject
@@ -30,10 +34,17 @@ class TestSubmissionPreparationTasks(TestTasks):
         self.assertEqual(5, len(broker_objects))
 
     def test_check_on_hold_status_task(self):
-        self.assertFalse(Submission.objects.first().approval_notification_sent)
-        result = check_on_hold_status_task.apply_async(kwargs={"submission_id": Submission.objects.first().id})
+        curators_group, _ = Group.objects.get_or_create(name="Curators")
+        submission = Submission.objects.first()
+        curators_group.user_set.add(submission.user)
+        mail.outbox.clear()
+        self.assertFalse(submission.approval_notification_sent)
+        result = check_on_hold_status_task.apply_async(kwargs={"submission_id": submission.id})
         self.assertTrue(result.successful())
         self.assertTrue(Submission.objects.first().approval_notification_sent)
+        self.assertEqual(1, len(mail.outbox))
+        self.assertIn(submission.user.email, mail.outbox[0].to)
+        self.assertTrue(mail.outbox[0].subject.startswith(settings.EMAIL_SUBJECT_PREFIX))
 
     @patch("gfbio_submissions.brokerage.tasks.submission_tasks.check_on_hold_status.logger")
     def test_check_on_hold_proceed_without_email(self, mock_logger):
