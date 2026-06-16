@@ -6,6 +6,15 @@ python_files = [
     "tests.py",
     "test_*.py",
 ]
+# Silence deprecation warnings emitted by third-party dependencies at import time
+# (not our code; fixable only by upgrading the dependency). Our own deprecations are
+# fixed at the source, so the suite runs warning-clean. Each filter is scoped to one
+# specific upstream message so new/own warnings are NOT masked. DASS-3577.
+filterwarnings = [
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning",  # celery importlib_metadata usage
+    "ignore:pkg_resources is deprecated as an API.*:UserWarning",  # django-model-utils imports pkg_resources
+    "ignore:Deprecated call to `pkg_resources.declare_namespace.*:DeprecationWarning",  # sphinxcontrib namespace packages
+]
 
 # ==== Coverage ====
 [tool.coverage.run]
