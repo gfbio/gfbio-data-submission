@@ -16,6 +16,10 @@ HOST_URL_ROOT=http://127.0.0.1:8000/
 # CELERY_FLOWER_USER=aiRSnHpOJDwwYQRNanJHlbgJFgiRHgxy
 # CELERY_FLOWER_PASSWORD=FZwjmuQwBK5X1BoOHrStDko21FWT6YrJeiUwNwXTQYuYN1ihpGfTCYgu6T3b0xk9
 
+# Onto-Portal matching for ENVO-Terms
+ONTO_PORTAL_URL=https://data.biodivportal.gfbio.org
+ONTO_PORTAL_API_KEY=
+ONTOLOGY_CACHE_TIMEOUT=86400
 
 # Use Profile based UI upon login
 # ------------------------------------------------------------------------------

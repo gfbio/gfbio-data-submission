@@ -209,6 +209,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
                 "tasks.check_ena_submittable_taxon_ids_task",
                 "tasks.notify_on_report_completed_task",
                 "tasks.validate_metadata_file_countries_task",
+                "tasks.validate_envo_columns_task",
                 "tasks.validate_character_encoding_task",
             ]
             all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
@@ -421,6 +422,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
                 "tasks.check_ena_submittable_taxon_ids_task",
                 "tasks.notify_on_report_completed_task",
                 "tasks.validate_metadata_file_countries_task",
+                "tasks.validate_envo_columns_task",
                 "tasks.validate_character_encoding_task",
             ]
             all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
