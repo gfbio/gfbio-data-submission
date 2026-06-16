@@ -6,7 +6,7 @@ import logging
 import os
 from collections import OrderedDict
 
-import dpath.util as dpath
+import dpath
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from shortid import ShortId
 
