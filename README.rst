@@ -64,16 +64,22 @@ Test coverage
 
 To run the tests, check your test coverage, and generate an HTML coverage report::
 
-    $ coverage run -m pytest
+    $ coverage run -m pytest gfbio_submissions
     $ coverage html
     $ open htmlcov/index.html
 
 Running tests with py.test
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+pytest is the canonical test runner for both local development and CI; the suite
+must pass green in a single run under randomised order (pytest-randomly). The seed
+is printed in the header and can be replayed with ``--randomly-seed=<seed>``.
+``manage.py test`` is no longer the test entry point; CI runs pytest and gates on
+its real exit code.
+
 ::
 
-  $ pytest
+  $ pytest gfbio_submissions
 
 Live reloading and Sass CSS compilation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
