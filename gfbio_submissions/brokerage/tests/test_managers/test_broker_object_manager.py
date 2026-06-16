@@ -47,7 +47,12 @@ class TestBrokerObjectManager(TestCase):
     def _create_multiple_broker_objects(cls):
         submission = cls._create_submission_via_serializer()
         BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
+        # Order by creation (id) and materialise to a list so the PK
+        # reassignment below is deterministic: an unordered QuerySet (re-queried
+        # per index) maps entities to forced PKs differently depending on test
+        # order, which made add_downloaded_pids_to_existing_broker_objects attach
+        # the PID to the wrong object under randomised order. DASS-3577.
+        broker_objects = list(BrokerObject.objects.all().order_by("id"))
         for i in range(0, len(broker_objects)):
             broker_objects[i].id = i + 1
             broker_objects[i].save()
