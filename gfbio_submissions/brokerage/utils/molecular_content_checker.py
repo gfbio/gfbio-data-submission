@@ -1,11 +1,11 @@
-import csv
 import logging
 import os
 
 from django.utils.encoding import smart_str
-
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_DELAY, SUBMISSION_MIN_COLS
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv
+from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
 
 logger = logging.getLogger(__name__)
@@ -24,9 +24,9 @@ class MolecularContentChecker():
         try:
             with self.file_opener.csv_reader(cloud_upload_file) as csv_file:
                 line = csv_file.readline()
-                dialect = csv.Sniffer().sniff(smart_str(line))
-                delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-                splitted = line.replace('"', "").lower().split(delimiter)
+                csv_file.seek(0)
+                _reader, csv_format = open_csv_reader(csv_file)
+                splitted = line.replace('"', "").lower().split(csv_format.delimiter)
 
                 res = {col in splitted for col in SUBMISSION_MIN_COLS}
                 if len(res) == 1 and (True in res):
@@ -134,6 +134,14 @@ class MolecularContentChecker():
             logger.info(
                 msg="check_for_molecular_content  | finished | return status={0} "
                     "messages={1} molecular_data_check_performed={2}".format(self.status, self.messages, self.check_performed)
+            )
+            add_metadata_file_validation_task.apply_async(
+                kwargs={
+                    "submission_id": "{0}".format(self.submission.pk),
+                    "submission_upload_id": "{0}".format(meta_data_file.pk),
+                    "triggered_by_user_id": self.submission.user.pk,
+                },
+                countdown=SUBMISSION_DELAY,
             )
         else:
             self.infos.append("Info: Since there were neither meta-data-files nor was the target ENA, this process "

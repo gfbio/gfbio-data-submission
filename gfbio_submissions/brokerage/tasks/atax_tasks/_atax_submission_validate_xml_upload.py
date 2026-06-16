@@ -3,26 +3,14 @@ import logging
 
 from kombu.utils import json
 
-from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_task import SubmissionTask
+from ...tasks.submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.atax_submission_validate_xml_upload_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.atax_submission_validate_xml_upload_task")
 def atax_submission_validate_xml_upload_task(
     self,
     previous_task_result=None,
@@ -83,8 +71,7 @@ def atax_submission_validate_xml_upload_task(
             report.task_exception_info = json.dumps({"validation": messages})
 
             report.save()
-            submission_upload.submission.status = Submission.ERROR
-            submission_upload.submission.save()
+            submission_upload.submission.fail()
             return TaskProgressReport.CANCELLED
 
         else:

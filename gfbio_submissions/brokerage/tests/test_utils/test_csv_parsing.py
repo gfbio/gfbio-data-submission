@@ -14,6 +14,7 @@ from gfbio_submissions.brokerage.utils.csv import (
     extract_sample,
     parse_molecular_csv_with_encoding_detection,
 )
+from gfbio_submissions.brokerage.utils.encodings import sniff_encoding
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
 from gfbio_submissions.users.models import User
@@ -219,7 +220,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -294,7 +295,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -370,7 +371,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -446,7 +447,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -522,7 +523,7 @@ class TestCSVParsing(TestCase):
                         ),
                         OrderedDict(
                             [
-                                ("tag", "geographic location (elevation)"),
+                                ("tag", "elevation"),
                                 ("value", "-2465.5"),
                                 ("units", "m"),
                             ]
@@ -1070,6 +1071,57 @@ class TestCSVParsing(TestCase):
 
             assert "samples" in requirements
             assert len(requirements["samples"]) == 1
+
+    @staticmethod
+    def _normalize_encoding_name(name):
+        return name.replace("_", "").replace("-", "").lower()
+
+    def test_sniff_encoding_windows1252(self):
+        # Excel-on-Windows saves CSV as Windows-1252 without a BOM. The sniffer
+        # must detect this statistically instead of falling back to utf-8.
+        path = os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_windows1252.csv")
+        encoding = sniff_encoding(path)
+        self.assertIsNotNone(encoding)
+        # Must NOT fall back to utf-8/ascii (the old buggy behaviour). The exact
+        # name may be cp1252/windows-1252/latin-1 - all decode the umlauts the
+        # same way, so assert the real contract: the file decodes correctly.
+        self.assertNotIn(self._normalize_encoding_name(encoding), {"utf8", "ascii"})
+        with open(path, "r", encoding=encoding) as decoded:
+            self.assertIn("München", decoded.read())
+
+    def test_sniff_encoding_utf8_no_bom_regression(self):
+        # A plain (ASCII/UTF-8, no BOM) file must still be readable as utf-8.
+        path = os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF8_no_BOM.csv")
+        encoding = sniff_encoding(path)
+        self.assertIsNotNone(encoding)
+        self.assertIn(self._normalize_encoding_name(encoding), {"utf8", "ascii"})
+
+    def test_sniff_encoding_utf8_bom_regression(self):
+        path = os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF8-bom.csv")
+        self.assertEqual("utf-8-sig", sniff_encoding(path))
+
+    def test_parse_windows1252_umlauts(self):
+        # Regression for DASS-3527: a Windows-1252 cell "München" must be read
+        # correctly, not mangled into "MÃ¼nchen".
+        path = os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_windows1252.csv")
+        requirements = parse_molecular_csv_with_encoding_detection(path, Submission.objects.first())
+        self.assertEqual(5, len(requirements["samples"]))
+        self.assertEqual("München", requirements["samples"][0]["sample_description"])
+
+    def test_parse_undecodable_file_does_not_crash(self):
+        # A genuinely undecodable file must not raise / mangle bytes silently;
+        # the legacy parse path returns empty molecular_requirements.
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tf:
+            tf.write(bytes(range(128, 256)) * 4)
+            garbage_path = tf.name
+        try:
+            requirements = parse_molecular_csv_with_encoding_detection(garbage_path, Submission.objects.first())
+            self.assertEqual([], requirements["samples"])
+            self.assertEqual([], requirements["experiments"])
+        finally:
+            os.remove(garbage_path)
 
 
     # # TODO: remove ?

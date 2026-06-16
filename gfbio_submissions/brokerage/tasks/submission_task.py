@@ -3,6 +3,10 @@ import logging
 
 import celery
 
+from config.celery_app import app
+
+from ..configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ..exceptions.transfer_exceptions import TransferClientError, TransferServerError
 from ..models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
@@ -55,3 +59,26 @@ class SubmissionTask(celery.Task):
         )
         TaskProgressReport.objects.update_report_after_return(status, task_id, task_name=self.name)
         super(SubmissionTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
+
+
+# decorator factory ------------------------------------------------------------
+def submission_task(name, **overrides):
+    """Register a submission task with the standard Celery retry preamble.
+
+    Returns the ``app.task`` decorator pre-configured with ``SubmissionTask`` as
+    the base, ``bind=True`` and the shared auto-retry settings. ``name`` is the
+    registered Celery task name and must stay stable for queue routing. Any
+    ``overrides`` (e.g. ``queue=...``) are forwarded to ``app.task`` and take
+    precedence, so intentional per-task deviations remain explicit.
+    """
+    options = {
+        "base": SubmissionTask,
+        "bind": True,
+        "name": name,
+        "autoretry_for": (TransferServerError, TransferClientError),
+        "retry_kwargs": {"max_retries": SUBMISSION_MAX_RETRIES},
+        "retry_backoff": SUBMISSION_RETRY_DELAY,
+        "retry_jitter": True,
+    }
+    options.update(overrides)
+    return app.task(**options)

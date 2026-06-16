@@ -1,18 +1,28 @@
 import json
 from pprint import pprint
 from unittest import skip
+from unittest.mock import patch
 
 import arrow
 import requests
 import responses
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
-from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer, _get_jira_hook_request_data
+from gfbio_submissions.brokerage.configuration.settings import (
+    ENA,
+    ENA_PANGAEA,
+    GENERIC,
+    GFBIO_HELPDESK_TICKET,
+)
+from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer,
+    _get_jira_hook_request_data,
+)
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
 
@@ -21,6 +31,8 @@ from ...models.submission import Submission
 
 
 class TestJiraIssueUpdateView(APITestCase):
+    embargo_changelog = {"items": [{"fieldId": "customfield_10200"}]}
+
     @staticmethod
     def _create_user(username, email):
         user = User.objects.create_user(
@@ -70,6 +82,33 @@ class TestJiraIssueUpdateView(APITestCase):
         Submission.objects.first().additionalreference_set.all().delete()
         super(TestJiraIssueUpdateView, cls).tearDownClass()
 
+    def _jira_payload(self, submission, embargo_date=None, changelog=None):
+        if embargo_date is None:
+            embargo_date = arrow.now().shift(years=1)
+        if changelog is None:
+            changelog = self.embargo_changelog
+
+        return {
+            "user": {"emailAddress": "horst@horst.de"},
+            "issue": {
+                "key": "SAND-007",
+                "fields": {
+                    "customfield_10200": embargo_date.for_json(),
+                    "customfield_10303": "{}".format(submission.broker_submission_id),
+                    "reporter": {
+                        "name": "repo123_loginame",
+                        "emailAddress": "repo@repo.de",
+                    },
+                },
+            },
+            "changelog": changelog,
+        }
+
+    @staticmethod
+    def _delete_primary_accessions(submission):
+        for broker_object in submission.brokerobject_set.filter(type="study"):
+            broker_object.persistentidentifier_set.filter(archive="ENA", pid_type="PRJ").delete()
+
     def test_jira_invalid_request_data(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(self.url, "{foo}", content_type="application/json")
@@ -101,7 +140,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -123,7 +162,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{0}".format(submission.broker_submission_id),
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -152,7 +191,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     },
                 },
             },
-            "changelog": {"items": [{}]},
+            "changelog": self.embargo_changelog,
         }
         self.client.post(self.url, post_data, format="json")
 
@@ -193,7 +232,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10303": "a260377d-8509-4bdc-b0bd-b859460d064d",
                 },
             },
-            "changelog": {"items": [{}]},
+            "changelog": self.embargo_changelog,
         }
 
         requests.post(
@@ -227,7 +266,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10303": "{0}".format(submission.broker_submission_id),
                 },
             },
-            "changelog": {"items": [{}]},
+            "changelog": self.embargo_changelog,
         }
         self.client.post(self.url, post_data, format="json")
 
@@ -284,7 +323,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -293,6 +332,9 @@ class TestJiraIssueUpdateView(APITestCase):
 
     def test_real_world_request(self):
         submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6).date()
+        submission.embargo = six_months
+        submission.save()
 
         hook_content = _get_jira_hook_request_data()
         payload = json.loads(hook_content)
@@ -305,10 +347,14 @@ class TestJiraIssueUpdateView(APITestCase):
         print(response.content)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
-        # TODO: check response content
+        submission.refresh_from_db()
+        self.assertEqual(six_months, submission.embargo)
 
     def test_real_world_request_no_changelog(self):
         submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6).date()
+        submission.embargo = six_months
+        submission.save()
 
         hook_content = _get_jira_hook_request_data(no_changelog=True)
         payload = json.loads(hook_content)
@@ -320,7 +366,84 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
-        # TODO: check response content
+        submission.refresh_from_db()
+        self.assertEqual(six_months, submission.embargo)
+
+    def test_irrelevant_changelog_skips_embargo_validation_and_warnings(self):
+        submission = Submission.objects.first()
+        original_embargo = arrow.now().shift(months=6).date()
+        submission.embargo = original_embargo
+        submission.save()
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {"emailAddress": "horst@horst.de"},
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2020-04-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
+                    },
+                },
+                "changelog": {"items": [{"field": "description"}]},
+            },
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(len(mail.outbox), 0)
+        submission.refresh_from_db()
+        self.assertEqual(original_embargo, submission.embargo)
+
+    def test_ena_embargo_changelog_missing_primary_accession_returns_400(self):
+        submission = Submission.objects.first()
+        submission.target = ENA
+        submission.save()
+        self._delete_primary_accessions(submission)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(b"submission without a primary accession", response.content)
+
+    def test_irrelevant_changelog_missing_primary_accession_does_not_warn(self):
+        submission = Submission.objects.first()
+        self._delete_primary_accessions(submission)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, changelog={"items": [{"field": "description"}]}),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertNotIn(b"submission without a primary accession", response.content)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_non_ena_embargo_changelog_missing_primary_accession_does_not_warn(self):
+        submission = Submission.objects.first()
+        submission.target = GENERIC
+        submission.save()
+        self._delete_primary_accessions(submission)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertNotIn(b"submission without a primary accession", response.content)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_no_issue_in_request(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -336,7 +459,7 @@ class TestJiraIssueUpdateView(APITestCase):
             {
                 "user": {"emailAddress": "horst@horst.de"},
                 "issue": {"key": "SAND-007"},
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -353,7 +476,7 @@ class TestJiraIssueUpdateView(APITestCase):
             {
                 "user": {"emailAddress": "horst@horst.de"},
                 "issue": {"key": "SAND-007", "fields": {}},
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -375,7 +498,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "",
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -385,6 +508,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("horst@horst.de", mail.outbox[0].to)
+        self.assertEqual(
+            "{0}Submission update via jira hook failed".format(settings.EMAIL_SUBJECT_PREFIX),
+            mail.outbox[0].subject,
+        )
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
             "Data provided by Jira hook is not valid.\n{'issue': [\"customfield_10200 : '' is too short\", "
@@ -404,7 +532,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "",
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -432,7 +560,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -462,7 +590,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -491,7 +619,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -526,7 +654,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -563,7 +691,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -595,7 +723,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -604,6 +732,13 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("horst@horst.de", mail.outbox[0].to)
+        self.assertEqual(
+            "{0}WARNING: no submission user change, reporter's Jira emailAddress is empty!".format(
+                settings.EMAIL_SUBJECT_PREFIX
+            ),
+            mail.outbox[0].subject,
+        )
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
             "WARNING: JIRA hook requested an user update, but reporter's Jira emailAddress is empty!\n"
@@ -629,7 +764,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -639,7 +774,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
-    def test_date_tomorrow(self):
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_date_tomorrow(self, notify_apply_async_mock):
         submission = Submission.objects.first()
         embargo_tomorrow = arrow.now().shift(days=1).format("YYYY-MM-DD")
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -658,13 +797,143 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_embargo_changelog_updates_submission_and_starts_ena_update(
+        self, notify_apply_async_mock, apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {"emailAddress": "horst@horst.de"},
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": new_embargo.for_json(),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
+                    },
+                },
+                "changelog": self.embargo_changelog,
+            },
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        submission.refresh_from_db()
+        self.assertEqual(new_embargo.date(), submission.embargo)
+        apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_ena_pangaea_near_embargo_changelog_notifies_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        submission.target = ENA_PANGAEA
+        submission.save()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, embargo_date=new_embargo),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_ena_embargo_changelog_after_fourteen_days_does_not_notify_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        new_embargo = arrow.now().shift(days=15)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, embargo_date=new_embargo),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_not_called()
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_non_ena_near_embargo_changelog_does_not_notify_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        submission.target = GENERIC
+        submission.save()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(submission, embargo_date=new_embargo),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
+        notify_apply_async_mock.assert_not_called()
+
+    @patch("gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo." "update_ena_embargo_task.apply_async")
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_near_embargo_without_embargo_changelog_does_not_notify_submitter(
+        self, notify_apply_async_mock, update_apply_async_mock
+    ):
+        submission = Submission.objects.first()
+        new_embargo = arrow.now().shift(days=14)
+
+        response = self.client.post(
+            self.url,
+            self._jira_payload(
+                submission,
+                embargo_date=new_embargo,
+                changelog={"items": [{"field": "description"}]},
+            ),
+            format="json",
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        update_apply_async_mock.assert_not_called()
+        notify_apply_async_mock.assert_not_called()
 
     def test_date_in_the_far_future(self):
         submission = Submission.objects.first()
@@ -684,7 +953,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -712,7 +981,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -722,7 +991,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
-    def test_embargo_is_identical(self):
+    @patch(
+        "gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_changed."
+        "notify_user_embargo_changed_task.apply_async"
+    )
+    def test_embargo_is_identical(self, notify_apply_async_mock):
         submission = Submission.objects.first()
         embargo_date = arrow.now().shift(days=14).format("YYYY-MM-DD")
         embargo_date_hour_offset = arrow.now().shift(days=14, hours=1).format("YYYY-MM-DD")
@@ -744,12 +1017,13 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertNotIn(b"'customfield_10200': no changes detected", response.content)
+        notify_apply_async_mock.assert_called_once_with(kwargs={"submission_id": submission.pk})
 
     def test_missing_issue_reference(self):
         submission = Submission.objects.first()
@@ -770,7 +1044,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -779,6 +1053,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("horst@horst.de", mail.outbox[0].to)
+        self.assertEqual(
+            "{0}WARNING: submission embargo date, issue not found".format(settings.EMAIL_SUBJECT_PREFIX),
+            mail.outbox[0].subject,
+        )
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
             "WARNING: JIRA hook requested an Embargo Date update, "
@@ -804,7 +1083,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -832,7 +1111,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -865,7 +1144,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -895,7 +1174,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )
@@ -922,7 +1201,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         },
                     },
                 },
-                "changelog": {"items": [{}]},
+                "changelog": self.embargo_changelog,
             },
             format="json",
         )

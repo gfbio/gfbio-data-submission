@@ -1,9 +1,8 @@
 import csv
 import requests
 
-from django.utils.encoding import smart_str
-
 from gfbio_submissions.brokerage.configuration.settings import ENA_TAXONOMY_URL_PREFIX
+from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
 
 
 class SubmittableDataHandler():
@@ -88,9 +87,7 @@ class SubmittableTaxIdHandler(SubmittableDataHandler):
     # parse meta data file for unique tax ids
     def get_data(self, file):
         tax_ids = set()
-        dialect = csv.Sniffer().sniff(file.read(20))
-        file.seek(0)
-        csv_reader = csv.DictReader(file, dialect=dialect)
+        csv_reader, _csv_format = open_csv_reader(file)
         for row in csv_reader:
             tax_id = row.get("taxon_id", "")
             if tax_id:
@@ -104,9 +101,9 @@ class SubmittableScientificNameHandler(SubmittableDataHandler):
         for meta_data_file in metadata_files:
             with self.file_opener.csv_reader(meta_data_file) as file:
                 line = file.readline()
-                dialect = csv.Sniffer().sniff(smart_str(line))
-                delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-                splitted = line.replace('"', "").lower().split(delimiter)
+                file.seek(0)
+                _reader, csv_format = open_csv_reader(file)
+                splitted = line.replace('"', "").lower().split(csv_format.delimiter)
                 if all(col in splitted for col in specimen_cols):
                     return meta_data_file
         self.messages.append("No metadata-file available to check scientific names are submittable to ENA.")
@@ -128,10 +125,7 @@ class SubmittableScientificNameHandler(SubmittableDataHandler):
     # parse meta data file for unique scientific names
     def get_data(self, file):
         scientific_names = set()
-        dialect = csv.Sniffer().sniff(file.read(20))
-        delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ","
-        file.seek(0)
-        csv_reader = csv.DictReader(file, dialect=dialect, delimiter=delimiter, quoting=csv.QUOTE_ALL)
+        csv_reader, _csv_format = open_csv_reader(file, quoting=csv.QUOTE_ALL)
         csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
         for row in csv_reader:
             scientific_name = row.get("scientific name", "")

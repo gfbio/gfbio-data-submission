@@ -204,6 +204,13 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
                 "tasks.prepare_ena_submission_data_task",
                 "tasks.check_submittable_taxon_id_task",
                 "tasks.add_general_comment_to_issue_task",
+                "tasks.add_metadata_file_validation_task",
+                "tasks.check_ena_mandatory_fields_task",
+                "tasks.check_mixs_metadata_task",
+                "tasks.check_ena_submittable_taxon_ids_task",
+                "tasks.notify_on_report_completed_task",
+                "tasks.validate_metadata_file_countries_task",
+                "tasks.validate_character_encoding_task",
             ]
             all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
             for a in all_task_reports:
@@ -410,6 +417,13 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
                 "tasks.prepare_ena_submission_data_task",
                 "tasks.check_submittable_taxon_id_task",
                 "tasks.add_general_comment_to_issue_task",
+                "tasks.add_metadata_file_validation_task",
+                "tasks.check_ena_mandatory_fields_task",
+                "tasks.check_mixs_metadata_task",
+                "tasks.check_ena_submittable_taxon_ids_task",
+                "tasks.notify_on_report_completed_task",
+                "tasks.validate_metadata_file_countries_task",
+                "tasks.validate_character_encoding_task",
             ]
             all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
             for a in all_task_reports:

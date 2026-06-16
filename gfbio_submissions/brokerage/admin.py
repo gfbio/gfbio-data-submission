@@ -18,6 +18,8 @@ from dt_upload import admin as dt_admin
 from dt_upload.models import DTUpload, FileUploadRequest
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
+from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport, ValidationFinding, ValidationTaskReport
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
     check_submittable_taxon_id_task,
 )
@@ -717,6 +719,36 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
+class ValidationFindingInlineAdmin(admin.TabularInline):
+    model = ValidationFinding
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 1
+
+
+class ValidationTaskReportAdmin(admin.ModelAdmin):
+    inlines = (
+        ValidationFindingInlineAdmin,
+    )
+
+
+class ValidationTaskReportInlineAdmin(admin.TabularInline):
+    model = ValidationTaskReport
+    fields = ('task_name', 'status')
+    readonly_fields = ('task_name', 'status')
+    show_change_link = True
+    can_delete = False
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 0
+
+
+class MetadataValidationReportAdmin(admin.ModelAdmin):
+    inlines = (
+        ValidationTaskReportInlineAdmin,
+    )
+
+
 def run_csv_reparse_task_in_reparse_pipeline(queryset, get_submission_id, task):
     for obj in queryset:
         submission_upload_id = obj.id
@@ -780,6 +812,28 @@ def reparse_csv_metadata_cloud_uploads(modeladmin, request, queryset):
 
 
 reparse_csv_metadata_cloud_uploads.short_description = "Re-parse csv metadata to get updated XMLs"
+
+
+def run_validate_metadata_cloud_uploads(modeladmin, request, queryset):
+    non_ena_scu_ids = []
+    non_ena_submission_cloud_uploads = [scu for scu in queryset if scu.submission.target != ENA or not scu.meta_data]
+    if non_ena_submission_cloud_uploads:
+        msg = f"The following cloud uploads have either not the target '{ENA}' or missing the metadata-flag and can't be processed: <br />" 
+        msg += ", <br />".join([f"{scu}" for scu in non_ena_submission_cloud_uploads])
+        from django.utils.safestring import mark_safe
+        from django.contrib import messages
+        modeladmin.message_user(request, mark_safe(msg), level=messages.ERROR)        
+        non_ena_scu_ids = [scu.id for scu in non_ena_submission_cloud_uploads]
+
+    for metadata_file in queryset.exclude(id__in=non_ena_scu_ids):
+        add_metadata_file_validation_task.s(
+            submission_id=metadata_file.submission.pk,
+            submission_upload_id=metadata_file.id,
+            triggered_by_user_id=request.user.pk,
+        ).set(countdown=SUBMISSION_DELAY)
+
+
+run_validate_metadata_cloud_uploads.short_description = "Run validation for molecular metadata"
 
 
 def download_submission_upload_file(modeladmin, request, queryset):
@@ -875,7 +929,14 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
     actions = [
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
+        run_validate_metadata_cloud_uploads,
     ]
+
+    def save_model(self, request, obj, form, change):
+        if obj.file_upload_id:
+            obj.file_upload._validation_triggered_by_user_id = request.user.pk
+        super().save_model(request, obj, form, change)
+
     def file_upload_link(self, obj):
         return mark_safe('<a href="{}">{}</a>'.format(
             reverse("admin:index") + f"dt_upload/fileuploadrequest/{obj.file_upload.pk}/change/",
@@ -901,6 +962,11 @@ except admin.sites.NotRegistered:
 class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
     search_fields = ["submissioncloudupload__submission__broker_submission_id", "original_filename"]
 
+    def save_model(self, request, obj, form, change):
+        obj._validation_triggered_by_user_id = request.user.pk
+        super().save_model(request, obj, form, change)
+
+
 admin.site.register(FileUploadRequest, FileUploadRequestAdmin)
 
 
@@ -922,3 +988,6 @@ admin.site.register(JiraMessage, JiraMessageAdmin)
 admin.site.register(AbcdConversionResult, AbcdConversionResultAdmin)
 
 admin.site.register(SubmissionCloudUpload, SubmissionCloudUploadAdmin)
+
+admin.site.register(MetadataValidationReport, MetadataValidationReportAdmin)
+admin.site.register(ValidationTaskReport, ValidationTaskReportAdmin)

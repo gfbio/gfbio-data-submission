@@ -7,12 +7,13 @@ import os
 from collections import OrderedDict
 
 import dpath.util as dpath
-from django.utils.encoding import smart_str
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from shortid import ShortId
 
+from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER_MAPPING
 from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
 from ..configuration.settings import ATAX, ENA, SUBMISSION_UPLOAD_RETRY_DELAY
+from ..utils.csv_format import detect_csv_format, open_csv_reader
 from ..utils.encodings import sniff_encoding
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ core_fields = sample_core_fields + experiment_core_fields
 unit_mapping = {
     "Depth": "m",
     "depth": "m",
+    "elevation": "m",
+    "altitude": "m",
     "geographic location (altitude)": "m",
     "geographic location (depth)": "m",  # TODO: replace with depth DASS-2700
     "geographic location (elevation)": "m",
@@ -229,13 +232,7 @@ attribute_value_blacklist = [
     "N/A",
 ]
 
-# TODO: DASS-2699: move to method
-ena_header_mapping = {
-    "geographic location (depth)": "depth",
-    "environment (biome)": "broad-scale environmental context",
-    "environment (material)": "environmental medium",
-    "environment (feature)": "local environmental context",
-}
+ena_header_mapping = ENA_HEADER_MAPPING
 
 
 def replace_ena_header_attributes(sample_attributes):
@@ -459,14 +456,9 @@ def extract_experiment(experiment_id, row, sample_id):
 
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file, submission):
-    header = csv_file.readline()
-    dialect = csv.Sniffer().sniff(smart_str(header))
-    csv_file.seek(0)
-    delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-    csv_reader = csv.DictReader(
+    csv_reader, _csv_format = open_csv_reader(
         csv_file,
         quoting=csv.QUOTE_ALL,
-        delimiter=delimiter,
         quotechar='"',
         skipinitialspace=True,
         restkey="extra_columns_found",
@@ -522,21 +514,30 @@ def parse_molecular_csv(csv_file, submission):
 
 def parse_molecular_csv_with_encoding_detection(path, submission):
     encoding = sniff_encoding(path)
-    with open(
-        path, "r", encoding=encoding
-    ) as csv_file:
-        return parse_molecular_csv(csv_file, submission)
+    try:
+        with open(path, "r", encoding=encoding, errors="strict") as csv_file:
+            return parse_molecular_csv(csv_file, submission)
+    except (UnicodeDecodeError, LookupError) as e:
+        # The file cannot be decoded as text with the detected encoding. Do not
+        # silently mangle the bytes (the original DASS-3527 bug); return empty
+        # requirements. The user-facing error is raised by the metadata
+        # validation report (see validate_character_encoding_task).
+        logger.warning(
+            "parse_molecular_csv_with_encoding_detection: could not decode '%s' "
+            "as '%s': %s",
+            path, encoding, e,
+        )
+        return {"samples": [], "experiments": []}
 
 
 # search for specimen meta data for ATAX submission
 def search_for_specimen_meta_data(meta_data_files):
     specimen_cols = ["specimen identifier", "basis of record", "scientific name"]
     for meta_data_file in meta_data_files:
-        with open(meta_data_file.file.path, "r", encoding="utf-8-sig", newline="") as file:
+        csv_format = detect_csv_format(meta_data_file.file.path)
+        with open(meta_data_file.file.path, "r", encoding=csv_format.encoding, newline="") as file:
             line = file.readline()
-            dialect = csv.Sniffer().sniff(smart_str(line))
-            delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
-            splitted = line.replace('"', "").lower().split(delimiter)
+            splitted = line.replace('"', "").lower().split(csv_format.delimiter)
             if all(col in splitted for col in specimen_cols):
                 return meta_data_file
     return None

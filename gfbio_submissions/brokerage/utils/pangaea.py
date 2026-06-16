@@ -13,7 +13,6 @@ from django.db import transaction
 from gfbio_submissions.generic.models.ticket_label import TicketLabel
 from gfbio_submissions.generic.utils import logged_requests
 from ..configuration.settings import SUBMISSION_DELAY, CSV_WRITER_QUOTING, SEPARATOR
-from ..models.submission import Submission
 from ..utils.gcdj_utils import flatten_dictionary
 
 logger = logging.getLogger(__name__)
@@ -111,8 +110,7 @@ def pull_pangaea_dois(submission, jira_client):
             study_broker_object = submission.brokerobject_set.filter(type="study").first()
             with transaction.atomic():
                 persistent_identifier = study_broker_object.append_pid_for_pangea_doi(doi=doi)
-                submission.status = Submission.CLOSED
-                submission.save()
+                submission.close()
                 logger.info(
                     msg="pull_pangaea_dois adding PersistentIdentifier {} to "
                     "BrokerObject {} of Submission {}. Closing Submission".format(

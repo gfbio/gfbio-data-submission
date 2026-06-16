@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from django.core.mail import mail_admins
-
 from config.celery_app import app
 from ...configuration.settings import (
     NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE,
@@ -10,6 +8,7 @@ from ...configuration.settings import (
 )
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
+from ...utils.email_curators import mail_curators
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ def check_for_submissions_without_helpdesk_issue_task(self):
             "| no helpdesk issue for submission {} | "
             "sending mail to admins".format(sub.broker_submission_id)
         )
-        mail_admins(
+        mail_curators(
             subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(sub.broker_submission_id),
             message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(sub.broker_submission_id, sub.user.username),
         )

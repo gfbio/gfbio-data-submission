@@ -3,35 +3,17 @@ import logging
 
 from django.utils.encoding import smart_str
 
-from config.celery_app import app
-from ...configuration.settings import (
-    SUBMISSION_MAX_RETRIES,
-    SUBMISSION_RETRY_DELAY,
-    JIRA_FALLBACK_USERNAME,
-    JIRA_FALLBACK_EMAIL,
-)
-from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...configuration.settings import JIRA_FALLBACK_EMAIL, JIRA_FALLBACK_USERNAME, SUBMISSION_MAX_RETRIES
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
-from ...tasks.submission_task import SubmissionTask
 from ...utils.gfbio import get_gfbio_helpdesk_username
-from ...utils.task_utils import (
-    get_submission_and_site_configuration,
-    raise_transfer_server_exceptions,
-)
+from ...utils.task_utils import get_submission_and_site_configuration, raise_transfer_server_exceptions
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.get_gfbio_helpdesk_username_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
+@submission_task("tasks.get_gfbio_helpdesk_username_task")
 def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
