@@ -56,6 +56,16 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-eager-propagates
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_ALWAYS_EAGER = True
+# Keep eager test tasks fully in-process. base.py points the broker AND result
+# backend at the real Redis, and in CI (cicd/local.yml) live celeryworker/beat
+# services run under config.settings.local (non-eager) against the SAME Postgres
+# and Redis as the test run. Without broker isolation, a task message from the
+# test process could be executed by a live worker against the test database
+# concurrently — a second DB backend that can deadlock with the test's own
+# transaction on shared unique keys (e.g. users_user.username). Pin the broker
+# and result backend to in-memory so nothing escapes the test process. DASS-3577.
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
