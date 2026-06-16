@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from django.core.mail import mail_admins
-
 from config.celery_app import app
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from ...configuration.settings import (
-    APPROVAL_EMAIL_SUBJECT_TEMPLATE,
     APPROVAL_EMAIL_MESSAGE_TEMPLATE,
+    APPROVAL_EMAIL_SUBJECT_TEMPLATE,
 )
 from ...models.task_progress_report import TaskProgressReport
+from ...utils.email_curators import mail_curators
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
                 )
             )
             # TODO: refactor to method in task_utils, and use templates/constants
-            mail_admins(
+            mail_curators(
                 subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
                     HOST_URL_ROOT,
                     # site_configuration.site.username if site_configuration.site else site_configuration.title,

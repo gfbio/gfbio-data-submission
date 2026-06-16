@@ -5,8 +5,8 @@ from typing import List
 from uuid import UUID
 
 import arrow
-from django.core.mail import mail_admins
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import serializers
 
 from gfbio_submissions.brokerage.configuration.settings import (
@@ -16,6 +16,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_HELPDESK_TICKET,
 )
 from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.utils.email_curators import mail_curators
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 from gfbio_submissions.users.models import User
 
@@ -46,7 +47,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         submission_msg = f"Submission ID: {self.broker_submission_id}" if add_submission_id else ""
         issue_msg = f"Issue Key: {self.issue_key}" if add_issue_key else ""
         msg = "\n".join(filter(None, [message, submission_msg, issue_msg]))
-        mail_admins(subject=reason, message=msg)
+        mail_curators(subject=reason, message=msg)
 
     def _data_get(self, data: dict, keys: List[str]):
         resp = data
@@ -83,15 +84,18 @@ class JiraHookRequestSerializer(serializers.Serializer):
             self._jira_embargo_date = self.embargo_date_format_validation(self, jira_embargo_date)
         return self._jira_embargo_date
 
+    def _embargo_days_from_today(self, embargo_date):
+        """Calendar-day distance from today (project timezone) to the embargo date."""
+        return (embargo_date.date() - timezone.localdate()).days
+
     def should_notify_submitter_about_near_embargo(self, submission, embargo_date):
         if not self.has_embargo_date_changelog_item():
             return False
         if submission.target not in [ENA, ENA_PANGAEA]:
             return False
 
-        today = arrow.get(arrow.now().format("YYYY-MM-DD"))
-        delta = embargo_date - today
-        return 1 <= delta.days <= 14
+        days_from_today = self._embargo_days_from_today(embargo_date)
+        return 1 <= days_from_today <= 14
 
     def save(self):
         submission_id = self._data_get(self.validated_data, ["issue", "fields", "customfield_10303"])
@@ -242,9 +246,9 @@ class JiraHookRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError({"issue": ["'customfield_10200': {0}".format(e)]})
         return embargo_date
 
-    def embargo_data_future_check(self, embargo_date, delta):
+    def embargo_data_future_check(self, embargo_date, days_from_today):
         # future, 1 year = 365 days, *2 = 730
-        if delta.days > 730:
+        if days_from_today > 730:
             self.send_mail_to_admins(
                 reason="WARNING: submission embargo date in the distant future",
                 message="WARNING: JIRA hook requested an Embargo Date in the distant future",
@@ -257,9 +261,9 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 }
             )
 
-    def embargo_date_past_check(self, embargo_date, delta):
+    def embargo_date_past_check(self, embargo_date, days_from_today):
         # past, 1 day granularity
-        if delta.days <= 0:
+        if days_from_today <= 0:
             self.send_mail_to_admins(
                 reason="WARNING: submission embargo date in the past",
                 message="WARNING: JIRA hook requested an Embargo Date in the past",
@@ -270,11 +274,9 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
     def embargo_date_validation(self):
         embargo_date = self.get_jira_embargo_date()
-
-        today = arrow.get(arrow.now().format("YYYY-MM-DD"))
-        delta = embargo_date - today
-        self.embargo_date_past_check(embargo_date, delta)
-        self.embargo_data_future_check(embargo_date, delta)
+        days_from_today = self._embargo_days_from_today(embargo_date)
+        self.embargo_date_past_check(embargo_date, days_from_today)
+        self.embargo_data_future_check(embargo_date, days_from_today)
 
     def submission_existing_check(self):
         # TODO: constant for customfield key !

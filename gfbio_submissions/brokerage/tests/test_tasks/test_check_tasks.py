@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from django.conf import settings
+from django.contrib.auth.models import Group
+from django.core import mail
 from django.db.models import Q
 from django.test import TestCase
 
@@ -119,9 +122,18 @@ class TestCheckTasks(TestCase):
         self.assertEqual(3, len(no_ticket_subs_3))
 
     def test_check_for_submissions_without_helpdesk_issue_task(self):
+        curator = User.objects.create_user(username="curator", email="curator@check.test", password="password")
+        curators_group, _ = Group.objects.get_or_create(name="Curators")
+        curators_group.user_set.add(curator)
+        mail.outbox.clear()
         result = check_for_submissions_without_helpdesk_issue_task.apply()
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertTrue(result.successful())
+        self.assertEqual(3, len(mail.outbox))
+        for message in mail.outbox:
+            self.assertIn("curator@check.test", message.to)
+            self.assertTrue(message.subject.startswith(settings.EMAIL_SUBJECT_PREFIX))
+            self.assertIn("has no primary helpdesk issue", message.subject)
 
     def test_check_for_user_without_site_configuration_task(self):
         users = User.objects.all()
