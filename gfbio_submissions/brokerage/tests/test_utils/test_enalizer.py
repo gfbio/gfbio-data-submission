@@ -21,6 +21,10 @@ from gfbio_submissions.brokerage.utils.ena import (
     prepare_ena_data,
     release_study_on_ena,
     send_submission_to_ena,
+    store_ena_data_as_auditable_text_data,
+)
+from gfbio_submissions.brokerage.utils.task_utils import (
+    send_data_to_ena_for_validation_or_test,
 )
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
@@ -712,6 +716,63 @@ class TestEnalizer(TestCase):
         )
 
         release_study_on_ena(submission)
+
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
+    # DASS-3574 T6: the VALIDATE/TEST path must resolve the submission's curated
+    # centre (instead of the in-memory "GFBIO" throwaway) so a missing centre is
+    # surfaced at validation time; an invalid centre -> ERROR, no HTTP call.
+    @responses.activate
+    def test_validate_against_ena_uses_curated_center(self):
+        submission = Submission.objects.first()
+        ResourceCredential.objects.create(
+            title="ENA",
+            url=SiteConfiguration.objects.first().ena_server.url,
+            authentication_string="letMeIn",
+        )
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
+        responses.add(
+            responses.POST,
+            SiteConfiguration.objects.first().ena_server.url,
+            status=200,
+            body=_get_ena_xml_response(),
+        )
+        task = mock.MagicMock()
+        task.name = "tasks.validate_against_ena_task"
+        task.request.id = uuid4()
+        task.request.retries = 0
+
+        send_data_to_ena_for_validation_or_test(task, submission.pk, "VALIDATE")
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="CustomCenter"', body)
+        self.assertNotIn('center_name="GFBIO"', body)
+
+    @responses.activate
+    def test_validate_against_ena_centerless_rejects(self):
+        submission = Submission.objects.first()
+        ResourceCredential.objects.create(
+            title="ENA",
+            url=SiteConfiguration.objects.first().ena_server.url,
+            authentication_string="letMeIn",
+        )
+        # Build + persist the XML while the curated centre is attached, then
+        # strip the centre so the *resolve* (not XML assembly) is what rejects.
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        task = mock.MagicMock()
+        task.name = "tasks.validate_against_ena_task"
+        task.request.id = uuid4()
+        task.request.retries = 0
+
+        send_data_to_ena_for_validation_or_test(task, submission.pk, "VALIDATE")
 
         self.assertEqual(0, len(responses.calls))
         submission = Submission.objects.get(pk=submission.pk)
