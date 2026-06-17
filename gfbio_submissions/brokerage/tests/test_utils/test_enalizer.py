@@ -22,7 +22,7 @@ from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import DEFAULT_ENA_CENTER_NAME
+from ...exceptions.transfer_exceptions import InvalidCenterName
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
 from ...models.submission import Submission
@@ -48,6 +48,8 @@ class TestEnalizer(TestCase):
         user = User.objects.create(username="user1")
         user.site_configuration = site_config
         user.save()
+        # _create_submission_via_serializer attaches a curated "CustomCenter"
+        # CenterName (DASS-3574); the XML/center_name assertions rely on it.
         _create_submission_via_serializer()
         _create_submission_via_serializer(runs=True)
 
@@ -71,12 +73,26 @@ class TestEnalizer(TestCase):
     def test_center_name(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix="test")
-        self.assertEqual(DEFAULT_ENA_CENTER_NAME, enalizer.center_name)
-        center_name, created = CenterName.objects.get_or_create(center_name="CustomCenter")
+        self.assertEqual("CustomCenter", enalizer.center_name)
+        center_name, created = CenterName.objects.get_or_create(center_name="OtherCenter")
         submission.center_name = center_name
         submission.save()
         enalizer_2 = Enalizer(submission=submission, alias_postfix="test")
-        self.assertEqual("CustomCenter", enalizer_2.center_name)
+        self.assertEqual("OtherCenter", enalizer_2.center_name)
+
+    def test_enalizer_rejects_centerless_submission(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.save()
+        with self.assertRaises(InvalidCenterName):
+            Enalizer(submission=submission, alias_postfix="test")
+
+    def test_study_xml_carries_curated_center(self):
+        submission = Submission.objects.first()
+        enalizer = Enalizer(submission, "test-enalizer-study")
+        data = enalizer.prepare_submission_data()
+        k, study_xml = data.get("STUDY")
+        self.assertIn('center_name="CustomCenter"', study_xml)
 
     def test_study_xml(self):
         submission = Submission.objects.first()
@@ -128,7 +144,7 @@ class TestEnalizer(TestCase):
             "<SAMPLE_NAME>"
             "<TAXON_ID>530564</TAXON_ID>"
             "</SAMPLE_NAME>"
-            "<DESCRIPTION />".format(submission_samples[0].pk, DEFAULT_ENA_CENTER_NAME),
+            "<DESCRIPTION />".format(submission_samples[0].pk, "CustomCenter"),
             sample_xml,
         )
         self.assertIn(
@@ -137,7 +153,7 @@ class TestEnalizer(TestCase):
             "<SAMPLE_NAME>"
             "<TAXON_ID>530564</TAXON_ID>"
             "</SAMPLE_NAME>"
-            "<DESCRIPTION />".format(submission_samples[1].pk, DEFAULT_ENA_CENTER_NAME),
+            "<DESCRIPTION />".format(submission_samples[1].pk, "CustomCenter"),
             sample_xml,
         )
 
@@ -233,7 +249,7 @@ class TestEnalizer(TestCase):
                 '<STUDY_REF refname="{2}:test-enalizer-sample" />'
                 "".format(
                     submission_experiments[i].pk,
-                    DEFAULT_ENA_CENTER_NAME,
+                    "CustomCenter",
                     submission_study.pk,
                 ),
                 experiment_xml,

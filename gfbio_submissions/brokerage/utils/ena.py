@@ -22,6 +22,7 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
@@ -30,7 +31,6 @@ from .email_curators import send_checklist_mapping_error_notification
 from ..configuration.settings import (
     CHECKLIST_ACCESSION_MAPPING,
     DEFAULT_ENA_BROKER_NAME,
-    DEFAULT_ENA_CENTER_NAME,
     STATIC_SAMPLE_SCHEMA_LOCATION,
     SUBMISSION_DELAY,
 )
@@ -73,10 +73,7 @@ class Enalizer(object):
         self.run = runs
         self.runs_key = "runs"
         self.embargo = submission.embargo
-        if submission.center_name is not None and submission.center_name.center_name != "":
-            self.center_name = submission.center_name.center_name
-        else:
-            self.center_name = DEFAULT_ENA_CENTER_NAME
+        self.center_name = resolve_and_validate_center_name(submission)
         self.submission_id = submission.id
         self.submission = submission
         self.samples_with_checklist_errors = []

@@ -13,6 +13,7 @@ from gfbio_submissions.generic.models.site_configuration import SiteConfiguratio
 from .test_submission_view_base import TestSubmissionView
 from ....configuration.settings import JIRA_ISSUE_URL, GENERIC
 from ....models.broker_object import BrokerObject
+from ....models.center_name import CenterName
 from ....models.persistent_identifier import PersistentIdentifier
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
@@ -190,6 +191,11 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
+        # DASS-3574: attach a curated centre before the release-triggering PUT
+        # so the ENA prepare path resolves a valid center_name.
+        center_name, _ = CenterName.objects.get_or_create(center_name="CustomCenter")
+        submission.center_name = center_name
+        submission.save()
         response = self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {"target": "ENA", "release": True, "data": _get_submission_request_data()},
