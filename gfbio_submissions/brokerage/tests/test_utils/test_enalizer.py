@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+from unittest import mock
 from uuid import uuid4
 
 import responses
@@ -25,7 +26,7 @@ from gfbio_submissions.users.models import User
 from ...exceptions.transfer_exceptions import InvalidCenterName
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
-from ...models.submission import Submission
+from ...models.submission import IllegalStatusTransition, Submission
 
 
 class TestEnalizer(TestCase):
@@ -503,6 +504,53 @@ class TestEnalizer(TestCase):
             RequestLog.objects.get(request_id=req_log_request_id).request_id,
         )
         self.assertEqual(200, response.status_code)
+
+    # DASS-3574 T4: an invalid center_name surfaced while preparing ENA data
+    # must end as a clean ERROR transition (prepare path), and must never reach
+    # ENA via the push path (send path) — without double-faulting on terminals.
+    def test_prepare_ena_data_centerless_sets_error(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.OPEN
+        submission.save()
+        with mock.patch("gfbio_submissions.brokerage.utils.ena.JiraClient"):
+            with self.assertRaises(Exception) as cm:
+                prepare_ena_data(submission=submission)
+        self.assertNotIsInstance(cm.exception, IllegalStatusTransition)
+        self.assertIn("center_name", str(cm.exception))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
+    def test_prepare_ena_data_centerless_closed_no_double_fault(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.CLOSED
+        submission.save()
+        with mock.patch("gfbio_submissions.brokerage.utils.ena.JiraClient"):
+            with self.assertRaises(Exception) as cm:
+                prepare_ena_data(submission=submission)
+        # The centre error is surfaced, not masked by a status-machine crash.
+        self.assertNotIsInstance(cm.exception, IllegalStatusTransition)
+        self.assertIn("center_name", str(cm.exception))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.CLOSED, submission.status)
+
+    @responses.activate
+    def test_send_submission_to_ena_centerless_no_post(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        with self.assertRaises(InvalidCenterName):
+            send_submission_to_ena(
+                submission=submission,
+                archive_access=conf.ena_server,
+                ena_submission_data={},
+            )
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
 
     def test_prepare_ena_data_add(self):
         submission = Submission.objects.first()

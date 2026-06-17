@@ -22,6 +22,7 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.exceptions.transfer_exceptions import InvalidCenterName
 from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
@@ -37,7 +38,7 @@ from ..configuration.settings import (
 from ..models.auditable_text_data import AuditableTextData
 from ..models.ena_report import EnaReport
 from ..models.persistent_identifier import PersistentIdentifier
-from ..models.submission import Submission
+from ..models.submission import IllegalStatusTransition, Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..utils.csv import find_correct_platform_and_model
 
@@ -695,13 +696,32 @@ def store_single_data_item_as_auditable_text_data(submission, data):
         return text_data
 
 
+def _fail_submission_safely(submission, reason):
+    """Transition ``submission`` to ERROR without double-faulting on terminals.
+
+    CLOSED/CANCELLED submissions have no legal transition to ERROR, so calling
+    ``fail()`` on them raises ``IllegalStatusTransition`` and masks the real
+    error (e.g. an invalid center_name surfaced on a re-run that loads closed
+    submissions with ``include_closed=True``). Guarding the transition lets the
+    underlying error be surfaced instead of a secondary status-machine crash.
+    """
+    try:
+        submission.fail(reason=reason)
+    except IllegalStatusTransition:
+        logger.warning(
+            msg="ena.py | _fail_submission_safely | submission in terminal "
+                "state, cannot transition to ERROR | submission_pk={0} "
+                "status={1} reason={2}".format(submission.pk, submission.status, reason)
+        )
+
+
 def prepare_ena_data(submission):
     # outgoing_request_id = uuid.uuid4()
     try:
         enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         return enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
     except Exception as ex:
-        submission.fail(reason=str(ex))
+        _fail_submission_safely(submission, str(ex))
 
         from gfbio_submissions.brokerage.utils.task_utils import _safe_get_site_config
         site_configuration = _safe_get_site_config(submission)
@@ -739,7 +759,13 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data, acti
 
     outgoing_request_id = uuid.uuid4()
     # TODO: this needs refactoring, maybe static method for submission.xml thus the DB is not hit by constructor
-    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
+    # DASS-3574: reject an invalid center_name *before* the POST so an empty/None
+    # centre can never reach ENA; fail the submission (terminal-safe) and abort.
+    try:
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
+    except InvalidCenterName as ex:
+        _fail_submission_safely(submission, str(ex))
+        raise
     ena_submission_data["SUBMISSION"] = enalizer.prepare_submission_xml_for_sending(
         action=action,
         outgoing_request_id=outgoing_request_id,
