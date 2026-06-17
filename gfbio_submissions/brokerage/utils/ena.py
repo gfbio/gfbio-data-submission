@@ -14,6 +14,7 @@ from collections import OrderedDict
 from ftplib import FTP, error_perm
 from uuid import uuid4
 from xml.etree.ElementTree import Element, SubElement
+from xml.sax.saxutils import quoteattr
 
 import dicttoxml
 from django.conf import settings
@@ -843,6 +844,22 @@ def release_study_on_ena(submission):
             )
         )
 
+        # DASS-3574: carry the submission's curated centre into the RELEASE XML
+        # instead of the hardcoded "GFBIO"; reject (-> ERROR, no POST) rather
+        # than release with an empty/None centre. quoteattr escapes & " < > for
+        # the hand-built (non-ElementTree) raw-string XML and supplies the quotes.
+        try:
+            center_name = resolve_and_validate_center_name(submission)
+        except InvalidCenterName as ex:
+            _fail_submission_safely(submission, str(ex))
+            logger.warning(
+                "ena.py | release_study_on_ena | invalid center_name, "
+                "aborting before RELEASE | submission_id={0} | reason={1}".format(
+                    submission.broker_submission_id, ex
+                )
+            )
+            return None
+
         current_datetime = datetime.datetime.now(timezone("UTC")).isoformat()
 
         submission_xml = textwrap.dedent(
@@ -851,7 +868,7 @@ def release_study_on_ena(submission):
             ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
             "<SUBMISSION"
             ' alias="gfbio:release:{broker_submission_id}:{time_stamp}"'
-            ' center_name="GFBIO" broker_name="GFBIO">'
+            " center_name={center_name} broker_name=\"GFBIO\">"
             "<ACTIONS>"
             "<ACTION>"
             '<RELEASE target="{accession_no}"/>'
@@ -862,6 +879,7 @@ def release_study_on_ena(submission):
                 broker_submission_id=submission.broker_submission_id,
                 time_stamp=current_datetime,
                 accession_no=study_primary_accession,
+                center_name=quoteattr(center_name),
             )
         )
 

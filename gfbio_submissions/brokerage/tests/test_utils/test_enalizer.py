@@ -12,6 +12,9 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_release_xml_response,
     _get_ena_xml_response,
 )
+from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import (
+    update_ena_embargo_task,
+)
 from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
 from gfbio_submissions.brokerage.utils.ena import (
     Enalizer,
@@ -602,3 +605,114 @@ class TestEnalizer(TestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
         release_study_on_ena(submission)
         self.assertEqual(0, len(RequestLog.objects.all()))
+
+    # DASS-3574 T5: HOLD/RELEASE XML must carry the submission's curated centre
+    # instead of the hardcoded "GFBIO", and must reject (-> ERROR, no HTTP call)
+    # rather than send an empty/None centre. The broker_name="GFBIO" stays.
+    @staticmethod
+    def _request_body_text(call):
+        body = call.request.body
+        if isinstance(body, (bytes, bytearray)):
+            return body.decode("utf-8")
+        return str(body)
+
+    @responses.activate
+    def test_update_ena_embargo_uses_curated_center(self):
+        submission = Submission.objects.first()
+        submission.status = Submission.SUBMITTED
+        submission.embargo = datetime(2020, 1, 10).date()
+        submission.save()
+        conf = SiteConfiguration.objects.first()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+        responses.add(responses.POST, conf.ena_server.url, status=200, body="<RECEIPT/>")
+
+        update_ena_embargo_task.s(submission_id=submission.pk).apply()
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="CustomCenter"', body)
+        self.assertNotIn('center_name="GFBIO"', body)
+
+    @responses.activate
+    def test_update_ena_embargo_escapes_center_name(self):
+        # Raw-string XML (no ElementTree escaping): a centre with XML
+        # metacharacters must be escaped, not interpolated verbatim.
+        submission = Submission.objects.first()
+        center_name, _ = CenterName.objects.get_or_create(center_name="A&B")
+        submission.center_name = center_name
+        submission.status = Submission.SUBMITTED
+        submission.embargo = datetime(2020, 1, 10).date()
+        submission.save()
+        conf = SiteConfiguration.objects.first()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+        responses.add(responses.POST, conf.ena_server.url, status=200, body="<RECEIPT/>")
+
+        update_ena_embargo_task.s(submission_id=submission.pk).apply()
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="A&amp;B"', body)
+        self.assertNotIn('center_name="A&B"', body)
+
+    @responses.activate
+    def test_update_ena_embargo_centerless_rejects_no_post(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.embargo = datetime(2020, 1, 10).date()
+        submission.save()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+
+        update_ena_embargo_task.s(submission_id=submission.pk).apply()
+
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
+    @responses.activate
+    def test_release_study_on_ena_uses_curated_center(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response(),
+        )
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+
+        release_study_on_ena(submission)
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="CustomCenter"', body)
+        self.assertNotIn('center_name="GFBIO"', body)
+
+    @responses.activate
+    def test_release_study_on_ena_centerless_rejects(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+
+        release_study_on_ena(submission)
+
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
