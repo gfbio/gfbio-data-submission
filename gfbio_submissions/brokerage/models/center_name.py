@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+from django.core.exceptions import ValidationError
 from django.db import models
-
-from ..configuration.settings import DEFAULT_ENA_CENTER_NAME
 
 
 class CenterName(models.Model):
     center_name = models.CharField(max_length=128, default="")
 
+    def clean(self):
+        if self.center_name.strip() == "":
+            raise ValidationError(
+                {"center_name": "center_name must not be empty."}
+            )
+
     def __str__(self):
-        if self.center_name != "":
-            return "{0}".format(self.center_name)
-        else:
-            return DEFAULT_ENA_CENTER_NAME
+        return self.center_name
