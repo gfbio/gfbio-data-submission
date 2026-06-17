@@ -33,6 +33,18 @@ class TransferInvalidSubmission(TransferError):
     pass
 
 
+class InvalidCenterName(TransferInvalidSubmission):
+    def __init__(self, submission_id, reason):
+        self.submission_id = submission_id
+        self.reason = reason
+        super().__init__(str(self))
+
+    def __str__(self):
+        return "Invalid ENA center_name for submission {0}: {1}".format(
+            self.submission_id, self.reason
+        )
+
+
 class TransferInternalError(TransferError):
     pass
 
