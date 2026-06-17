@@ -103,3 +103,31 @@ class TestMetadataValidationComment(TestCase):
         self.assertIn("The mandatory metadata checks completed without errors.", comment)
         self.assertNotIn("ENA mandatory fields (SUCCESS)", comment)
         self.assertNotIn("No issues reported.", comment)
+
+    def test_build_comment_includes_task_details_when_only_warnings(self):
+        report = MetadataValidationReport.objects.create(
+            submission=self.submission,
+            upload_file=self.submitter_upload,
+            file_md5_checksum="abc",
+            triggered_by=self.submitter,
+        )
+        task_report = ValidationTaskReport.objects.create(
+            report=report,
+            task_name="MIxS vocabulary check",
+            status="WARNING",
+        )
+        ValidationFinding.objects.create(
+            task_report=task_report,
+            status="WARNING",
+            row=3,
+            column_name="environment_biome",
+            message="Value not found in ENVO vocabulary.",
+            help_text="Choose the closest ENVO term.",
+        )
+
+        comment = build_metadata_validation_report_comment(report)
+
+        self.assertIn("Result: warnings found", comment)
+        self.assertIn("MIxS vocabulary check (WARNING)", comment)
+        self.assertIn("Value not found in ENVO vocabulary.", comment)
+        self.assertIn("Please review the warnings above before continuing.", comment)
