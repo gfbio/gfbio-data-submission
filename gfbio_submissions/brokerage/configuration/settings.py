@@ -53,6 +53,10 @@ CHECKLIST_ACCESSION_MAPPING = getattr(
         "wastewater sludge": "ERC000023",
         "soil": "ERC000022",
         "human gut": "ERC000015",
+        "agriculture": "ERC000055",
+        "food and production": "ERC000056",
+        "symbiont": "ERC000057",
+        "hydrocarbon": "ERC000058",
     },
 )
 
