@@ -5,7 +5,7 @@ const MetadataTemplate = () => {
   const templates = [
     {
       id: "molecular_template",
-      name: "Molecular Data Template:",
+      name: "Molecular Data:",
       template_link:
         "https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv?ref_type=heads",
       description_link:
@@ -13,11 +13,19 @@ const MetadataTemplate = () => {
     },
     {
       id: "biodiversity_template",
-      name: "Biodiversity, Ecological and Collection Data Template:",
+      name: "Collection Data:",
       template_link:
-        "https://kb.gfbio.org/download/attachments/138937170/GFBio_data_submission_template_mc1216.xlsm?version=1&modificationDate=1709796572343&api=v2",
+        "https://kb.gfbio.org/download/attachments/138937170/GFBio_data_submission_template_mc1216.xlsm?version=1&modificationDate=1709796572343&api=v2&download=true",
       description_link:
         "https://kb.gfbio.org/display/KB/ABCD+consensus+elements+for+data+publication",
+    },
+    {
+      id: "env_and_bio_data_template",
+      name: "Environmental and Biological Data:",
+      template_link:
+        "https://kb.gfbio.org/display/KB/Data+Submission+Templates?preview=/138937170/162562383/PANGAEA_template_for_GFBio_v2.xlsx&download=true",
+      description_link:
+        "https://wiki.pangaea.de/wiki/Best_practice_manuals_and_templates",
     },
   ];
 
@@ -56,6 +64,11 @@ const MetadataTemplate = () => {
           </li>
         ))}
       </ul>
+      <div className="mt-3">
+        <a href="https://kb.gfbio.org/display/KB/Data+Submission+Templates" target="_blank" id="other-templates-link" className="px-2">
+          Other templates <i className="fa fa-external-link-square pr-2" aria-hidden="true"></i>
+        </a>
+      </div>
     </div>
   );
 };
