@@ -388,6 +388,18 @@ NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE = getattr(
     "There is no primary helpdesk issue available for\nsubmission: {0}" "\nof user: {1}",
 )
 
+NO_HELPDESK_ISSUES_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    "NO_HELPDESK_ISSUES_EMAIL_SUBJECT_TEMPLATE",
+    "{0} submissions have no primary helpdesk issue",
+)
+
+NO_HELPDESK_ISSUES_EMAIL_MESSAGE_TEMPLATE = getattr(
+    settings,
+    "NO_HELPDESK_ISSUES_EMAIL_MESSAGE_TEMPLATE",
+    "There are submissions without a primary helpdesk issue:\n\n{0}",
+)
+
 PANGAEA = getattr(settings, "PANGAEA", "PANGAEA")
 
 PANGAEA_ISSUE_VIEW_URL = getattr(settings, "PANGAEA_ISSUE_VIEW_URL", "https://issues.pangaea.de/browse/")
