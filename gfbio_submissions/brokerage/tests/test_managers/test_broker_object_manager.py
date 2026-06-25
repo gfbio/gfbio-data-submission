@@ -47,7 +47,12 @@ class TestBrokerObjectManager(TestCase):
     def _create_multiple_broker_objects(cls):
         submission = cls._create_submission_via_serializer()
         BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
+        # Order by creation (id) and materialise to a list so the PK
+        # reassignment below is deterministic: an unordered QuerySet (re-queried
+        # per index) maps entities to forced PKs differently depending on test
+        # order, which made add_downloaded_pids_to_existing_broker_objects attach
+        # the PID to the wrong object under randomised order. DASS-3577.
+        broker_objects = list(BrokerObject.objects.all().order_by("id"))
         for i in range(0, len(broker_objects)):
             broker_objects[i].id = i + 1
             broker_objects[i].save()
@@ -335,9 +340,15 @@ class TestBrokerObjectManager(TestCase):
 
     def test_append_pid_with_corrupt_alias(self):
         broker_object = self._create_broker_object()
+        # Reference a broker-object id that is guaranteed not to exist (max + 1)
+        # rather than a hardcoded "666": under randomised order the broker-object
+        # id sequence (not rolled back) can climb past any fixed value, which
+        # would make the alias resolve to a real object and create a PID, breaking
+        # the "corrupt alias -> no PID" assertion. DASS-3577.
+        missing_id = BrokerObject.objects.order_by("id").last().id + 1
         study = {
             "accession": "ERP013438",
-            "alias": "666:f844738b-3304-4db7-858d-b7e47b293bb2",
+            "alias": "{0}:f844738b-3304-4db7-858d-b7e47b293bb2".format(missing_id),
             "holdUntilDate": "2016-03-05Z",
             "status": "PRIVATE",
         }

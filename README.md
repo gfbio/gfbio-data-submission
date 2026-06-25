@@ -44,13 +44,24 @@ Running type checks with mypy:
 
 To run the tests, check your test coverage, and generate an HTML coverage report::
 
-    $ coverage run -m pytest
+    $ coverage run -m pytest gfbio_submissions
     $ coverage html
     $ open htmlcov/index.html
 
 #### Running tests with py.test
 
-    $ pytest
+pytest is the canonical test runner for both local development and CI; the suite
+must pass green in a single run under randomised order (pytest-randomly):
+
+    $ pytest gfbio_submissions
+
+The order is randomised each run and the seed is printed in the header. To
+reproduce a specific ordering, pass the seed back:
+
+    $ pytest gfbio_submissions -p randomly --randomly-seed=<seed>
+
+`manage.py test` is no longer the test entry point: CI runs pytest and gates on
+its real exit code.
 
 ### Live reloading and Sass CSS compilation
 
