@@ -3,6 +3,7 @@ import gzip
 import os
 from pprint import pprint
 from unittest import skip
+from unittest.mock import MagicMock, patch
 from uuid import UUID, uuid4
 
 import responses
@@ -26,6 +27,7 @@ from gfbio_submissions.brokerage.utils.ena import (
     store_ena_data_as_auditable_text_data,
     store_single_data_item_as_auditable_text_data,
 )
+from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.ena_cli import (
     create_ena_manifest_text_data,
     store_manifest_to_filesystem,
@@ -555,6 +557,53 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertEqual(1, len(PersistentIdentifier.objects.filter(pid_type="TSQ")))
 
+    @patch("gfbio_submissions.brokerage.utils.ena_cli.subprocess.run")
+    def test_submit_targeted_sequences_uses_curated_center(self, mock_run):
+        # DASS-3574: the webin-cli -centername arg must carry the curated
+        # CenterName ("test-center"), never the hardcoded "GFBIO".
+        mock_run.return_value = MagicMock(args=[], returncode=0, stdout=b"", stderr=b"")
+        submission = self._prepare_objects_for_registered_study(
+            "7159acef-51a1-4378-9716-78f4495f0db4", "PRJEB39350"
+        )
+
+        submit_targeted_sequences_to_ena_task.apply_async(
+            kwargs={
+                "submission_id": submission.pk,
+                "do_test": True,
+                "do_validate": True,
+            }
+        ).get()
+
+        self.assertTrue(mock_run.called)
+        command = mock_run.call_args.args[0]
+        self.assertIn("-centername", command)
+        center_arg = command[command.index("-centername") + 1]
+        self.assertEqual("test-center", center_arg)
+        self.assertNotEqual("GFBIO", center_arg)
+
+    @patch("gfbio_submissions.brokerage.utils.ena_cli.subprocess.run")
+    def test_submit_targeted_sequences_centerless_rejects(self, mock_run):
+        # DASS-3574: a centre-less submission must fail before webin-cli runs.
+        submission = self._prepare_objects_for_registered_study(
+            "7159acef-51a1-4378-9716-78f4495f0db4", "PRJEB39350"
+        )
+        submission.center_name = None
+        submission.save()
+
+        submit_targeted_sequences_to_ena_task.apply_async(
+            kwargs={
+                "submission_id": submission.pk,
+                "do_test": True,
+                "do_validate": True,
+            }
+        ).get()
+
+        self.assertFalse(mock_run.called)
+        self.assertEqual(
+            Submission.ERROR,
+            Submission.objects.get(pk=submission.pk).status,
+        )
+
 
 # TODO: remove
 @skip("just for prototyping")
@@ -766,6 +815,7 @@ class TestCLI(TestCase):
             username=ena_resource.username,
             password=ena_resource.password,
             submission=submission,
+            center_name=resolve_and_validate_center_name(submission),
         )
 
         # TODO: put this workflow in tasks, then every error can be reviewed in task progress reports

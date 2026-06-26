@@ -52,7 +52,7 @@ def store_manifest_to_filesystem(submission):
             output.write(manifest_text_data.text_data)
 
 
-def submit_targeted_sequences(username, password, submission, center_name="GFBIO", test=True, validate=True):
+def submit_targeted_sequences(username, password, submission, center_name, test=True, validate=True):
     submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
     manifest_path = os.path.join(submission_folder, "MANIFEST")
 

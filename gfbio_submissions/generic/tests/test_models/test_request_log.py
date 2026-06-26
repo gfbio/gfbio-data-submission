@@ -4,6 +4,7 @@ import responses
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.center_name import CenterName
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.serializers.submission_serializer import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, _get_ena_data_without_runs, _get_ena_xml_response
@@ -27,6 +28,10 @@ class RequestLogTest(TestCase):
         )
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
+        # DASS-3574: attach a curated centre so prepare_ena_data resolves it.
+        center_name, _ = CenterName.objects.get_or_create(center_name="CustomCenter")
+        submission.center_name = center_name
+        submission.save()
         BrokerObject.objects.add_submission_data(submission)
         return submission
 

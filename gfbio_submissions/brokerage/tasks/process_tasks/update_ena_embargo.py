@@ -2,6 +2,7 @@
 import datetime
 import logging
 import textwrap
+from xml.sax.saxutils import quoteattr
 
 from django.core.mail import mail_admins
 from pytz import timezone
@@ -11,7 +12,10 @@ from ...models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
 
+from ...exceptions.transfer_exceptions import InvalidCenterName
 from ...tasks.submission_task import SubmissionTask
+from ...utils.center_name import resolve_and_validate_center_name
+from ...utils.ena import _fail_submission_safely
 from ...utils.task_utils import get_submission_and_site_configuration
 from gfbio_submissions.generic.utils import logged_requests
 
@@ -55,6 +59,22 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
             )
         )
 
+        # DASS-3574: carry the submission's curated centre into the HOLD XML
+        # instead of the hardcoded "GFBIO"; reject (-> ERROR, no POST) rather
+        # than send an empty/None centre. quoteattr escapes & " < > for the
+        # hand-built (non-ElementTree) raw-string XML and supplies the quotes.
+        try:
+            center_name = resolve_and_validate_center_name(submission)
+        except InvalidCenterName as ex:
+            _fail_submission_safely(submission, str(ex))
+            logger.warning(
+                "ena.py | update_ena_embargo_task | invalid center_name, "
+                "aborting before HOLD | submission_id={0} | reason={1}".format(
+                    submission.broker_submission_id, ex
+                )
+            )
+            return "invalid center_name, submission={}".format(submission.broker_submission_id)
+
         current_datetime = datetime.datetime.now(timezone("UTC")).isoformat()
         submission_xml = textwrap.dedent(
             '<?xml version="1.0" encoding="UTF-8"?>'
@@ -62,7 +82,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
             ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
             "<SUBMISSION"
             ' alias="gfbio:hold:{broker_submission_id}:{time_stamp}"'
-            ' center_name="GFBIO" broker_name="GFBIO">'
+            " center_name={center_name} broker_name=\"GFBIO\">"
             "<ACTIONS>"
             "<ACTION>"
             '<HOLD target="{accession_no}" HoldUntilDate="{hold_date}"/>'
@@ -74,6 +94,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
                 broker_submission_id=submission.broker_submission_id,
                 time_stamp=current_datetime,
                 accession_no=study_primary_accession,
+                center_name=quoteattr(center_name),
             )
         )
 

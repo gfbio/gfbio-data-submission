@@ -6,13 +6,18 @@ import shutil
 from uuid import UUID
 
 from gfbio_submissions.brokerage.tests.test_tasks.test_ena_validation_tasks import run_test_with_fake_submission_upload
+import pytest
 import responses
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_ROOT
-from gfbio_submissions.brokerage.tests.utils import _get_submission_post_response, _get_submission_request_data
+from gfbio_submissions.brokerage.tests.utils import (
+    _attach_curated_center_on_create,
+    _get_submission_post_response,
+    _get_submission_request_data,
+)
 from gfbio_submissions.users.models import User
 
 from ....configuration.settings import ENA, GENERIC
@@ -22,6 +27,13 @@ from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewFullPosts(TestSubmissionView):
+    @pytest.fixture(autouse=True)
+    def _curated_center(self):
+        # DASS-3574: these tests POST and process the ENA chain eagerly in the
+        # same request, so attach a curated centre at submission-creation time.
+        with _attach_curated_center_on_create():
+            yield
+
     @classmethod
     def tearDownClass(cls):
         super(TestSubmissionViewFullPosts, cls).tearDownClass()

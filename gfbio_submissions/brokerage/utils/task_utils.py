@@ -6,7 +6,8 @@ from django.utils.encoding import smart_str
 from requests import Response
 
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
-from .ena import send_submission_to_ena
+from .center_name import resolve_and_validate_center_name
+from .ena import _fail_submission_safely, send_submission_to_ena
 from ..configuration.settings import (
     TASK_FAIL_SUBJECT_TEMPLATE,
     TASK_FAIL_TEXT_TEMPLATE,
@@ -15,6 +16,7 @@ from ..configuration.settings import (
     SUBMISSION_UPLOAD_RETRY_DELAY,
 )
 from ..exceptions.transfer_exceptions import (
+    InvalidCenterName,
     TransferInternalError,
     raise_response_exceptions,
     TransferClientError,
@@ -22,7 +24,6 @@ from ..exceptions.transfer_exceptions import (
     NoTicketAvailableError,
 )
 from ..models.auditable_text_data import AuditableTextData
-from ..models.center_name import CenterName
 from ..models.jira_message import JiraMessage
 from ..models.submission import Submission
 from ..models.task_progress_report import TaskProgressReport
@@ -329,9 +330,17 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
         TaskProgressReport.objects.create_initial_report(task=task)
         return "No submission found with pk {}".format(submission_id)
 
-    # change center name for task without updating submission
-    center_name, created = CenterName.objects.get_or_create(center_name="GFBIO")
-    submission.center_name = center_name
+    # DASS-3574: validate the submission's curated centre instead of overriding
+    # it with a throwaway "GFBIO". A missing/empty centre is surfaced here (at
+    # validation time) as a clean ERROR transition (terminal-safe); the value
+    # can never reach ENA. NOTE: this changes validate/test semantics — formerly
+    # a deliberate "GFBIO" throwaway that never accessions. (To restore the old
+    # behaviour for validate-only, this is the single block to revert.)
+    try:
+        resolve_and_validate_center_name(submission)
+    except InvalidCenterName as ex:
+        _fail_submission_safely(submission, str(ex))
+        return "Invalid center_name: {}".format(ex)
 
     # create initial task report
     TaskProgressReport.objects.create_initial_report(submission=submission, task=task)
