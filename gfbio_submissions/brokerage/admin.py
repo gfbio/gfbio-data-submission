@@ -61,13 +61,6 @@ class PersistentIdentifierInline(admin.TabularInline):
         return 1
 
 
-class BrokerObjectInline(admin.TabularInline):
-    model = BrokerObject.submissions.through
-
-    def get_extra(self, request, obj=None, **kwargs):
-        return 1
-
-
 class BrokerObjectAdmin(admin.ModelAdmin):
     inlines = (PersistentIdentifierInline,)
     list_filter = (
@@ -705,18 +698,6 @@ class SubmissionAdmin(admin.ModelAdmin):
             return reference.reference_key
         else:
             return "-"
-
-
-class RunFileRestUploadAdmin(admin.ModelAdmin):
-    readonly_fields = ("created",)
-
-
-class SubmissionFileUploadAdmin(admin.ModelAdmin):
-    pass
-
-
-class PrimaryDataFileAdmin(admin.ModelAdmin):
-    pass
 
 
 class ValidationFindingInlineAdmin(admin.TabularInline):
