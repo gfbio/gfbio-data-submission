@@ -9,10 +9,6 @@ from .models.profile import Profile
 from .models.profile_field import ProfileField
 
 
-class ProfileFieldAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "profile", "field",]
-
-
 class ProfileFieldInline(admin.TabularInline):
     model = ProfileField
     extra = 1
