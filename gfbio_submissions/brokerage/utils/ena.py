@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import gzip
 import hashlib
 import io
 import json
@@ -938,25 +937,6 @@ def parse_ena_submission_response(response_content=""):
             res["samples"].append(attr)
 
     return res
-
-
-def download_submitted_run_files_to_string_io(site_config, decompressed_io):
-    ftp_rc = site_config.ena_ftp
-    transmission_report = []
-    ftp = FTP(ftp_rc.url)
-    transmission_report.append(ftp.login(user=ftp_rc.username, passwd=ftp_rc.password))
-    transmission_report.append(ftp.cwd("report"))
-    transmission_report.append(ftp.retrlines("LIST"))
-
-    compressed_file = io.StringIO()
-
-    transmission_report.append(ftp.retrbinary("RETR submitted_run_files.txt.gz", compressed_file.write))
-    transmission_report.append(ftp.quit())
-
-    compressed_file.seek(0)
-    decompressed_io.write(gzip.GzipFile(fileobj=compressed_file, mode="rb").read())
-    compressed_file.close()
-    return transmission_report
 
 
 class md5ChecksumCalculator:
