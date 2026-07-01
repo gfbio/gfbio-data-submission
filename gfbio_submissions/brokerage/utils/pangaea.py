@@ -49,10 +49,6 @@ def parse_pangaea_login_token_response(soap_response):
         return ""
 
 
-def get_pangaea_login_token(archive_access):
-    return parse_pangaea_login_token_response(request_pangaea_login_token(resource_credential=archive_access))
-
-
 # TODO: is checklist/package mandatory in schema now ???
 def get_csv_from_sample(sample_data={}):
     if "gcdjson" in sample_data.keys():
