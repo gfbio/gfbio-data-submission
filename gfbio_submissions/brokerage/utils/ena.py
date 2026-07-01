@@ -33,7 +33,6 @@ from .email_curators import send_checklist_mapping_error_notification
 from ..configuration.settings import (
     CHECKLIST_ACCESSION_MAPPING,
     DEFAULT_ENA_BROKER_NAME,
-    STATIC_SAMPLE_SCHEMA_LOCATION,
     SUBMISSION_DELAY,
 )
 from ..models.auditable_text_data import AuditableTextData
@@ -939,27 +938,6 @@ def parse_ena_submission_response(response_content=""):
             res["samples"].append(attr)
 
     return res
-
-
-def validate_sample_data(json_data):
-    try:
-        with open(os.path.join(settings.STATIC_ROOT, STATIC_SAMPLE_SCHEMA_LOCATION)) as schema_file:
-            schema = json.load(schema_file)
-    except IOError as e:
-        return e
-    validator = Draft3Validator(schema)
-    is_valid = validator.is_valid(json_data)
-    if not is_valid:
-        return is_valid, [
-            "Error(s) regarding field '{0}' because: {1}".format(
-                error.relative_path.pop(), error.message.replace("u'", "'")
-            )
-            if len(error.relative_path) > 0
-            else "{0}".format(error.message.replace("u'", "'"))
-            for error in validator.iter_errors(json_data)
-        ]
-    else:
-        return True, []
 
 
 def download_submitted_run_files_to_string_io(site_config, decompressed_io):
