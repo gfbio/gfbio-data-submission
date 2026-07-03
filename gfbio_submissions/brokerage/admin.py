@@ -18,6 +18,7 @@ from dt_upload import admin as dt_admin
 from dt_upload.models import DTUpload, FileUploadRequest
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
+from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport, ValidationFinding, ValidationTaskReport
 from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
@@ -888,6 +889,11 @@ class JiraMessageAdmin(admin.ModelAdmin):
     list_display = ("name", "modified")
 
 
+class JiraQueueMessageAdmin(admin.ModelAdmin):
+    list_display = ("submission_id", "type", "modified", "status")
+    fields = ("submission_id", "type", "status", "created", "modified", "data")
+    readonly_fields = ("created", "modified",)
+
 class AbcdConversionResultAdmin(admin.ModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
@@ -991,3 +997,5 @@ admin.site.register(SubmissionCloudUpload, SubmissionCloudUploadAdmin)
 
 admin.site.register(MetadataValidationReport, MetadataValidationReportAdmin)
 admin.site.register(ValidationTaskReport, ValidationTaskReportAdmin)
+
+admin.site.register(JiraQueueMessage, JiraQueueMessageAdmin)
