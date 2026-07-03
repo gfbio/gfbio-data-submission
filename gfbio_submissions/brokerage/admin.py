@@ -422,7 +422,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     from celery import chord
     from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
-    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ]
+    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ".fq.gz", ".fq.bz2", ".fastq.bz2", ".fq.bz", ".fastq.bz",  ]
 
     for obj in queryset:
         submission_cloud_upload_ids = [
