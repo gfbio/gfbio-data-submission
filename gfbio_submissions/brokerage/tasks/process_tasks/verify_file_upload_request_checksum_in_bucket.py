@@ -5,12 +5,12 @@ import os
 from django.conf import settings
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.utils.jira import JiraClient
+from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
 from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
 from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
-from ...utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
+from ...utils.task_utils import get_submission_and_site_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +54,12 @@ def verify_file_upload_request_checksum_in_bucket_task(self, previous_result=Non
         return TaskProgressReport.CANCELLED
 
     calculated_md5sum = calculate_checksum_locally("md5", submission_cloud_upload)
-    jira_message = ""
+    jira_message_data = {"file_name": submission_cloud_upload.file_upload.original_filename}
     if calculated_md5sum == submission_cloud_upload.file_upload.md5:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         submission_cloud_upload.save()
         submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}])
-        jira_message = f"File {submission_cloud_upload.file_upload.original_filename} was successfully added to the submission. The user-provided and our calculated checksum match."
+        jira_message_data["checksum_missmatched"] = False
     else:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM
         submission_cloud_upload.save()
@@ -68,18 +68,19 @@ def verify_file_upload_request_checksum_in_bucket_task(self, previous_result=Non
             f"A checksum-missmatch occurred for the transmitted file '{submission_cloud_upload.file_upload.original_filename}'. "
             f"Expected checksum: {submission_cloud_upload.file_upload.md5}, actual checksum: {calculated_md5sum}"
         )
-        jira_message = checksum_missmatch_message
+        
+        jira_message_data["checksum_missmatched"] = True
+        jira_message_data["provided_checksum"] = submission_cloud_upload.file_upload.md5
+        jira_message_data["calculated_checksum"] = calculated_md5sum
         logger.warning(
             f"tasks.py | check_transfer_cloud_upload_checksums_task | " + checksum_missmatch_message +
             f" | submission_cloud_upload_id={submission_cloud_upload_id} | submission_id={submission_id} | task_id={self.request.id}")
 
-    reference = submission.get_primary_helpdesk_reference()
+    jira_queue_message = JiraQueueMessage.objects.create(
+        type=JiraQueueMessage.TYPE_CHECKSUM_CALCULATED,
+        data=jira_message_data,
+        submission_id=submission_id
+    )
+    jira_queue_message.save()
 
-    if reference and site_configuration.helpdesk_server:
-        jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-        jira_client.add_comment(key_or_issue=reference.reference_key, text=jira_message, is_internal=False)
-        return jira_error_auto_retry(
-            jira_client=jira_client,
-            task=self,
-            broker_submission_id=submission.broker_submission_id,
-        )
+    return jira_queue_message.pk

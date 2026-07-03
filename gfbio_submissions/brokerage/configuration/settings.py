@@ -479,3 +479,23 @@ TASK_FAIL_SUBJECT_TEMPLATE = getattr(settings, "TASK_FAIL_SUBJECT_TEMPLATE", 'Ta
 TASK_FAIL_TEXT_TEMPLATE = getattr(settings, "TASK_FAIL_TEXT_TEMPLATE", 'Task "{0}" failed after {1} retries. {2}')
 
 SUBMISSION_COMMENT_TEMPLATE = getattr(settings, "SUBMISSION_COMMENT_TEMPLATE", "{0} ({1}) commented:\n{2}")
+
+JIRA_MESSAGES_WAIT_DELAY = getattr(
+    settings,
+    "JIRA_MESSAGES_WAIT_DELAY",
+    # seconds
+    30 * 60,
+)
+
+JIRA_MESSAGES_MAX_DELAY = getattr(
+    settings,
+    "JIRA_MESSAGES_MAX_DELAY",
+    # seconds
+    4 * 60 * 60,
+)
+
+JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE = getattr(
+    settings,
+    "JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE",
+    100,
+)
