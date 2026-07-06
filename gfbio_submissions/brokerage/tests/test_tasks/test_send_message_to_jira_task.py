@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-from gfbio_submissions.users.models import User
 import responses
-from unittest.mock import patch
 
-from django.conf import settings
 from django.utils import timezone
 
 from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET, JIRA_MESSAGES_WAIT_DELAY, JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE, JIRA_MESSAGES_MAX_DELAY
-from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import send_message_to_jira_task
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import send_message_to_jira_task
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_comment_response
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.users.models import User
 
-from ...models.submission import Submission
 from .test_tasks_base import TestTasks
+from ...models.submission import Submission
 
 
 class TestSendMessageToJiraTasks(TestTasks):
@@ -44,7 +42,7 @@ class TestSendMessageToJiraTasks(TestTasks):
         )
         if missmatch:
             jqmsg.data["provided_checksum"] = "prov_chksm"
-            jqmsg.data["calculated_checksum"] = "calc_chksm",    
+            jqmsg.data["calculated_checksum"] = "calc_chksm"
         jqmsg.save()
         return jqmsg
 
@@ -72,7 +70,7 @@ class TestSendMessageToJiraTasks(TestTasks):
         jqmsg = self._create_jqmsg("test.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150)
         result_bool, result_msg = self._run_test(msg_id=jqmsg.id)
         self.assertTrue(result_bool)
-        self.assertEqual("Message was sent: h2. 1 File(s) where uploaded to the submission and we verified the checksums:\nh3. Files where the Checksums were matches:\ntest.fastq.gz", result_msg)
+        self.assertEqual("Message was sent: h3. 1 File(s) where uploaded to the submission and we verified the checksums:\nh4. Files where the Checksums were matches:\ntest.fastq.gz", result_msg)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg)
 
 
@@ -83,21 +81,18 @@ class TestSendMessageToJiraTasks(TestTasks):
         
         result_bool, result_msg = self._run_test(msg_id=jqmsg2.id)
         self.assertTrue(result_bool)
-        self.assertEqual("Message was sent: h2. 2 File(s) where uploaded to the submission and we verified the checksums:\nh3. Files where the Checksums were matches:\ntest1.fastq.gz, test2.fastq.gz", result_msg)
+        self.assertEqual("Message was sent: h3. 2 File(s) where uploaded to the submission and we verified the checksums:\nh4. Files where the Checksums were matches:\ntest1.fastq.gz, test2.fastq.gz", result_msg)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg1)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg2)
 
 
     @responses.activate
-    def test_send_message_to_jira_task_do_not_send(self):
-        jqmsg1 = self._create_jqmsg("test1.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150)
-        jqmsg2 = self._create_jqmsg("test2.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY - 500)
-        
-        result_bool, result_msg = self._run_test(msg_id=jqmsg1.id)
+    def test_send_message_to_jira_task_simple_missmatch(self):
+        jqmsg = self._create_jqmsg("test.fastq.gz", missmatch=True, seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150)
+        result_bool, result_msg = self._run_test(msg_id=jqmsg.id)
         self.assertTrue(result_bool)
-        self.assertEqual("Newer Message found.", result_msg)
-        self._assert_jq_msg_status(JiraQueueMessage.STATUS_NOT_SENT, jqmsg1)
-        self._assert_jq_msg_status(JiraQueueMessage.STATUS_NOT_SENT, jqmsg2)
+        self.assertEqual("Message was sent: h3. 1 File(s) where uploaded to the submission and we verified the checksums:\nh4. Checksum-fails:\n- Missmatch for test.fastq.gz: provided: prov_chksm | calculated: calc_chksm", result_msg)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg)
 
 
     @responses.activate
@@ -126,7 +121,7 @@ class TestSendMessageToJiraTasks(TestTasks):
         
         result_bool, result_msg = self._run_test(msg_id=jqmsg1.id)
         self.assertTrue(result_bool)
-        self.assertEqual("Message was sent: h2. 2 File(s) where uploaded to the submission and we verified the checksums:\nh3. Files where the Checksums were matches:\ntest1.fastq.gz, test2.fastq.gz", result_msg)
+        self.assertEqual("Message was sent: h3. 2 File(s) where uploaded to the submission and we verified the checksums:\nh4. Files where the Checksums were matches:\ntest1.fastq.gz, test2.fastq.gz", result_msg)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg1)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg2)
 
@@ -138,6 +133,39 @@ class TestSendMessageToJiraTasks(TestTasks):
         
         result_bool, result_msg = self._run_test(msg_id=jqmsg2.id)
         self.assertTrue(result_bool)
-        self.assertEqual("Message was sent: h2. 2 File(s) where uploaded to the submission and we verified the checksums:\nh3. Files where the Checksums were matches:\ntest2.fastq.gz", result_msg)
+        self.assertEqual("Message was sent: h3. 1 File(s) where uploaded to the submission and we verified the checksums:\nh4. Files where the Checksums were matches:\ntest2.fastq.gz", result_msg)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_PICKED_UP, jqmsg1)
         self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg2)
+
+
+    def test_send_message_to_jira_task_do_not_send(self):
+        jqmsg1 = self._create_jqmsg("test1.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150)
+        jqmsg2 = self._create_jqmsg("test2.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY - 500)
+        
+        result_bool, result_msg = self._run_test(msg_id=jqmsg1.id)
+        self.assertTrue(result_bool)
+        self.assertEqual("Newer Message found.", result_msg)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_NOT_SENT, jqmsg1)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_NOT_SENT, jqmsg2)
+
+
+    def test_send_message_to_jira_task_message_already_sent(self):
+        jqmsg1 = self._create_jqmsg("test1.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150, status=JiraQueueMessage.STATUS_SENT)
+        
+        result_bool, result_msg = self._run_test(msg_id=jqmsg1.id)
+        self.assertTrue(result_bool)
+        self.assertEqual("Message already in state SENT.", result_msg)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg1)
+
+
+    def test_send_message_to_jira_task_message_no_msg_id(self):
+        result_bool, result_msg = self._run_test(msg_id=None)
+        self.assertEqual(TaskProgressReport.CANCELLED, result_bool)
+        self.assertEqual("Previous Task didn't provide message-id.", result_msg)
+        result_bool, result_msg = self._run_test(0)
+        self.assertEqual(TaskProgressReport.CANCELLED, result_bool)
+        self.assertEqual("Previous Task didn't provide message-id.", result_msg)
+        result_bool, result_msg = self._run_test(TaskProgressReport.CANCELLED)
+        self.assertEqual(TaskProgressReport.CANCELLED, result_bool)
+        self.assertEqual("Previous Task didn't provide message-id.", result_msg)
+

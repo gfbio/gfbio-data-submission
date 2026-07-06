@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @app.task(base=SubmissionTask, bind=True, name="tasks.send_message_to_jira_task")
 def send_message_to_jira_task(self, previous_result, submission_id):
     if not previous_result or previous_result == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
+        return TaskProgressReport.CANCELLED, "Previous Task didn't provide message-id."
     
     message = JiraQueueMessage.objects.get(pk=previous_result)
     if message.status != JiraQueueMessage.STATUS_NOT_SENT:
@@ -58,11 +58,11 @@ def send_message_to_jira_task(self, previous_result, submission_id):
 
 
 def create_checksum_message(messages_to_send):
-    jira_message = f"h2. {len(messages_to_send)} File(s) where uploaded to the submission and we verified the checksums:\n"
+    jira_message = f"h3. {len(messages_to_send)} File(s) where uploaded to the submission and we verified the checksums:\n"
     bad_checksum_messages = [msg for msg in messages_to_send if msg.data["checksum_missmatched"]]
     nice_checksum_messages = [msg for msg in messages_to_send if not msg.data["checksum_missmatched"]]
     if len(bad_checksum_messages) > 0:
-        jira_message += "h3. Checksum-fails:\n"
+        jira_message += "h4. Checksum-fails:\n"
         jira_message += "\n".join(
             [
                 (
@@ -74,7 +74,7 @@ def create_checksum_message(messages_to_send):
         )
 
     if len(nice_checksum_messages) > 0:
-        jira_message += "h3. Files where the Checksums were matches:\n"
+        jira_message += "h4. Files where the Checksums were matches:\n"
         jira_message += ", ".join([msg.data['file_name'] for msg in messages_to_send])
 
     return jira_message
