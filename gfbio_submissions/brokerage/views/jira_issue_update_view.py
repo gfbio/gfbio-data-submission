@@ -44,7 +44,7 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         if not is_valid:
             # in case of JiraHookRequestSerializer  errors:
-            logger.warn(
+            logger.warning(
                 "JiraIssueUpdateView | not is_valid | errors={0} | "
                 "".format(serializer.errors)
             )

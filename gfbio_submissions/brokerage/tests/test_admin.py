@@ -9,6 +9,7 @@ from gfbio_submissions.generic.models.site_configuration import SiteConfiguratio
 from gfbio_submissions.users.models import User
 
 from ..models.auditable_text_data import AuditableTextData
+from ..models.center_name import CenterName
 from ..models.submission import Submission
 from ..models.task_progress_report import TaskProgressReport
 
@@ -34,10 +35,15 @@ class TestSubmissionAdmin(TestCase):
             username="user1",
             site_configuration=site_configuration,
         )
+        # DASS-3574: the VALIDATE/TEST path now resolves the curated centre, so
+        # the fixture submission needs a valid CenterName (the FK guarantees
+        # membership; the guard only rejects None/empty).
+        center = CenterName.objects.create(center_name="test-center")
         Submission.objects.create(
             user=user,
             status="OPEN",
             # submitting_user='John Doe',
+            center_name=center,
             target="ENA",
             release=False,
             data={},

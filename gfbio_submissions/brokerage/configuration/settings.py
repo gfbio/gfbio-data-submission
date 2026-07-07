@@ -53,6 +53,10 @@ CHECKLIST_ACCESSION_MAPPING = getattr(
         "wastewater sludge": "ERC000023",
         "soil": "ERC000022",
         "human gut": "ERC000015",
+        "agriculture": "ERC000055",
+        "food and production": "ERC000056",
+        "symbiont": "ERC000057",
+        "hydrocarbon": "ERC000058",
     },
 )
 
@@ -382,6 +386,18 @@ NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE = getattr(
     settings,
     "NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE",
     "There is no primary helpdesk issue available for\nsubmission: {0}" "\nof user: {1}",
+)
+
+NO_HELPDESK_ISSUES_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    "NO_HELPDESK_ISSUES_EMAIL_SUBJECT_TEMPLATE",
+    "{0} submissions have no primary helpdesk issue",
+)
+
+NO_HELPDESK_ISSUES_EMAIL_MESSAGE_TEMPLATE = getattr(
+    settings,
+    "NO_HELPDESK_ISSUES_EMAIL_MESSAGE_TEMPLATE",
+    "There are submissions without a primary helpdesk issue:\n\n{0}",
 )
 
 PANGAEA = getattr(settings, "PANGAEA", "PANGAEA")

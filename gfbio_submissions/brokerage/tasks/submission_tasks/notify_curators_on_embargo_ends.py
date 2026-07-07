@@ -20,14 +20,16 @@ def notify_curators_on_embargo_ends_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     results = []
+    notified_pids = []
     all_submissions = Submission.objects.all()
+    today = datetime.date.today()
     for submission in all_submissions:
         # ignore submission without embargo
         if not submission.embargo:
             continue
         # only send notification for closed submissions with PID type PRJ
         # and when embargo date is not in the past
-        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
+        if submission.status != Submission.CLOSED or submission.embargo < today:
             continue
         # get study object
         study = submission.brokerobject_set.filter(type="study").first()
@@ -35,9 +37,10 @@ def notify_curators_on_embargo_ends_task(self):
             # get persistent identifier
             study_pid = study.persistentidentifier_set.filter(pid_type="PRJ").first()
             if study_pid:
-                # check if embargo is withing 7 days
-                one_week_from_now = datetime.date.today() + datetime.timedelta(days=6)
-                if submission.embargo <= one_week_from_now:
+                # check if embargo is within 7 days
+                one_week_from_now = today + datetime.timedelta(days=6)
+                should_notify = study_pid.curators_notified_embargo_expiry_for != submission.embargo
+                if submission.embargo <= one_week_from_now and should_notify:
                     # get jira link
                     if submission.get_primary_helpdesk_reference():
                         jira_link = "{}{}".format(JIRA_TICKET_URL, submission.get_primary_helpdesk_reference())
@@ -53,6 +56,7 @@ def notify_curators_on_embargo_ends_task(self):
                             "embargo": "{}".format(submission.embargo),
                         }
                     )
+                    notified_pids.append((study_pid, submission.embargo))
 
     curators = User.objects.filter(groups__name="Curators")
     if len(results) > 0 and len(curators) > 0:
@@ -76,6 +80,9 @@ def notify_curators_on_embargo_ends_task(self):
             recipient_list=curators_emails,
             fail_silently=False,
         )
+        for study_pid, embargo in notified_pids:
+            study_pid.curators_notified_embargo_expiry_for = embargo
+            study_pid.save(update_fields=["curators_notified_embargo_expiry_for"])
         results.append({"curators": curators_emails})
         return results
 

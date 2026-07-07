@@ -125,15 +125,39 @@ class TestCheckTasks(TestCase):
         curator = User.objects.create_user(username="curator", email="curator@check.test", password="password")
         curators_group, _ = Group.objects.get_or_create(name="Curators")
         curators_group.user_set.add(curator)
+        no_issue_submissions = list(Submission.objects.get_submissions_without_primary_helpdesk_issue())
         mail.outbox.clear()
+
         result = check_for_submissions_without_helpdesk_issue_task.apply()
+
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertTrue(result.successful())
-        self.assertEqual(3, len(mail.outbox))
-        for message in mail.outbox:
-            self.assertIn("curator@check.test", message.to)
-            self.assertTrue(message.subject.startswith(settings.EMAIL_SUBJECT_PREFIX))
-            self.assertIn("has no primary helpdesk issue", message.subject)
+        self.assertEqual(1, len(mail.outbox))
+
+        message = mail.outbox[0]
+        self.assertIn("curator@check.test", message.to)
+        self.assertTrue(message.subject.startswith(settings.EMAIL_SUBJECT_PREFIX))
+        self.assertIn("3 submissions have no primary helpdesk issue", message.subject)
+        for submission in no_issue_submissions:
+            self.assertIn(str(submission.broker_submission_id), message.body)
+            self.assertIn("database id: {}".format(submission.pk), message.body)
+            self.assertIn("status: {}".format(submission.status), message.body)
+            self.assertIn("user: {}".format(submission.user.username), message.body)
+
+    def test_check_for_submissions_without_helpdesk_issue_task_without_matches(self):
+        for submission in Submission.objects.get_submissions_without_primary_helpdesk_issue():
+            submission.additionalreference_set.create(
+                type=GFBIO_HELPDESK_TICKET,
+                reference_key="HLP-{}".format(submission.pk),
+                primary=True,
+            )
+        mail.outbox.clear()
+
+        result = check_for_submissions_without_helpdesk_issue_task.apply()
+
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertTrue(result.successful())
+        self.assertEqual(0, len(mail.outbox))
 
     def test_check_for_user_without_site_configuration_task(self):
         users = User.objects.all()

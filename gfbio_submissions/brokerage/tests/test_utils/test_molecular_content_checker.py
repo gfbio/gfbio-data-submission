@@ -13,6 +13,7 @@ from gfbio_submissions.brokerage.utils.molecular_content_checker import Molecula
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from gfbio_submissions.users.models import User
 from ...models.broker_object import BrokerObject
+from ...models.center_name import CenterName
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...serializers.submission_serializer import SubmissionSerializer
@@ -69,6 +70,10 @@ class TestCSVParsing(TestCase):
         )
         serializer.is_valid()
         cls.submission = serializer.save(user=user)
+        # DASS-3574: the prepare_ena_data tests below need a curated centre.
+        center_name, _ = CenterName.objects.get_or_create(center_name="CustomCenter")
+        cls.submission.center_name = center_name
+        cls.submission.save()
         cls.submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
         cls.create_csv_submission_upload(cls.submission, user)
         file_opener = create_submission_file_opener(cls.submission)
