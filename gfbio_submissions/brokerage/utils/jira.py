@@ -73,10 +73,62 @@ class JiraClient(object):
         response = request_pangaea_login_token(resource_credential=self.token_resource)
         return dict(PanLoginID=parse_pangaea_login_token_response(response))
 
+    def _format_jira_error(self, error):
+        details = ["Error: {}".format(error)]
+        status_code = getattr(error, "status_code", None)
+        if status_code:
+            details.append("Status code: {}".format(status_code))
+        error_text = getattr(error, "text", "")
+        if error_text:
+            details.append("Error text: {}".format(error_text))
+        return "\n".join(details)
+
+    def _format_submission_context(self, submission):
+        if not submission:
+            return "Submission: not provided"
+
+        username = submission.user.username if submission.user else "no user"
+        return "\n".join(
+            [
+                "Submission:",
+                "- database id: {}".format(submission.pk),
+                "- broker_submission_id: {}".format(submission.broker_submission_id),
+                "- status: {}".format(submission.status),
+                "- target: {}".format(submission.target),
+                "- user: {}".format(username),
+            ]
+        )
+
+    def _format_payload_context(self, payload):
+        if payload is None:
+            return ""
+        return "Relevant content:\n{}".format(payload)
+
+    def _mail_curators_on_jira_error(self, action, error, jira_key=None, submission=None, payload=None):
+        subject = "JIRA - {} error".format(action)
+        if jira_key:
+            subject = "{} for {}".format(subject, jira_key)
+
+        message_parts = [
+            "A Jira action failed.",
+            "",
+            "Action: {}".format(action),
+            "Jira ticket/key: {}".format(jira_key if jira_key else "not provided"),
+            "",
+            self._format_submission_context(submission),
+            "",
+            self._format_jira_error(error),
+        ]
+        payload_context = self._format_payload_context(payload)
+        if payload_context:
+            message_parts.extend(["", payload_context])
+
+        mail_curators(subject=subject, message="\n".join(message_parts))
+
     # generic methods ----------------------------------------------------------
 
     # https://jira.readthedocs.io/en/master/examples.html#issues
-    def create_issue(self, fields={}):
+    def create_issue(self, fields={}, submission=None):
         log_arguments = {
             "method": RequestLog.POST,
             "data": {"fields": fields},
@@ -90,7 +142,12 @@ class JiraClient(object):
         except JIRAError as e:
             logger.warning("JiraClient | create_issue | JIRAError {0} | {1}".format(e, e.text))
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_curators(subject="JIRA - create issue error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="create issue",
+                error=e,
+                submission=submission,
+                payload=json.dumps(fields, default=str),
+            )
             self.issue = None
             self.error = e
 
@@ -114,7 +171,7 @@ class JiraClient(object):
             self.error = e
         RequestLog.objects.create_jira_log(log_arguments)
 
-    def update_issue(self, key, fields, notify=False):
+    def update_issue(self, key, fields, notify=False, submission=None):
         self.get_issue(key)
         log_arguments = {
             "method": RequestLog.PUT,
@@ -129,11 +186,17 @@ class JiraClient(object):
         except JIRAError as e:
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_curators(subject="JIRA - update issue error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="update issue",
+                error=e,
+                jira_key=key,
+                submission=submission,
+                payload=json.dumps(fields, default=str),
+            )
         RequestLog.objects.create_jira_log(log_arguments)
 
     # https://jira.readthedocs.io/en/master/examples.html#comments
-    def add_comment(self, key_or_issue, text, is_internal=True):
+    def add_comment(self, key_or_issue, text, is_internal=True, submission=None):
         log_arguments = {
             "method": RequestLog.POST,
             "data": {
@@ -152,7 +215,13 @@ class JiraClient(object):
             logger.warning("JiraClient | add_comment | JIRAError {0} | {1}".format(e, e.text))
             self.comment = None
             self.error = e
-            mail_curators(subject="JIRA - add comment error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="add comment",
+                error=e,
+                jira_key=key_or_issue,
+                submission=submission,
+                payload=text,
+            )
             log_arguments["request_details"]["error"] = "{}".format(e)
         RequestLog.objects.create_jira_log(log_arguments)
 
@@ -177,7 +246,7 @@ class JiraClient(object):
 
     # https://jira.readthedocs.io/en/master/examples.html#attachments
     # file-like, string-path, stringIO (requires filename)
-    def add_attachment(self, key, file, file_name=None):
+    def add_attachment(self, key, file, file_name=None, submission=None):
         self.get_issue(key)
         return_value = None
         log_arguments = {
@@ -200,11 +269,17 @@ class JiraClient(object):
             logger.warning("JiraClient | add_attachment | JIRAError {0} | {1}".format(e, e.text))
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_curators(subject="JIRA - add attachment error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="add attachment",
+                error=e,
+                jira_key=key,
+                submission=submission,
+                payload="file={}, file_name={}".format(file, file_name),
+            )
         RequestLog.objects.create_jira_log(log_arguments)
         return return_value
 
-    def delete_attachment(self, id):
+    def delete_attachment(self, id, submission=None):
         log_arguments = {
             "method": RequestLog.DELETE,
             "data": {"id": id},
@@ -219,11 +294,16 @@ class JiraClient(object):
         except JIRAError as e:
             logger.warning("JiraClient | delete_attachment | JIRAError {0} | {1}".format(e, e.text))
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_curators(subject="JIRA - delete attachment error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="delete attachment",
+                error=e,
+                submission=submission,
+                payload="attachment id: {}".format(id),
+            )
             self.error = e
         RequestLog.objects.create_jira_log(log_arguments)
 
-    def add_remote_link(self, key_or_issue, url="", title=""):
+    def add_remote_link(self, key_or_issue, url="", title="", submission=None):
         log_arguments = {
             "method": RequestLog.POST,
             "data": {"key_or_issue": key_or_issue, "url": url, "title": title},
@@ -238,7 +318,13 @@ class JiraClient(object):
             logger.warning("JiraClient | add_remote_link | JIRAError {0} | {1}".format(e, e.text))
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_curators(subject="JIRA - add remote link error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="add remote link",
+                error=e,
+                jira_key=key_or_issue,
+                submission=submission,
+                payload="url={}, title={}".format(url, title),
+            )
         RequestLog.objects.create_jira_log(log_arguments)
 
     # specialized methods ------------------------------------------------------
@@ -248,7 +334,8 @@ class JiraClient(object):
         self.create_issue(
             fields=gfbio_prepare_create_helpdesk_payload(
                 reporter=reporter, site_config=site_config, submission=submission
-            )
+            ),
+            submission=submission,
         )
         self.force_submission_issue(submission, site_config)
 
@@ -262,6 +349,7 @@ class JiraClient(object):
                 prepare_for_update=True,
             ),
             notify=True,
+            submission=submission,
         )
 
     def force_submission_issue(self, submission, site_config):
@@ -292,12 +380,15 @@ class JiraClient(object):
                     )
 
     def create_pangaea_issue(self, site_config, submission):
-        self.create_issue(fields=prepare_pangaea_issue_content(site_configuration=site_config, submission=submission))
+        self.create_issue(
+            fields=prepare_pangaea_issue_content(site_configuration=site_config, submission=submission),
+            submission=submission,
+        )
 
     def attach_to_pangaea_issue(self, key, submission):
         attachment = StringIO()
         attachment.write(get_csv_from_samples(submission=submission))
-        self.add_attachment(key=key, file=attachment, file_name="contextual_data.csv")
+        self.add_attachment(key=key, file=attachment, file_name="contextual_data.csv", submission=submission)
         attachment.close()
 
     def add_ena_study_link_to_issue(self, key_or_issue, accession_number):
@@ -351,7 +442,13 @@ class JiraClient(object):
             except JIRAError as e:
                 response = e
                 logger.info("JiraClient | cancel_issue | Error {}".format(e))
-                mail_curators(subject="JIRA - cancel issue error", message="Error: {}".format(e))
+                self._mail_curators_on_jira_error(
+                    action="cancel issue",
+                    error=e,
+                    jira_key=issue,
+                    submission=submission,
+                    payload="transition_id={}, admin={}".format(cancel_transition_id, admin),
+                )
 
             with transaction.atomic():
                 RequestLog.objects.create(
@@ -389,7 +486,13 @@ class JiraClient(object):
         except JIRAError as e:
             response = e
             logger.info("JiraClient | transition_issue | Error {}".format(e))
-            mail_curators(subject="JIRA - issue transition error", message="Error: {}".format(e))
+            self._mail_curators_on_jira_error(
+                action="issue transition",
+                error=e,
+                jira_key=issue,
+                submission=submission,
+                payload="transition_id={}, resolution={}".format(transition_id, resolution),
+            )
 
         with transaction.atomic():
             RequestLog.objects.create(

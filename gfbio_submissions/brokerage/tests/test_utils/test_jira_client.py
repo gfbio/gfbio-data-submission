@@ -7,7 +7,9 @@ from unittest import skip
 import jira
 import requests
 import responses
+from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
+from django.core import mail
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -23,6 +25,7 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_request_comment_response,
 )
 from gfbio_submissions.brokerage.utils.gfbio import gfbio_prepare_create_helpdesk_payload
+from gfbio_submissions.brokerage.utils.email_curators import CURATORS_GROUP_NAME
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
@@ -69,6 +72,9 @@ class TestJiraClient(TestCase):
         )
         submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True)
+        curator = User.objects.create_user(username="curator", email="curator@example.org", password="password")
+        curators_group, _ = Group.objects.get_or_create(name=CURATORS_GROUP_NAME)
+        curators_group.user_set.add(curator)
         cls.issue_json = _get_jira_issue_response()
         cls.pangaea_issue_json = _get_pangaea_ticket_response()
         cls.minimal_issue_fields = {
@@ -174,9 +180,18 @@ class TestJiraClient(TestCase):
     def test_create_issue_client_error(self):
         self._add_create_ticket_responses(status_code=400, json_content={"error": "client"})
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        mail.outbox.clear()
         jira_client.create_issue(fields=self.minimal_issue_fields)
         self.assertIsNotNone(jira_client.error)
         self.assertIsNone(jira_client.issue)
+        self.assertEqual(1, len(mail.outbox))
+        self.assertIn("curator@example.org", mail.outbox[0].to)
+        self.assertIn("JIRA - create issue error", mail.outbox[0].subject)
+        self.assertIn("Action: create issue", mail.outbox[0].body)
+        self.assertIn("Jira ticket/key: not provided", mail.outbox[0].body)
+        self.assertIn("Submission: not provided", mail.outbox[0].body)
+        self.assertIn("Status code: 400", mail.outbox[0].body)
+        self.assertIn("sum41", mail.outbox[0].body)
 
     @responses.activate
     def test_create_issue_server_error(self):
@@ -258,9 +273,21 @@ class TestJiraClient(TestCase):
             json={"errorMessages": ["Issue Does Not Exist"], "errors": {}},
             status=400,
         )
-        jira_client.add_comment("SAND-1661", "Bla")
+        submission = Submission.objects.first()
+        comment = "This submitter comment must not get lost."
+        mail.outbox.clear()
+        jira_client.add_comment("SAND-1661", comment, submission=submission)
         self.assertIsNotNone(jira_client.error)
         self.assertIsNone(jira_client.comment)
+        self.assertEqual(1, len(mail.outbox))
+        self.assertIn("curator@example.org", mail.outbox[0].to)
+        self.assertIn("JIRA - add comment error for SAND-1661", mail.outbox[0].subject)
+        self.assertIn("Action: add comment", mail.outbox[0].body)
+        self.assertIn("Jira ticket/key: SAND-1661", mail.outbox[0].body)
+        self.assertIn("database id: {}".format(submission.pk), mail.outbox[0].body)
+        self.assertIn("broker_submission_id: {}".format(submission.broker_submission_id), mail.outbox[0].body)
+        self.assertIn("Status code: 400", mail.outbox[0].body)
+        self.assertIn(comment, mail.outbox[0].body)
 
     @responses.activate
     def test_add_comment_server_error(self):
