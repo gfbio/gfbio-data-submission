@@ -1,16 +1,19 @@
 import csv
 import difflib
 import logging
+import re
 
 from config.celery_app import app
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 from gfbio_submissions.brokerage.tasks.metadata_tasks.data.allowed_location_names import allowed_location_names
 from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
+from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import INSDC_MISSING_VALUE_PATTERN
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 
 
 logger = logging.getLogger(__name__)
+INSDC_MISSING_VALUE_REGEX = re.compile(INSDC_MISSING_VALUE_PATTERN)
 
 
 @app.task(
@@ -64,7 +67,15 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                     if ":" in location_name:
                         sanitized_location_name = location_name.split(":")[0].strip()
                     
-                    if not sanitized_location_name in allowed_location_names and sanitized_location_name != "not applicable" and sanitized_location_name != "missing":
+                    is_allowed_missing_value = bool(
+                        INSDC_MISSING_VALUE_REGEX.fullmatch(
+                            sanitized_location_name.strip().lower()
+                        )
+                    )
+                    if (
+                        sanitized_location_name not in allowed_location_names
+                        and not is_allowed_missing_value
+                    ):
                         validation_task_report.status = "ERROR"
                         help_text = f"Please double check the geografic location {sanitized_location_name}."
                         close_names = difflib.get_close_matches(location_name, allowed_location_names)

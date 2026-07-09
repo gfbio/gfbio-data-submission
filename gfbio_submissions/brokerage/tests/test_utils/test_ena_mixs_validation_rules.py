@@ -58,6 +58,12 @@ class TestEnaMixsValidationRules(SimpleTestCase):
     def test_depth_pattern_accepts_numeric_and_missing_terms(self):
         depth_rule = get_format_rule("depth")
         self.assertTrue(format_rule_value_matches(depth_rule, "12.5"))
+        self.assertTrue(format_rule_value_matches(depth_rule, "0.02"))
+        self.assertTrue(format_rule_value_matches(depth_rule, "0.5"))
+        self.assertTrue(format_rule_value_matches(depth_rule, "0.1-0.2"))
+        self.assertTrue(format_rule_value_matches(depth_rule, "0.1 - 0.2"))
+        self.assertTrue(format_rule_value_matches(depth_rule, "0.1- 0.2"))
+        self.assertTrue(format_rule_value_matches(depth_rule, "0.1 -0.2"))
         self.assertTrue(format_rule_value_matches(depth_rule, "not applicable"))
         self.assertFalse(format_rule_value_matches(depth_rule, "12.5 m"))
         self.assertFalse(format_rule_value_matches(depth_rule, "500mm"))
