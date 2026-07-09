@@ -157,7 +157,8 @@ def check_meta_referenced_files_in_cloud_uploads_task(self, previous_task_result
         upload_report,
     )
 
-    send_completeness_report_to_jira(submission, site_configuration, upload_report)
+    jira_message = generate_jira_message(upload_report)
+    send_completeness_report_to_jira(submission, site_configuration, jira_message)
     return upload_report
 
 
@@ -217,6 +218,7 @@ def gather_uploads_in_bad_state(submission):
         if key not in uploads_in_bad_state:
             uploads_in_bad_state[key] = []
         uploads_in_bad_state[key].append(file_name)
+    return uploads_in_bad_state
 
 
 def group_uploads_by_status(uploads):
@@ -230,7 +232,7 @@ def group_uploads_by_status(uploads):
     return uploads_in_bad_state
 
 
-def send_completeness_report_to_jira(submission, site_configuration, result):
+def generate_jira_message(result):
     jira_message = f"Check for referenced files in csv-meta-file was executed for '{result['meta_cloud_upload_name']}' "
     if result['missing'] or result['duplicates_in_csv'] or result['found_with_problems']:
         jira_message = "{color:#de350b}" + jira_message + "with errors! {color}"
@@ -261,7 +263,10 @@ def send_completeness_report_to_jira(submission, site_configuration, result):
     if result['uploads_in_bad_state']:
         jira_message += "h4. Some files ran into problems while being processed (please check them and set their state to DELETED if no loger of concern):\n"
         jira_message += append_problems_grouped(result['uploads_in_bad_state'])
+    return jira_message
 
+
+def send_completeness_report_to_jira(submission, site_configuration, jira_message):
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
     reference = submission.get_primary_helpdesk_reference()
     jira_client.add_comment(key_or_issue=reference.reference_key, text=jira_message, is_internal=True)
