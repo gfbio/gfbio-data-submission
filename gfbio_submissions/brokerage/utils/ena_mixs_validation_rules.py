@@ -73,6 +73,12 @@ def _ebi_numeric_pattern(*, signed: bool = False) -> str:
     return f"{numeric_pattern}|({INSDC_MISSING_VALUE_PATTERN})"
 
 
+def _ebi_numeric_with_range_pattern() -> str:
+    numeric_pattern = EBI_UNSIGNED_NUMERIC_PATTERN
+    numeric_range_pattern = f"{numeric_pattern}\\s*-\\s*{numeric_pattern}"
+    return f"{numeric_pattern}|({numeric_range_pattern})|({INSDC_MISSING_VALUE_PATTERN})"
+
+
 def _ebi_decimal_degrees_pattern() -> str:
     return f"{EBI_DECIMAL_DEGREES_PATTERN}|{INSDC_MISSING_VALUE_PATTERN}"
 
@@ -320,7 +326,7 @@ def _validation_rule(
 MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
     _validation_rule(
         1, "depth", "format",
-        pattern=_ebi_numeric_pattern(),
+        pattern=_ebi_numeric_with_range_pattern(),
         environmental_packages=MIXS_PACKAGE_MANDATORY_FIELDS["depth"],
         unit="m",
         description=(

@@ -52,6 +52,12 @@ class TestEnaMixsValidation(TestCase):
             )
         )
 
+    def test_depth_range_value_is_accepted(self):
+        row = VALID_WATER_ROW.replace("12.5", "0.1-0.2")
+        csv_content = f"{VALID_HEADER}\n{row}\n"
+        findings = self._validate(csv_content)
+        self.assertFalse(any(f["column_name"] == "depth" for f in findings))
+
     def test_invalid_latitude_is_reported(self):
         row = VALID_WATER_ROW.replace("52.5", "not-a-coordinate")
         csv_content = f"{VALID_HEADER}\n{row}\n"
