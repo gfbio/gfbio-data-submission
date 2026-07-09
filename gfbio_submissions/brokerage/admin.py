@@ -422,12 +422,18 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     from celery import chord
     from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
-    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ]
+    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ".fq.gz", ".fq.bz2", ".fastq.bz2", ".fq.bz", ".fastq.bz",  ]
 
     for obj in queryset:
         submission_cloud_upload_ids = [
             upload.pk for upload in obj.submissioncloudupload_set.all()
-            if upload.status not in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM, SubmissionCloudUpload.STATUS_DELETED] and any(upload.file_upload.original_filename.lower().endswith(ext) for ext in allowed_types)
+            if upload.status in [
+                    SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+                    SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+                    SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
+                    SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+                ]
+                and any(upload.file_upload.original_filename.lower().endswith(ext) for ext in allowed_types)
         ]
         if submission_cloud_upload_ids:
             site_config = _safe_get_site_config(obj)
@@ -836,6 +842,15 @@ def run_validate_metadata_cloud_uploads(modeladmin, request, queryset):
 run_validate_metadata_cloud_uploads.short_description = "Run validation for molecular metadata"
 
 
+def set_cloud_uploads_as_deleted(modeladmin, request, queryset):
+    for scu in queryset:
+        scu.status = SubmissionCloudUpload.STATUS_DELETED
+    SubmissionCloudUpload.objects.bulk_update(queryset, ["status"])
+
+
+set_cloud_uploads_as_deleted.short_description = "Set the state of the selected cloud-uploads to deleted"
+
+
 def download_submission_upload_file(modeladmin, request, queryset):
     for obj in queryset:
         f = obj.file
@@ -916,8 +931,8 @@ download_submission_cloud_upload_file.short_description = "Download the file of 
 
 
 class SubmissionCloudUploadAdmin(ReverseModelAdmin):
-    list_display = ("__str__", "meta_data", "user", "attachment_id", "attach_to_ticket")
-    list_filter = ("user", "meta_data", "attach_to_ticket")
+    list_display = ("__str__", "meta_data", "user", "status")
+    list_filter = ("status", "file_upload__status", "user", "meta_data", "attach_to_ticket")
     search_fields = ["submission__broker_submission_id", "submission__additionalreference__reference_key"]
     inline_type = "stacked"
     date_hierarchy = "created"  # date drill down
@@ -930,6 +945,7 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
         run_validate_metadata_cloud_uploads,
+        set_cloud_uploads_as_deleted
     ]
 
     def save_model(self, request, obj, form, change):

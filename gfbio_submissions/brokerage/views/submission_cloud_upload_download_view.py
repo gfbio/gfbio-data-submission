@@ -1,10 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
-from django.urls import reverse
 import requests
 
 from django.conf import settings
 from django.views import View
-from django.http import HttpResponseRedirect, HttpResponseForbidden, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, StreamingHttpResponse
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from zipstream import ZipStream
@@ -35,6 +34,8 @@ class SubmissionCloudGetDownloadLinkView(View):
         try:
             if str(cloud_upload.submission.broker_submission_id) != broker_submission_id:
                 return HttpResponseForbidden("The requested file is not part of the submission the the file is requested for.")
+            if not file_upload or file_upload.status != "COMPLETED":
+                return HttpResponse("The requested file was not completely uploaded in the first place.", status=409)
             response = StreamingHttpResponse(get_file_stream(file_upload.uploaded_file.url), content_type='application/data')
             response['Content-Disposition'] = f'attachment; filename={file_upload.original_filename}'
             return response
@@ -43,9 +44,16 @@ class SubmissionCloudGetDownloadLinkView(View):
 
 
 class SubmissionCloudZipAllFilesAndDownload(View):
-
     def get(self, request, broker_submission_id):
         files = SubmissionCloudUpload.objects.filter(submission__broker_submission_id=broker_submission_id).all()
+
+        if files.exclude(status=SubmissionCloudUpload.STATUS_DELETED).filter(file_upload__isnull=True).exists():
+            return HttpResponse("There are empty files with no upload. Please delete these files first.", status=409)
+
+        if files.exclude(status=SubmissionCloudUpload.STATUS_DELETED).exclude(file_upload__status="COMPLETED").exists():
+            error_msg = "Some files were not completely uploaded in the first place. Please delete or reupload the files: "
+            error_msg += ", ".join([file.file_upload.original_filename for file in files.exclude(status=SubmissionCloudUpload.STATUS_DELETED).exclude(file_upload__status="COMPLETED")])
+            return HttpResponse(error_msg, status=409)
 
         filename = f"submission_{broker_submission_id}.zip"
         zip_chunk_size = settings.MAX_USER_DOWNLOAD_SPEED
@@ -54,6 +62,7 @@ class SubmissionCloudZipAllFilesAndDownload(View):
         response = StreamingHttpResponse(zf.stream(), content_type='application/zip')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
+
     
 class SubmissionCloudZipAllFilesAndDownloadRedirect(View):
     def get(self, request, broker_submission_id):

@@ -2,7 +2,7 @@
 
 from unittest.mock import PropertyMock, patch
 
-from dt_upload.models import FileUploadRequest
+from dt_upload.models import FileUploadRequest, MultiPartUpload
 
 from ...models.submission import Submission
 from ...models.submission_cloud_upload import SubmissionCloudUpload
@@ -33,14 +33,19 @@ class TestCheckMetaReferencedFilesInCloudUploads(TestTasks):
             original_filename=filename,
             file_key=f"{filename}-key",
             file_type="fastq" if not meta else "csv",
-            status="PENDING",
             user=submission.user,
         )
+        MultiPartUpload.objects.create(
+            file_upload_request=fur
+        )
+        fur.status = "COMPLETED"
+        fur.save()
         scu = SubmissionCloudUpload.objects.create(
             submission=submission,
             attach_to_ticket=False,
             meta_data=meta,
             file_upload=fur,
+            status=SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
         )
         return scu
 
@@ -84,10 +89,10 @@ class TestCheckMetaReferencedFilesInCloudUploads(TestTasks):
         self.assertIn("found", result)
         self.assertIn("missing", result)
         self.assertIn("extra_uploads", result)
-        self.assertEqual(sorted(result["found"]), ["File3.forward.fastq.gz", "File3.reverse.fastq.gz"])
+        self.assertEqual(sorted([res['name'] for res in result["found"]]), ["File3.forward.fastq.gz", "File3.reverse.fastq.gz"])
         self.assertEqual(result["missing"], [])
         # meta.csv must not appear as extra upload
-        self.assertEqual(result["extra_uploads"], ["unreferenced.fastq.gz"])
+        self.assertEqual([res['name'] for res in result["extra_uploads"]], ["unreferenced.fastq.gz"])
 
     @patch(
         "gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads.requests.get",
