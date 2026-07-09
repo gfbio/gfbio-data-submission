@@ -1,12 +1,13 @@
 import logging
+from django.db import transaction
 from django.utils import timezone
-from ...configuration.settings import JIRA_MESSAGES_MAX_DELAY, JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE
-
 from config.celery_app import app
+
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
 from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import get_any_submission_and_site_configuration, jira_error_auto_retry
+from ...configuration.settings import JIRA_MESSAGES_MAX_DELAY, JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE
 from ...tasks.submission_task import SubmissionTask
 
 logger = logging.getLogger(__name__)
@@ -22,15 +23,18 @@ def send_message_to_jira_task(self, previous_result, submission_id):
         return True, f"Message already in state {message.status}."
     
     max_delay = timezone.now() - timezone.timedelta(seconds=JIRA_MESSAGES_MAX_DELAY)
-    query = JiraQueueMessage.objects.filter(submission_id=submission_id, status=JiraQueueMessage.STATUS_NOT_SENT, type=message.type)
-    if not query.filter(created__lte=max_delay).exists() and query.count() < JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE:
-        if query.filter(created__gt=message.created).exclude(pk=message.pk).exists():
-            return True, f"Newer Message found."
-    
-    messages_to_send = query.all()
-    for msg in messages_to_send:
-        msg.status = JiraQueueMessage.STATUS_PICKED_UP
-    JiraQueueMessage.objects.bulk_update(messages_to_send, ["status"])
+
+    messages_to_send = []
+    with transaction.atomic():
+        query = JiraQueueMessage.objects.filter(submission_id=submission_id, status=JiraQueueMessage.STATUS_NOT_SENT, type=message.type)
+        if not query.filter(created__lte=max_delay).exists() and query.count() < JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE:
+            if query.filter(created__gt=message.created).exclude(pk=message.pk).exists():
+                return True, f"Newer Message found."
+        
+        messages_to_send = query.all()
+        for msg in messages_to_send:
+            msg.status = JiraQueueMessage.STATUS_PICKED_UP
+        JiraQueueMessage.objects.bulk_update(messages_to_send, ["status"])
     
     jira_message = "Missing Message"
     if message.type == JiraQueueMessage.TYPE_CHECKSUM_CALCULATED:
@@ -54,6 +58,9 @@ def send_message_to_jira_task(self, previous_result, submission_id):
             JiraQueueMessage.objects.bulk_update(messages_to_send, ["status"])
             return True, f"Message was sent: {jira_message}"
         else:
+            for msg in messages_to_send:
+                msg.status = JiraQueueMessage.STATUS_NOT_SENT
+            JiraQueueMessage.objects.bulk_update(messages_to_send, ["status"])
             return jira_sending_result
 
 
@@ -69,12 +76,12 @@ def create_checksum_message(messages_to_send):
                     f"- Missmatch for {msg.data['file_name']}: "
                     f"provided: {msg.data['provided_checksum']}"
                     f" | calculated: {msg.data['calculated_checksum']}"
-                ) for msg in messages_to_send
+                ) for msg in bad_checksum_messages
             ]
         )
 
     if len(nice_checksum_messages) > 0:
         jira_message += "h4. Files where the Checksums were matches:\n"
-        jira_message += ", ".join([msg.data['file_name'] for msg in messages_to_send])
+        jira_message += ", ".join([msg.data['file_name'] for msg in nice_checksum_messages])
 
     return jira_message
