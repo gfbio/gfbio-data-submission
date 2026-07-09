@@ -165,3 +165,16 @@ class TestValidateMetadataFileCountriesTask(TestTasks):
         task_report = report.validationtaskreport_set.get()
         self.assertEqual("ERROR", task_report.status)
         self.assertEqual(2, task_report.validationfinding_set.count())
+
+    @patch(_OPENER_PATH)
+    def test_insdc_missing_term_not_collected_is_allowed(self, mock_opener):
+        report = self._create_report()
+        mock_opener.return_value = _FakeOpener(
+            HEADER + "The sample1;123;Belly Button;not collected\n"
+        )
+
+        self._run(report)
+
+        task_report = report.validationtaskreport_set.get()
+        self.assertEqual("SUCCESS", task_report.status)
+        self.assertEqual(0, task_report.validationfinding_set.count())
