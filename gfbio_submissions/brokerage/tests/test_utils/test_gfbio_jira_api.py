@@ -12,8 +12,6 @@ from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import JIRA_ATTACHMENT_SUB_URL, JIRA_ISSUE_URL
 from gfbio_submissions.brokerage.tests.test_utils.test_helpdesk_ticket_methods import TestHelpDeskTicketMethods
-from gfbio_submissions.brokerage.utils.pangaea import get_pangaea_login_token
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 
 class TestGFBioJiraApi(TestCase):
@@ -363,33 +361,6 @@ class TestGFBioJiraApi(TestCase):
         #     print('text ', e.text)
         #     print('response ', e.response)
         #     print('response. status_code ', e.response.status_code)
-
-    @skip("Test against pangaea servers")
-    def test_pangaea_jira(self):
-        rc = ResourceCredential.objects.create(
-            title="t",
-            url="https://ws.pangaea.de/ws/services/PanLogin",
-            authentication_string="-",
-            username="gfbio-broker",
-            password="",
-            comment="-",
-        )
-        login_token = get_pangaea_login_token(rc)
-        cookies = dict(PanLoginID=login_token)
-        print("COOKIES ", cookies)
-
-        options = {
-            "server": "https://issues.pangaea.de",
-            "cookies": cookies,
-        }
-        jira = JIRA(options)
-        print(jira)
-        print("projects", jira.projects)
-        # PDI-21091
-        issues = jira.search_issues('assignee="brokeragent"')
-        print("issues ", issues)
-        issue = jira.issue("PDI-21091")
-        print("issue ", issue.fields.summary)
 
     @skip("Test against helpdesk server")
     def test_python_jira_create(self):

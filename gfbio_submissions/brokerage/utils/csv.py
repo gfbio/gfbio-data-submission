@@ -530,19 +530,6 @@ def parse_molecular_csv_with_encoding_detection(path, submission):
         return {"samples": [], "experiments": []}
 
 
-# search for specimen meta data for ATAX submission
-def search_for_specimen_meta_data(meta_data_files):
-    specimen_cols = ["specimen identifier", "basis of record", "scientific name"]
-    for meta_data_file in meta_data_files:
-        csv_format = detect_csv_format(meta_data_file.file.path)
-        with open(meta_data_file.file.path, "r", encoding=csv_format.encoding, newline="") as file:
-            line = file.readline()
-            splitted = line.replace('"', "").lower().split(csv_format.delimiter)
-            if all(col in splitted for col in specimen_cols):
-                return meta_data_file
-    return None
-
-
 def check_submittable_taxon_id(submission):
     """Check if the data in the submission meta file is submittable
 
