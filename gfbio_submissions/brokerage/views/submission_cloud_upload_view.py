@@ -4,6 +4,7 @@ import math
 import os
 from uuid import uuid4
 
+from celery import chain
 from django.db import transaction
 from dt_upload.models import backend_based_upload_models, MultiPartUpload
 from dt_upload.serializers import backend_based_upload_serializers
@@ -14,12 +15,13 @@ from rest_framework import mixins, generics, permissions, status, parsers, seria
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
+from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import send_message_to_jira_task
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.brokerage.utils.cloud_upload_multipart import restart_multipart_on_file_upload_request
 from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import \
     verify_file_upload_request_checksum_in_bucket_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
-from ..configuration.settings import ATAX, SUBMISSION_DELAY, ENA
+from ..configuration.settings import ATAX, SUBMISSION_DELAY, ENA, JIRA_MESSAGES_WAIT_DELAY
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
@@ -218,13 +220,7 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
             submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED
             submission_cloud_upload.save()
             submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], self.request.user.id)
-            verify_file_upload_request_checksum_in_bucket_task.apply_async(
-                kwargs={
-                    "submission_id": mpu.file_upload_request.submissioncloudupload.submission.pk,
-                    "submission_cloud_upload_id": mpu.file_upload_request.submissioncloudupload.pk
-                },
-                countdown=SUBMISSION_DELAY,
-            )
+            add_verify_checksum_task(mpu.file_upload_request.submissioncloudupload)
             if hasattr(mpu.file_upload_request, "submissioncloudupload"):
                 mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
 
@@ -491,13 +487,7 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
             [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}],
             self.request.user.id
         )
-        verify_file_upload_request_checksum_in_bucket_task.apply_async(
-            kwargs={
-                "submission_id": submission_cloud_upload.submission.pk,
-                "submission_cloud_upload_id": submission_cloud_upload.pk
-            },
-            countdown=SUBMISSION_DELAY,
-        )
+        add_verify_checksum_task(submission_cloud_upload)
         submission_cloud_upload.trigger_attach_to_issue()
 
         response_data = {
@@ -734,3 +724,18 @@ class SubmissionCloudUploadCollectionView(SubmissionCloudUploadSingleCallView):
         )
         serializer = SubmissionCloudUploadSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def add_verify_checksum_task(submission_cloud_upload):
+    verification_chain = chain(
+        verify_file_upload_request_checksum_in_bucket_task.s(
+            submission_id=submission_cloud_upload.submission.pk,
+            submission_cloud_upload_id= submission_cloud_upload.pk,
+        ).set(countdown=SUBMISSION_DELAY) 
+        | 
+        send_message_to_jira_task.s(
+            submission_id = submission_cloud_upload.submission.pk
+        ).set(countdown=JIRA_MESSAGES_WAIT_DELAY)
+    )
+
+    verification_chain.apply_async()
