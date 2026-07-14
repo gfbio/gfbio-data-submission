@@ -206,15 +206,18 @@ body {
   }
 
   .info-box .list-group-flush {
+    .fa-archive::before, .fa-tags::before {
+      font-size: 1.25rem;
+    }
+    
+    .fa-bookmark-o {
+      padding-right: 0.65rem !important;
+    }
 
     > li.list-group-item {
       padding: 0.375rem 0;
       border: none;
       color: #495057;
-    }
-
-    .info-box-header {
-      padding: 0.75rem 1.25rem 0 1.25rem
     }
 
     .data-field {
