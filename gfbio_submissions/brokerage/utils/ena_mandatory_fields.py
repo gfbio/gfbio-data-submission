@@ -253,15 +253,18 @@ def validate_ena_mandatory_fields(csv_file):
             row_list = ", ".join(str(row_number) for row_number in row_numbers)
             findings.append(
                 {
-                    "status": "ERROR",
+                    "status": "INFO",
                     "row": row_numbers[0],
                     "column": _column_index(fieldnames, "sample_title"),
                     "column_name": "sample_title",
                     "message": (
-                        f"Duplicate sample_title '{title}' in rows {row_list}. "
-                        "sample_title must be unique across all rows."
+                        f"The sample_title '{title}' was used more than once (lines: {row_list}). "
+                        "Only one sample with the metadata from the first (topmost) occurrence in the metadata file will be created. "
+                        "The sequence data from all subsequent occurrences will be linked to the same sample."
                     ),
-                    "help_text": FIELD_HELP_TEXT["sample_title"],
+                    "help_text": (
+                        "Please ensure that you actually want to group these samples or choose unique sample titles to prevent the clustering."
+                    ),
                 }
             )
 

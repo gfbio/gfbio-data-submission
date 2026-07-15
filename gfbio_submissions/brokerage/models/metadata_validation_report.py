@@ -40,6 +40,7 @@ class ValidationTaskReport(TimeStampedModel):
 
 class ValidationFinding(models.Model):
     STATUSES = (
+        ("INFO", "INFO"),
         ("WARNING", "WARNING"),
         ("ERROR", "ERROR")
     )
