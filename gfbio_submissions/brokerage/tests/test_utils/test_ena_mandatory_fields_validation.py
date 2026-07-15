@@ -82,7 +82,8 @@ class TestEnaMandatoryFieldsValidation(TestCase):
         findings = self._validate(csv_content)
         duplicate_findings = [f for f in findings if f["column_name"] == "sample_title"]
         self.assertEqual(1, len(duplicate_findings))
-        self.assertIn("rows 2, 3", duplicate_findings[0]["message"])
+        self.assertIn("(lines: 2, 3)", duplicate_findings[0]["message"])
+        self.assertIn("INFO", duplicate_findings[0]["status"])
 
     def test_paired_layout_requires_paired_header_columns(self):
         header = VALID_HEADER.replace("reverse_read_file_checksum;", "")
