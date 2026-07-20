@@ -28,6 +28,7 @@ class ValidationTaskReport(TimeStampedModel):
     STATUSES = (
         ("PENDING", "PENDING"),
         ("SUCCESS", "SUCCESS"),
+        ("INFO", "INFO"),
         ("WARNING", "WARNING"),
         ("ERROR", "ERROR")
     )
@@ -37,6 +38,23 @@ class ValidationTaskReport(TimeStampedModel):
 
     def __str__(self):
         return f"Report {self.task_name}, status {self.status}"
+
+    def set_status_based_on_findings(self):
+        findings = self.validationfinding_set.all()
+        
+        if not findings.exists():
+            self.status = "SUCCESS"
+            return
+        
+        if findings.filter(status="ERROR").exists():
+            self.status = "ERROR"
+        elif findings.filter(status="WARNING").exists():
+            self.status = "WARNING"
+        elif findings.filter(status="INFO").exists():
+            self.status = "INFO"
+        else:
+            self.status = "SUCCESS"
+
 
 class ValidationFinding(models.Model):
     STATUSES = (
@@ -49,6 +67,7 @@ class ValidationFinding(models.Model):
     row = models.IntegerField(null=True) # row 1 == header-row
     column = models.IntegerField(null=True) #1-based
     column_name = models.CharField(max_length=255, null=True)
+    finding_type = models.CharField(max_length=255, null=False, default="unclassified")
     message = models.TextField()
     help_text = models.TextField()
 

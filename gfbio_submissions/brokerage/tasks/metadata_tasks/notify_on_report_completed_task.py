@@ -28,6 +28,7 @@ def notify_on_report_completed_task(self, previous_task_result=None, submission_
     report = MetadataValidationReport.objects.select_related(
         "submission",
         "upload_file__file_upload",
+        "validationtaskreport_set__validationfinding_set"
     ).get(pk=report_id)
 
     if not should_post_metadata_validation_jira_comment(report):

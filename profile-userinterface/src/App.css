@@ -126,7 +126,7 @@ body {
   margin-top: 3rem;
 }
 
-.submission-form {
+.submission-form, .validation-report-container {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
     --input-bd-focus: #a6c97e !important;
@@ -244,6 +244,13 @@ body {
     }
 
     i {
+      padding-right: 0.5rem;
+      font-size: 1.5rem;
+      vertical-align: middle;
+    }
+  }
+
+  .info-title {  i {
       padding-right: 0.5rem;
       font-size: 1.5rem;
       vertical-align: middle;
@@ -994,4 +1001,67 @@ button.button-inverted {
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 12px;
+}
+
+.status-success {
+    color: #81B248;
+}
+
+.status-error {
+    color: #dc3444;
+}
+
+.status-warning {
+    color: #ff8362;
+}
+
+.status-info {
+    color: #3cace4;
+}
+
+.validation-report-container {
+    .validation-report-container {
+        min-height: calc(100vh - 80px);
+        padding: 20px 0;
+    }
+
+    .summary-box {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+
+    .summary-count {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .summary-label {
+        font-size: 1.25rem;
+    }
+
+    .task-name {
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .finding-group-name {
+        font-weight: 500;
+        font-size: 1.1rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+
+    .collapsible-toggler {
+        cursor: pointer;
+    }
+        
+    .collapsible-toggler:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+    }
 }

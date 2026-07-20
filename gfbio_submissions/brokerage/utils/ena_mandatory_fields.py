@@ -107,6 +107,7 @@ def validate_ena_mandatory_fields(csv_file):
                 "row": 1,
                 "column": None,
                 "column_name": None,
+                "finding_type": "Header-Error",
                 "message": "Metadata file is empty or has no header row.",
                 "help_text": "Provide a CSV file with a header row based on the molecular submission template.",
             }
@@ -127,6 +128,7 @@ def validate_ena_mandatory_fields(csv_file):
                 "row": 1,
                 "column": None,
                 "column_name": None,
+                "finding_type": "Header-Error",
                 "message": "Metadata file has no parseable header row.",
                 "help_text": "Provide a CSV file with a header row based on the molecular submission template.",
             }
@@ -146,6 +148,7 @@ def validate_ena_mandatory_fields(csv_file):
                     "row": 1,
                     "column": None,
                     "column_name": field_name,
+                    "finding_type": "Missing Required Column",
                     "message": f"Required column '{field_name}' is missing from the metadata file header.",
                     "help_text": FIELD_HELP_TEXT.get(field_name, ""),
                 }
@@ -162,6 +165,7 @@ def validate_ena_mandatory_fields(csv_file):
                         "row": 1,
                         "column": None,
                         "column_name": field_name,
+                        "finding_type": "Missing Required Column",
                         "message": (
                             f"Required column '{field_name}' is missing from the metadata file header "
                             "for paired-end library_layout."
@@ -184,8 +188,9 @@ def validate_ena_mandatory_fields(csv_file):
                     "row": row_number,
                     "column": _column_index(fieldnames, "library_layout"),
                     "column_name": "library_layout",
+                    "finding_type": "Invalid Library Layout",
                     "message": (
-                        f"Invalid library_layout value '{row.get('library_layout')}' in row {row_number}. "
+                        f"Invalid library_layout value '{row.get('library_layout')}'. "
                         'Allowed values are "single" or "paired".'
                     ),
                     "help_text": FIELD_HELP_TEXT["library_layout"],
@@ -202,7 +207,8 @@ def validate_ena_mandatory_fields(csv_file):
                         "row": row_number,
                         "column": _column_index(fieldnames, field_name),
                         "column_name": field_name,
-                        "message": f"Required field '{field_name}' is empty in row {row_number}.",
+                        "finding_type": "Missing Required Field Value",
+                        "message": f"Required field '{field_name}' is empty.",
                         "help_text": FIELD_HELP_TEXT.get(field_name, ""),
                     }
                 )
@@ -222,8 +228,9 @@ def validate_ena_mandatory_fields(csv_file):
                             "row": row_number,
                             "column": _column_index(fieldnames, field_name),
                             "column_name": field_name,
+                            "finding_type": "Missing Paired-End Field Value",
                             "message": (
-                                f"Required field '{field_name}' is empty in row {row_number} "
+                                f"Required field '{field_name}' is empty "
                                 "for paired-end library_layout."
                             ),
                             "help_text": FIELD_HELP_TEXT.get(field_name, ""),
@@ -240,9 +247,9 @@ def validate_ena_mandatory_fields(csv_file):
                             "row": row_number,
                             "column": _column_index(fieldnames, field_name),
                             "column_name": field_name,
+                            "finding_type": "Unexpected Paired-End Field Value",
                             "message": (
-                                f"Field '{field_name}' must be empty in row {row_number} "
-                                "when library_layout is single."
+                                f"Field '{field_name}' must be empty when library_layout is single."
                             ),
                             "help_text": FIELD_HELP_TEXT.get(field_name, ""),
                         }
@@ -257,6 +264,7 @@ def validate_ena_mandatory_fields(csv_file):
                     "row": row_numbers[0],
                     "column": _column_index(fieldnames, "sample_title"),
                     "column_name": "sample_title",
+                    "finding_type": "Duplicate Sample Title",
                     "message": (
                         f"The sample_title '{title}' was used more than once (lines: {row_list}). "
                         "Only one sample with the metadata from the first (topmost) occurrence in the metadata file will be created. "

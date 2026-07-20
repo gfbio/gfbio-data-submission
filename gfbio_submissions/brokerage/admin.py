@@ -732,6 +732,10 @@ class ValidationTaskReportInlineAdmin(admin.TabularInline):
 
 
 class MetadataValidationReportAdmin(admin.ModelAdmin):
+    autocomplete_fields = ["upload_file", "submission"]
+    list_per_page = 50
+    show_full_result_count = False
+
     inlines = (
         ValidationTaskReportInlineAdmin,
     )

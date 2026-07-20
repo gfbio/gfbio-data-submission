@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularSwaggerView
 from dt_upload.views import backend_based_upload_views
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
+from .views.metadata_validation_report_view import LatestMetadataValidationReportView, MetadataValidationReportView
 from .views.submission_cloud_upload_detail_view import SubmissionCloudUploadDetailView
 from .views.submission_cloud_upload_patch_view import SubmissionCloudUploadPatchView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadAbortView
@@ -118,6 +119,16 @@ urlpatterns = [
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$",
         view=SubmissionCommentView.as_view(),
         name="submission_comment",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validation-reports/latest/$",
+        view=LatestMetadataValidationReportView.as_view(),
+        name="metadata_validation_report_latest",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validation-reports/(?P<pk>[0-9]+)/$",
+        view=MetadataValidationReportView.as_view(),
+        name="metadata_validation_report",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/reports/$",

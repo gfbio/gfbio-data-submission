@@ -50,6 +50,11 @@ urlpatterns = [
         view=ProfileFrontendView.as_view(),
         name="update_submission_ui",
     ),
+    re_path(
+        route=r"^validations/(?P<submission_id>[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})/validation-report/(?P<report_id>[0-9]+)/$",
+        view=ProfileFrontendView.as_view(),
+        name="update_submission_ui",
+    ),
     path(
         route="list/",
         view=ProfileFrontendView.as_view(),
