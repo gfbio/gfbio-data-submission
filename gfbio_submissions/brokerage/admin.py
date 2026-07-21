@@ -676,18 +676,12 @@ class SubmissionAdmin(admin.ModelAdmin):
             if not status in cloud_upload_list:
                 cloud_upload_list[status] = []
 
-            # Build the upload name here because we use values() rows and not model instances anymore,
-            # this is equivalent to SubmissionCloudUpload.__str__().
-            file_upload_id = cloud_upload["file_upload_id"]
-            submission_id = cloud_upload["submission__broker_submission_id"]
-            file_name = cloud_upload["file_upload__original_filename"]
-            file_status = cloud_upload["file_upload__status"]
-            if file_upload_id is None:
-                upload_name = f"{submission_id}-NO-FILE-UPLOAD-REQUEST"
-            elif file_name:
-                upload_name = f"{file_name} / {submission_id}-{file_upload_id}-{file_status}"
-            else:
-                upload_name = f"{submission_id}-{file_upload_id}-{file_status}"
+            upload_name = SubmissionCloudUpload.format_display_name(
+                cloud_upload["submission__broker_submission_id"],
+                cloud_upload["file_upload_id"],
+                cloud_upload["file_upload__original_filename"],
+                cloud_upload["file_upload__status"],
+            )
 
             cloud_upload_list[status].append({
                 "pk": cloud_upload["pk"],
