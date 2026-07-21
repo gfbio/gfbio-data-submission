@@ -575,7 +575,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         return custom_urls + urls
     
     def submission_cloud_uploads_view(self, request, object_id, extra_context=None):
-        "Grouped one-page overview of a submission's cloud uploads for the admin dashboard."
+        "The 'history' admin view for this model."
         from django.contrib.admin.models import LogEntry
 
         model = self.model
