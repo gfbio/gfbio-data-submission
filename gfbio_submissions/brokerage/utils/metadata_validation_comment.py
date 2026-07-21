@@ -30,7 +30,7 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
 
 
     findings = []
-    for task_report in report.taskreport_set:
+    for task_report in report.validationtaskreport_set.all():
         findings.extend(list(task_report.validationfinding_set.all()))
 
     error_count = sum(1 for finding in findings if finding.status == "ERROR")

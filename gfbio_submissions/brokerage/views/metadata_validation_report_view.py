@@ -26,10 +26,6 @@ class MetadataValidationReportView(RetrieveAPIView):
         return MetadataValidationReport.objects.filter(
             submission__broker_submission_id=submission_id,
             submission__user=user
-        ).prefetch_related(
-            'submission',
-            'upload_file__file_upload',
-            'validationtaskreport_set__validationfinding_set'
         )
 
     def retrieve(self, request, *args, **kwargs):
@@ -45,9 +41,7 @@ class LatestMetadataValidationReportView(GenericAPIView):
 
 
     def get_latest_report_for_submission(self, submission_id):
-        current_meta_data_upload = SubmissionCloudUpload.objects.prefetch_related(
-            'file_upload',
-        ).filter(
+        current_meta_data_upload = SubmissionCloudUpload.objects.filter(
             submission__broker_submission_id=submission_id,
             meta_data=True,
         ).exclude(
@@ -61,10 +55,6 @@ class LatestMetadataValidationReportView(GenericAPIView):
             submission__broker_submission_id=submission_id,
             upload_file=current_meta_data_upload,
             file_md5_checksum=current_meta_data_upload.file_upload.md5,
-        ).prefetch_related(
-            'submission',
-            'upload_file__file_upload',
-            'validationtaskreport_set__validationfinding_set'
         ).order_by('-created').first()
 
 
