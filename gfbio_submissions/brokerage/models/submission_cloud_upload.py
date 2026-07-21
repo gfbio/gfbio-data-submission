@@ -114,8 +114,14 @@ class SubmissionCloudUpload(TimeStampedModel):
         )
 
     @staticmethod
-    def format_display_name(submission_broker_submission_id, file_upload_id, original_filename, file_upload_status):
-        if file_upload_id is None:
+    def format_display_name(
+        submission_broker_submission_id,
+        has_file_upload,
+        file_upload_id,
+        original_filename,
+        file_upload_status,
+    ):
+        if not has_file_upload:
             return f"{submission_broker_submission_id}-NO-FILE-UPLOAD-REQUEST"
         if original_filename:
             return (
@@ -128,6 +134,7 @@ class SubmissionCloudUpload(TimeStampedModel):
         file_upload = self.file_upload
         return self.format_display_name(
             self.submission.broker_submission_id,
+            file_upload is not None,
             file_upload.id if file_upload else None,
             file_upload.original_filename if file_upload else None,
             file_upload.status if file_upload else None,

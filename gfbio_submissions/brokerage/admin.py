@@ -678,6 +678,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 
             upload_name = SubmissionCloudUpload.format_display_name(
                 cloud_upload["submission__broker_submission_id"],
+                cloud_upload["file_upload_id"] is not None,
                 cloud_upload["file_upload_id"],
                 cloud_upload["file_upload__original_filename"],
                 cloud_upload["file_upload__status"],
