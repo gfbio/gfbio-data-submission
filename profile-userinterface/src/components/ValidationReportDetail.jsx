@@ -223,7 +223,7 @@ function renderFindingsList(taskReportFindingsGroups, findingsGroupKey) {
 }
 
 function renderReportInformation(report, goToSubmission) {
-    const findingGroups = Object.groupBy([...report.task_reports.map(tr => tr.findings)], f => f.status);
+    const findingGroups = Object.groupBy(report.task_reports.map(tr => tr.findings).flat(), f => f.status);
     const infoFindingsCount = findingGroups['INFO'] ? findingGroups['INFO'].length : 0;
     const warningFindingsCount = findingGroups['WARNING'] ? findingGroups['WARNING'].length : 0;
     const errorFindingsCount = findingGroups['ERROR'] ? findingGroups['ERROR'].length : 0;
