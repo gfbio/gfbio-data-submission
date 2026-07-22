@@ -47,11 +47,12 @@ services:
       && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/submission_profiles.json
       && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
 
-  downloads:
-    <<: *django
-    image: gfbio_submissions_production_downloads
-    container_name: gfbio-submission-downloads
-    command: /start-downloads
+# seems to cause confusion for traefik
+#  downloads:
+#    <<: *django
+#    image: gfbio_submissions_production_downloads
+#    container_name: gfbio-submission-downloads
+#    command: /start-downloads
 
   postgres:
     build:
