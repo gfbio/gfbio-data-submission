@@ -26,6 +26,7 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - /dev/fuse:/dev/fuse
     networks:
       - internalProxy
       - internal
@@ -88,6 +89,7 @@ services:
       - internal
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - /dev/fuse:/dev/fuse
     image: gfbio_submissions_production_celeryworker
     cap_add:
       - SYS_ADMIN
@@ -115,6 +117,7 @@ services:
       - internal
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - /dev/fuse:/dev/fuse
     image: gfbio_submissions_production_celery_transfer_worker
     cap_add:
       - SYS_ADMIN
@@ -146,6 +149,8 @@ services:
     privileged: true
     security_opt:
       - apparmor:unconfined
+    volumes:
+      - /dev/fuse:/dev/fuse
     logging:
       driver: syslog
       options:
