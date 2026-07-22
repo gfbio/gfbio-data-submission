@@ -17,6 +17,8 @@ services:
       - SYS_ADMIN
     devices:
       - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
     depends_on:
       - postgres
       - redis
@@ -92,6 +94,8 @@ services:
       - SYS_ADMIN
     devices:
       - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
     logging:
       driver: syslog
       options:
@@ -118,6 +122,8 @@ services:
       - SYS_ADMIN
     devices:
       - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
     logging:
       driver: syslog
       options:
@@ -142,6 +148,8 @@ services:
       - SYS_ADMIN
     devices:
       - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
     logging:
       driver: syslog
       options:
@@ -162,10 +170,6 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_flower
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
     logging:
       driver: syslog
       options:
