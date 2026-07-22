@@ -37,8 +37,6 @@ LANGUAGE_CODE = "en-us"
 SITE_ID = env.int("DJANGO_SITE_ID", default=1)
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
 USE_I18N = True
-# https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
-USE_L10N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
@@ -535,3 +533,9 @@ DJANGO_UPLOAD_TOOLS_PROJECT_NAME = env("DJANGO_UPLOAD_TOOLS_PROJECT_NAME", defau
 # ------------------------------------------------------------------------------
 ASPERA_ASCP_PATH = env.str("ASPERA_ASCP_PATH", default="/home/asperauser/.aspera/connect/bin/ascp")
 S3FS_MOUNT_POINT = env.str("DJANGO_S3FS_MOUNT_POINT", default="/mnt/s3bucket")
+
+# Settings for ENVO-Validation
+# ------------------------------------------------------------------------------
+ONTO_PORTAL_URL = env("ONTO_PORTAL_URL", default="https://data.biodivportal.gfbio.org")
+ONTO_PORTAL_API_KEY = env("ONTO_PORTAL_API_KEY", default=None)
+ONTOLOGY_CACHE_TIMEOUT = env.int("ONTOLOGY_CACHE_TIMEOUT", default=24 * 60 * 60)

@@ -8,7 +8,6 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_body, _get_pangaea_soap_response
 from gfbio_submissions.brokerage.utils.pangaea import (
-    get_pangaea_login_token,
     parse_pangaea_login_token_response,
     request_pangaea_login_token,
 )
@@ -64,21 +63,6 @@ class PangaeaTicketTest(TestCase):
             response.content,
         )
 
-    @skip("request to PANGAEA server")
-    def test_doi_parsing(self):
-        site_config = SiteConfiguration.objects.first()
-        login_token = get_pangaea_login_token(site_config.pangaea_token_server)
-        ticket_key = "PDI-12428"
-        # TODO: PANGAEA_ISSUE_BASE_URL not defined anymore
-        url = "{0}{1}".format("PANGAEA_ISSUE_BASE_URL", ticket_key)
-        cookies = dict(PanLoginID=login_token)
-        headers = {"Content-Type": "application/json"}
-        response = requests.get(
-            url=url,
-            headers=headers,
-            cookies=cookies,
-        )
-
     @responses.activate
     def test_parse_pangaea_soap_response(self):
         resource_credential = ResourceCredential.objects.first()
@@ -92,18 +76,6 @@ class PangaeaTicketTest(TestCase):
         response = request_pangaea_login_token(resource_credential)
         parsed_token = parse_pangaea_login_token_response(response)
         self.assertEqual(expected_token, parsed_token)
-
-    @responses.activate
-    def test_get_pangaea_login_token(self):
-        resource_credential = ResourceCredential.objects.first()
-        expected_token = "f3d7aca208aaec8954d45bebc2f59ba1522264db"
-        responses.add(
-            responses.POST,
-            resource_credential.url,
-            status=200,
-            body=_get_pangaea_soap_response(),
-        )
-        self.assertTrue(expected_token, get_pangaea_login_token(resource_credential))
 
     def test_filter_for_submission_additional_reference(self):
         submissions_with_reference = Submission.objects.filter(status=Submission.OPEN).filter(

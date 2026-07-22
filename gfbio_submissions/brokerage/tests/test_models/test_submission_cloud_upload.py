@@ -2,7 +2,6 @@
 
 from django.test import TestCase
 from dt_upload.models import FileUploadRequest
-from dt_upload.tests.test_models import TestN4BUploadModel
 
 from gfbio_submissions.brokerage.models import SubmissionCloudUpload
 from gfbio_submissions.users.models import User

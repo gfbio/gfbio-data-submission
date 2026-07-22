@@ -16,7 +16,7 @@ const InfoBox = ({title, submissionData}) => {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
-                        <i className="fa fa-bookmark-o pe-2" aria-hidden="true"/>
+                        <i className="fa fa-bookmark-o" aria-hidden="true"/>
                         Submission Id: <br/>
                         <div className="data-field">{submissionData?.broker_submission_id}</div>
                     </a>
@@ -24,31 +24,32 @@ const InfoBox = ({title, submissionData}) => {
             );
             key++;
         }
-        if (submissionData?.accessionId && submissionData?.accessionId.length > 0) {
+        if (submissionData?.accession_id && submissionData?.accession_id.length > 0) {
             items.push(
-                <div className="info-box-header">
-                    <i className="fa fa-archive pe-2" aria-hidden="true"/>
-                    ENA Accession:
-                    <br/>
-                </div>,
-            );
-            submissionData?.accessionId.forEach(accession => {
-                    items.push(
-                        <li key={key} className="list-group-item">
-                            <div className="data-field">
-                                <div className="">
-                                    <span style={{fontWeight: 600}}>ID</span>: {accession.pid}
+                <li key={key} className="list-group-item">
+                    <a>
+                        <i className="fa fa-archive pe-2" aria-hidden="true"/>
+                        ENA Accession:
+                        <br/>
+                    </a>
+                    {
+                        submissionData.accession_id.map(accession => {
+                            return (
+                                <div className="data-field">
+                                    <div className="">
+                                        <span style={{fontWeight: 600}}>ID</span>: {accession.pid}
+                                    </div>
+                                    <div className="" style={{marginTop: 0}}>
+                                        <span style={{fontWeight: 600}}>Status</span>:{' '}
+                                        {accession.status}
+                                    </div>
                                 </div>
-                                <div className="" style={{marginTop: 0}}>
-                                    <span style={{fontWeight: 600}}>Status</span>:{' '}
-                                    {accession.status}
-                                </div>
-                            </div>
-                        </li>
-                    );
-                    key++;
-                }
+                            );
+                        })
+                    }
+                </li>
             );
+            key++;
         }
         if (submissionData?.issue && submissionData?.issue.length > 0) {
             items.push(

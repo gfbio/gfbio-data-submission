@@ -336,10 +336,6 @@ def add_unit_data_measurement(parent, ns, unid, csvdict):
     add_measurement_or_fact(parent, ns, unid, csvdict)
 
 
-def add_unit_data_multimedia(parent, ns, unid, csvdict):
-    add_multimediaobject(parent, ns, unid, csvdict)
-
-
 def store_atax_data_as_auditable_text_data(submission, data_type, data, comment, atax_file_name, atax_exp_index):
     typename = data_type
     xmlfilecontent = data

@@ -7,7 +7,7 @@ from wsgiref.util import FileWrapper
 from django.urls import reverse
 import requests
 from django.contrib import admin, messages
-from django.db.models import Count
+from django.db.models import Case, Count, IntegerField, Value, When
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.utils.encoding import smart_bytes
@@ -18,6 +18,7 @@ from dt_upload import admin as dt_admin
 from dt_upload.models import DTUpload, FileUploadRequest
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
+from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport, ValidationFinding, ValidationTaskReport
 from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
@@ -56,13 +57,6 @@ from .utils.task_utils import _safe_get_site_config, jira_cancel_issue
 
 class PersistentIdentifierInline(admin.TabularInline):
     model = PersistentIdentifier
-
-    def get_extra(self, request, obj=None, **kwargs):
-        return 1
-
-
-class BrokerObjectInline(admin.TabularInline):
-    model = BrokerObject.submissions.through
 
     def get_extra(self, request, obj=None, **kwargs):
         return 1
@@ -427,7 +421,13 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         submission_cloud_upload_ids = [
             upload.pk for upload in obj.submissioncloudupload_set.all()
-            if upload.status not in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM, SubmissionCloudUpload.STATUS_DELETED] and any(upload.file_upload.original_filename.lower().endswith(ext) for ext in allowed_types)
+            if upload.status in [
+                    SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+                    SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+                    SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
+                    SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+                ]
+                and any(upload.file_upload.original_filename.lower().endswith(ext) for ext in allowed_types)
         ]
         if submission_cloud_upload_ids:
             site_config = _safe_get_site_config(obj)
@@ -579,7 +579,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         from django.contrib.admin.models import LogEntry
 
         model = self.model
-        obj = Submission.objects.get(pk=object_id)
+        obj = Submission.objects.filter(pk=object_id).first()
         if obj is None:
             return self._get_obj_does_not_exist_redirect(
                 request, model._meta, object_id
@@ -597,46 +597,100 @@ class SubmissionAdmin(admin.ModelAdmin):
             SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM,
             SubmissionCloudUpload.STATUS_DELETED,
         ]
-        submission_cloud_uploads = list(SubmissionCloudUpload.objects.filter(submission__pk=object_id))
-        submission_cloud_uploads.sort(key=lambda x: orderlist.index(x.status))
+        # One query for all uploads: DB-side status ordering, only columns needed for display
+        # (avoids N+1 from str(cloud_upload) and loading full model rows).
+        status_order = Case(
+            *[When(status=state, then=Value(index)) for index, state in enumerate(orderlist)],
+            default=Value(len(orderlist)),
+            output_field=IntegerField(),
+        )
+        submission_cloud_uploads = list(
+            SubmissionCloudUpload.objects.filter(submission__pk=object_id)
+            .annotate(status_order=status_order)
+            .order_by("status_order", "pk")
+            .values(
+                "pk",
+                "status",
+                "modified",
+                "submission__broker_submission_id",
+                "file_upload_id",
+                "file_upload__original_filename",
+                "file_upload__status",
+            )
+        )
+        cloud_upload_ids = [upload["pk"] for upload in submission_cloud_uploads]
 
-        submission_tasks_reports = TaskProgressReport.objects.filter(submission__pk=object_id)
+        # One query for all task reports; only fields used to build related-task links.
+        submission_tasks_reports = TaskProgressReport.objects.filter(submission__pk=object_id).values(
+            "task_id",
+            "task_kwargs",
+            "task_return_value",
+        )
         tasks_by_upload = {}
-        non_upload_tasks = []
         for task_report in submission_tasks_reports:
-            scu_found = False
-            if task_report.task_kwargs:
-                task_kwargs = json.loads(task_report.task_kwargs)
+            task_kwargs_raw = task_report["task_kwargs"]
+            if task_kwargs_raw:
+                task_kwargs = json.loads(task_kwargs_raw)
                 if "submission_cloud_upload_id" in task_kwargs:
-                    scu_found = True
                     scu_id = task_kwargs["submission_cloud_upload_id"]
+                    if isinstance(scu_id, str) and scu_id.isdigit():
+                        scu_id = int(scu_id)
                     if scu_id not in tasks_by_upload:
                         tasks_by_upload[scu_id] = []
-                    tasks_by_upload[scu_id].append({"id": task_report.pk, "status": task_report.task_return_value[0:1]})
-            if not scu_found:
-                non_upload_tasks.append(task_report)
+                    task_return_value = task_report["task_return_value"] or ""
+                    tasks_by_upload[scu_id].append({"id": task_report["task_id"], "status": task_return_value[0:1]})
 
+        # One bulk query for admin log history instead of one LogEntry query per upload.
+        # Use DISTINCT ON so Postgres returns only the earliest log row per upload, otherwise
+        # fall back to fetching matching rows in Python and keeping only the first per upload.
+        first_log_by_upload_id = {}
+        if cloud_upload_ids:
+            from django.db.utils import NotSupportedError
+
+            log_entries_qs = (
+                LogEntry.objects.filter(
+                    content_type=40,
+                    object_id__in=[str(upload_id) for upload_id in cloud_upload_ids],
+                )
+                .order_by("object_id", "action_time", "pk")
+                .only("object_id", "action_time", "change_message")
+            )
+            try:
+                first_log_by_upload_id = {
+                    log_entry.object_id: log_entry
+                    for log_entry in log_entries_qs.distinct("object_id")
+                }
+            except NotSupportedError:
+                for log_entry in log_entries_qs:
+                    if log_entry.object_id not in first_log_by_upload_id:
+                        first_log_by_upload_id[log_entry.object_id] = log_entry
 
         cloud_upload_list = {}
-        for cloud_upload in submission_cloud_uploads:
-            last_action = (
-                LogEntry.objects.filter(
-                    object_id=cloud_upload.pk,
-                    content_type=40,
-                ).order_by("action_time").first()
-            )
+        known_status_names = [SubmissionCloudUpload.get_status_name(state) for state in orderlist]
+        for status_name in known_status_names:
+            cloud_upload_list[status_name] = []
 
-            status = SubmissionCloudUpload.get_status_name(cloud_upload.status)
+        for cloud_upload in submission_cloud_uploads:
+            last_action = first_log_by_upload_id.get(str(cloud_upload["pk"]))
+            status = SubmissionCloudUpload.get_status_name(cloud_upload["status"])
             if not status in cloud_upload_list:
                 cloud_upload_list[status] = []
 
+            upload_name = SubmissionCloudUpload.format_display_name(
+                cloud_upload["submission__broker_submission_id"],
+                cloud_upload["file_upload_id"] is not None,
+                cloud_upload["file_upload_id"],
+                cloud_upload["file_upload__original_filename"],
+                cloud_upload["file_upload__status"],
+            )
+
             cloud_upload_list[status].append({
-                "pk": cloud_upload.pk,
-                "name": str(cloud_upload),
+                "pk": cloud_upload["pk"],
+                "name": upload_name,
                 "status": status,
-                "last_change_action_time": last_action.action_time if last_action else cloud_upload.modified,
+                "last_change_action_time": last_action.action_time if last_action else cloud_upload["modified"],
                 "last_change_message": last_action.get_change_message() if last_action else "",
-                "related_tasks": tasks_by_upload[cloud_upload.pk] if cloud_upload.pk in tasks_by_upload else []
+                "related_tasks": tasks_by_upload.get(cloud_upload["pk"], []),
             })
 
         context = {
@@ -705,18 +759,6 @@ class SubmissionAdmin(admin.ModelAdmin):
             return reference.reference_key
         else:
             return "-"
-
-
-class RunFileRestUploadAdmin(admin.ModelAdmin):
-    readonly_fields = ("created",)
-
-
-class SubmissionFileUploadAdmin(admin.ModelAdmin):
-    pass
-
-
-class PrimaryDataFileAdmin(admin.ModelAdmin):
-    pass
 
 
 class ValidationFindingInlineAdmin(admin.TabularInline):
@@ -836,6 +878,15 @@ def run_validate_metadata_cloud_uploads(modeladmin, request, queryset):
 run_validate_metadata_cloud_uploads.short_description = "Run validation for molecular metadata"
 
 
+def set_cloud_uploads_as_deleted(modeladmin, request, queryset):
+    for scu in queryset:
+        scu.status = SubmissionCloudUpload.STATUS_DELETED
+    SubmissionCloudUpload.objects.bulk_update(queryset, ["status"])
+
+
+set_cloud_uploads_as_deleted.short_description = "Set the state of the selected cloud-uploads to deleted"
+
+
 def download_submission_upload_file(modeladmin, request, queryset):
     for obj in queryset:
         f = obj.file
@@ -888,6 +939,11 @@ class JiraMessageAdmin(admin.ModelAdmin):
     list_display = ("name", "modified")
 
 
+class JiraQueueMessageAdmin(admin.ModelAdmin):
+    list_display = ("submission_id", "type", "modified", "status")
+    fields = ("submission_id", "type", "status", "created", "modified", "data")
+    readonly_fields = ("created", "modified",)
+
 class AbcdConversionResultAdmin(admin.ModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
@@ -916,8 +972,8 @@ download_submission_cloud_upload_file.short_description = "Download the file of 
 
 
 class SubmissionCloudUploadAdmin(ReverseModelAdmin):
-    list_display = ("__str__", "meta_data", "user", "attachment_id", "attach_to_ticket")
-    list_filter = ("user", "meta_data", "attach_to_ticket")
+    list_display = ("__str__", "meta_data", "user", "status")
+    list_filter = ("status", "file_upload__status", "user", "meta_data", "attach_to_ticket")
     search_fields = ["submission__broker_submission_id", "submission__additionalreference__reference_key"]
     inline_type = "stacked"
     date_hierarchy = "created"  # date drill down
@@ -930,6 +986,7 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
         reparse_csv_metadata_cloud_uploads,
         download_submission_cloud_upload_file,
         run_validate_metadata_cloud_uploads,
+        set_cloud_uploads_as_deleted
     ]
 
     def save_model(self, request, obj, form, change):
@@ -991,3 +1048,5 @@ admin.site.register(SubmissionCloudUpload, SubmissionCloudUploadAdmin)
 
 admin.site.register(MetadataValidationReport, MetadataValidationReportAdmin)
 admin.site.register(ValidationTaskReport, ValidationTaskReportAdmin)
+
+admin.site.register(JiraQueueMessage, JiraQueueMessageAdmin)

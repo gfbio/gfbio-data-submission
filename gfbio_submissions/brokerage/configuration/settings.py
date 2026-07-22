@@ -53,6 +53,10 @@ CHECKLIST_ACCESSION_MAPPING = getattr(
         "wastewater sludge": "ERC000023",
         "soil": "ERC000022",
         "human gut": "ERC000015",
+        "agriculture": "ERC000055",
+        "food and production": "ERC000056",
+        "symbiont": "ERC000057",
+        "hydrocarbon": "ERC000058",
     },
 )
 
@@ -384,6 +388,18 @@ NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE = getattr(
     "There is no primary helpdesk issue available for\nsubmission: {0}" "\nof user: {1}",
 )
 
+NO_HELPDESK_ISSUES_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    "NO_HELPDESK_ISSUES_EMAIL_SUBJECT_TEMPLATE",
+    "{0} submissions have no primary helpdesk issue",
+)
+
+NO_HELPDESK_ISSUES_EMAIL_MESSAGE_TEMPLATE = getattr(
+    settings,
+    "NO_HELPDESK_ISSUES_EMAIL_MESSAGE_TEMPLATE",
+    "There are submissions without a primary helpdesk issue:\n\n{0}",
+)
+
 PANGAEA = getattr(settings, "PANGAEA", "PANGAEA")
 
 PANGAEA_ISSUE_VIEW_URL = getattr(settings, "PANGAEA_ISSUE_VIEW_URL", "https://issues.pangaea.de/browse/")
@@ -463,3 +479,23 @@ TASK_FAIL_SUBJECT_TEMPLATE = getattr(settings, "TASK_FAIL_SUBJECT_TEMPLATE", 'Ta
 TASK_FAIL_TEXT_TEMPLATE = getattr(settings, "TASK_FAIL_TEXT_TEMPLATE", 'Task "{0}" failed after {1} retries. {2}')
 
 SUBMISSION_COMMENT_TEMPLATE = getattr(settings, "SUBMISSION_COMMENT_TEMPLATE", "{0} ({1}) commented:\n{2}")
+
+JIRA_MESSAGES_WAIT_DELAY = getattr(
+    settings,
+    "JIRA_MESSAGES_WAIT_DELAY",
+    # seconds
+    30 * 60,
+)
+
+JIRA_MESSAGES_MAX_DELAY = getattr(
+    settings,
+    "JIRA_MESSAGES_MAX_DELAY",
+    # seconds
+    4 * 60 * 60,
+)
+
+JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE = getattr(
+    settings,
+    "JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE",
+    100,
+)

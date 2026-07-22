@@ -4,12 +4,16 @@ import base64
 import json
 from urllib.parse import quote
 
+import pytest
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 from rest_framework.test import APIClient, APIRequestFactory
 
-from gfbio_submissions.brokerage.tests.utils import _get_submission_request_data
+from gfbio_submissions.brokerage.tests.utils import (
+    _attach_curated_center_on_create,
+    _get_submission_request_data,
+)
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
@@ -21,6 +25,13 @@ from .test_atax_tasks_and_chains import TestAtaxSubmissionTasks
 
 
 class TestInitialChainTasks(TestCase):
+    @pytest.fixture(autouse=True)
+    def _curated_center(self):
+        # DASS-3574: the release POST processes the ENA chain eagerly in-request,
+        # so attach a curated centre at submission-creation time.
+        with _attach_curated_center_on_create():
+            yield
+
     @classmethod
     def setUpTestData(cls):
         resource_cred = ResourceCredential.objects.create(

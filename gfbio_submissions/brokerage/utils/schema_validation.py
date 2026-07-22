@@ -16,10 +16,6 @@ from ..configuration.settings import (
     STATIC_MIN_REQUIREMENTS_LOCATION,
     ENA,
     ENA_PANGAEA,
-    STATIC_SAMPLE_SCHEMA_LOCATION,
-    STATIC_STUDY_SCHEMA_LOCATION,
-    STATIC_EXPERIMENT_SCHEMA_LOCATION,
-    STATIC_RUN_SCHEMA_LOCATION,
     GENERIC,
     STATIC_GENERIC_REQUIREMENTS_LOCATION,
     ATAX,
@@ -29,17 +25,6 @@ from ..configuration.settings import (
 # from ..utils.atax import create_ataxer
 
 logger = logging.getLogger(__name__)
-
-
-def collect_errors(data, validator):
-    return [
-        "Error(s) regarding field '{0}' because: {1}".format(
-            error.relative_path.pop(), error.message.replace("u'", "'")
-        )
-        if len(error.relative_path) > 0
-        else "{0}".format(error.message.replace("u'", "'"))
-        for error in validator.iter_errors(data)
-    ]
 
 
 def collect_validation_errors(data, validator):
@@ -67,63 +52,6 @@ def validate_data(data={}, schema_file=None, schema_string="{}", use_draft04_val
     data_valid = validator.is_valid(data)
     errors = [] if data_valid else collect_validation_errors(data, validator)
     return data_valid, errors
-
-
-def validate_study(data):
-    return validate_data(
-        data=data,
-        schema_file=os.path.join(settings.STATIC_ROOT, STATIC_STUDY_SCHEMA_LOCATION),
-    )
-
-
-def validate_experiment(data):
-    return validate_data(
-        data=data,
-        schema_file=os.path.join(settings.STATIC_ROOT, STATIC_EXPERIMENT_SCHEMA_LOCATION),
-    )
-
-
-def validate_run(data):
-    return validate_data(
-        data=data,
-        schema_file=os.path.join(settings.STATIC_ROOT, STATIC_RUN_SCHEMA_LOCATION),
-    )
-
-
-# def get_gcdj_schema(checklist, package):
-#     url = GCDJ_SCHEMA_URL.format(host=BASE_HOST_NAME,
-#                                  checklist=checklist,
-#                                  package=package)
-#     # requestlog: no, neccessary ?
-#     response = requests.get(url=url)
-#     return response.content
-
-
-def validate_gcdj(sample, schema):
-    gcdj_valid, gcdj_errors = validate_data(data=sample["gcdjson"], schema_string=schema, use_draft04_validator=True)
-    return gcdj_errors
-
-
-def validate_sample(data):
-    sample_valid, sample_errors = validate_data(
-        data=data,
-        schema_file=os.path.join(settings.STATIC_ROOT, STATIC_SAMPLE_SCHEMA_LOCATION),
-    )
-    if not sample_valid:
-        return sample_valid, sample_errors
-    errors = []
-    # TODO: decouple GCDJ stuff
-    # schemas = {}
-    # for sample in data['samples']:
-    #     if 'gcdjson' in sample.keys():
-    #         checklist = sample['gcdjson'].get('checklist', '')
-    #         package = sample['gcdjson'].get('package')
-    #         if (checklist, package) not in schemas.keys():
-    #             schemas[(checklist, package)] = get_gcdj_schema(checklist,
-    #                                                             package)
-    #         errors.extend(validate_gcdj(sample, schemas[(checklist, package)]))
-
-    return len(errors) == 0, errors
 
 
 TARGET_SCHEMA_MAPPINGS = {

@@ -10,6 +10,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.users.models import User
 
 from ....configuration.settings import ENA, GENERIC
+from ....models.center_name import CenterName
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
 from .test_submission_view_base import TestSubmissionView
@@ -94,6 +95,11 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             file=uploaded_file,
         )
         self.assertEqual(1, len(submission.submissionupload_set.filter(meta_data=True)))
+        # DASS-3574: attach a curated centre before the release PUT triggers the
+        # ENA prepare path on this (otherwise centre-less) submission.
+        center_name, _ = CenterName.objects.get_or_create(center_name="CustomCenter")
+        submission.center_name = center_name
+        submission.save()
         self._create_ena_taxa_query_response()
         response = self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
@@ -134,6 +140,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_ena_submittable_taxon_ids_task",
             "tasks.notify_on_report_completed_task",
             "tasks.validate_metadata_file_countries_task",
+            "tasks.validate_envo_columns_task",
             "tasks.validate_character_encoding_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):

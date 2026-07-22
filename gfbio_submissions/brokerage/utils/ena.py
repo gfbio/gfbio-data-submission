@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import gzip
 import hashlib
 import io
 import json
@@ -14,6 +13,7 @@ from collections import OrderedDict
 from ftplib import FTP, error_perm
 from uuid import uuid4
 from xml.etree.ElementTree import Element, SubElement
+from xml.sax.saxutils import quoteattr
 
 import dicttoxml
 from django.conf import settings
@@ -22,6 +22,8 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.exceptions.transfer_exceptions import InvalidCenterName
+from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
@@ -30,14 +32,12 @@ from .email_curators import send_checklist_mapping_error_notification
 from ..configuration.settings import (
     CHECKLIST_ACCESSION_MAPPING,
     DEFAULT_ENA_BROKER_NAME,
-    DEFAULT_ENA_CENTER_NAME,
-    STATIC_SAMPLE_SCHEMA_LOCATION,
     SUBMISSION_DELAY,
 )
 from ..models.auditable_text_data import AuditableTextData
 from ..models.ena_report import EnaReport
 from ..models.persistent_identifier import PersistentIdentifier
-from ..models.submission import Submission
+from ..models.submission import IllegalStatusTransition, Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..utils.csv import find_correct_platform_and_model
 
@@ -73,10 +73,7 @@ class Enalizer(object):
         self.run = runs
         self.runs_key = "runs"
         self.embargo = submission.embargo
-        if submission.center_name is not None and submission.center_name.center_name != "":
-            self.center_name = submission.center_name.center_name
-        else:
-            self.center_name = DEFAULT_ENA_CENTER_NAME
+        self.center_name = resolve_and_validate_center_name(submission)
         self.submission_id = submission.id
         self.submission = submission
         self.samples_with_checklist_errors = []
@@ -698,13 +695,32 @@ def store_single_data_item_as_auditable_text_data(submission, data):
         return text_data
 
 
+def _fail_submission_safely(submission, reason):
+    """Transition ``submission`` to ERROR without double-faulting on terminals.
+
+    CLOSED/CANCELLED submissions have no legal transition to ERROR, so calling
+    ``fail()`` on them raises ``IllegalStatusTransition`` and masks the real
+    error (e.g. an invalid center_name surfaced on a re-run that loads closed
+    submissions with ``include_closed=True``). Guarding the transition lets the
+    underlying error be surfaced instead of a secondary status-machine crash.
+    """
+    try:
+        submission.fail(reason=reason)
+    except IllegalStatusTransition:
+        logger.warning(
+            msg="ena.py | _fail_submission_safely | submission in terminal "
+                "state, cannot transition to ERROR | submission_pk={0} "
+                "status={1} reason={2}".format(submission.pk, submission.status, reason)
+        )
+
+
 def prepare_ena_data(submission):
     # outgoing_request_id = uuid.uuid4()
     try:
         enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         return enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
     except Exception as ex:
-        submission.fail(reason=str(ex))
+        _fail_submission_safely(submission, str(ex))
 
         from gfbio_submissions.brokerage.utils.task_utils import _safe_get_site_config
         site_configuration = _safe_get_site_config(submission)
@@ -742,7 +758,13 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data, acti
 
     outgoing_request_id = uuid.uuid4()
     # TODO: this needs refactoring, maybe static method for submission.xml thus the DB is not hit by constructor
-    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
+    # DASS-3574: reject an invalid center_name *before* the POST so an empty/None
+    # centre can never reach ENA; fail the submission (terminal-safe) and abort.
+    try:
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
+    except InvalidCenterName as ex:
+        _fail_submission_safely(submission, str(ex))
+        raise
     ena_submission_data["SUBMISSION"] = enalizer.prepare_submission_xml_for_sending(
         action=action,
         outgoing_request_id=outgoing_request_id,
@@ -820,6 +842,22 @@ def release_study_on_ena(submission):
             )
         )
 
+        # DASS-3574: carry the submission's curated centre into the RELEASE XML
+        # instead of the hardcoded "GFBIO"; reject (-> ERROR, no POST) rather
+        # than release with an empty/None centre. quoteattr escapes & " < > for
+        # the hand-built (non-ElementTree) raw-string XML and supplies the quotes.
+        try:
+            center_name = resolve_and_validate_center_name(submission)
+        except InvalidCenterName as ex:
+            _fail_submission_safely(submission, str(ex))
+            logger.warning(
+                "ena.py | release_study_on_ena | invalid center_name, "
+                "aborting before RELEASE | submission_id={0} | reason={1}".format(
+                    submission.broker_submission_id, ex
+                )
+            )
+            return None
+
         current_datetime = datetime.datetime.now(timezone("UTC")).isoformat()
 
         submission_xml = textwrap.dedent(
@@ -828,7 +866,7 @@ def release_study_on_ena(submission):
             ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
             "<SUBMISSION"
             ' alias="gfbio:release:{broker_submission_id}:{time_stamp}"'
-            ' center_name="GFBIO" broker_name="GFBIO">'
+            " center_name={center_name} broker_name=\"GFBIO\">"
             "<ACTIONS>"
             "<ACTION>"
             '<RELEASE target="{accession_no}"/>'
@@ -839,6 +877,7 @@ def release_study_on_ena(submission):
                 broker_submission_id=submission.broker_submission_id,
                 time_stamp=current_datetime,
                 accession_no=study_primary_accession,
+                center_name=quoteattr(center_name),
             )
         )
 
@@ -898,46 +937,6 @@ def parse_ena_submission_response(response_content=""):
             res["samples"].append(attr)
 
     return res
-
-
-def validate_sample_data(json_data):
-    try:
-        with open(os.path.join(settings.STATIC_ROOT, STATIC_SAMPLE_SCHEMA_LOCATION)) as schema_file:
-            schema = json.load(schema_file)
-    except IOError as e:
-        return e
-    validator = Draft3Validator(schema)
-    is_valid = validator.is_valid(json_data)
-    if not is_valid:
-        return is_valid, [
-            "Error(s) regarding field '{0}' because: {1}".format(
-                error.relative_path.pop(), error.message.replace("u'", "'")
-            )
-            if len(error.relative_path) > 0
-            else "{0}".format(error.message.replace("u'", "'"))
-            for error in validator.iter_errors(json_data)
-        ]
-    else:
-        return True, []
-
-
-def download_submitted_run_files_to_string_io(site_config, decompressed_io):
-    ftp_rc = site_config.ena_ftp
-    transmission_report = []
-    ftp = FTP(ftp_rc.url)
-    transmission_report.append(ftp.login(user=ftp_rc.username, passwd=ftp_rc.password))
-    transmission_report.append(ftp.cwd("report"))
-    transmission_report.append(ftp.retrlines("LIST"))
-
-    compressed_file = io.StringIO()
-
-    transmission_report.append(ftp.retrbinary("RETR submitted_run_files.txt.gz", compressed_file.write))
-    transmission_report.append(ftp.quit())
-
-    compressed_file.seek(0)
-    decompressed_io.write(gzip.GzipFile(fileobj=compressed_file, mode="rb").read())
-    compressed_file.close()
-    return transmission_report
 
 
 class md5ChecksumCalculator:

@@ -40,5 +40,8 @@ class PersistentIdentifier(TimeStampedModel):
     # notify user when ena status changed to PUBLIC
     user_notified_released = models.DateField(null=True, blank=True)
 
+    # notify curators before embargo expiry
+    curators_notified_embargo_expiry_for = models.DateField(null=True, blank=True)
+
     def __str__(self):
         return "{}".format(self.pid)

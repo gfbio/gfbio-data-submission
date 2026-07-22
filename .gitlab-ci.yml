@@ -38,9 +38,13 @@ run unit tests:
     - docker compose -f local.yml build
     - CURRENT_UID="$(id -u):$(id -g)" docker stack deploy -c cicd/local.yml "$DOCKER_NAME-tests"
     - while [[ $(docker ps -a | grep "$DOCKER_NAME-tests_django" | grep -c Exited) == 0 ]]; do sleep 1; done
-    - docker logs "$(docker ps -a | grep -oP "$DOCKER_NAME-tests_django.+\s?")"
-    - if [[ $(docker logs "$(docker ps -a | grep -oP "$DOCKER_NAME-tests_django.+\s?")" --tail 2 2>&1 | grep -c FAILED) == 1 ]]; then docker stack rm "$DOCKER_NAME-tests" && exit 1; fi
+    - TEST_CONTAINER=$(docker ps -a | grep -oP "$DOCKER_NAME-tests_django.+\s?")
+    - docker logs "$TEST_CONTAINER"
+    # Gate on pytest's real exit code (0 pass; 1 failures; 5 nothing-collected) via the
+    # container exit status, not a log grep that was blind to crashes. DASS-3577.
+    - TEST_EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' "$TEST_CONTAINER")
     - docker stack rm "$DOCKER_NAME-tests"
+    - if [[ "$TEST_EXIT_CODE" != "0" ]]; then exit 1; fi
   after_script:
     - docker compose -f cicd/local.yml run --rm django rm -rf staticfiles
     - docker compose -f cicd/local.yml down

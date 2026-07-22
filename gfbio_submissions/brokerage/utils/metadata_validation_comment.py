@@ -35,7 +35,17 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
     has_errors = any(task_report.status == "ERROR" for task_report in task_reports) or any(
         finding.status == "ERROR" for finding in findings
     )
-    summary_status = "errors found" if has_errors else "no errors found"
+    has_warnings = any(task_report.status == "WARNING" for task_report in task_reports) or any(
+        finding.status == "WARNING" for finding in findings
+    )
+    has_issues = has_errors or has_warnings
+
+    if has_errors:
+        summary_status = "errors found"
+    elif has_warnings:
+        summary_status = "warnings found"
+    else:
+        summary_status = "no errors found"
 
     lines = [
         "Metadata validation report",
@@ -47,7 +57,7 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
 
     if not task_reports.exists():
         lines.append("No validation checks were recorded for this metadata file.")
-    elif has_errors:
+    elif has_issues:
         for task_report in task_reports:
             lines.append(f"{task_report.task_name} ({task_report.status})")
             task_findings = list(task_report.validationfinding_set.all())
@@ -72,6 +82,8 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
 
     if has_errors:
         lines.append("Please fix the issues above and upload an updated metadata file.")
+    elif has_warnings:
+        lines.append("Please review the warnings above before continuing.")
     else:
         lines.append("The mandatory metadata checks completed without errors.")
 

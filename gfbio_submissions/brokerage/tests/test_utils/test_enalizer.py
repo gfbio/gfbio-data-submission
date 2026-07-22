@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+from unittest import mock
 from uuid import uuid4
 
 import responses
@@ -11,21 +12,28 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_release_xml_response,
     _get_ena_xml_response,
 )
+from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import (
+    update_ena_embargo_task,
+)
 from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
 from gfbio_submissions.brokerage.utils.ena import (
     Enalizer,
     prepare_ena_data,
     release_study_on_ena,
     send_submission_to_ena,
+    store_ena_data_as_auditable_text_data,
+)
+from gfbio_submissions.brokerage.utils.task_utils import (
+    send_data_to_ena_for_validation_or_test,
 )
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import DEFAULT_ENA_CENTER_NAME
+from ...exceptions.transfer_exceptions import InvalidCenterName
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
-from ...models.submission import Submission
+from ...models.submission import IllegalStatusTransition, Submission
 
 
 class TestEnalizer(TestCase):
@@ -48,6 +56,8 @@ class TestEnalizer(TestCase):
         user = User.objects.create(username="user1")
         user.site_configuration = site_config
         user.save()
+        # _create_submission_via_serializer attaches a curated "CustomCenter"
+        # CenterName (DASS-3574); the XML/center_name assertions rely on it.
         _create_submission_via_serializer()
         _create_submission_via_serializer(runs=True)
 
@@ -71,12 +81,26 @@ class TestEnalizer(TestCase):
     def test_center_name(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix="test")
-        self.assertEqual(DEFAULT_ENA_CENTER_NAME, enalizer.center_name)
-        center_name, created = CenterName.objects.get_or_create(center_name="CustomCenter")
+        self.assertEqual("CustomCenter", enalizer.center_name)
+        center_name, created = CenterName.objects.get_or_create(center_name="OtherCenter")
         submission.center_name = center_name
         submission.save()
         enalizer_2 = Enalizer(submission=submission, alias_postfix="test")
-        self.assertEqual("CustomCenter", enalizer_2.center_name)
+        self.assertEqual("OtherCenter", enalizer_2.center_name)
+
+    def test_enalizer_rejects_centerless_submission(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.save()
+        with self.assertRaises(InvalidCenterName):
+            Enalizer(submission=submission, alias_postfix="test")
+
+    def test_study_xml_carries_curated_center(self):
+        submission = Submission.objects.first()
+        enalizer = Enalizer(submission, "test-enalizer-study")
+        data = enalizer.prepare_submission_data()
+        k, study_xml = data.get("STUDY")
+        self.assertIn('center_name="CustomCenter"', study_xml)
 
     def test_study_xml(self):
         submission = Submission.objects.first()
@@ -128,7 +152,7 @@ class TestEnalizer(TestCase):
             "<SAMPLE_NAME>"
             "<TAXON_ID>530564</TAXON_ID>"
             "</SAMPLE_NAME>"
-            "<DESCRIPTION />".format(submission_samples[0].pk, DEFAULT_ENA_CENTER_NAME),
+            "<DESCRIPTION />".format(submission_samples[0].pk, "CustomCenter"),
             sample_xml,
         )
         self.assertIn(
@@ -137,7 +161,7 @@ class TestEnalizer(TestCase):
             "<SAMPLE_NAME>"
             "<TAXON_ID>530564</TAXON_ID>"
             "</SAMPLE_NAME>"
-            "<DESCRIPTION />".format(submission_samples[1].pk, DEFAULT_ENA_CENTER_NAME),
+            "<DESCRIPTION />".format(submission_samples[1].pk, "CustomCenter"),
             sample_xml,
         )
 
@@ -233,7 +257,7 @@ class TestEnalizer(TestCase):
                 '<STUDY_REF refname="{2}:test-enalizer-sample" />'
                 "".format(
                     submission_experiments[i].pk,
-                    DEFAULT_ENA_CENTER_NAME,
+                    "CustomCenter",
                     submission_study.pk,
                 ),
                 experiment_xml,
@@ -488,6 +512,53 @@ class TestEnalizer(TestCase):
         )
         self.assertEqual(200, response.status_code)
 
+    # DASS-3574 T4: an invalid center_name surfaced while preparing ENA data
+    # must end as a clean ERROR transition (prepare path), and must never reach
+    # ENA via the push path (send path) — without double-faulting on terminals.
+    def test_prepare_ena_data_centerless_sets_error(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.OPEN
+        submission.save()
+        with mock.patch("gfbio_submissions.brokerage.utils.ena.JiraClient"):
+            with self.assertRaises(Exception) as cm:
+                prepare_ena_data(submission=submission)
+        self.assertNotIsInstance(cm.exception, IllegalStatusTransition)
+        self.assertIn("center_name", str(cm.exception))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
+    def test_prepare_ena_data_centerless_closed_no_double_fault(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.CLOSED
+        submission.save()
+        with mock.patch("gfbio_submissions.brokerage.utils.ena.JiraClient"):
+            with self.assertRaises(Exception) as cm:
+                prepare_ena_data(submission=submission)
+        # The centre error is surfaced, not masked by a status-machine crash.
+        self.assertNotIsInstance(cm.exception, IllegalStatusTransition)
+        self.assertIn("center_name", str(cm.exception))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.CLOSED, submission.status)
+
+    @responses.activate
+    def test_send_submission_to_ena_centerless_no_post(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        with self.assertRaises(InvalidCenterName):
+            send_submission_to_ena(
+                submission=submission,
+                archive_access=conf.ena_server,
+                ena_submission_data={},
+            )
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
     def test_prepare_ena_data_add(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
@@ -538,3 +609,171 @@ class TestEnalizer(TestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
         release_study_on_ena(submission)
         self.assertEqual(0, len(RequestLog.objects.all()))
+
+    # DASS-3574 T5: HOLD/RELEASE XML must carry the submission's curated centre
+    # instead of the hardcoded "GFBIO", and must reject (-> ERROR, no HTTP call)
+    # rather than send an empty/None centre. The broker_name="GFBIO" stays.
+    @staticmethod
+    def _request_body_text(call):
+        body = call.request.body
+        if isinstance(body, (bytes, bytearray)):
+            return body.decode("utf-8")
+        return str(body)
+
+    @responses.activate
+    def test_update_ena_embargo_uses_curated_center(self):
+        submission = Submission.objects.first()
+        submission.status = Submission.SUBMITTED
+        submission.embargo = datetime(2020, 1, 10).date()
+        submission.save()
+        conf = SiteConfiguration.objects.first()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+        responses.add(responses.POST, conf.ena_server.url, status=200, body="<RECEIPT/>")
+
+        update_ena_embargo_task.s(submission_id=submission.pk).apply()
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="CustomCenter"', body)
+        self.assertNotIn('center_name="GFBIO"', body)
+
+    @responses.activate
+    def test_update_ena_embargo_escapes_center_name(self):
+        # Raw-string XML (no ElementTree escaping): a centre with XML
+        # metacharacters must be escaped, not interpolated verbatim.
+        submission = Submission.objects.first()
+        center_name, _ = CenterName.objects.get_or_create(center_name="A&B")
+        submission.center_name = center_name
+        submission.status = Submission.SUBMITTED
+        submission.embargo = datetime(2020, 1, 10).date()
+        submission.save()
+        conf = SiteConfiguration.objects.first()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+        responses.add(responses.POST, conf.ena_server.url, status=200, body="<RECEIPT/>")
+
+        update_ena_embargo_task.s(submission_id=submission.pk).apply()
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="A&amp;B"', body)
+        self.assertNotIn('center_name="A&B"', body)
+
+    @responses.activate
+    def test_update_ena_embargo_centerless_rejects_no_post(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.embargo = datetime(2020, 1, 10).date()
+        submission.save()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+
+        update_ena_embargo_task.s(submission_id=submission.pk).apply()
+
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
+    @responses.activate
+    def test_release_study_on_ena_uses_curated_center(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response(),
+        )
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+
+        release_study_on_ena(submission)
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="CustomCenter"', body)
+        self.assertNotIn('center_name="GFBIO"', body)
+
+    @responses.activate
+    def test_release_study_on_ena_centerless_rejects(self):
+        submission = Submission.objects.first()
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        study = submission.brokerobject_set.filter(type="study").first()
+        study.persistentidentifier_set.create(
+            archive="ENA", pid_type="PRJ", pid="PRJEB0815", outgoing_request_id=uuid4()
+        )
+
+        release_study_on_ena(submission)
+
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+
+    # DASS-3574 T6: the VALIDATE/TEST path must resolve the submission's curated
+    # centre (instead of the in-memory "GFBIO" throwaway) so a missing centre is
+    # surfaced at validation time; an invalid centre -> ERROR, no HTTP call.
+    @responses.activate
+    def test_validate_against_ena_uses_curated_center(self):
+        submission = Submission.objects.first()
+        ResourceCredential.objects.create(
+            title="ENA",
+            url=SiteConfiguration.objects.first().ena_server.url,
+            authentication_string="letMeIn",
+        )
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
+        responses.add(
+            responses.POST,
+            SiteConfiguration.objects.first().ena_server.url,
+            status=200,
+            body=_get_ena_xml_response(),
+        )
+        task = mock.MagicMock()
+        task.name = "tasks.validate_against_ena_task"
+        task.request.id = uuid4()
+        task.request.retries = 0
+
+        send_data_to_ena_for_validation_or_test(task, submission.pk, "VALIDATE")
+
+        self.assertEqual(1, len(responses.calls))
+        body = self._request_body_text(responses.calls[0])
+        self.assertIn('center_name="CustomCenter"', body)
+        self.assertNotIn('center_name="GFBIO"', body)
+
+    @responses.activate
+    def test_validate_against_ena_centerless_rejects(self):
+        submission = Submission.objects.first()
+        ResourceCredential.objects.create(
+            title="ENA",
+            url=SiteConfiguration.objects.first().ena_server.url,
+            authentication_string="letMeIn",
+        )
+        # Build + persist the XML while the curated centre is attached, then
+        # strip the centre so the *resolve* (not XML assembly) is what rejects.
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
+        submission.center_name = None
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        task = mock.MagicMock()
+        task.name = "tasks.validate_against_ena_task"
+        task.request.id = uuid4()
+        task.request.retries = 0
+
+        send_data_to_ena_for_validation_or_test(task, submission.pk, "VALIDATE")
+
+        self.assertEqual(0, len(responses.calls))
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
