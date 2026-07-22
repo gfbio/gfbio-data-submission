@@ -13,11 +13,6 @@ services:
         GROUP_ID: 997
         USER_ID: 998
     image: gfbio_submissions_production_django
-    cap_add:
-      - SYS_ADMIN
-    privileged: true
-    security_opt:
-      - apparmor:unconfined
     depends_on:
       - postgres
       - redis
@@ -26,7 +21,7 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - /dev/fuse:/dev/fuse
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     networks:
       - internalProxy
       - internal
@@ -89,13 +84,8 @@ services:
       - internal
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - /dev/fuse:/dev/fuse
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     image: gfbio_submissions_production_celeryworker
-    cap_add:
-      - SYS_ADMIN
-    privileged: true
-    security_opt:
-      - apparmor:unconfined
     logging:
       driver: syslog
       options:
@@ -117,13 +107,8 @@ services:
       - internal
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
-      - /dev/fuse:/dev/fuse
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     image: gfbio_submissions_production_celery_transfer_worker
-    cap_add:
-      - SYS_ADMIN
-    privileged: true
-    security_opt:
-      - apparmor:unconfined
     logging:
       driver: syslog
       options:
@@ -144,13 +129,8 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_celerybeat
-    cap_add:
-      - SYS_ADMIN
-    privileged: true
-    security_opt:
-      - apparmor:unconfined
     volumes:
-      - /dev/fuse:/dev/fuse
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     logging:
       driver: syslog
       options:
