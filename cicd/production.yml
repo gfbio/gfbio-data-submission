@@ -88,6 +88,10 @@ services:
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celeryworker
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     logging:
       driver: syslog
       options:
@@ -110,6 +114,10 @@ services:
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celery_transfer_worker
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     logging:
       driver: syslog
       options:
@@ -130,6 +138,10 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_celerybeat
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     logging:
       driver: syslog
       options:
@@ -150,6 +162,10 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_flower
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     logging:
       driver: syslog
       options:
