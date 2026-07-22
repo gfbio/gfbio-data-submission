@@ -15,8 +15,7 @@ services:
     image: gfbio_submissions_production_django
     cap_add:
       - SYS_ADMIN
-    devices:
-      - /dev/fuse
+    privileged: true
     security_opt:
       - apparmor:unconfined
     depends_on:
@@ -92,8 +91,7 @@ services:
     image: gfbio_submissions_production_celeryworker
     cap_add:
       - SYS_ADMIN
-    devices:
-      - /dev/fuse
+    privileged: true
     security_opt:
       - apparmor:unconfined
     logging:
@@ -120,8 +118,7 @@ services:
     image: gfbio_submissions_production_celery_transfer_worker
     cap_add:
       - SYS_ADMIN
-    devices:
-      - /dev/fuse
+    privileged: true
     security_opt:
       - apparmor:unconfined
     logging:
@@ -146,8 +143,7 @@ services:
     image: gfbio_submissions_production_celerybeat
     cap_add:
       - SYS_ADMIN
-    devices:
-      - /dev/fuse
+    privileged: true
     security_opt:
       - apparmor:unconfined
     logging:
