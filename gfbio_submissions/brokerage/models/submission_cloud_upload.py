@@ -113,13 +113,32 @@ class SubmissionCloudUpload(TimeStampedModel):
             object_repr=self.__str__()
         )
 
+    @staticmethod
+    def format_display_name(
+        submission_broker_submission_id,
+        has_file_upload,
+        file_upload_id,
+        original_filename,
+        file_upload_status,
+    ):
+        if not has_file_upload:
+            return f"{submission_broker_submission_id}-NO-FILE-UPLOAD-REQUEST"
+        if original_filename:
+            return (
+                f"{original_filename} / {submission_broker_submission_id}-"
+                f"{file_upload_id}-{file_upload_status}"
+            )
+        return f"{submission_broker_submission_id}-{file_upload_id}-{file_upload_status}"
+
     def __str__(self):
-        if self.file_upload is None:
-            return f"{self.submission.broker_submission_id}-NO-FILE-UPLOAD-REQUEST"
-        elif self.file_upload.original_filename:
-            return f"{self.file_upload.original_filename} / {self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
-        else:
-            return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"
+        file_upload = self.file_upload
+        return self.format_display_name(
+            self.submission.broker_submission_id,
+            file_upload is not None,
+            file_upload.id if file_upload else None,
+            file_upload.original_filename if file_upload else None,
+            file_upload.status if file_upload else None,
+        )
 
     @staticmethod
     def get_status_name(status):
