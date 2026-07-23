@@ -99,6 +99,12 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
             validation_task_report.status = "SUCCESS"
     except Exception as e:
         logger.error(f"Error: Exception on parsing file {cloud_upload_file}: {e}.")
+        validation_task_report.validationfinding_set.create(
+            message="An error occured while processing the file.", help_text="Was the file properly uploaded? Please verify and try uploading it again.",
+            status="ERROR", finding_type="File-Problem"
+        )
+        validation_task_report.status = "ERROR"
+
         return False
     finally:
         validation_task_report.save()

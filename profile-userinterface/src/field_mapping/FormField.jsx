@@ -50,7 +50,9 @@ const FormField = ({ formField, form, onFilesChange, submissionData, submissionF
             case "metadata-template":
                 return <MetadataTemplate {...fieldParameters}></MetadataTemplate>;
             case "info-box":
-                return <InfoBox {...fieldParameters}></InfoBox>;
+                return <InfoBox {...fieldParameters} showValidations={false}></InfoBox>;
+            case "info-box-with-validation":
+                return <InfoBox {...fieldParameters} showValidations={true}></InfoBox>;
             case "multiselect-checkboxes":
                 return (
                     <MultiSelectCheckboxes {...fieldParameters}></MultiSelectCheckboxes>

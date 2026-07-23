@@ -23,7 +23,7 @@ def check_mixs_metadata_task(self, previous_task_result=None, submission_id=None
     if not file_opener.is_csv(upload_file):
         findings.append(
             {
-                "status": MIXS_FINDING_STATUS,
+                "status": "ERROR",
                 "row": None,
                 "column": None,
                 "column_name": None,

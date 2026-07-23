@@ -24,6 +24,11 @@ def validate_envo_columns_task(self, previous_task_result=None,  submission_id=N
     except Exception as e:
         msg = f"Error: Exception on parsing file {report.upload_file}: {e}."
         logger.error(msg)
+        validation_task_report.validationfinding_set.create(
+            message="An error occured while processing the file.", help_text="Was the file properly uploaded? Please verify and try uploading it again.",
+            status="ERROR", finding_type="File-Problem"
+        )
+        validation_task_report.status = "ERROR"
         return False, msg
     finally:
         validation_task_report.save()

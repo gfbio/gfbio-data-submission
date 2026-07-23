@@ -51,6 +51,9 @@ class MetadataValidationReportSerializer(serializers.ModelSerializer):
 
     def get_status(self, current_report):
         task_reports = current_report.validationtaskreport_set.all()
+        if len(task_reports) == 0:
+            return 'PENDING'
+
         validation_status = 'SUCCESS'
         for task_report in task_reports:
             if task_report.status == 'ERROR':

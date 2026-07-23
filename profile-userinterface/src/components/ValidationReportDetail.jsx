@@ -289,6 +289,11 @@ function renderReportInformation(report, goToSubmission) {
                 </div>
             </div>
             <div className="mt-4">
+                {report.status == "PENDING" && (
+                    <p>
+                        The validation is still ongoing. Please refresh in a couple of minutes.
+                    </p>
+                )}
                 {errorFindingsCount > 0 && (
                     <p>
                         The validation of your metadata file ran into errors. 
@@ -310,7 +315,7 @@ function renderReportInformation(report, goToSubmission) {
                         before proceeding with your submission.
                     </p>
                 )}
-                {infoFindingsCount == 0 && warningFindingsCount == 0 && errorFindingsCount == 0 && (
+                {report.status != "PENDING" && infoFindingsCount == 0 && warningFindingsCount == 0 && errorFindingsCount == 0 && (
                     <p>
                         Your metadata file was successfully validated and should now be ready for the next steps.
                     </p>
