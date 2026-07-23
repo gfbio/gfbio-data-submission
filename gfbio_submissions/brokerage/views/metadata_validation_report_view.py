@@ -7,13 +7,12 @@ from rest_framework.response import Response
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 
-from ..permissions.is_submission_owner import IsSubmissionOwner
 from ..serializers.metadata_validation_report_serializer import MetadataValidationReportSerializer
 
 
 class MetadataValidationReportView(RetrieveAPIView):
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsSubmissionOwner)
+    permission_classes = (permissions.IsAuthenticated)
     serializer_class = MetadataValidationReportSerializer
     queryset = MetadataValidationReport.objects.all()
     lookup_field = 'pk'
