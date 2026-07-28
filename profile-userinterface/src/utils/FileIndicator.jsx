@@ -25,10 +25,10 @@ const FileIndicator = ({
             const isSelected = isFileSelected(index, "server");
             return (
                 <li key={index}
-                    className={`row small file-list my-1 py-2 list-group-item file-upload success ${isSelected ? "selected" : ""}`}>
+                    className={`row small file-list my-1 py-2 list-group-item file-upload success ${isSelected ? "selected" : ""} pe-0`}>
                     <div className="col-12 container">
                         <div className="row">
-                            <div className={brokerSubmissionId ? "col-md-8" : "col-md-9"}>
+                            <div className={brokerSubmissionId ? "col-md-7" : "col-md-8"}>
                                 <div className="container h-100">
                                     <small className="file-name row h-100 ps-3">
                                         <div
@@ -53,25 +53,41 @@ const FileIndicator = ({
                             <small className="col-2 file-size d-flex align-items-center">
                                 {uploaded.file_size && filesize(uploaded.file_size)}
                             </small>
-                            {
-                                brokerSubmissionId &&
-                                <button type="button" className="col-1 btn btn-download d-flex justify-content-end">
-                                    <a className="col-1 d-flex justify-content-end"
-                                       href={`/api/downloads/submissions/${brokerSubmissionId}/uploads/download_file/${uploaded.pk}/`}
-                                       target="_blank">
-                                        <i className="fa fa-download"></i>
-                                    </a>
+                            <div className="col-1 d-flex justify-content-center align-items-center">
+                                <HoverCard width={320} shadow="md" position="right" withArrow>
+                                <HoverCard.Target>
+                                    <i className={`fa ${getIconForUpload(uploaded.file_status)} ps-0`} 
+                                        aria-hidden="true">    
+                                    </i>
+                                </HoverCard.Target>
+                                <HoverCard.Dropdown>
+                                    <p>
+                                        {uploaded.file_status}: The file was uploaded successfully to our servers
+                                    </p>
+                                </HoverCard.Dropdown>
+                                </HoverCard>
+                            </div>
+                            <div className="col-2 d-flex justify-content-center">
+                                {
+                                    brokerSubmissionId &&
+                                    <button type="button" className="btn btn-download  d-flex">
+                                        <a className="col-1 d-flex"
+                                        href={`/api/downloads/submissions/${brokerSubmissionId}/uploads/download_file/${uploaded.pk}/`}
+                                        target="_blank">
+                                            <i className="fa fa-download"></i>
+                                        </a>
+                                    </button>
+                                }
+                                <button
+                                    className="btn btn-remove  d-flex justify-content-center"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        deleteFile(index, uploaded.pk);
+                                    }}
+                                >
+                                    <i className="fa fa-trash" aria-hidden="true"></i>
                                 </button>
-                            }
-                            <button
-                                className="col-1 btn btn-remove d-flex justify-content-end"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    deleteFile(index, uploaded.pk);
-                                }}
-                            >
-                                <i className="fa fa-trash" aria-hidden="true"></i>
-                            </button>
+                            </div>
                         </div>
                     </div>
                 </li>
@@ -171,39 +187,48 @@ const FileIndicator = ({
         <>
             {fileListElements.length > 0 || uploadedFileListElement.length > 0 ? (
                 <div className="container mb-3">
-                    <div className="row">
-                        <div className="col-12">
-                            <div className="container">
-                                <div className="row">
-                                    <span className="ps-0 py-3 col-6 col-lg-8 upload-header list-header">
-                                        Metadata
-                                        <HoverCard width={320} shadow="md" position="right" withArrow>
-                                        <HoverCard.Target>
-                                            <i className="fa fa-question-circle-o ps-2" aria-hidden="true"></i>
-                                        </HoverCard.Target>
-                                        <HoverCard.Dropdown>
-                                            <p>
-                                            Select the primary metadata file, e.g. metadata template.
-                                            </p>
-                                        </HoverCard.Dropdown>
-                                        </HoverCard>
-                                    </span>
-                                    {
-                                        brokerSubmissionId && (
-                                            <div className="col-6 col-lg-4 btn-download-all d-flex flex-row-reverse align-items-center">
-                                                <a href={`/api/downloads/submissions/${brokerSubmissionId}/uploads/zip/`} target="_blank">
-                                                    Download All 
-                                                    <i className="px-2 fa fa-file-zip-o"></i>
-                                                </a>
-                                            </div>
-                                        )
-                                    }
+                    {
+                        brokerSubmissionId && (
+                            <div className="row flex-row-reverse">
+                                <div className="col-6 col-lg-4 btn-download-all d-flex flex-row-reverse align-items-center">
+                                    <a href={`/api/downloads/submissions/${brokerSubmissionId}/uploads/zip/`} target="_blank">
+                                        Download all files
+                                        <i className="px-2 fa fa-file-zip-o"></i>
+                                    </a>
                                 </div>
                             </div>
+                        )
+                    }
+                    <div className="row mt-1">
+                        <div className="col-2 ps-0">
+                            <span className="upload-header list-header">
+                                Metadata
+                                <HoverCard width={320} shadow="md" position="right" withArrow>
+                                <HoverCard.Target>
+                                    <i className="fa fa-question-circle-o ps-2" aria-hidden="true"></i>
+                                </HoverCard.Target>
+                                <HoverCard.Dropdown>
+                                    <p>
+                                    Select the primary metadata file, e.g. metadata template.
+                                    </p>
+                                </HoverCard.Dropdown>
+                                </HoverCard>
+                            </span>
+                        </div>
+                        <div className="col-5">
+                        </div>
+                        <div className="col-2 list-header">
+                            File-Size
+                        </div>
+                        <div className="col-1 list-header text-center">
+                            Status
+                        </div>
+                        <div className="col-2 list-header text-center">
+                            Actions
                         </div>
                     </div>
-                    <div className="scrollable-file-list">
-                        <ul className="list-group list-group-flush">
+                    <div className="row scrollable-file-list">
+                        <ul className="container list-group list-group-flush pe-0">
                             {uploadedFileListElement}
                             {fileListElements}
                         </ul>
@@ -226,3 +251,15 @@ FileIndicator.propTypes = {
 };
 
 export default FileIndicator;
+function getIconForUpload(status) {
+    if (status == "UPLOADED") {
+        return "fa-cloud file-status-uploaded";
+    }
+    else if (status == "CHECKSUM_MISSMATCH") {
+        return "fa-warning file-status-checksum-missmatch";
+    }
+    else if (status == "INCOMPLETE") {
+        return "fa-cloud-upload file-status-incomplete";
+    }
+}
+
