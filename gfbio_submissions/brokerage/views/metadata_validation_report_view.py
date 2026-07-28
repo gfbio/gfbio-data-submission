@@ -12,7 +12,7 @@ from ..serializers.metadata_validation_report_serializer import MetadataValidati
 
 class MetadataValidationReportView(RetrieveAPIView):
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = MetadataValidationReportSerializer
     queryset = MetadataValidationReport.objects.all()
     lookup_field = 'pk'
