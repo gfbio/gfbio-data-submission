@@ -21,7 +21,7 @@ class SubmissionCloudUploadSerializer(serializers.ModelSerializer):
         if not file_upload or file_upload.status != "COMPLETED" or obj.status in [SubmissionCloudUpload.STATUS_ACTIVE, SubmissionCloudUpload.STATUS_NEW]:
             return "INCOMPLETE"
         if obj.status in [SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM, SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM]:
-            return "CHECKSUM_MISMATCH"
+            return "CHECKSUM MISMATCH"
         return "UPLOADED"
 
 

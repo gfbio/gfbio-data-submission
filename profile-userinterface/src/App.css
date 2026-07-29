@@ -410,6 +410,7 @@ body {
 
     .checkbox-col {
       border-right: #ccc 1px dashed;
+      padding-right: 20px;
     }
 
     .mantine-Checkbox-body {
@@ -602,7 +603,7 @@ body {
   }
 
 
-  .file-status-incomplete, .file-status-checksum-missmatch {
+  .file-status-incomplete, .file-status-checksum-mismatch {
     color: #dc3444;
   }
 
