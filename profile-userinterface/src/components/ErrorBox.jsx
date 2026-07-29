@@ -4,7 +4,7 @@ import {
     Card
 } from "@mantine/core";
 
-const ErrorBox = ({ errorList }) => {
+const ErrorBox = ({ errorList, title, helpText }) => {
     return (
         <div className="error-box w-100">
             {
@@ -12,13 +12,13 @@ const ErrorBox = ({ errorList }) => {
                     <Card padding="md" className="w-100">
                         <div className="text-danger fs-5 pb-2">
                             <i className="fa fa-flash ps-2 pe-2"></i>
-                            There are some validation errors
+                            {title || "We could not submit your form"}
                         </div>
                         <List spacing="0" icon={<i className="fa fa-minus"></i>}>
                             {
                                 errorList.map(
-                                    (error) => (
-                                        <List.Item className="error-item">
+                                    (error, index) => (
+                                        <List.Item className="error-item" key={`${error.field}-${index}`}>
                                             <span className="field">
                                                 {error.field}
                                             </span>
@@ -31,7 +31,7 @@ const ErrorBox = ({ errorList }) => {
                                 )
                             }
                             <List.Item className="error-helptext">
-                                Once all errors are resolved, try to submit again.
+                                {helpText || "Fix the issues above, then click Submit again."}
                             </List.Item>
                         </List>
                     </Card>
@@ -42,7 +42,9 @@ const ErrorBox = ({ errorList }) => {
 };
 
 ErrorBox.defaultProps = {
-    errorList: []
+    errorList: [],
+    title: null,
+    helpText: null,
 };
 
 ErrorBox.propTypes = {
@@ -50,6 +52,8 @@ ErrorBox.propTypes = {
         field: PropTypes.string.isRequired,
         message: PropTypes.string.isRequired,
     })).isRequired,
+    title: PropTypes.string,
+    helpText: PropTypes.string,
 };
 
 export default ErrorBox;

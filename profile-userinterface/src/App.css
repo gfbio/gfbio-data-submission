@@ -812,11 +812,59 @@ button.button-inverted {
   }
 }
 
+.success-message-warning {
+  border-color: #f0c36d;
+  background-color: #fff8e8;
+
+  i {
+    color: #d39e00;
+  }
+
+  .success-message-warnings {
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    background: transparent;
+  }
+
+  .success-message-warning-item {
+    margin: 0 0 0.35rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    pointer-events: none;
+  }
+
+  .success-message-warning-link {
+    margin: 0.75rem 0 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+
+    a {
+      color: #a07900;
+      font-weight: 600;
+      text-decoration: underline;
+
+      &:hover {
+        color: #7a5c00;
+      }
+    }
+  }
+}
+
 .btn-green-inverted {
   background-color: white;
   color: #81B248 !important;
   border-width: 1px;
   border-color: #81B248;
+}
+
+.btn-warning-inverted {
+  background-color: white;
+  color: #a07900 !important;
+  border-width: 1px;
+  border-color: #d39e00;
 }
 
 .error-box {
