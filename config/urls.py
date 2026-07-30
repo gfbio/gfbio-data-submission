@@ -33,6 +33,7 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
     path("resolve/", include("gfbio_submissions.resolve.urls", namespace="resolve")),
+    path("ui/curator/", include("gfbio_submissions.curator_ui.urls", namespace="curator_ui")),
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
     path("profile/", include("gfbio_submissions.submission_profile.urls", namespace="profile")),
 

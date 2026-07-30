@@ -1,0 +1,22 @@
+User Stories (Curators Frontend)
+
+1) As a curator, I want to see a list of all submissions (status, target, user, modified) so I can quickly prioritize.
+2) As a curator, I want to search by submission ID, user name, or ticket reference so I can find specific cases fast.
+3) As a curator, I want to filter by status and target so I can group workloads.
+4) As a curator, I want a single-page submission detail view so I can see all relevant information without context switching.
+5) As a curator, I want to see core metadata (broker_submission_id, user, target, status, created/modified, embargo) so I understand the context.
+6) As a curator, I want to see ticket references (e.g. Helpdesk/Jira) and mark a primary one so communication is traceable.
+7) As a curator, I want to see submission reports (INFO/ERROR/DEBUG) so I can identify problems quickly.
+8) As a curator, I want to see uploads and cloud uploads including status so I can verify data transfer.
+9) As a curator, I want to add a comment to a submission so the process is documented.
+10) As a curator, I want to see optional validation errors so I can ask targeted follow-up questions.
+11) As a curator, I want to execute actions (e.g. validate, submit to ENA, create/recreate XML) so I can manage the workflow without the admin UI.
+12) As a curator, I want to cancel a submission (set to CANCELLED) so faulty submissions are stopped.
+13) As a curator, I want to see per-file cloud upload status details (including last status change) so I can plan fixes.
+14) As a curator, I want to download all files of a submission as a ZIP so I can review them locally.
+15) As a curator, I want to see whether a submission already has accession IDs so I can verify the ENA status.
+16) As a curator, I want to see whether a submission has "release" set and adjust it if needed so release is controlled correctly.
+17) As a curator, I want to view the full JSON submission payload so I can assess data quality.
+18) As a curator, I want to see the history/log of key status changes so the process is traceable.
+19) As a curator, I want the current upload and processing status (e.g. transfer_failed) highlighted in the detail view so I can react quickly.
+20) As a curator, I want to sort the list by "modified" so I can see the most recent cases first.
