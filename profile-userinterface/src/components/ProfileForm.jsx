@@ -14,6 +14,7 @@ import {formatDateToYYYYMMDD} from "../utils/dateUtils";
 import ErrorBox from "./ErrorBox.jsx";
 import LeaveFormDialog from "./LeaveFormDialog.jsx";
 import postComment from "../api/postComment.jsx";
+import { buildSubmissionErrorList, mergeErrorLists } from "../utils/humanizeSubmissionError.jsx";
 
 const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
@@ -168,37 +169,109 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
         const attach_to_ticket = false;
         const meta_data = isMetadata;
-        try {
-            if (uploadType === "cloud") {
-                await uploadFileToS3(
-                    file,
-                    brokerSubmissionId,
-                    attach_to_ticket,
-                    meta_data,
-                    getToken(),
-                    setUploadProgressPercent,
-                );
-            } else {
-                await createUploadFileChannel(
-                    brokerSubmissionId,
-                    file,
-                    file.size < 10 * 1024 * 1024,
-                    meta_data,
-                    getToken(),
-                    setUploadProgressPercent,
+        if (uploadType === "cloud") {
+            await uploadFileToS3(
+                file,
+                brokerSubmissionId,
+                attach_to_ticket,
+                meta_data,
+                getToken(),
+                setUploadProgressPercent,
+            );
+        } else {
+            await createUploadFileChannel(
+                brokerSubmissionId,
+                file,
+                file.size < 10 * 1024 * 1024,
+                meta_data,
+                getToken(),
+                setUploadProgressPercent,
+            );
+        }
+        console.log("Upload complete");
+    };
+
+    const collectPostSaveWarnings = async (brokerSubmissionId, comment) => {
+        const warnings = [];
+
+        if (comment) {
+            try {
+                await postComment(brokerSubmissionId, comment);
+            } catch (error) {
+                console.error(error);
+                warnings.push(
+                    "Your comment could not be saved.",
                 );
             }
-            console.log("Upload complete");
-        } catch (error) {
-            console.error("Upload error: ", error);
         }
+
+        const fileUploadResults = await Promise.allSettled(
+            files.map((file, index) => {
+                let isMetadata = false;
+                if (metadataIndex && metadataIndex.source === "local") {
+                    isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
+                }
+                return handleFileUpload(file, brokerSubmissionId, isMetadata);
+            }),
+        );
+
+        const failedFileNames = fileUploadResults
+            .map((result, index) => {
+                if (result.status !== "rejected") {
+                    return null;
+                }
+                console.error("Upload error: ", result.reason);
+                return files[index]?.name || "a file";
+            })
+            .filter(Boolean);
+
+        if (failedFileNames.length === 1) {
+            warnings.push(
+                `The file "${failedFileNames[0]}" could not be uploaded.`,
+            );
+        } else if (failedFileNames.length > 1) {
+            warnings.push(
+                `${failedFileNames.length} files could not be uploaded.`,
+            );
+        }
+
+        return warnings;
+    };
+
+    const navigateAfterSave = (isUpdate, warnings, brokerSubmissionId) => {
+        setShowLeaveDialog(false);
+        sessionStorage.removeItem("successMessageShown");
+        navigate(pendingNavigation || ROUTER_URL_LIST, {
+            state: isUpdate
+                ? { update: true, warnings, brokerSubmissionId }
+                : { create: true, warnings, brokerSubmissionId },
+        });
+    };
+
+    const buildClientErrorList = (validationErrors) => {
+        if (!validationErrors || !profileData?.form_fields) {
+            return [];
+        }
+        return Object.entries(validationErrors).map(([key, val]) => {
+            const formField = profileData.form_fields.find(f => f.field.field_id == key);
+            return {
+                field: formField ? formField.field.title : key,
+                message: String(val),
+            };
+        });
     };
 
     const handleSubmit = (values) => {
-        if (!form.isValid || uploadLimitExceeded || (values.files && values.files.some(file => file.invalid))) {
+        if (uploadLimitExceeded || (values.files && values.files.some(file => file.invalid))) {
             return;
         }
+
+        // Keep inline field errors, still call the API so schema errors (e.g. data center) are included.
+        const validationResult = form.validate();
+        const clientErrorList = buildClientErrorList(validationResult.errors);
+
         setProcessing(true);
+        setErrorList(clientErrorList);
 
         // Extract embargo_date before filtering other values
         const embargoDate = values.embargo;
@@ -220,6 +293,11 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
             return acc;
         }, {});
 
+        const onSubmissionError = (error) => {
+            const serverErrorList = buildSubmissionErrorList(error, resolveFieldTitle);
+            setErrorList(mergeErrorLists(clientErrorList, serverErrorList));
+        };
+
         // TODO: fixed token value for local testing only
         if (submissionData?.broker_submission_id) {
             putSubmission(
@@ -228,29 +306,15 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 embargoDate,
                 filteredValues,
             )
-                .then((result) => {
+                .then(async (result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        if(result?.comment) {
-                            postComment(result.broker_submission_id, result.comment).then((result) => {
-                            }).catch((error) => {
-                                console.error(error);
-                            }).finally(() => {});
-                        }
-                        const fileUploadPromises = files.map((file, index) => {
-                            let isMetadata = false;
-                            if (metadataIndex && metadataIndex.source === "local") {
-                                isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
-                            }
-                            return handleFileUpload(file, brokerSubmissionId, isMetadata);
-                        });
-                        return Promise.all(fileUploadPromises).then(() => {
-                            setShowLeaveDialog(false); // Close dialog after successful submission
-                            sessionStorage.removeItem("successMessageShown");
-                            navigate(pendingNavigation || ROUTER_URL_LIST, {
-                                state: { update: true },
-                            });
-                        });
+                        const warnings = await collectPostSaveWarnings(
+                            brokerSubmissionId,
+                            result?.comment,
+                        );
+                        navigateAfterSave(true, warnings, brokerSubmissionId);
+                        return;
                     } else {
                         console.error(
                             "broker_submission_id is missing in the response data.",
@@ -261,36 +325,22 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                         );
                     }
                 })
-                .catch(handleSubmissionError)
+                .catch(onSubmissionError)
                 .finally(async () => {
                     await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                     setProcessing(false);
                 });
         } else {
             postSubmission(profileData.target, embargoDate, filteredValues)
-                .then((result) => {
+                .then(async (result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        if(result?.comment) {
-                            postComment(result.broker_submission_id, result.comment).then((result) => {
-                            }).catch((error) => {
-                                console.error(error);
-                            }).finally(() => {});
-                        }
-                        const fileUploadPromises = files.map((file, index) => {
-                            let isMetadata = false;
-                            if (metadataIndex && metadataIndex.source === "local") {
-                                isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
-                            }
-                            return handleFileUpload(file, brokerSubmissionId, isMetadata);
-                        });
-                        return Promise.all(fileUploadPromises).then(() => {
-                            setShowLeaveDialog(false); // Close dialog after successful submission
-                            sessionStorage.removeItem("successMessageShown");
-                            navigate(pendingNavigation || ROUTER_URL_LIST, {
-                                state: { create: true },
-                            });
-                        });
+                        const warnings = await collectPostSaveWarnings(
+                            brokerSubmissionId,
+                            result?.comment,
+                        );
+                        navigateAfterSave(false, warnings, brokerSubmissionId);
+                        return;
                     } else {
                         console.error(
                             "broker_submission_id is missing in the response data.",
@@ -301,7 +351,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                         );
                     }
                 })
-                .catch(handleSubmissionError)
+                .catch(onSubmissionError)
                 .finally(async () => {
                     await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                     setProcessing(false);
@@ -309,26 +359,14 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         }
     };
 
-    const handleSubmissionError = (error) => {
-        if (error.response && error.response.data && error.response.data.data) {
-            console.log(error.response.data);
-            if (error.response.data.data && Array.isArray(error.response.data.data)) {
-                setErrorList(
-                    error.response.data.data.map((item) => {
-                        let colonIdx = item.indexOf(" : ");
-                        let field_id = item.substring(0, colonIdx);
-                        let message = item.substring(colonIdx + 3);
-                        if (profileData.form_fields.find(f => f.field.field_id == field_id)) {
-                            field_id = profileData.form_fields.find(f => f.field.field_id == field_id).field.title;
-                        }
-                        return { "field": field_id, "message": message };
-                    }),
-                );
+    const handleFormSubmit = (event) => {
+        event.preventDefault();
+        handleSubmit(form.getValues());
+    };
 
-            }
-        } else {
-            console.error("Submission error: ", error);
-        }
+    const resolveFieldTitle = (fieldId) => {
+        const formField = profileData.form_fields?.find(f => f.field.field_id == fieldId);
+        return formField ? formField.field.title : fieldId;
     };
 
     const createSubmitButton = () => {
@@ -378,7 +416,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 onDiscard={handleLeaveDiscard}
             />
             <form
-                onSubmit={form.onSubmit(handleSubmit)}
+                onSubmit={handleFormSubmit}
                 className="submission-form container"
             >
                 <div className="row">
