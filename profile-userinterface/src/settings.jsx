@@ -49,3 +49,5 @@ export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 100 * 1024 * 1024 * 1024;  // 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
 
 export const USE_LOCAL_UPLOAD_ONLY = false;
+
+export const TASK_REFRESH_INTERVAL_MS = 10000;

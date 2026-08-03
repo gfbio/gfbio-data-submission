@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models.submission import Submission
-from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
+from ..permissions.is_owner_or_readonly import IsOwnerOrHasCuratorRightsOrReadOnly
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
@@ -27,7 +27,7 @@ class SubmissionDetailView(
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrHasCuratorRightsOrReadOnly)
 
     lookup_field = "broker_submission_id"
 

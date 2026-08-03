@@ -12,6 +12,9 @@ import SelectField from "./input_fields/SelectField.jsx";
 import TagsInputInlineField from "./input_fields/TagsInputInlineField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
+import SubmissionOverview from "./input_fields/SubmissionOverview.jsx";
+import TaskProgressReports from "./input_fields/TaskProgressReports.jsx";
+import CuratorActions from "./input_fields/CuratorActions.jsx";
 
 const FormField = ({ formField, form, onFilesChange, submissionData, submissionFiles, localSubmissionFiles }) => {
     const fieldParameters = {
@@ -69,6 +72,12 @@ const FormField = ({ formField, form, onFilesChange, submissionData, submissionF
                 return <UniqueStringsList {...fieldParameters} fa_icon_tag={"fa-newspaper-o"}></UniqueStringsList>;
             case "contributors":
                 return <Contributors {...fieldParameters}></Contributors>;
+            case "submission-overview":
+                return <SubmissionOverview {...fieldParameters}></SubmissionOverview>
+            case "task-progress-reports":
+                return <TaskProgressReports {...fieldParameters}></TaskProgressReports>
+            case "curator-actions":
+                return <CuratorActions {...fieldParameters}></CuratorActions>
             default:
                 return <TextField {...fieldParameters}></TextField>;
         }

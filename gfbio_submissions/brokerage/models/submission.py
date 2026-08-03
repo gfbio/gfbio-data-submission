@@ -273,3 +273,8 @@ class Submission(TimeStampedModel):
 
     def __str__(self):
         return "{}_{}".format(self.pk, self.broker_submission_id)
+
+    class Meta:
+        permissions = [
+            ("curate_submissions", "Can edit submissions that belong to other users"),
+        ]

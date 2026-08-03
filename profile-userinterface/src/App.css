@@ -995,3 +995,27 @@ button.button-inverted {
   overflow-x: hidden;
   padding-right: 12px;
 }
+
+
+
+.clickable-text {
+  &:hover {
+    color: #3cace4;
+  }
+
+  cursor: pointer;
+}
+
+.allow-line-wrapping {
+  white-space: pre-wrap;
+}
+
+.task-report-table {
+  tbody {
+    border-bottom: 2px solid #bdbdbd;
+    
+    .main-row {
+      border-top: 2px solid #bdbdbd;
+    }
+  }
+}
