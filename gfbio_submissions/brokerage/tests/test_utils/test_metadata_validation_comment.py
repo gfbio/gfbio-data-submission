@@ -79,10 +79,11 @@ class TestMetadataValidationComment(TestCase):
         )
 
         comment = build_metadata_validation_report_comment(report)
-        self.assertIn("Metadata validation report", comment)
-        self.assertIn("ENA mandatory fields (ERROR)", comment)
-        self.assertIn("Required field 'taxon_id' is empty in row 2.", comment)
-        self.assertIn("Please fix the issues above", comment)
+        self.assertIn("WARNINGS: 0", comment)
+        self.assertIn("INFOS: 0", comment)
+        self.assertIn("ERRORS: 1", comment)
+        self.assertIn("Please fix the issues and upload an updated metadata file.", comment)
+
 
     def test_build_comment_omits_task_details_when_no_errors(self):
         report = MetadataValidationReport.objects.create(
@@ -99,10 +100,11 @@ class TestMetadataValidationComment(TestCase):
 
         comment = build_metadata_validation_report_comment(report)
 
-        self.assertIn("Result: no errors found", comment)
-        self.assertIn("The mandatory metadata checks completed without errors.", comment)
-        self.assertNotIn("ENA mandatory fields (SUCCESS)", comment)
-        self.assertNotIn("No issues reported.", comment)
+        self.assertIn("WARNINGS: 0", comment)
+        self.assertIn("INFOS: 0", comment)
+        self.assertIn("ERRORS: 0", comment)
+        self.assertIn("The mandatory metadata checks completed without errors. Your submission should be ready to continue.", comment)
+
 
     def test_build_comment_includes_task_details_when_only_warnings(self):
         report = MetadataValidationReport.objects.create(
@@ -127,7 +129,7 @@ class TestMetadataValidationComment(TestCase):
 
         comment = build_metadata_validation_report_comment(report)
 
-        self.assertIn("Result: warnings found", comment)
-        self.assertIn("MIxS vocabulary check (WARNING)", comment)
-        self.assertIn("Value not found in ENVO vocabulary.", comment)
-        self.assertIn("Please review the warnings above before continuing.", comment)
+        self.assertIn("WARNINGS: 1", comment)
+        self.assertIn("INFOS: 0", comment)
+        self.assertIn("ERRORS: 0", comment)
+        self.assertIn("Please review the warnings and consider improving your metadata file before continuing.", comment)

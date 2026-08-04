@@ -4,10 +4,11 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
+import ValidationReportDetail from "./components/ValidationReportDetail.jsx";
 import ErrorPage from "./components/errorPage.jsx";
 
 // eslint-disable-next-line no-unused-vars
-import {DEFAULT_PROFILE_NAME, ROUTER_URL_CREATE, ROUTER_URL_LIST, ROUTER_URL_EDIT, LOCAL_ROUTER_BASE_URL} from "./settings.jsx";
+import {DEFAULT_PROFILE_NAME, ROUTER_URL_CREATE, ROUTER_URL_LIST, ROUTER_URL_EDIT, LOCAL_ROUTER_BASE_URL, ROUTER_URL_VALIDATIONS} from "./settings.jsx";
 
 import {loader as submissionsLoader} from "./utils/SubmissionsLoader.jsx";
 
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
             {
                 path: ROUTER_URL_EDIT + ":brokerageId/",
                 element: <ProfileFormWrapper/>,
+            },
+            {
+                path: ROUTER_URL_VALIDATIONS + ":brokerageId/validation-report/:reportId/",
+                element: <ValidationReportDetail/>,
             },
         ],
     },

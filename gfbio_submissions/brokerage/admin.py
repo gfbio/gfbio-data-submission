@@ -786,6 +786,10 @@ class ValidationTaskReportInlineAdmin(admin.TabularInline):
 
 
 class MetadataValidationReportAdmin(admin.ModelAdmin):
+    autocomplete_fields = ["upload_file", "submission"]
+    list_per_page = 50
+    show_full_result_count = False
+
     inlines = (
         ValidationTaskReportInlineAdmin,
     )
@@ -868,11 +872,14 @@ def run_validate_metadata_cloud_uploads(modeladmin, request, queryset):
         non_ena_scu_ids = [scu.id for scu in non_ena_submission_cloud_uploads]
 
     for metadata_file in queryset.exclude(id__in=non_ena_scu_ids):
-        add_metadata_file_validation_task.s(
-            submission_id=metadata_file.submission.pk,
-            submission_upload_id=metadata_file.id,
-            triggered_by_user_id=request.user.pk,
-        ).set(countdown=SUBMISSION_DELAY)
+        chain = (
+            add_metadata_file_validation_task.s(
+                submission_id=metadata_file.submission.pk,
+                submission_upload_id=metadata_file.id,
+                triggered_by_user_id=request.user.pk,
+            ).set(countdown=SUBMISSION_DELAY)
+        )
+        chain()
 
 
 run_validate_metadata_cloud_uploads.short_description = "Run validation for molecular metadata"
