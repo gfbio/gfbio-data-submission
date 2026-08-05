@@ -23,10 +23,11 @@ def check_mixs_metadata_task(self, previous_task_result=None, submission_id=None
     if not file_opener.is_csv(upload_file):
         findings.append(
             {
-                "status": MIXS_FINDING_STATUS,
+                "status": "ERROR",
                 "row": None,
                 "column": None,
                 "column_name": None,
+                "finding_type": "Invalid File Format",
                 "message": "Metadata validation requires a CSV metadata file.",
                 "help_text": "Upload the molecular metadata template as a .csv file.",
             }
@@ -43,6 +44,7 @@ def check_mixs_metadata_task(self, previous_task_result=None, submission_id=None
                     "row": None,
                     "column": None,
                     "column_name": None,
+                    "finding_type": "File Read Error",
                     "message": f"Could not read metadata file for MIxS validation: {error}",
                     "help_text": "Ensure the metadata file is a valid CSV and accessible to the submission system.",
                 }
@@ -51,9 +53,6 @@ def check_mixs_metadata_task(self, previous_task_result=None, submission_id=None
     for finding in findings:
         validation_task_report.validationfinding_set.create(**finding)
 
-    if findings:
-        validation_task_report.status = MIXS_FINDING_STATUS
-    else:
-        validation_task_report.status = "SUCCESS"
+    validation_task_report.set_status_based_on_findings()
     validation_task_report.save()
     return True

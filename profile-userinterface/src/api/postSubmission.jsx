@@ -4,8 +4,6 @@ import getToken from "./utils/getToken.jsx";
 
 // TODO: work in progress.
 const postSubmission = async (target, embargo, data) => {
-    let result = {};
-
     let comment = data.comment || "";
     delete data.comment;
 
@@ -29,20 +27,9 @@ const postSubmission = async (target, embargo, data) => {
             "Content-Type": "application/json",
         },
     };
-    await axios
-        .post(url, requestData, config)
-        .then((reponse) => {
-            result = reponse.data;
-        })
-        .catch((error) => {
-            console.error("Error: ", error);
-            // setError(error);
-        })
-        .finally(() => {
-        });
 
-    result["comment"] =  comment;
-    return result;
+    const response = await axios.post(url, requestData, config);
+    return { ...response.data, comment };
 };
 
 export default postSubmission;

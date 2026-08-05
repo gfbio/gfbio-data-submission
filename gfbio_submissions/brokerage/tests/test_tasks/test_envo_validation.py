@@ -323,7 +323,7 @@ class TestEnvoValidation(TestTasks):
 
         self.assertEqual(1, task_report.validationfinding_set.count())
         self.assertEqual("WARNING", task_report.status)
-        self.assertEqual("'glaciation' is not a decendant of enviromental material [ENVO:00010483], which we dicourage.", task_report.validationfinding_set.all()[0].message)
+        self.assertEqual("'glaciation' is not a descendant of enviromental material [ENVO:00010483], which we dicourage.", task_report.validationfinding_set.all()[0].message)
         self.assertEqual(5, task_report.validationfinding_set.all()[0].column)
         self.assertEqual(2, task_report.validationfinding_set.all()[0].row)
         self.assertEqual("environmental medium", task_report.validationfinding_set.all()[0].column_name)

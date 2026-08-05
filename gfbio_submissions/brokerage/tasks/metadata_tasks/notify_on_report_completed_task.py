@@ -25,10 +25,7 @@ logger = logging.getLogger(__name__)
     retry_jitter=True,
 )
 def notify_on_report_completed_task(self, previous_task_result=None, submission_id=None, report_id=None):
-    report = MetadataValidationReport.objects.select_related(
-        "submission",
-        "upload_file__file_upload",
-    ).get(pk=report_id)
+    report = MetadataValidationReport.objects.get(pk=report_id)
 
     if not should_post_metadata_validation_jira_comment(report):
         logger.info(

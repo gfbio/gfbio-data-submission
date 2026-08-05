@@ -100,9 +100,9 @@ def _findings_for_invalid_taxon_ids(upload_file, submission, invalid_taxon_ids):
                             "row": data_row_number,
                             "column": taxon_id_column,
                             "column_name": "taxon_id",
+                            "finding_type": "Non-Submittable Taxon ID",
                             "message": (
-                                f"Taxon ID '{taxon_id}' in row {data_row_number} "
-                                "is not submittable to ENA."
+                                f"The Taxon ID '{taxon_id}' is not submittable to ENA."
                             ),
                             "help_text": _TAXON_ID_HELP_TEXT,
                         }
@@ -125,6 +125,7 @@ def _fallback_findings_from_messages(messages):
             "row": None,
             "column": None,
             "column_name": "taxon_id",
+            "finding_type": "Taxon ID Error",
             "message": message,
             "help_text": _TAXON_ID_HELP_TEXT,
         }
@@ -160,6 +161,7 @@ def check_ena_submittable_taxon_ids_task(self, previous_task_result=None, submis
                     "row": None,
                     "column": None,
                     "column_name": "taxon_id",
+                    "finding_type": "Taxon ID Check Skipped",
                     "message": "Taxon ID submittability check could not be performed.",
                     "help_text": "Ensure a CSV metadata file with taxon_id values is available.",
                 }
@@ -184,6 +186,7 @@ def check_ena_submittable_taxon_ids_task(self, previous_task_result=None, submis
                 "row": None,
                 "column": None,
                 "column_name": "taxon_id",
+                "finding_type": "Taxon ID Validation Error",
                 "message": f"Could not validate taxon_id values against ENA: {error}",
                 "help_text": "Please retry later. If the problem persists, contact support.",
             }
@@ -192,11 +195,6 @@ def check_ena_submittable_taxon_ids_task(self, previous_task_result=None, submis
     for finding in findings:
         validation_task_report.validationfinding_set.create(**finding)
 
-    if any(finding["status"] == "ERROR" for finding in findings):
-        validation_task_report.status = "ERROR"
-    elif any(finding["status"] == "WARNING" for finding in findings):
-        validation_task_report.status = "WARNING"
-    else:
-        validation_task_report.status = "SUCCESS"
+    validation_task_report.set_status_based_on_findings()
     validation_task_report.save()
     return True

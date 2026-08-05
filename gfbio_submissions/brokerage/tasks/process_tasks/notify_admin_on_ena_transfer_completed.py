@@ -41,14 +41,24 @@ def notify_admin_on_ena_transfer_completed_task(self, previous_result=None, subm
             file for file in submission_cloud_uploads
             if file.status != SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
         ]
+
         if files_with_errors:
             jira_message += f"\nProcess ran into problems for {len(files_with_errors)} file(s):\n"
-            jira_message += "\n".join([
-                f"- {fwe.file_upload.original_filename}: {SubmissionCloudUpload.get_status_name(fwe.status)}"
-                for fwe in files_with_errors
-            ])
-            jira_message += "\n\n"
-        
+            if len(files_with_errors) < 50:
+                jira_message += "\n".join([
+                    f"- {fwe.file_upload.original_filename}: {SubmissionCloudUpload.get_status_name(fwe.status)}"
+                    for fwe in files_with_errors
+                ])
+                jira_message += "\n\n"
+            else:
+                errors = {}
+                for file in files_with_errors:
+                    if file.status not in errors:
+                        errors[file.status] = 0
+                    errors[file.status] = errors[file.status] + 1
+                for key, value in errors:
+                    jira_message += f"File(s) in state {key}: value\n\n"
+
         successes = [
             file.file_upload.original_filename
             for file in submission_cloud_uploads
@@ -56,7 +66,12 @@ def notify_admin_on_ena_transfer_completed_task(self, previous_result=None, subm
         ]
         if successes:
             jira_message += "\nSuccessfully transmitted:\n"
-            jira_message += ", ".join(successes)
+            if (len(successes < 50)):
+                jira_message += ", ".join(successes)
+            else:
+                jira_message += ", ".join(successes[0,5])
+                jira_message += f", [... {len(successes) - 10} further files ...], "
+                jira_message += ", ".join(successes[-5,-1])
             jira_message += "\n"
 
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)

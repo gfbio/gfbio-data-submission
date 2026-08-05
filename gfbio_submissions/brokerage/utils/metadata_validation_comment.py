@@ -1,3 +1,4 @@
+from django.conf import settings
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 
 
@@ -27,64 +28,33 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
     if upload_file.file_upload and upload_file.file_upload.original_filename:
         filename = upload_file.file_upload.original_filename
 
-    task_reports = report.validationtaskreport_set.prefetch_related("validationfinding_set").order_by("created")
+
     findings = []
-    for task_report in task_reports:
+    for task_report in report.validationtaskreport_set.all():
         findings.extend(list(task_report.validationfinding_set.all()))
 
-    has_errors = any(task_report.status == "ERROR" for task_report in task_reports) or any(
-        finding.status == "ERROR" for finding in findings
-    )
-    has_warnings = any(task_report.status == "WARNING" for task_report in task_reports) or any(
-        finding.status == "WARNING" for finding in findings
-    )
-    has_issues = has_errors or has_warnings
+    error_count = sum(1 for finding in findings if finding.status == "ERROR")
+    warning_count = sum(1 for finding in findings if finding.status == "WARNING")
+    info_count = sum(1 for finding in findings if finding.status == "INFO")
 
-    if has_errors:
-        summary_status = "errors found"
-    elif has_warnings:
-        summary_status = "warnings found"
-    else:
-        summary_status = "no errors found"
-
+    report_path = f"{settings.HOST_URL_ROOT}/validations/{report.submission.broker_submission_id}/validation-reports/{report.pk}/"
     lines = [
-        "Metadata validation report",
+        f"Metadata validation report ready for file {filename} ({report.file_md5_checksum})",
+        "Summary:",
+        f"ERRORS: {error_count}",
+        f"WARNINGS: {warning_count}",
+        f"INFOS: {info_count}",
         "",
-        f"File: {filename}",
-        f"Result: {summary_status}",
+        f"You can see the complete validation report here: {report_path}",
         "",
     ]
-
-    if not task_reports.exists():
-        lines.append("No validation checks were recorded for this metadata file.")
-    elif has_issues:
-        for task_report in task_reports:
-            lines.append(f"{task_report.task_name} ({task_report.status})")
-            task_findings = list(task_report.validationfinding_set.all())
-            if not task_findings:
-                lines.append("- No issues reported.")
-            else:
-                for finding in task_findings:
-                    location_parts = []
-                    if finding.row is not None:
-                        location_parts.append(f"row {finding.row}")
-                    if finding.column_name:
-                        location_parts.append(f"column '{finding.column_name}'")
-                    elif finding.column is not None:
-                        location_parts.append(f"column {finding.column}")
-                    location = ", ".join(location_parts)
-                    prefix = f"- {location}: " if location else "- "
-                    help_text = ""
-                    if finding.help_text:
-                        help_text = f" ({finding.help_text})"
-                    lines.append(f"{prefix}{finding.message}{help_text}")
-            lines.append("")
-
-    if has_errors:
-        lines.append("Please fix the issues above and upload an updated metadata file.")
-    elif has_warnings:
-        lines.append("Please review the warnings above before continuing.")
+    if error_count > 0:
+        lines.append("Please fix the issues and upload an updated metadata file.")
+    elif warning_count > 0:
+        lines.append("Please review the warnings and consider improving your metadata file before continuing.")
+    elif info_count > 0:
+        lines.append("Please review the infos above before continuing.")
     else:
-        lines.append("The mandatory metadata checks completed without errors.")
+        lines.append("The mandatory metadata checks completed without errors. Your submission should be ready to continue.")
 
     return "\n".join(lines).strip()

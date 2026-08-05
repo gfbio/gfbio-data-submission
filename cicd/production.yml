@@ -13,8 +13,6 @@ services:
         GROUP_ID: 997
         USER_ID: 998
     image: gfbio_submissions_production_django
-    cap_add:
-      - SYS_ADMIN
     depends_on:
       - postgres
       - redis
@@ -23,6 +21,7 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     networks:
       - internalProxy
       - internal
@@ -48,11 +47,12 @@ services:
       && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/submission_profiles.json
       && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
 
-  downloads:
-    <<: *django
-    image: gfbio_submissions_production_downloads
-    container_name: gfbio-submission-downloads
-    command: /start-downloads
+# seems to cause confusion for traefik
+#  downloads:
+#    <<: *django
+#    image: gfbio_submissions_production_downloads
+#    container_name: gfbio-submission-downloads
+#    command: /start-downloads
 
   postgres:
     build:
@@ -85,6 +85,7 @@ services:
       - internal
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog
@@ -107,6 +108,7 @@ services:
       - internal
     volumes:
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     image: gfbio_submissions_production_celery_transfer_worker
     logging:
       driver: syslog
@@ -128,6 +130,8 @@ services:
     networks:
       - internal
     image: gfbio_submissions_production_celerybeat
+    volumes:
+      - /home/gitlab-runner/mnt/s3bucket:/mnt/s3bucket:z
     logging:
       driver: syslog
       options:

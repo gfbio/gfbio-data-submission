@@ -80,6 +80,7 @@ def _finding(
     *,
     message: str,
     help_text: str,
+    finding_type: str | None = None,
     row: int | None = None,
     column: int | None = None,
     column_name: str | None = None,
@@ -89,6 +90,7 @@ def _finding(
         "row": row,
         "column": column,
         "column_name": column_name,
+        "finding_type": finding_type,
         "message": message,
         "help_text": help_text,
     }
@@ -100,6 +102,7 @@ def _validate_header(present_fields: set[str], fieldnames: list[str]) -> list[di
         if not _header_has_field(field_name, present_fields):
             findings.append(
                 _finding(
+                    finding_type="Required column missing",
                     row=1,
                     column_name=field_name,
                     message=f"Required column '{field_name}' is missing from the metadata file header.",
@@ -110,6 +113,7 @@ def _validate_header(present_fields: set[str], fieldnames: list[str]) -> list[di
         if not _header_has_field(field_name, present_fields):
             findings.append(
                 _finding(
+                    finding_type="Required column missing",
                     row=1,
                     column_name=field_name,
                     message=f"Required column '{field_name}' is missing from the metadata file header.",
@@ -126,6 +130,7 @@ def _validate_legacy_column_headers(present_fields: set[str], fieldnames: list[s
             continue
         findings.append(
             _finding(
+                finding_type="Column header deprecated",
                 row=1,
                 column=_column_index(fieldnames, legacy_name),
                 column_name=legacy_name,
@@ -163,6 +168,7 @@ def _validate_environmental_package(
         canonical_package = MIXS_ENVIRONMENTAL_PACKAGE_ALIASES[normalized_raw]
         findings.append(
             _finding(
+                finding_type="Incompatible package",
                 row=row_number,
                 column=column,
                 column_name=column_name,
@@ -176,11 +182,12 @@ def _validate_environmental_package(
     elif normalized_raw and not is_supported_environmental_package(row_package_raw):
         findings.append(
             _finding(
+                finding_type="Unknown environmental package",
                 row=row_number,
                 column=column,
                 column_name=column_name,
                 message=(
-                    f"Unknown environmental package '{row_package_raw.strip()}' in row {row_number}."
+                    f"Unknown environmental package '{row_package_raw.strip()}'."
                 ),
                 help_text=_field_help_text("environmental package"),
             )
@@ -204,10 +211,11 @@ def _validate_presence_field(
         return None
     prefix = f"MIxS rule {rule_number}: " if rule_number else ""
     return _finding(
+        finding_type="Missing value",
         row=row_number,
         column=_column_index(fieldnames, column_name),
         column_name=column_name,
-        message=f"{prefix}Required field '{field_name}' is empty in row {row_number}.",
+        message=f"{prefix}Required field '{field_name}' is empty.",
         help_text=_field_help_text(field_name),
     )
 
@@ -238,12 +246,12 @@ def _validate_format_rule(
         if _format_rule_is_mandatory(rule, row_package):
             findings.append(
                 _finding(
+                    finding_type="Missing value",
                     row=row_number,
                     column=_column_index(fieldnames, column_name),
                     column_name=column_name,
                     message=(
-                        f"MIxS rule {rule['rule_number']}: Required field '{field_name}' is empty "
-                        f"in row {row_number}."
+                        f"MIxS rule {rule['rule_number']}: Required field '{field_name}' is empty."
                     ),
                     help_text=format_rule["help_text"],
                 )
@@ -253,12 +261,13 @@ def _validate_format_rule(
     if not format_rule_value_matches(format_rule, value):
         findings.append(
             _finding(
+                finding_type="Invalid value",
                 row=row_number,
                 column=_column_index(fieldnames, column_name),
                 column_name=column_name,
                 message=(
                     f"MIxS rule {rule['rule_number']}: Invalid value '{str(value).strip()}' "
-                    f"for '{field_name}' in row {row_number}."
+                    f"for '{field_name}'."
                 ),
                 help_text=format_rule["help_text"],
             )
@@ -293,11 +302,11 @@ def _validate_package_extra_mandatory_fields(
         if column_name is None:
             findings.append(
                 _finding(
+                    finding_type="Required column missing",
                     row=row_number,
                     column_name=field_name,
                     message=(
-                        f"Required field '{field_name}' is missing for environmental package "
-                        f"'{package}' in row {row_number}."
+                        f"Required field '{field_name}' is missing for environmental package '{package}'."
                     ),
                     help_text=_field_help_text(field_name),
                 )
@@ -307,12 +316,13 @@ def _validate_package_extra_mandatory_fields(
         if _is_missing_value(row.get(column_name)):
             findings.append(
                 _finding(
+                    finding_type="Missing value",
                     row=row_number,
                     column=_column_index(fieldnames, column_name),
                     column_name=column_name,
                     message=(
                         f"Required field '{field_name}' is empty for environmental package "
-                        f"'{package}' in row {row_number}."
+                        f"'{package}'."
                     ),
                     help_text=_field_help_text(field_name),
                 )

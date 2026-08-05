@@ -13,6 +13,7 @@ from .views.curator_submissions_view import (
     CuratorSubmissionTaskProgressReportView,
 )
 from .views.jira_issue_update_view import JiraIssueUpdateView
+from .views.metadata_validation_report_view import LatestMetadataValidationReportView, MetadataValidationReportView
 from .views.submission_cloud_upload_detail_view import SubmissionCloudUploadDetailView
 from .views.submission_cloud_upload_download_view import (
     SubmissionCloudGetDownloadLinkView,
@@ -162,6 +163,16 @@ urlpatterns = [
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$",
         view=SubmissionCommentView.as_view(),
         name="submission_comment",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validation-reports/latest/$",
+        view=LatestMetadataValidationReportView.as_view(),
+        name="metadata_validation_report_latest",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validation-reports/(?P<pk>[0-9]+)/$",
+        view=MetadataValidationReportView.as_view(),
+        name="metadata_validation_report",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/reports/$",

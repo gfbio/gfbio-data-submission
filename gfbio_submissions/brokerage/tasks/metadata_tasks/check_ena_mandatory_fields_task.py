@@ -36,6 +36,7 @@ def check_ena_mandatory_fields_task(self, previous_task_result=None, submission_
                 "row": None,
                 "column": None,
                 "column_name": None,
+                "finding_type": "Invalid File Format",
                 "message": "Metadata validation requires a CSV metadata file.",
                 "help_text": "Upload the molecular metadata template as a .csv file.",
             }
@@ -52,6 +53,7 @@ def check_ena_mandatory_fields_task(self, previous_task_result=None, submission_
                     "row": None,
                     "column": None,
                     "column_name": None,
+                    "finding_type": "File Read Error",
                     "message": f"Could not read metadata file for validation: {error}",
                     "help_text": "Ensure the metadata file is a valid CSV and accessible to the submission system.",
                 }
@@ -60,9 +62,6 @@ def check_ena_mandatory_fields_task(self, previous_task_result=None, submission_
     for finding in findings:
         validation_task_report.validationfinding_set.create(**finding)
 
-    if any(finding["status"] == "ERROR" for finding in findings):
-        validation_task_report.status = "ERROR"
-    else:
-        validation_task_report.status = "SUCCESS"
+    validation_task_report.set_status_based_on_findings()
     validation_task_report.save()
     return True

@@ -16,6 +16,7 @@ class OntologyMatcher:
             ontology = provided_id.split(":")[0]
             if self.ontology and ontology != self.ontology:
                 return None, {
+                    "finding_type": "Ontology Mismatch",
                     "msg": f"The id {provided_id} of {provided_name} does not match the required Ontology {self.ontology}.", 
                     "help_text": f"Please choose a term from the Ontology {self.ontology}.",
                     "status": "ERROR",
@@ -31,6 +32,7 @@ class OntologyMatcher:
             elif len(matches) > 1:
                 examples = ', '.join([f"'{res['prefLabel']} [{res['id']}]'" for res in matches])
                 return None, {
+                    "finding_type": "Multiple matches in ontology",
                     "msg": f"There are mulitple possible matches for '{provided_name}'. E.g. {examples}...",
                     "help_text": "Please set the format to 'the terminology [ONTO:12345]' to remove all ambiguity.",
                     "status": "ERROR",
@@ -38,6 +40,7 @@ class OntologyMatcher:
             elif len(matches) == 0 and len(collection) > 0:
                 examples = ', '.join([f"'{res['prefLabel']} [{res['id']}]'" for res in collection])
                 return None, {
+                    "finding_type": "No exact match in ontology",
                     "msg": f"There is no exact match for '{provided_name}', but mulitple possible matches, e.g. {examples}...",
                     "help_text": "Please choose maybe one them and set the format to 'the terminology [ONTO:12345]' to remove all ambiguity.",
                     "status": "ERROR",
@@ -46,7 +49,7 @@ class OntologyMatcher:
         msg=f"Can't find matching term for '{provided_name}'."
         if self.root:
             msg += f" Please ensure the term is a decendant of {self.root_name} [{get_short_id(self.root)}]."
-        return None, {"msg": msg, "help_text": "Please double-check the spelling of the term.", "status": "ERROR",}
+        return None, {"finding_type": "Ontology-Term not a descendant", "msg": msg, "help_text": "Please double-check the spelling of the term.", "status": "ERROR",}
 
 
 class MediumOntologyMatcher(OntologyMatcher):
@@ -63,8 +66,9 @@ class MediumOntologyMatcher(OntologyMatcher):
                 matches = [res for res in broader_collection if provided_name in res["names"]]
                 if len(matches) == 1:
                     return matches[0], {
-                        "msg": f"'{provided_name}' is not a decendant of {self.root_name} [{get_short_id(self.root)}], which we dicourage.",
-                        "help_text": f"Please consider using a decendant of {self.root_name} [{get_short_id(self.root)}].",
+                        "finding_type": "Ontology-Term not a descendant",
+                        "msg": f"'{provided_name}' is not a descendant of {self.root_name} [{get_short_id(self.root)}], which we dicourage.",
+                        "help_text": f"Please consider using a descendant of {self.root_name} [{get_short_id(self.root)}].",
                         "status": "WARNING",
                     }
         return primary_result, primary_result_msg

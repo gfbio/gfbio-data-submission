@@ -72,6 +72,7 @@ def validate_character_encoding_task(self, previous_task_result=None, submission
         )
         task_report.validationfinding_set.create(
             status="ERROR",
+            finding_type="File Encoding Error",
             message="The uploaded metadata file could not be read as text "
             "(its encoding could not be determined).",
             help_text="Please re-save the file as UTF-8 encoded CSV and upload it again.",
@@ -93,6 +94,7 @@ def validate_character_encoding_task(self, previous_task_result=None, submission
         )
         task_report.validationfinding_set.create(
             status="ERROR",
+            finding_type="File Access Error",
             message="The uploaded metadata file could not be opened for validation.",
             help_text="Please try uploading the file again. If the problem "
             "persists, contact the helpdesk.",
@@ -133,6 +135,7 @@ def validate_character_encoding_task(self, previous_task_result=None, submission
             row=row_index,
             column=column_index,
             column_name=column_name,
+            finding_type="Non-ASCII Character",
             message="Non-ASCII character(s) {characters} found in value '{value}'.".format(
                 characters=" ".join(repr(c) for c in characters),
                 value=value,

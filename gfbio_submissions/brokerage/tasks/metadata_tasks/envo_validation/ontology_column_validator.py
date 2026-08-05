@@ -17,6 +17,7 @@ class OntologyColumnValidator:
             self.column_index = self.csv_reader.fieldnames.index(self.column_name) + 1
         else:
             self.create_error_finding(
+                finding_type="Missing Column",
                 message=f"Column '{self.column_name}' is missing.",
                 help_text=f"Please ensure the column '{self.column_name}' exists and there has a value set for every row in the column.",
                 row = 1,
@@ -28,6 +29,7 @@ class OntologyColumnValidator:
         envo_col_value = row.get(self.column_name, "")
         if not envo_col_value.strip():
             self.create_error_finding(
+                finding_type="Missing Value",
                 message=f"Value for column '{self.column_name}' is missing.",
                 help_text=f"Please ensure there is a value set for every row in column '{self.column_name}'."
             )
@@ -35,6 +37,7 @@ class OntologyColumnValidator:
             envo_values = [val.strip() for val in envo_col_value.split("|") if val.strip()]
             if not envo_values:
                 self.create_error_finding(
+                    finding_type="Missing Value",
                     message=f"Value for column '{self.column_name}' is missing.",
                     help_text=f"Please ensure there is a value set for every row in column '{self.column_name}'."
                 )
@@ -47,6 +50,7 @@ class OntologyColumnValidator:
                 envo_match, finding = self.ontology_matcher.get_match(provided_name, provided_id)
                 if finding:
                     self.create_finding(
+                        finding_type=finding["finding_type"],
                         message=finding["msg"],
                         help_text=finding["help_text"],
                         status=finding["status"]
@@ -56,21 +60,23 @@ class OntologyColumnValidator:
                 if provided_id:
                     if provided_id != envo_match["id"]:
                         self.create_error_finding(
+                            finding_type="Ontology-ID Mismatch",
                             message=f"The provided id '{provided_id}' does not match the ENVO-id '{envo_match['id']}' we found for '{provided_name}'.",
                             help_text=f"Did you maybe meant '{provided_name} [{envo_match['id']}]'?"
                         )
 
-    def create_error_finding(self, message, help_text, row=0):
-        self.create_finding(message, help_text, row, status = "ERROR")
+    def create_error_finding(self, finding_type, message, help_text, row=0):
+        self.create_finding(finding_type, message, help_text, row, status = "ERROR")
 
-    def create_warning_finding(self, message, help_text, row=0):
-        self.create_finding(message, help_text, row, status = "WARNING")
+    def create_warning_finding(self, finding_type, message, help_text, row=0):
+        self.create_finding(finding_type, message, help_text, row, status = "WARNING")
 
-    def create_finding(self, message, help_text, row=0, status="ERROR"):
+    def create_finding(self, finding_type, message, help_text, row=0, status="ERROR"):
         if self.validation_task_report.status != "ERROR":
             self.validation_task_report.status = status
         self.validation_task_report.validationfinding_set.create(
             message=message, help_text=help_text, column_name=self.column_name, status=status,
+            finding_type=finding_type,
             row=row if row > 0 else self.csv_reader.line_num,
             column=self.column_index if self.column_index else None,
         )
@@ -85,7 +91,8 @@ class OntologyColumnValidator:
                 return matches.group("name"), None
             else:
                 self.create_error_finding(
-                    f"'{value_to_split}' seems to be in an invalid format or it contains invalid characters.",
+                    finding_type="Invalid format for ontology value",
+                    message=f"'{value_to_split}' seems to be in an invalid format or it contains invalid characters.",
                     help_text="Please provide values in format 'the terminology [ONTO:12345]'."
                 )
                 return None, None

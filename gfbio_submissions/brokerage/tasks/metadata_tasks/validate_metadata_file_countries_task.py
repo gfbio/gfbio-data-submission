@@ -45,6 +45,7 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                         validation_task_report.status = "ERROR"
                         validation_task_report.validationfinding_set.create(
                             message="Column Geographic Location is missing.",
+                            finding_type="Missing Column",
                             help_text=f"Please ensure the column '{column_name}' exists and there is a geographic location name set for every row in the column.",
                             column_name=column_name,
                             status = "ERROR",
@@ -56,6 +57,7 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                     validation_task_report.status = "ERROR"
                     validation_task_report.validationfinding_set.create(
                         message="Geographic Location is missing.",
+                        finding_type="Missing Geographic Location Value",
                         help_text=f"Please ensure there is a geographic location name set for every row in column '{column_name}'.",
                         column_name=column_name,
                         status = "ERROR",
@@ -85,6 +87,7 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                             help_text += " Did you maybe mean one of these: " + ", ".join(close_names) + "?"
                         validation_task_report.validationfinding_set.create(
                             message=f"The Geographic Location '{sanitized_location_name}' does not match the ENA-vocabulary (https://www.insdc.org/submitting-standards/geo_loc_name-qualifier-vocabulary/).",
+                            finding_type="Invalid Geographic Location",
                             help_text=help_text,
                             column_name=column_name,
                             status = "ERROR",
@@ -96,6 +99,12 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
             validation_task_report.status = "SUCCESS"
     except Exception as e:
         logger.error(f"Error: Exception on parsing file {cloud_upload_file}: {e}.")
+        validation_task_report.validationfinding_set.create(
+            message="An error occured while processing the file.", help_text="Was the file properly uploaded? Please verify and try uploading it again.",
+            status="ERROR", finding_type="File-Problem"
+        )
+        validation_task_report.status = "ERROR"
+
         return False
     finally:
         validation_task_report.save()

@@ -12,6 +12,7 @@ export const PROFILE_URL_PREFIX = "/profile/";
 export const ROUTER_URL_CREATE = "/new/"
 export const ROUTER_URL_LIST = "/list/"
 export const ROUTER_URL_EDIT = "/edit/";
+export const ROUTER_URL_VALIDATIONS = "/validations/";
 
 // TODO: handle dynamic, get default from server (global default field there ?)
 export const DEFAULT_PROFILE_NAME = "gfbio";
