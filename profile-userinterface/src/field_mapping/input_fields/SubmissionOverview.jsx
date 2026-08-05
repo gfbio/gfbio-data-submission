@@ -5,7 +5,7 @@ const SubmissionOverview = ({title, submissionData}) => {
     const [showJson, setShowJson] = useState(false);
 
     return (
-        <div className="info-box">
+        <div>
             <header className="">
                 <h2 className="omit-optional">{title}</h2>
                 <p className=""/>

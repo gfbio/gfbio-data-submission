@@ -221,18 +221,18 @@ const SubmissionList = (props) => {
                                     </div>
                                     {
                                         showCuratorView && (
-                                            <div className='col-3'>
+                                            <div className='col-4 col-lg-6 col-xl-3'>
                                                 <TextInput id="user-filter" label="User" type="text" value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} />
                                             </div>
                                         )
                                     }
-                                    <div className='d-flex flex-column col-4 col-xl-2'>
+                                    <div className='d-flex flex-column col-4 col-lg-3 col-xl-2'>
                                         <Select id="status-filter" value={filters.status} label="Status" defaultValue={"All"}
                                             onChange={(value) => setFilters({...filters, status: value})} 
                                             data={[{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.status))].map(status => ({value: status, label: status}))]} 
                                         />
                                     </div>
-                                    <div className='d-flex flex-column col-4 col-xl-2'>
+                                    <div className='d-flex flex-column col-4 col-lg-3 col-xl-2'>
                                         <Select id="target-filter" value={filters.target} label="Target" defaultValue={"All"}
                                             onChange={(value) => setFilters({...filters, target: value})} 
                                             data={[{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.target))].map(target => ({value: target, label: target}))]}
@@ -344,7 +344,9 @@ const SubmissionList = (props) => {
                                             showCuratorView && (
                                                 <div className="row g-0 curator-details align-items-center">
                                                     <div className="col-5 col-lg-4 col-xl-3 ">
-                                                        <span className="submission-id">{submission.broker_submission_id}</span>
+                                                        <span className="submission-id font-monospace fs-8">
+                                                            {submission.broker_submission_id}
+                                                        </span>
                                                     </div>
                                                     <div className="col-3 col-lg-4 col-xl-5 text-truncate ps-2">
                                                         <span className="user c-pointer" onClick={() => {setFilters({...filters, user: submission.user});}}>
@@ -357,7 +359,7 @@ const SubmissionList = (props) => {
                                                             {submission.target}
                                                         </span>
                                                     </div>
-                                                    <div className="col-2 text-end">
+                                                    <div className="col-2 text-end font-monospace">
                                                         <span className="modified text-end">{formatDateTime(submission.modified)}</span>
                                                     </div>
                                                 </div>

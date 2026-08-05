@@ -8,6 +8,7 @@ from .views.curator_submissions_view import (
     CuratorSubmissionActionView,
     CuratorSubmissionCloudUploadListView,
     CuratorSubmissionDetailView,
+    CuratorSubmissionStateView,
     CuratorSubmissionsView,
     CuratorSubmissionTaskProgressReportView,
 )
@@ -60,6 +61,11 @@ urlpatterns = [
         route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/actions/$",
         view=CuratorSubmissionActionView.as_view(),
         name="curator_submissions_actions",
+    ),
+    re_path(
+        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/state/$",
+        view=CuratorSubmissionStateView.as_view(),
+        name="curator_submissions_set_state",
     ),
     re_path(route=r"submissions/$", view=SubmissionsView.as_view(), name="submissions"),
     re_path(

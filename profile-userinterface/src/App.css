@@ -1051,3 +1051,34 @@ button.button-inverted {
 .align-center {
   vertical-align: center;
 }
+
+.submission-state-button {
+  border: var(--submission-button-color) 1px solid;
+  background-color: unset;
+  color: var(--submission-button-color);
+
+  &[data-disabled="true"], &:hover {
+    background-color: var(--submission-button-color);
+    color: white;
+  }
+
+  &.submitted {
+    --submission-button-color: #80b148;
+  }
+
+  &.new {
+    --submission-button-color: #3cace4;
+  }
+
+  &.error {
+    --submission-button-color: #dc3444;
+  }
+
+  &.cancelled {
+    --submission-button-color: #ff8362;
+  }
+
+  &.closed {
+    --submission-button-color: #6c757d;
+  }
+}

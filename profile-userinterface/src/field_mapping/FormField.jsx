@@ -15,6 +15,7 @@ import TextField from "./input_fields/TextField.jsx";
 import SubmissionOverview from "./input_fields/SubmissionOverview.jsx";
 import TaskProgressReports from "./input_fields/TaskProgressReports.jsx";
 import CuratorActions from "./input_fields/CuratorActions.jsx";
+import SubmissionStatus from "./input_fields/SubmissionStatus.jsx";
 
 const FormField = ({ formField, form, onFilesChange, submissionData, submissionFiles, localSubmissionFiles }) => {
     const fieldParameters = {
@@ -78,6 +79,8 @@ const FormField = ({ formField, form, onFilesChange, submissionData, submissionF
                 return <TaskProgressReports {...fieldParameters}></TaskProgressReports>
             case "curator-actions":
                 return <CuratorActions {...fieldParameters}></CuratorActions>
+            case "submission-status":
+                return <SubmissionStatus {...fieldParameters}></SubmissionStatus>
             default:
                 return <TextField {...fieldParameters}></TextField>;
         }

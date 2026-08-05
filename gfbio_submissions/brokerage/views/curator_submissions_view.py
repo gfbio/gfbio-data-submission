@@ -308,3 +308,41 @@ class CuratorSubmissionActionView(APIView):
             return result
 
         return Response({"status": "queued", "action": action_key})
+
+
+STATE_DEFINITIONS = [
+    Submission.SUBMITTED,
+    Submission.OPEN,
+    Submission.CANCELLED,
+    Submission.CLOSED,
+    Submission.ERROR,
+]
+
+
+class CuratorSubmissionStateSerializer(serializers.Serializer):
+    state = serializers.CharField()
+
+    def validate_state(self, value):
+        if value not in STATE_DEFINITIONS:
+            raise serializers.ValidationError("Unsupported state.")
+        return value
+
+
+class CuratorSubmissionStateView(APIView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated, CuratorSubmissionActionPermissions)
+    queryset = Submission.objects.all()
+
+    def post(self, request, broker_submission_id):
+        serializer = CuratorSubmissionStateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_state = serializer.validated_data["state"]
+
+        submission = Submission.objects.filter(broker_submission_id=broker_submission_id).first()
+        if not submission:
+            return Response({"detail": "Submission not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        submission.status = new_state
+        submission.save()
+
+        return Response({"state": new_state})

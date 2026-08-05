@@ -4,7 +4,7 @@ import { TASK_REFRESH_INTERVAL_MS } from "../../settings";
 import getCuratorSubmissionActions from "../../api/getCuratorSubmissionActions";
 import runCuratorSubmissionAction from "../../api/runCuratorSubmissionAction";
 
-const CuratorActions = ({ title, submissionData }) => {
+const CuratorActions = ({ title, submissionData, options }) => {
     const [actions, setActions] = useState([]);
     const [isActionsLoading, setIsActionsLoading] = useState(false);
     const [actionStates, setActionStates] = useState({});
@@ -14,7 +14,15 @@ const CuratorActions = ({ title, submissionData }) => {
         const fetchActions = async () => {
             setIsActionsLoading(true);
             const data = await getCuratorSubmissionActions(submissionData.broker_submission_id);
-            setActions(data);
+            if (options && options.length > 0) {
+                // Filter actions based on provided options
+                const filteredActions = data.filter(action =>
+                    options.some(opt => opt.option === action.label)
+                );
+                setActions(filteredActions);
+            } else {
+                setActions(data);
+            }
             setIsActionsLoading(false);
         };
         fetchActions();
@@ -138,6 +146,9 @@ const CuratorActions = ({ title, submissionData }) => {
 CuratorActions.propTypes = {
     title: PropTypes.string.isRequired,
     submissionData: PropTypes.object,
+    options: PropTypes.arrayOf(PropTypes.shape({
+        option: PropTypes.string.isRequired
+    })).isRequired,
 };
 
 export default CuratorActions;
