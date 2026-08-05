@@ -1019,3 +1019,35 @@ button.button-inverted {
     }
   }
 }
+
+.curator-details {
+  color: white;
+  background-color: #80b148;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-size: 0.875rem;
+
+  .c-pointer:hover {
+    color: #495057;
+  }
+}
+
+.fs-7 {
+  font-size: 0.875rem;
+}
+
+.fs-8 {
+  font-size: 0.75rem;
+}
+
+.fs-9 {
+  font-size: 0.6875rem;
+}
+
+.c-pointer {
+  cursor: pointer;
+}
+
+.align-center {
+  vertical-align: center;
+}

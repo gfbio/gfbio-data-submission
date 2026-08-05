@@ -73,10 +73,11 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         )
 
     def get_queryset(self):
+        submissions = Submission.objects
         user = self.request.user
-        return Submission.objects.filter(user=user).order_by("-modified")
-
-    # http://www.django-rest-framework.org/api-guide/filtering/
+        if not user.is_staff and not user.is_superuser and not user.has_perm("brokerage.curate_submission"):
+             submissions = submissions.filter(user=user)
+        return submissions.order_by("-modified")
 
     @extend_schema(
         operation_id="list submissions",

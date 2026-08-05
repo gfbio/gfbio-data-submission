@@ -156,4 +156,5 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "data",
             "embargo",
             "download_url",
+            "modified",
         )

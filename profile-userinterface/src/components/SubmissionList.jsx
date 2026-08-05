@@ -1,4 +1,4 @@
-import {Collapse} from '@mantine/core';
+import {Collapse, Menu, Button, TextInput, Select} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import {useEffect, useState} from "react";
 import {Link, useLoaderData, useLocation} from "react-router-dom";
@@ -6,6 +6,37 @@ import deleteSubmission from "../api/deleteSubmission";
 import SimpleModal from "./simpleModal";
 import NavigationMenu from './NavigationMenu.jsx';
 import {ROUTER_URL_CREATE, ROUTER_URL_EDIT} from "../settings.jsx";
+import getCurrentUser from '../api/getCurrentUser.jsx';
+import { formatDateTime } from '../utils/dateUtils.js';
+
+const sortOptions = [
+    {
+        label: "Last Modified (Newest First)",
+        field: "modified",
+        direction: -1,
+        icon: "fa-calendar",
+        secondaryIcon: "fa-sort-down",
+    },
+    {
+        label: "Last Modified (Oldest First)",
+        field: "modified",
+        direction: 1,
+        icon: "fa-calendar",
+        secondaryIcon: "fa-sort-up",
+    },
+    {
+        label: "Title (A-Z)",
+        field: "title",
+        direction: 1,
+        icon: "fa-sort-alpha-asc",
+    },
+    {
+        label: "Title (Z-A)",
+        field: "title",
+        direction: -1,
+        icon: "fa-sort-alpha-desc",
+    },
+];
 
 // SubmissionList component
 const SubmissionList = (props) => {
@@ -22,6 +53,29 @@ const SubmissionList = (props) => {
     const [isSuccessVisible, successVisibleHandlers] = useDisclosure(
         (state?.create || state?.update) && !hasShownMessage
     );
+
+    const [user, setUser] = useState(null);
+    const [showCuratorView, setShowCuratorView] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        status: "",
+        target: "",
+        user: "",
+        search: "",
+    });
+
+    const [sorting, setSorting] = useState(sortOptions[0]);
+
+    useEffect(() => {
+        getCurrentUser().then((userData) => {
+            setUser(userData);
+            if (userData && (userData.is_staff || userData.is_superuser || userData.groups.some(group => group.name === "Curators"))) {
+                setShowCuratorView(true);
+            }
+        }).catch((error) => {
+            console.error("Error fetching current user:", error);
+        }); 
+    }, []);
 
     useEffect(() => {
         if (state?.create) {
@@ -103,8 +157,8 @@ const SubmissionList = (props) => {
                     <div className="list-start-wrapper d-flex">
                         <div className="container my-auto">
                             <div className="row g-0 text-center">
-                                <div className="col-md-10 ps-3 align-middle">
-                                    <Link to={ROUTER_URL_CREATE} className="nav-link list-start">
+                                <div className="col-md-12 ps-3 align-middle">
+                                    <Link to={ROUTER_URL_CREATE} className="nav-link list-start d-flex flex-column align-items-center justify-content-center">
                                         <p>You have no submissions yet.</p>
                                         <p>Start a new submission</p>
                                     </Link>
@@ -113,65 +167,240 @@ const SubmissionList = (props) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="pt-3">
-                        <div className="row g-0">
-                            <div className="col-md-10 ps-3">
-                                <div className="row g-0">
-                                    <div className="col-md-8 align-self-center">
-                                        <h6>Title</h6>
+                    <>
+                        <div className='pb-3'>
+                            <div>
+                                <span className='c-pointer' onClick={() => setShowFilters(!showFilters)}>
+                                    <i className={`fa fa-chevron-${showFilters ? 'down' : 'right pe-1'}  me-1`}/>
+                                    Filters
+                                </span>
+                                {
+                                    filters.search && (
+                                        <span className="badge bg-primary ms-2">
+                                            Search: {filters.search}
+                                            <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, search: ""})} />
+                                        </span>
+                                    )
+                                }
+                                {
+                                    filters.user && showCuratorView && (
+                                        <span className="badge bg-primary ms-2">
+                                            User: {filters.user}
+                                            <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, user: ""})} />
+                                        </span>
+                                    )
+                                }
+                                {
+                                    filters.status && (
+                                        <span className="badge bg-primary ms-2">
+                                            Status: {filters.status}
+                                            <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, status: ""})} />
+                                        </span>
+                                    )
+                                }
+                                {
+                                    filters.target && (
+                                        <span className="badge bg-primary ms-2">
+                                            Target: {filters.target}
+                                            <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, target: ""})} />
+                                        </span>
+                                    )
+                                }
+                                {
+                                    (filters.status || filters.target || filters.user || filters.search) && (
+                                        <i className='fa fa-repeat fa-rotate-180 ms-4 c-pointer' onClick={() => setFilters({
+                                            status: "", target: "", user: "", search: "",
+                                        })} />
+                                    )
+                                }
+                            </div>
+                            <Collapse in={showFilters}>
+                                <div className="filter-section row">
+                                    <div className={`col-12 ${showCuratorView ? 'col-xl-5' : 'col-xl-8'}`}>
+                                        <TextInput id="search" label="Search" type="text" value={filters.search} onChange={(e) => setFilters({...filters, search: e.target.value})} />
                                     </div>
-                                    <div className="col-md-2 align-self-center">
-                                        <h6>Status</h6>
+                                    {
+                                        showCuratorView && (
+                                            <div className='col-3'>
+                                                <TextInput id="user-filter" label="User" type="text" value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} />
+                                            </div>
+                                        )
+                                    }
+                                    <div className='d-flex flex-column col-4 col-xl-2'>
+                                        <Select id="status-filter" value={filters.status} label="Status" defaultValue={"All"}
+                                            onChange={(value) => setFilters({...filters, status: value})} 
+                                            data={[{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.status))].map(status => ({value: status, label: status}))]} 
+                                        />
                                     </div>
-                                    <div className="col-md-2 align-self-center">
-                                        <h6>Ticket</h6>
+                                    <div className='d-flex flex-column col-4 col-xl-2'>
+                                        <Select id="target-filter" value={filters.target} label="Target" defaultValue={"All"}
+                                            onChange={(value) => setFilters({...filters, target: value})} 
+                                            data={[{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.target))].map(target => ({value: target, label: target}))]}
+                                        />
                                     </div>
                                 </div>
-                            </div>
+                            </Collapse>
                         </div>
-                        <ul className="list-group">
-                            {submissions.map((submission) => (
-                                <li
-                                    key={submission.broker_submission_id}
-                                    className="list-group-item"
-                                >
+                        <div className="pt-3">
+                            <div className="row g-0 px-3">
+                                <div className="col-10 mb-2">
                                     <div className="row g-0">
-                                        <div className="col-md-10">
-                                            <Link
-                                                to={ROUTER_URL_EDIT + submission.broker_submission_id}
-                                                className="row g-0"
-                                            >
-                                                <div className="col-md-8 col-sm-12 align-self-center">
-                                                    <i className="icon ion-md-apps"/>
-                                                    <span>{submission.data.requirements.title}</span>
-                                                </div>
-                                                <div className="col-md-2 col-sm-12 align-self-center status">
-                                                    <span>{submission.status}</span>
-                                                </div>
-                                                <div className="col-md-2 col-sm-12 align-self-center">
-                                                    <span className="issue">{submission.issue}</span>
-                                                </div>
-                                            </Link>
+                                        <div className="col-md-8 align-self-center d-flex">
+                                            <h6 className='mb-0 mt-1'>Title</h6>
                                         </div>
-                                        <div className="col-md-2 col-sm-12 align-self-center actions">
-                                            <Link
-                                                to={ROUTER_URL_EDIT + submission.broker_submission_id}
-                                                className="action h-100 d-inline-block pe-4 btn btn-link"
-                                            >
-                                                <i className="icon ion-md-create"/> Edit
-                                            </Link>
-                                            <a
-                                                className="action h-100 d-inline-block btn btn-link"
-                                                onClick={() => handleDeleteClick(submission)}
-                                            >
-                                                <i className="icon ion-md-trash"/>Delete
-                                            </a>
+                                        <div className="col-md-2 align-self-center d-flex">
+                                            <h6 className='mb-0 mt-1'>Status</h6>
+                                            <Menu>
+                                                <Menu.Target>
+                                                    <i className='fa fa-filter ms-2 mt-1 c-pointer'></i>
+                                                </Menu.Target>
+                                                <Menu.Dropdown>
+                                                    {
+                                                        [{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.status))]
+                                                            .map(status => ({value: status, label: status}))]
+                                                            .map((option) => (
+                                                                <Menu.Item key={option.value} onClick={() => setFilters({...filters, status: option.value})}>
+                                                                    {option.label}
+                                                                </Menu.Item>
+                                                            ))
+                                                    }
+                                                </Menu.Dropdown>
+                                            </Menu>
+                                        </div>
+                                        <div className="col-md-2 align-self-center">
+                                            <h6 className='mb-0 mt-1'>Ticket</h6>
                                         </div>
                                     </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                                </div>
+                                <div className="col-2 text-end">
+                                    <Menu>
+                                        <Menu.Target>
+                                            <span className='c-pointer'>
+                                                <i className={`fa ${sorting.icon}`}></i>
+                                                {
+                                                    sorting.secondaryIcon && (
+                                                        <i className={`fa ${sorting.secondaryIcon} ms-1`}></i>
+                                                    )
+                                                }
+                                            </span>
+                                        </Menu.Target>
+                                        <Menu.Dropdown>
+                                            {
+                                                sortOptions.map((option) => (
+                                                    <Menu.Item key={option.value} onClick={() => setSorting(option)}>
+                                                        
+                                                        {
+                                                            option.secondaryIcon ? (
+                                                                <>
+                                                                    <i className={`fa ${option.icon} me-1`}/>
+                                                                    <i className={`fa ${option.secondaryIcon} me-2`}/>
+                                                                </>
+                                                            ) : <i className={`fa ${option.icon} ms-1 me-3`}/>
+                                                        }
+                                                        {option.label}
+                                                    </Menu.Item>
+                                                ))
+                                            }
+                                        </Menu.Dropdown>
+                                    </Menu>
+                                </div>
+                            </div>
+                            <ul className="list-group">
+                                {submissions.filter((submission) => {
+                                    return (
+                                        (!filters.status || submission.status == filters.status)
+                                        && (!filters.target || submission.target == filters.target)
+                                        && (!filters.user || submission.user.includes(filters.user))
+                                        && (!filters.search 
+                                            || submission.broker_submission_id.includes(filters.search)
+                                            || submission.user.includes(filters.search)
+                                            || submission.issue.includes(filters.search)
+                                            || submission.data.requirements.title.includes(filters.search)
+                                            || submission.data.requirements.description.includes(filters.search)
+                                        )
+                                    );
+                                }).sort(
+                                    (a, b) => {
+                                        if (sorting.field === "modified") {
+                                            const dateA = new Date(a.modified);
+                                            const dateB = new Date(b.modified);
+                                            return (dateA - dateB) * sorting.direction;
+                                        }
+                                        else if (sorting.field === "title") {
+                                            const titleA = a.data.requirements.title.toLowerCase();
+                                            const titleB = b.data.requirements.title.toLowerCase();
+                                            if (titleA < titleB) return -sorting.direction;
+                                            if (titleA > titleB) return sorting.direction;
+                                            return 0;
+                                        }
+                                    }
+
+                                ).map((submission) => (
+                                    <li
+                                        key={submission.broker_submission_id}
+                                        className="list-group-item"
+                                    >
+                                        {
+                                            showCuratorView && (
+                                                <div className="row g-0 curator-details align-items-center">
+                                                    <div className="col-5 col-lg-4 col-xl-3 ">
+                                                        <span className="submission-id">{submission.broker_submission_id}</span>
+                                                    </div>
+                                                    <div className="col-3 col-lg-4 col-xl-5 text-truncate ps-2">
+                                                        <span className="user c-pointer" onClick={() => {setFilters({...filters, user: submission.user});}}>
+                                                            <i className='fa align-center fa-user pe-1 fs-9'/>
+                                                            {submission.user}
+                                                        </span>
+                                                    </div>
+                                                    <div className="col-2 text-end fs-8">
+                                                        <span className="target c-pointer" onClick={() => {setFilters({...filters, target: submission.target});}}>
+                                                            {submission.target}
+                                                        </span>
+                                                    </div>
+                                                    <div className="col-2 text-end">
+                                                        <span className="modified text-end">{formatDateTime(submission.modified)}</span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        }
+                                        <div className="row g-0">
+                                            <div className="col-md-10">
+                                                <Link
+                                                    to={ROUTER_URL_EDIT + submission.broker_submission_id}
+                                                    className="row g-0"
+                                                >
+                                                    <div className="col-md-8 col-sm-12 align-self-center">
+                                                        <i className="icon ion-md-apps"/>
+                                                        <span>{submission.data.requirements.title}</span>
+                                                    </div>
+                                                    <div className="col-md-2 col-sm-12 align-self-center status">
+                                                        <span>{submission.status}</span>
+                                                    </div>
+                                                    <div className="col-md-2 col-sm-12 align-self-center">
+                                                        <span className="issue">{submission.issue}</span>
+                                                    </div>
+                                                </Link>
+                                            </div>
+                                            <div className="col-md-2 col-sm-12 align-self-center actions">
+                                                <Link
+                                                    to={ROUTER_URL_EDIT + submission.broker_submission_id}
+                                                    className="action h-100 d-inline-block pe-4 btn btn-link"
+                                                >
+                                                    <i className="icon ion-md-create"/> Edit
+                                                </Link>
+                                                <a
+                                                    className="action h-100 d-inline-block btn btn-link"
+                                                    onClick={() => handleDeleteClick(submission)}
+                                                >
+                                                    <i className="icon ion-md-trash"/>Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </>
                 )}
                 <SimpleModal
                     isOpen={isDeleteModalOpen}

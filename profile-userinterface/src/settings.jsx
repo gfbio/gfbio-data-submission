@@ -26,6 +26,8 @@ export const ACTIVE_PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "active/";
 
 export const SUBMISSIONS_API = SERVER_ROOT + "/api/submissions/";
 
+export const USER_API = SERVER_ROOT + "/api/users/@me/";
+
 export const JIRA_ROOT = "https://helpdesk.gfbio.org/browse/";
 
 export const JIRA_COMMENT = "/comment/";

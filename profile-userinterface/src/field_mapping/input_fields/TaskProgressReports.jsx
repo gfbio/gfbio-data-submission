@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { TASK_REFRESH_INTERVAL_MS } from "../../settings";
 import getCuratorSubmissionTaskProgressReports from "../../api/getCuratorSubmissionTaskProgressReports";
+import { formatDateTime } from "../../utils/dateUtils";
 
 const TaskProgressReports = ({ title, submissionData }) => {
     const [extendedReport, setExtendedReport] = useState(null);
@@ -36,11 +37,6 @@ const TaskProgressReports = ({ title, submissionData }) => {
         }
         return "bg-danger";
     };
-
-    const getFormattedDate = (date) => {
-        var d = new Date(date);
-        return d.toISOString().substring(0,19).replace("T", " "); 
-    }
 
     useEffect(() => {
         let isMounted = true;
@@ -115,7 +111,7 @@ const TaskProgressReports = ({ title, submissionData }) => {
                                                     {report.status}
                                                 </span>
                                             </td>
-                                            <td>{getFormattedDate(report.modified)}</td>
+                                            <td>{formatDateTime(report.modified)}</td>
                                         </tr>
                                         {
                                             extendedReport == report.task_id && (

@@ -2,6 +2,7 @@
 from django.urls import path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularSwaggerView
+from gfbio_submissions.brokerage.views.user_view import UserView
 
 from .views.curator_submissions_view import (
     CuratorSubmissionActionView,
@@ -182,6 +183,7 @@ urlpatterns = [
         ),
         name="api_molecular_documentation",
     ),
+    re_path(r"users/@me/$", UserView.as_view(), name="user"),
     # acts also as a default view if nothing above applies
     re_path("", SpectacularSwaggerView.as_view(url_name="api-schema"), name="api_documentation"),
 ]
