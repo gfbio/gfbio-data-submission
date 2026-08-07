@@ -49,6 +49,8 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         }
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(Submission.objects.all()))
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertDictEqual(expected, content)
 
         # 1 incoming post, 1 get helpdesk user, 1 create issue

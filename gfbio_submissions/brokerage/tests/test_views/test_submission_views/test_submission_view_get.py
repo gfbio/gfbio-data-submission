@@ -85,6 +85,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
             self.assertEqual(user.username, sub["user"])
             self.assertNotIn("site", sub.keys())
 
+        # Staff User kevin can see them all
         user = User.objects.get(username="kevin")
         token, created = Token.objects.get_or_create(user_id=user.id)
         client = APIClient()
@@ -94,10 +95,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         content = json.loads(response.content)
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(2, len(content))
-        for sub in content:
-            self.assertEqual(user.username, sub["user"])
-            self.assertNotIn("site", sub.keys())
+        self.assertEqual(6, len(content))
 
         user = User.objects.get(username="regular_user_2")
         token, created = Token.objects.get_or_create(user_id=user.id)
@@ -106,7 +104,11 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
 
         response = client.get("/api/submissions/")
         content = json.loads(response.content)
+        for sub in content:
+            self.assertEqual(user.username, sub["user"])
+            self.assertNotIn("site", sub.keys())
 
+        # Admin can also see them all
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(content))
         for sub in content:
@@ -122,7 +124,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         content = json.loads(response.content)
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(0, len(content))
+        self.assertEqual(6, len(content))
 
     def test_fresh_user_get(self):
         user = User.objects.create_user(

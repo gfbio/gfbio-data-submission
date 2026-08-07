@@ -80,6 +80,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             },
         }
         self.assertEqual(201, response.status_code)
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
 

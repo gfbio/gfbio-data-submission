@@ -105,6 +105,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             "status": "OPEN",
             "target": "ENA",
         }
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertEqual(201, response.status_code)
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
@@ -144,6 +146,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             "target": "ENA",
         }
         self.assertEqual(201, response.status_code)
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.last()
