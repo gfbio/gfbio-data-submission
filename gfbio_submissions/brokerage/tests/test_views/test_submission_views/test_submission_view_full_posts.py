@@ -78,6 +78,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         expected = _get_submission_post_response()
         expected["broker_submission_id"] = content["broker_submission_id"]
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertDictEqual(expected, content)
         self.assertNotIn("download_url", content["data"]["requirements"].keys())
         self.assertEqual(1, len(Submission.objects.all()))
