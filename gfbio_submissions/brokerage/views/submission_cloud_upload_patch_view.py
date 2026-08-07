@@ -12,7 +12,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..models import SubmissionCloudUpload
 from ..models.submission import Submission
-from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
+from ..permissions.is_owner_or_readonly import IsOwnerOrHasCuratorRightsOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 from ..configuration.settings import ENA, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
@@ -33,7 +33,7 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
         parsers.FormParser,
     )
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrHasCuratorRightsOrReadOnly)
 
     @extend_schema(
         operation_id="patch-update submission upload",

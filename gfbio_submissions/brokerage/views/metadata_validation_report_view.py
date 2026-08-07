@@ -20,12 +20,14 @@ class MetadataValidationReportView(RetrieveAPIView):
     def get_queryset(self):
         user = self.request.user
         submission_id = self.kwargs.get('broker_submission_id')
-        
-        # Filter reports by submission and ensure user is the submission owner
-        return MetadataValidationReport.objects.filter(
-            submission__broker_submission_id=submission_id,
-            submission__user=user
-        )
+
+        if user.is_staff or user.is_superuser or user.has_perm("brokerage.curate_submission"):
+            return MetadataValidationReport.objects.filter(submission__broker_submission_id=submission_id)
+        else:
+            return MetadataValidationReport.objects.filter(
+                submission__broker_submission_id=submission_id,
+                submission__user=user
+            )
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

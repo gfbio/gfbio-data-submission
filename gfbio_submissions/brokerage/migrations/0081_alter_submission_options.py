@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("brokerage", "0079_alter_validationfinding_status"),
+        ("brokerage", "0080_validationfinding_finding_type"),
     ]
 
     operations = [

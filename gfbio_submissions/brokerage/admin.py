@@ -432,15 +432,23 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
         if submission_cloud_upload_ids:
             site_config = _safe_get_site_config(obj)
             if not site_config:
-                modeladmin.message_user(
-                    request,
-                    _(
-                        "Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user."
+                if modeladmin:
+                    modeladmin.message_user(
+                        request,
+                        _(
+                            "Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user."
+                        )
+                        % {"sid": obj.broker_submission_id},
+                        level=messages.WARNING,
                     )
-                    % {"sid": obj.broker_submission_id},
-                    level=messages.WARNING,
-                )
-                continue
+                    continue
+                else:
+                    raise Exception(
+                        _(
+                            "Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user."
+                        )
+                        % {"sid": obj.broker_submission_id}
+                    )
             if not site_config.ena_ftp_id:
                 hosting_config = SiteConfiguration.objects.get_hosting_site_configuration()
                 if hosting_config.ena_ftp_id:
@@ -448,13 +456,19 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
             try:
                 ensure_ena_webin_submission_folder_via_ftp(site_config, obj.broker_submission_id)
             except Exception as exc:
-                modeladmin.message_user(
-                    request,
-                    _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
-                    % {"sid": obj.broker_submission_id, "err": exc},
-                    level=messages.ERROR,
-                )
-                continue
+                if modeladmin:
+                    modeladmin.message_user(
+                        request,
+                        _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
+                        % {"sid": obj.broker_submission_id, "err": exc},
+                        level=messages.ERROR,
+                    )
+                    continue
+                else:
+                    raise Exception(
+                        _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
+                        % {"sid": obj.broker_submission_id, "err": exc}
+                    )
         parallel_transfers = [
             transfer_cloud_upload_to_ena_task.s(
                 submission_cloud_upload_id=upload_id, submission_id=obj.pk, user_id=request.user.id

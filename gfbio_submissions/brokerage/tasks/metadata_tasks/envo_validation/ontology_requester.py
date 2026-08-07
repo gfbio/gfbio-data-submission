@@ -1,6 +1,7 @@
 import urllib
 
 from django.conf import settings
+from requests import RequestException
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.utils import get_short_id
 from django.core.cache import cache
 
@@ -24,7 +25,7 @@ class OntologyRequester:
                 msg += " Please check request-log."
             if not settings.ONTO_PORTAL_API_KEY:
                 msg += " Please set the API-Key for the onto-portal in the settings."
-            raise Exception(msg)
+            raise RequestException(msg)
         result = response.json()
         return [
             {

@@ -92,16 +92,16 @@ const TaskProgressReports = ({ title, submissionData }) => {
                     </div>
                 )}
                 {!isTaskReportsLoading && taskReports.length > 0 && (
-                    <div className="table-responsive">
+                    <div className="table-responsive task-report-table-container">
                         <table className="table table-sm align-middle task-report-table">
-                            <thead>
+                            <thead className="task-report-header">
                                 <tr>
                                     <th>Task</th>
                                     <th>Status</th>
                                     <th>Modified</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="task-report-body">
                                 {taskReports.map((report) => (
                                     <>
                                         <tr key={report.task_id}  onClick={() => { setExtendedReport(extendedReport != report.task_id ? report.task_id : null); }} className="clickable-text main-row">

@@ -1063,12 +1063,25 @@ button.button-inverted {
   white-space: pre-wrap;
 }
 
-.task-report-table {
-  tbody {
-    border-bottom: 2px solid #bdbdbd;
-    
-    .main-row {
-      border-top: 2px solid #bdbdbd;
+.task-report-table-container {
+  max-height: 70vh;
+  overflow: scroll;
+
+  .task-report-table {
+    position: relative;
+
+    .task-report-header {
+      position: sticky;
+      top: 0;
+      outline: 2px solid black;
+    }
+
+    tbody {
+      border-bottom: 2px solid #bdbdbd;
+      
+      .main-row {
+        border-top: 2px solid #bdbdbd;
+      }
     }
   }
 }
@@ -1134,6 +1147,8 @@ button.button-inverted {
   &.closed {
     --submission-button-color: #6c757d;
   }
+}
+
 .status-success {
     color: #81B248;
 }
