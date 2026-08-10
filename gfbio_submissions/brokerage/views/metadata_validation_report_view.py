@@ -21,7 +21,7 @@ class MetadataValidationReportView(RetrieveAPIView):
         user = self.request.user
         submission_id = self.kwargs.get('broker_submission_id')
 
-        if user.is_staff or user.is_superuser or user.has_perm("brokerage.curate_submission"):
+        if user.is_staff or user.is_superuser or user.has_perm("brokerage.curate_submissions"):
             return MetadataValidationReport.objects.filter(submission__broker_submission_id=submission_id)
         else:
             return MetadataValidationReport.objects.filter(

@@ -73,7 +73,7 @@ const SubmissionList = (props) => {
     useEffect(() => {
         getCurrentUser().then((userData) => {
             setUser(userData);
-            if (userData && (userData.is_staff || userData.is_superuser || userData.groups.some(group => group.name === "Curators"))) {
+            if (userData && (userData.is_staff || userData.is_superuser || userData.groups.some(group => group == "Curators"))) {
                 setShowCuratorView(true);
             }
         }).catch((error) => {
@@ -388,18 +388,18 @@ const SubmissionList = (props) => {
                                                             {submission.broker_submission_id}
                                                         </span>
                                                     </div>
-                                                    <div className="col-3 col-lg-4 col-xl-5 text-truncate ps-2">
+                                                    <div className="col-2 col-lg-3 col-xl-5 text-truncate ps-2">
                                                         <span className="user c-pointer" onClick={() => {setFilters({...filters, user: submission.user});}}>
                                                             <i className='fa align-center fa-user pe-1 fs-9'/>
                                                             {submission.user}
                                                         </span>
                                                     </div>
-                                                    <div className="col-2 text-end fs-8">
+                                                    <div className="col-2 text-center text-lg-end fs-8">
                                                         <span className="target c-pointer" onClick={() => {setFilters({...filters, target: submission.target});}}>
                                                             {submission.target}
                                                         </span>
                                                     </div>
-                                                    <div className="col-2 text-end font-monospace">
+                                                    <div className="col-3 col-xl-2 text-end font-monospace">
                                                         <span className="modified text-end">{formatDateTime(submission.modified)}</span>
                                                     </div>
                                                 </div>

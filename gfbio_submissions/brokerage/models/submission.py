@@ -276,5 +276,5 @@ class Submission(TimeStampedModel):
 
     class Meta:
         permissions = [
-            ("curate_submissions", "Can edit submissions that belong to other users"),
+            ("curate_submissions", "Can edit (curate) submissions that belong to other users"),
         ]

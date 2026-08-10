@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}Duplicate Profile - Django Administration{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Duplicate Profile</h1>
+
+    {% if profiles %}
+        <p>You are about to duplicate the following profile(s):</p>
+        <ul>
+            {% for profile in profiles %}
+                <li><strong>{{ profile.name }}</strong> (Target: {{ profile.target }}, Current User: {% if profile.user %}{{ profile.user.username }}{% else %}<em>None</em>{% endif %})</li>
+            {% endfor %}
+        </ul>
+
+        <form method="post">
+            {% csrf_token %}
+            <fieldset>
+                <h2>Select Destination User</h2>
+                <div class="form-row">
+                    <div>
+                        {{ form.user.label_tag }}
+                        {{ form.user }}
+                        {% if form.user.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.user.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        {% if form.user.help_text %}
+                            <p class="help">{{ form.user.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </fieldset>
+            <div class="submit-row">
+                <input type="submit" value="Duplicate Profile(s)" class="default">
+                <a href="{% url 'admin:submission_profile_profile_changelist' %}" class="button cancel">Cancel</a>
+            </div>
+        </form>
+    {% else %}
+        <p>No profiles selected.</p>
+        <a href="{% url 'admin:submission_profile_profile_changelist' %}" class="button">Back to Profiles</a>
+    {% endif %}
+</div>
+{% endblock %}
