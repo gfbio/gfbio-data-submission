@@ -417,6 +417,7 @@ body {
 
     .checkbox-col {
       border-right: #ccc 1px dashed;
+      padding-right: 20px;
     }
 
     .mantine-Checkbox-body {
@@ -441,7 +442,8 @@ body {
     }
 
     .file-list, .list-header {
-      color: #495057
+      color: #495057;
+      font-size: smaller;
     }
 
     .file-list:hover {
@@ -601,6 +603,19 @@ body {
         overflow: hidden;
       }
     }
+  }
+
+  .file-status-uploaded {
+    color: #81B248;
+  }
+
+
+  .file-status-incomplete, .file-status-checksum-mismatch {
+    color: #dc3444;
+  }
+
+  .file-status-new {
+    color: #3cace4;
   }
 }
 

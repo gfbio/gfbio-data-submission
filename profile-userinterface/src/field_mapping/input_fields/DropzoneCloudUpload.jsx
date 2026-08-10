@@ -179,7 +179,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
     return (
         <div className="file-upload">
             <div>
-                <h2>{title}</h2>
+                <h2 className="mb-1">{title}</h2>
                 <Text>{description}</Text>
             </div>
 
