@@ -75,7 +75,7 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
     def get_queryset(self):
         submissions = Submission.objects
         user = self.request.user
-        if not user.is_staff and not user.is_superuser and not user.has_perm("brokerage.curate_submission"):
+        if not user.is_staff and not user.is_superuser and not user.has_perm("brokerage.curate_submissions"):
              submissions = submissions.filter(user=user)
         return submissions.order_by("-modified")
 

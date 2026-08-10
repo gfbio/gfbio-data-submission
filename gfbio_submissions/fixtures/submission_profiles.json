@@ -130,6 +130,56 @@
         }
     },
     {
+        "model": "submission_profile.fieldtype",
+        "pk": 14,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "type": "info-box-with-validation",
+            "comment": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 15,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "type": "task-progress-reports",
+            "comment": "Meant for curators. Shows the state of all task progress reports linked to the submission."
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 16,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "type": "submission-status",
+            "comment": "Meant for curators. Shows and let you set manually the state of the submission."
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 17,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "type": "curator-actions",
+            "comment": "Meant for curators. Let's you execute admin-actions from the frontend."
+        }
+    },
+    {
+        "model": "submission_profile.fieldtype",
+        "pk": 18,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "type": "submission-overview",
+            "comment": "Meant for curators. Shows an overview over some fields of a submission."
+        }
+    },
+    {
         "model": "submission_profile.field",
         "pk": 1,
         "fields": {
@@ -380,6 +430,74 @@
             "comment": "",
             "position": "sidebar",
             "order": 500,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 16,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "field_name": "task-progress-reports",
+            "field_type": 15,
+            "title": "Task Progress reports",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 450,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 17,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "field_name": "submission-status",
+            "field_type": 16,
+            "title": "Submission Status",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 60,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 18,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "field_name": "curator-actions",
+            "field_type": 17,
+            "title": "Curator Actions",
+            "description": "",
+            "comment": "",
+            "position": "sidebar",
+            "order": 80,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 19,
+        "fields": {
+            "created": "2026-08-07T12:00:00.000Z",
+            "modified": "2026-08-07T12:00:00.000Z",
+            "field_name": "overview",
+            "field_type": 18,
+            "title": "Submission Overview",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 1,
             "system_wide_mandatory": false,
             "placeholder": ""
         }
