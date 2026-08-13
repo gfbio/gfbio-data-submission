@@ -8,8 +8,6 @@ export default async function putSubmission(
     embargo,
     data
 ) {
-    let result = {};
-
     let comment = data.comment || "";
     delete data.comment;
 
@@ -17,6 +15,7 @@ export default async function putSubmission(
         broker_submission_id: broker_submission_id,
         target: target,
         embargo: embargo,
+        release: true,
         ...(data.download_url && { download_url: data.download_url }),
         data: {
             requirements: data,
@@ -30,17 +29,7 @@ export default async function putSubmission(
             "Content-Type": "application/json",
         },
     };
-    await axios
-        .put(url, requestData, config)
-        .then((reponse) => {
-            result = reponse.data;
-        })
-        .catch((error) => {
-            console.error("Error: ", error);
-        })
-        .finally(() => {
-        });
 
-    result["comment"] =  comment;
-    return result;
+    const response = await axios.put(url, requestData, config);
+    return { ...response.data, comment };
 }

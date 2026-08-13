@@ -9,4 +9,4 @@ if [ "${MOUNT_S3FS:-false}" = "True" ]; then
 else
   echo "Skipping mounting of DJANGO_AWS_STORAGE_BUCKET_NAME. MOUNT_S3FS is set to False or not existing."
 fi
-exec celery -A config.celery_app worker -l INFO -Q ena_transfer --concurrency=1
+exec celery -A config.celery_app worker -l INFO -Q ena_transfer --concurrency=4

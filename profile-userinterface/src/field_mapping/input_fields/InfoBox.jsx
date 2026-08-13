@@ -1,7 +1,37 @@
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { JIRA_ROOT } from "../../settings.jsx";
+import { JIRA_ROOT, ROUTER_URL_VALIDATIONS } from "../../settings.jsx";
+import getLatestValidationReport from "../../api/getLatestValidationReport.jsx";
 
-const InfoBox = ({title, submissionData}) => {
+const InfoBox = ({title, submissionData, showValidations}) => {
+    const [latestValidationReport, setLatestValidationReport] = useState(null);
+    const [isFetchingLatestReport, setIsFetchingLatestReport] = useState(false);
+
+    useEffect(() => {
+        const brokerSubmissionId = submissionData?.broker_submission_id;
+        if (!brokerSubmissionId) {
+            setIsFetchingLatestReport(false);
+            setLatestValidationReport(null);
+            return;
+        }
+
+        setIsFetchingLatestReport(true);
+
+        getLatestValidationReport(brokerSubmissionId)
+            .then(report => {
+                if (report) {
+                    setLatestValidationReport(report);
+                }
+            })
+            .catch(() => {
+                setLatestValidationReport(null);
+            })
+            .finally(() => {
+                setIsFetchingLatestReport(false);
+            });
+    }, [submissionData?.broker_submission_id]);
+
+    const validationReport = latestValidationReport ?? submissionData?.validation_reports;
 
     const infoItems = () => {
 
@@ -70,6 +100,69 @@ const InfoBox = ({title, submissionData}) => {
             key++;
         }
 
+        const validationStatusIcon = () => {
+            if (!validationReport?.status) {
+                return <i className="fa fa-question-circle-o" aria-hidden="true" />;
+            }
+
+            switch (validationReport.status) {
+                case 'ERROR':
+                    return <i className="fa fa-times-circle pe-2 status-error" aria-hidden="true" />;
+                case 'WARNING':
+                    return <i className="fa fa-exclamation-triangle pe-2 status-warning" aria-hidden="true" />;
+                case 'INFO':
+                    return <i className="fa fa-info-circle pe-2 status-info" aria-hidden="true" />;
+                case 'PENDING':
+                    return <span className="pe-2" aria-hidden="true">
+                            <i className="fa fa-spinner fa-spin p-0" aria-hidden="true" />
+                        </span>;
+                default:
+                    return <i className="fa fa-check-circle pe-2 status-success" aria-hidden="true" />;
+            }
+        };
+
+        if (showValidations) {
+            items.push(
+                <li key={key} className="list-group-item">
+                    <span className="info-title d-flex align-items-center">
+                        {
+                            isFetchingLatestReport 
+                            ?  <span className="pe-2"><i className="fa fa-spinner fa-spin  p-0 fs-5" aria-hidden="true" /></span>
+                            : validationStatusIcon()
+                        }
+                        Validations:
+                        <br/>
+                    </span>
+                    <div className="data-field">
+                        {validationReport ? (
+                            <span className="validation-report-status d-flex justify-content-between align-items-center">
+                                <a
+                                    href={
+                                        ROUTER_URL_VALIDATIONS
+                                        + `${submissionData.broker_submission_id}/validation-report/${validationReport.id}/`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="external"
+                                >
+                                    Metadata validation report
+                                </a>
+                                {validationStatusIcon()}
+                            </span>
+                        ) : isFetchingLatestReport ? (
+                            <span className="validation-report-status d-flex justify-content-between align-items-center">
+                                <span>Loading latest validation report...</span>
+                                <i className="fa fa-spinner fa-spin p-0" aria-hidden="true" />
+                            </span>
+                        ) : (
+                            'No validation report available'
+                        )}
+                    </div>
+                </li>
+            );
+            key++;
+        }
+
         if (submissionData?.readOnly) {
             items.push(
                 <li key={key} className="list-group-item">
@@ -117,6 +210,7 @@ const InfoBox = ({title, submissionData}) => {
 InfoBox.propTypes = {
     title: PropTypes.string.isRequired,
     submissionData: PropTypes.object,
+    showValidations: PropTypes.bool,
 };
 
 export default InfoBox;

@@ -16,6 +16,10 @@ const SubmissionList = (props) => {
     const [submissionToDelete, setSubmissionToDelete] = useState(null);
     const [successHeader, setSuccessHeader] = useState("");
     const [successText, setSuccessText] = useState("");
+    const [warnings, setWarnings] = useState([]);
+    const [warningSubmissionId, setWarningSubmissionId] = useState(null);
+
+    const hasWarnings = warnings.length > 0;
 
     // Check if message was already shown in this session
     const hasShownMessage = sessionStorage.getItem('successMessageShown');
@@ -24,16 +28,36 @@ const SubmissionList = (props) => {
     );
 
     useEffect(() => {
+        const nextWarnings = Array.isArray(state?.warnings) ? state.warnings : [];
+        setWarnings(nextWarnings);
+        setWarningSubmissionId(state?.brokerSubmissionId || null);
+
         if (state?.create) {
-            setSuccessHeader("Your data was submitted !");
-            setSuccessText(
-                "Congratulations, you have started a data submission. " +
-                "You will receive a confirmation email from the GFBio Helpdesk Team. " +
-                "Please reply to this email if you have questions."
-            );
+            if (nextWarnings.length > 0) {
+                setSuccessHeader("Your submission was created, but some steps failed");
+                setSuccessText(
+                    "The submission itself was saved successfully. " +
+                    "Please review the details below and try again if needed."
+                );
+            } else {
+                setSuccessHeader("Your data was submitted !");
+                setSuccessText(
+                    "Congratulations, you have started a data submission. " +
+                    "You will receive a confirmation email from the GFBio Helpdesk Team. " +
+                    "Please reply to this email if you have questions."
+                );
+            }
         } else if (state?.update) {
-            setSuccessHeader("Your submission was updated !");
-            setSuccessText("The Update of your data was successful.");
+            if (nextWarnings.length > 0) {
+                setSuccessHeader("Your submission was updated, but some steps failed");
+                setSuccessText(
+                    "Your changes were saved successfully. " +
+                    "Please review the details below and try again if needed."
+                );
+            } else {
+                setSuccessHeader("Your submission was updated !");
+                setSuccessText("The Update of your data was successful.");
+            }
         }
     }, [state]);
 
@@ -78,18 +102,34 @@ const SubmissionList = (props) => {
             <NavigationMenu />
             <div className="submission-list-wrapper">
                 <Collapse in={isSuccessVisible}>
-                    <div className="col-8 mx-auto success-message">
+                    <div className={`col-8 mx-auto success-message${hasWarnings ? " success-message-warning" : ""}`}>
                         <div className="row">
                             <div className="col-1 mx-auto">
-                                <i className="icon ion-md-checkmark-circle-outline"/>
+                                <i className={`icon ${hasWarnings ? "ion-md-warning" : "ion-md-checkmark-circle-outline"}`}/>
                             </div>
                             <div className="col-8">
                                 <h4>{successHeader}</h4>
                                 <p>{successText}</p>
+                                {hasWarnings && (
+                                    <div className="success-message-warnings">
+                                        {warnings.map((warning, index) => (
+                                            <p key={index} className="success-message-warning-item">
+                                                {warning}
+                                            </p>
+                                        ))}
+                                        {warningSubmissionId && (
+                                            <p className="success-message-warning-link">
+                                                <Link to={ROUTER_URL_EDIT + warningSubmissionId}>
+                                                    Open this submission to try again
+                                                </Link>
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div className="col-2">
                                 <button
-                                    className="btn btn-sm w-100 btn-green-inverted"
+                                    className={`btn btn-sm w-100 ${hasWarnings ? "btn-warning-inverted" : "btn-green-inverted"}`}
                                     onClick={handleClose}
                                 >
                                     Close
