@@ -15,7 +15,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django_reverse_admin import ReverseModelAdmin
 from dt_upload import admin as dt_admin
-from dt_upload.models import DTUpload, FileUploadRequest, FileUploadRequestMirror
+from dt_upload.models import DTUpload, FileUploadRequest, FileUploadRequestMirror, FailedMirrorBackupLog
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
@@ -1023,16 +1023,12 @@ try:
 except admin.sites.NotRegistered:
     pass
 
-try:
-    admin.site.unregister(FileUploadRequestMirror)
-except admin.sites.NotRegistered:
-    pass
 
 class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
     list_display = ("__str__", "user")
     search_fields = ["submissioncloudupload__submission__broker_submission_id", "original_filename"]
-    list_filter = (("mirrored_file___mirror_file", admin.EmptyFieldListFilter), "user")
-    readonly_fields = ["created", "modified", "mirrored_file"]
+    list_filter = ("status", ("mirrored_file___mirror_file", admin.EmptyFieldListFilter), "user")
+    readonly_fields = ["created", "modified", "mirrored_file", "submissioncloudupload"]
 
     def save_model(self, request, obj, form, change):
         obj._validation_triggered_by_user_id = request.user.pk
@@ -1040,15 +1036,6 @@ class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
 
 
 admin.site.register(FileUploadRequest, FileUploadRequestAdmin)
-
-class FileUploadRequestMirrorAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "_mirror_file", "modified")
-    list_filter = (("_mirror_file", admin.EmptyFieldListFilter), "fileuploadrequest__user", "bucket_name")
-    search_fields = ["_mirror_file", "bucket_name", "fileuploadrequest__user"]
-    readonly_fields = ["created", "modified", "fileuploadrequest"]
-
-
-admin.site.register(FileUploadRequestMirror, FileUploadRequestMirrorAdmin)
 
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
