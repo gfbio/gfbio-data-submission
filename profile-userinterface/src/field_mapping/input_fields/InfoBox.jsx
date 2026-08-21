@@ -67,7 +67,11 @@ const InfoBox = ({title, submissionData, showValidations}) => {
                             return (
                                 <div className="data-field">
                                     <div className="">
-                                        <span style={{fontWeight: 600}}>ID</span>: {accession.pid}
+                                        <span style={{fontWeight: 600}}>ID</span>: {
+                                            (accession.status == "PUBLIC") 
+                                                ? <a href={`https://www.ebi.ac.uk/ena/browser/view/${accession.pid}`}>{accession.pid}</a>
+                                                : accession.pid
+                                        }
                                     </div>
                                     <div className="" style={{marginTop: 0}}>
                                         <span style={{fontWeight: 600}}>Status</span>:{' '}
