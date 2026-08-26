@@ -102,6 +102,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             "download_url": "",
             "release": False,
             "user": "horst",
+            'user_email': 'horst@horst.de',
+            'user_legal_name': '',
             "status": "OPEN",
             "target": "ENA",
         }
@@ -142,6 +144,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             "download_url": "",
             "release": False,
             "user": "horst",
+            "user_email": "horst@horst.de",
+            "user_legal_name": "",
             "status": "OPEN",
             "target": "ENA",
         }

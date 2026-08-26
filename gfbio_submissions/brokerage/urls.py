@@ -6,10 +6,7 @@ from gfbio_submissions.brokerage.views.user_view import UserView
 
 from .views.curator_submissions_view import (
     CuratorSubmissionActionView,
-    CuratorSubmissionCloudUploadListView,
-    CuratorSubmissionDetailView,
     CuratorSubmissionStateView,
-    CuratorSubmissionsView,
     CuratorSubmissionTaskProgressReportView,
 )
 from .views.jira_issue_update_view import JiraIssueUpdateView
@@ -42,17 +39,6 @@ from .views.submissions_view import SubmissionsView
 
 app_name = "brokerage"
 urlpatterns = [
-    re_path(route=r"curator/submissions/$", view=CuratorSubmissionsView.as_view(), name="curator_submissions"),
-    re_path(
-        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/$",
-        view=CuratorSubmissionDetailView.as_view(),
-        name="curator_submissions_detail",
-    ),
-    re_path(
-        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloud-uploads/$",
-        view=CuratorSubmissionCloudUploadListView.as_view(),
-        name="curator_submissions_cloud_uploads",
-    ),
     re_path(
         route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/task-progress-reports/$",
         view=CuratorSubmissionTaskProgressReportView.as_view(),

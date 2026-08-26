@@ -72,6 +72,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             "issue": "",
             "target": "GENERIC",
             "user": "horst",
+            'user_email': 'horst@horst.de',
+            'user_legal_name': '',
             "data": {
                 "requirements": {
                     "description": "A Generic Description",

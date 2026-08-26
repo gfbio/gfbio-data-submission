@@ -35,6 +35,8 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             "broker_submission_id": content["broker_submission_id"],
             "issue": "",
             "user": "horst",
+            "user_email": "horst@horst.de",
+            "user_legal_name": "",
             "target": "ATAX",
             "status": "OPEN",
             "release": False,

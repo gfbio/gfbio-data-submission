@@ -24,18 +24,18 @@ const sortOptions = [
         icon: "fa-calendar",
         secondaryIcon: "fa-sort-up",
     },
-    {
-        label: "Title (A-Z)",
-        field: "title",
-        direction: 1,
-        icon: "fa-sort-alpha-asc",
-    },
-    {
-        label: "Title (Z-A)",
-        field: "title",
-        direction: -1,
-        icon: "fa-sort-alpha-desc",
-    },
+//    {
+//        label: "Title (A-Z)",
+//        field: "title",
+//        direction: 1,
+//        icon: "fa-sort-alpha-asc",
+//    },
+//    {
+//        label: "Title (Z-A)",
+//        field: "title",
+//        direction: -1,
+//        icon: "fa-sort-alpha-desc",
+//    },
 ];
 
 // SubmissionList component
@@ -290,22 +290,6 @@ const SubmissionList = (props) => {
                                         </div>
                                         <div className="col-md-2 align-self-center d-flex">
                                             <h6 className='mb-0 mt-1'>Status</h6>
-                                            <Menu>
-                                                <Menu.Target>
-                                                    <i className='fa fa-filter ms-2 mt-1 c-pointer'></i>
-                                                </Menu.Target>
-                                                <Menu.Dropdown>
-                                                    {
-                                                        [{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.status))]
-                                                            .map(status => ({value: status, label: status}))]
-                                                            .map((option) => (
-                                                                <Menu.Item key={option.value} onClick={() => setFilters({...filters, status: option.value})}>
-                                                                    {option.label}
-                                                                </Menu.Item>
-                                                            ))
-                                                    }
-                                                </Menu.Dropdown>
-                                            </Menu>
                                         </div>
                                         <div className="col-md-2 align-self-center">
                                             <h6 className='mb-0 mt-1'>Ticket</h6>
@@ -347,16 +331,24 @@ const SubmissionList = (props) => {
                             </div>
                             <ul className="list-group">
                                 {submissions.filter((submission) => {
+                                    var search_value = filters.search ? filters.search.toLowerCase() : filters.search;
+                                    var user_search_value = filters.user ? filters.user.toLowerCase() : filters.user;
                                     return (
                                         (!filters.status || submission.status == filters.status)
                                         && (!filters.target || submission.target == filters.target)
-                                        && (!filters.user || submission.user.includes(filters.user))
+                                        && (!filters.user 
+                                            || submission.user.includes(user_search_value)
+                                            || (submission.user_email && submission.user_email.toLowerCase().includes(user_search_value))
+                                            || (submission.user_legal_name && submission.user_legal_name.toLowerCase().includes(user_search_value))
+                                        )
                                         && (!filters.search 
-                                            || submission.broker_submission_id.includes(filters.search)
-                                            || submission.user.includes(filters.search)
-                                            || submission.issue.includes(filters.search)
-                                            || submission.data.requirements.title.includes(filters.search)
-                                            || submission.data.requirements.description.includes(filters.search)
+                                            || submission.broker_submission_id.toLowerCase().includes(search_value)
+                                            || submission.user.toLowerCase().includes(search_value)
+                                            || (submission.user_email && submission.user_email.toLowerCase().includes(search_value))
+                                            || (submission.user_legal_name && submission.user_legal_name.toLowerCase().includes(search_value))
+                                            || submission.issue.toLowerCase().includes(search_value)
+                                            || submission.data.requirements.title.toLowerCase().includes(search_value)
+                                            || submission.data.requirements.description.toLowerCase().includes(search_value)
                                         )
                                     );
                                 }).sort(

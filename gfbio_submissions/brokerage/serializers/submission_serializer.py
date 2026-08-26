@@ -118,6 +118,8 @@ SCHEMA_DEFAULT_EMBARGO = (timezone.now().date() + timedelta(days=365)).isoformat
 )
 class SubmissionSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.username")
+    user_email = serializers.ReadOnlyField(source="user.email")
+    user_legal_name = serializers.SerializerMethodField()
     broker_submission_id = serializers.UUIDField(required=False)
     download_url = serializers.URLField(required=False)
     data = serializers.JSONField()
@@ -129,6 +131,15 @@ class SubmissionSerializer(serializers.ModelSerializer):
     def get_issue(self, obj) -> str:
         ref = obj.get_primary_helpdesk_reference()
         return ref.reference_key if ref else ""
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_user_legal_name(self, obj) -> str:
+        legal_name = ""
+        if obj.user.first_name:
+            legal_name += obj.user.first_name + " "
+        if obj.user.last_name:
+            legal_name += obj.user.last_name
+        return legal_name
 
     def validate(self, data):
         if data.get("release", False):
@@ -150,6 +161,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "broker_submission_id",
             "issue",
             "user",
+            "user_email",
+            "user_legal_name",
             "target",
             "status",
             "release",

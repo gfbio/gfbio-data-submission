@@ -57,6 +57,8 @@
     "embargo": null,
     "release": true,
     "user": "horst",
+    "user_email": "horst@horst.de",
+    "user_legal_name": "",
     "status": "SUBMITTED",
     "target": "ENA"
 }
