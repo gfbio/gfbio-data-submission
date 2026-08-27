@@ -5,7 +5,20 @@ import { useState } from "react";
 
 const SubmissionStatus = ({ title, submissionData }) => {
     const [currentStatus, setCurrentStatus] = useState(submissionData.status);
-    console.log("SubmissionStatus: currentStatus = ", currentStatus, " submissionData.status = ", submissionData.status);
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const setStatus = (status) => {
+        postSubmissionState(submissionData, status)
+            .then(() => {
+                    setCurrentStatus(status);
+                    setErrorMessage("");
+                }
+            )
+            .catch(error => {
+                console.log(error);
+                setErrorMessage(`An error occured (${error.message}). Please try again or maybe try to reload the page.`);
+            });
+    };
 
     return (
         <div className="info-box">
@@ -14,31 +27,39 @@ const SubmissionStatus = ({ title, submissionData }) => {
             </header>
             <div>
                 <Button size="sm" className="m-1 submission-state-button new" disabled={currentStatus == "OPEN"} 
-                    onClick={() => { postSubmissionState(submissionData, "OPEN").then(() => setCurrentStatus("OPEN")) }}
+                    onClick={() => setStatus("OPEN")}
                 >
                     OPEN
                 </Button>
                 <Button size="sm" className="m-1 submission-state-button submitted" disabled={currentStatus == "SUBMITTED"}
-                    onClick={() => { postSubmissionState(submissionData, "SUBMITTED").then(() => setCurrentStatus("SUBMITTED")) }}
+                    onClick={() => setStatus("SUBMITTED")}
                 >
                     SUBMITTED
                 </Button>
                 <Button size="sm" className="m-1 submission-state-button error" disabled={currentStatus == "ERROR"}
-                    onClick={() => { postSubmissionState(submissionData, "ERROR").then(() => setCurrentStatus("ERROR")) }}
+                    onClick={() => setStatus("ERROR")}
                 >
                     ERROR
                 </Button>
                 <Button size="sm" className="m-1 submission-state-button cancelled" disabled={currentStatus == "CANCELLED"}
-                    onClick={() => { postSubmissionState(submissionData, "CANCELLED").then(() => setCurrentStatus("CANCELLED")) }}
+                    onClick={() => setStatus("CANCELLED")}
                 >
                     CANCELLED
                 </Button>
                 <Button size="sm" className="m-1 submission-state-button closed" disabled={currentStatus == "CLOSED"}
-                    onClick={() => { postSubmissionState(submissionData, "CLOSED").then(() => setCurrentStatus("CLOSED")) }}
+                    onClick={() => setStatus("CLOSED")}
                 >
                     CLOSED
                 </Button>
             </div>
+            {
+                errorMessage && (
+                    <div className="text-danger font-monospace fs-8">
+                        <i class="fa fa-flash ps-2 pe-2"></i>
+                        {errorMessage}
+                    </div>
+                )
+            }
         </div>
     );
 };

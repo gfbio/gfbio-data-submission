@@ -18,9 +18,8 @@ const postSubmissionState = async (submissionData, newState) => {
         })
         .catch((error) => {
             console.error("Error: ", error);
+            throw error;
         })
-        .finally(() => {
-        });
     return result;
 };
 

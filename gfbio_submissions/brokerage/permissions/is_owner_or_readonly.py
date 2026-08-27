@@ -17,7 +17,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 class IsOwnerOrHasCuratorRightsOrReadOnly(IsOwnerOrReadOnly):
     def has_object_permission(self, request, view, obj):
-        if super(IsOwnerOrReadOnly, self).has_object_permission(request, view, obj):
+        if super().has_object_permission(request, view, obj):
             return True
 
         return request.user.has_perm("brokerage.curate_submissions")

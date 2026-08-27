@@ -45,7 +45,7 @@ class CuratorSubmissionTaskProgressReportView(generics.ListAPIView):
 class CuratorSubmissionActionPermissions(DjangoModelPermissions):
     perms_map = {
         **DjangoModelPermissions.perms_map,
-        "POST": ["%(app_label)s.change_%(model_name)s"],
+        "POST": ["brokerage.curate_submissions"],
     }
 
 
