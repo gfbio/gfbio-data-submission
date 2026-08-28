@@ -1,18 +1,33 @@
 # -*- coding: utf-8 -*-
-from django.urls import re_path, path
+from django.urls import path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularSwaggerView
-from dt_upload.views import backend_based_upload_views
+from gfbio_submissions.brokerage.views.user_view import UserView
 
+from .views.curator_submissions_view import (
+    CuratorSubmissionActionView,
+    CuratorSubmissionStateView,
+    CuratorSubmissionTaskProgressReportView,
+)
 from .views.jira_issue_update_view import JiraIssueUpdateView
 from .views.metadata_validation_report_view import LatestMetadataValidationReportView, MetadataValidationReportView
 from .views.submission_cloud_upload_detail_view import SubmissionCloudUploadDetailView
+from .views.submission_cloud_upload_download_view import (
+    SubmissionCloudGetDownloadLinkView,
+    SubmissionCloudZipAllFilesAndDownload,
+    SubmissionCloudZipAllFilesAndDownloadRedirect,
+)
 from .views.submission_cloud_upload_patch_view import SubmissionCloudUploadPatchView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadAbortView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadCompleteView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadUpdatePartView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView, SubmissionCloudUploadSingleCallView, SubmissionCloudUploadBatchCallView, SubmissionCloudUploadCollectionView, SubmissionCloudUploadRestartMultipartView
-from .views.submission_cloud_upload_download_view import SubmissionCloudGetDownloadLinkView, SubmissionCloudZipAllFilesAndDownload, SubmissionCloudZipAllFilesAndDownloadRedirect
+from .views.submission_cloud_upload_view import (
+    SubmissionCloudUploadAbortView,
+    SubmissionCloudUploadBatchCallView,
+    SubmissionCloudUploadCollectionView,
+    SubmissionCloudUploadCompleteView,
+    SubmissionCloudUploadPartURLView,
+    SubmissionCloudUploadRestartMultipartView,
+    SubmissionCloudUploadUpdatePartView,
+    SubmissionCloudUploadView,
+)
 from .views.submission_comment_view import SubmissionCommentView
 from .views.submission_detail_view import SubmissionDetailView
 from .views.submission_report_view import SubmissionReportView
@@ -24,6 +39,21 @@ from .views.submissions_view import SubmissionsView
 
 app_name = "brokerage"
 urlpatterns = [
+    re_path(
+        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/task-progress-reports/$",
+        view=CuratorSubmissionTaskProgressReportView.as_view(),
+        name="curator_submissions_task_progress_reports",
+    ),
+    re_path(
+        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/actions/$",
+        view=CuratorSubmissionActionView.as_view(),
+        name="curator_submissions_actions",
+    ),
+    re_path(
+        route=r"curator/submissions/(?P<broker_submission_id>[0-9a-z-]+)/state/$",
+        view=CuratorSubmissionStateView.as_view(),
+        name="curator_submissions_set_state",
+    ),
     re_path(route=r"submissions/$", view=SubmissionsView.as_view(), name="submissions"),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/$",
@@ -63,12 +93,12 @@ urlpatterns = [
     path(
         route="submissions/uploads/<str:upload_id>/complete/",
         view=SubmissionCloudUploadCompleteView.as_view(),
-        name="submissions_cloud_upload_complete"
+        name="submissions_cloud_upload_complete",
     ),
     path(
         route="submissions/uploads/<str:upload_id>/abort/",
         view=SubmissionCloudUploadAbortView.as_view(),
-        name="submissions_cloud_upload_abort"
+        name="submissions_cloud_upload_abort",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/legacy-uploads/$",
@@ -103,17 +133,17 @@ urlpatterns = [
     re_path(
         route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/download_file/(?P<file_id>[0-9]+)/$",
         view=SubmissionCloudGetDownloadLinkView.as_view(),
-        name="submissions_cloud_file_download"
+        name="submissions_cloud_file_download",
     ),
     re_path(
         route="submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/zip/$",
         view=SubmissionCloudZipAllFilesAndDownloadRedirect.as_view(),
-        name="submissions_cloud_zip_download_redirect"
+        name="submissions_cloud_zip_download_redirect",
     ),
     re_path(
         route="downloads/submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/zip/$",
         view=SubmissionCloudZipAllFilesAndDownload.as_view(),
-        name="submissions_cloud_zip_download"
+        name="submissions_cloud_zip_download",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$",
@@ -148,10 +178,15 @@ urlpatterns = [
         ),
         name="api_molecular_documentation",
     ),
-    re_path(r'molecular/$', TemplateView.as_view(
-        template_name='pages/api_molecular.html',
-        extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
-    ), name='api_molecular_documentation'),
+    re_path(
+        r"molecular/$",
+        TemplateView.as_view(
+            template_name="pages/api_molecular.html",
+            extra_context={"schema_url": "generic:brokerage_schema_molecular"},
+        ),
+        name="api_molecular_documentation",
+    ),
+    re_path(r"users/@me/$", UserView.as_view(), name="user"),
     # acts also as a default view if nothing above applies
-    re_path('', SpectacularSwaggerView.as_view(url_name="api-schema"), name='api_documentation')
+    re_path("", SpectacularSwaggerView.as_view(url_name="api-schema"), name="api_documentation"),
 ]

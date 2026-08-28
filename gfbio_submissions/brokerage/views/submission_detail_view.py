@@ -10,11 +10,16 @@ from rest_framework.response import Response
 
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models.submission import Submission
-from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
+from ..permissions.is_owner_or_readonly import IsOwnerOrHasCuratorRightsOrReadOnly
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
 from ...generic.models.request_log import RequestLog
+
+
+
+def user_has_special_permissions(user):
+    return user.has_perm("brokerage.curate_submissions") or user.is_staff or user.is_superuser
 
 
 @extend_schema(tags=["submissions"])
@@ -27,7 +32,7 @@ class SubmissionDetailView(
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrHasCuratorRightsOrReadOnly)
 
     lookup_field = "broker_submission_id"
 
@@ -107,7 +112,25 @@ class SubmissionDetailView(
         new_embargo = get_embargo_from_request(request)
 
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
-        if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
+        if instance.status == Submission.CLOSED and new_embargo:
+            response = Response(data={"message": "Embargo updated"}, status=status.HTTP_200_OK)
+            # check for ena embargo update
+            if instance.embargo != new_embargo:
+                instance.embargo = new_embargo
+                instance.save()
+                from ..tasks.jira_tasks.update_submission_issue import update_submission_issue_task
+                from ..tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
+                from ..tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
+                from ..tasks.jira_tasks.notify_user_embargo_changed import notify_user_embargo_changed_task
+
+                update_chain = (
+                    get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                )
+                update_chain()
+        elif instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED or user_has_special_permissions(request.user):
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
@@ -152,24 +175,6 @@ class SubmissionDetailView(
                 countdown=SUBMISSION_DELAY
             )
             chain()
-        elif instance.status == Submission.CLOSED and new_embargo:
-            response = Response(data={"message": "Embargo updated"}, status=status.HTTP_200_OK)
-            # check for ena embargo update
-            if instance.embargo != new_embargo:
-                instance.embargo = new_embargo
-                instance.save()
-                from ..tasks.jira_tasks.update_submission_issue import update_submission_issue_task
-                from ..tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
-                from ..tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
-                from ..tasks.jira_tasks.notify_user_embargo_changed import notify_user_embargo_changed_task
-
-                update_chain = (
-                    get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                    | update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                    | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                    | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                )
-                update_chain()
         else:
             response = Response(
                 data={

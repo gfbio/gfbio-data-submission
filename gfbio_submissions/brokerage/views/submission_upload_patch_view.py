@@ -11,7 +11,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..models.submission import Submission
 from ..models.submission_upload import SubmissionUpload
-from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
+from ..permissions.is_owner_or_readonly import IsOwnerOrHasCuratorRightsOrReadOnly
 from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
 
 
@@ -24,7 +24,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView
         parsers.FormParser,
     )
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrHasCuratorRightsOrReadOnly)
 
     @extend_schema(
         operation_id="patch-update submission upload",

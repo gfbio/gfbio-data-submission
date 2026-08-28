@@ -1,5 +1,7 @@
 import logging
 
+from requests import RequestException
+
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.ontology_requester import OntologyRequester, OntologyRequesterCacheWrapper
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.envo_csv_validator import EnvoCsvValidator
@@ -21,6 +23,15 @@ def validate_envo_columns_task(self, previous_task_result=None,  submission_id=N
     try:
         with file_opener.csv_reader(report.upload_file) as meta_file:
             envo_csv_validator.validate(meta_file)
+    except RequestException as e:
+        msg = f"Error: while requesting ontology data from the OntoPortal API: {e}. Please refer to the curator for assistance."
+        logger.error(msg)
+        validation_task_report.validationfinding_set.create(
+            message="An error occured while requesting ontology data.", help_text="There seems to be a temporary issue with the OntoPortal API.",
+            status="ERROR", finding_type="Server-Problem"
+        )
+        validation_task_report.status = "ERROR"
+        return False, msg
     except Exception as e:
         msg = f"Error: Exception on parsing file {report.upload_file}: {e}."
         logger.error(msg)

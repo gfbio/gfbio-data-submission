@@ -13,3 +13,11 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         #   single user ownership
         # Write permissions are only allowed to the owner.
         return obj.user == request.user
+
+
+class IsOwnerOrHasCuratorRightsOrReadOnly(IsOwnerOrReadOnly):
+    def has_object_permission(self, request, view, obj):
+        if super().has_object_permission(request, view, obj):
+            return True
+
+        return request.user.has_perm("brokerage.curate_submissions")
