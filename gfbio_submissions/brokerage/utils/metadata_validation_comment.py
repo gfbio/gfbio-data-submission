@@ -37,7 +37,7 @@ def build_metadata_validation_report_comment(report: MetadataValidationReport) -
     warning_count = sum(1 for finding in findings if finding.status == "WARNING")
     info_count = sum(1 for finding in findings if finding.status == "INFO")
 
-    report_path = f"{settings.HOST_URL_ROOT}/validations/{report.submission.broker_submission_id}/validation-reports/{report.pk}/"
+    report_path = f"{settings.HOST_URL_ROOT}validations/{report.submission.broker_submission_id}/validation-report/{report.pk}/"
     lines = [
         f"Metadata validation report ready for file {filename} ({report.file_md5_checksum})",
         "Summary:",
