@@ -21,11 +21,13 @@ export const DEFAULT_PROFILE_ID = "1";
 //TODO: fix ugly url later
 export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profile/";
 
-export const PROFILE_LIST_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profiles/?system_wide_profile=true";
+export const PROFILE_LIST_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profiles/";
 
 export const ACTIVE_PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "active/";
 
 export const SUBMISSIONS_API = SERVER_ROOT + "/api/submissions/";
+
+export const USER_API = SERVER_ROOT + "/api/users/@me/";
 
 export const JIRA_ROOT = "https://helpdesk.gfbio.org/browse/";
 
@@ -50,3 +52,5 @@ export const MAX_TOTAL_UPLOAD_SIZE_CLOUD_UPLOAD = 100 * 1024 * 1024 * 1024;  // 
 export const PROFILE_SELECTION_FORM_KEY = "profileSelect";
 
 export const USE_LOCAL_UPLOAD_ONLY = false;
+
+export const TASK_REFRESH_INTERVAL_MS = 10000;

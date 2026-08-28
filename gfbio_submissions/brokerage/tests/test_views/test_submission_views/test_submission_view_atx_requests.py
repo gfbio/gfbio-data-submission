@@ -35,6 +35,8 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             "broker_submission_id": content["broker_submission_id"],
             "issue": "",
             "user": "horst",
+            "user_email": "horst@horst.de",
+            "user_legal_name": "",
             "target": "ATAX",
             "status": "OPEN",
             "release": False,
@@ -49,6 +51,8 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         }
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(Submission.objects.all()))
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertDictEqual(expected, content)
 
         # 1 incoming post, 1 get helpdesk user, 1 create issue

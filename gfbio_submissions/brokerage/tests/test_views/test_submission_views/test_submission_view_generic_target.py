@@ -72,6 +72,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             "issue": "",
             "target": "GENERIC",
             "user": "horst",
+            'user_email': 'horst@horst.de',
+            'user_legal_name': '',
             "data": {
                 "requirements": {
                     "description": "A Generic Description",
@@ -80,6 +82,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             },
         }
         self.assertEqual(201, response.status_code)
+        self.assertIsNotNone(content["modified"])
+        del content["modified"]
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
 

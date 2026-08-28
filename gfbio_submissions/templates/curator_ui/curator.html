@@ -1,0 +1,14 @@
+{% extends "base_content.html" %}
+{% load static %}
+{% load vite %}
+
+{% block content %}
+    <script>
+        window.props = {{ parameters|safe }};
+    </script>
+    <div id="curator-ui"></div>
+{% endblock content %}
+
+{% block thirdPartyJavaScript %}
+  {% vite_entry "index.html" %}
+{% endblock thirdPartyJavaScript %}
