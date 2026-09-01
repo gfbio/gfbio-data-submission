@@ -3,6 +3,9 @@
 import io
 from unittest.mock import patch
 
+import celery
+from requests import RequestException
+
 from dt_upload.models import FileUploadRequest
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.ontology_requester import OntologyRequester
 
@@ -66,6 +69,11 @@ class MockRequester(OntologyRequester):
         raise Exception(f"Unexpected: {name}")
 
 
+class MockRequesterWithException(OntologyRequester):
+    def request_ontology_entries(self, name, ontology=None, root=None):
+        raise RequestException("Unexpected error")
+
+
 class TestValidateEnvoColumnsTask(TestTasks):
     def _create_report(self):
         submission = Submission.objects.first()
@@ -123,3 +131,13 @@ class TestValidateEnvoColumnsTask(TestTasks):
         self.assertEqual("ERROR", task_report.status)
         self.assertEqual(1, task_report.validationfinding_set.count())
         self.assertEqual("Can't find matching term for 'plant matter with typo'. Please ensure the term is a decendant of enviromental material [ENVO:00010483].", task_report.validationfinding_set.all()[0].message)
+
+
+    @patch(_OPENER_PATH)
+    @patch(_ONTOLOGY_REQUESTER)
+    def test_envo_validation_ontoportal_not_reachable(self, mock_requester, mock_opener):
+        report = self._create_report()
+        mock_opener.return_value = _FakeOpener(HEADER + "The sample1;123;Belly Button;forest biome [ENVO:01000174];plant matter [ENVO:01001121];microbial community [PCO:1000004]\n")
+        mock_requester.return_value = MockRequesterWithException()
+
+        self.assertRaises(celery.exceptions.Retry, self._run, report)
