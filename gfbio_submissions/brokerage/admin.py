@@ -494,6 +494,29 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
 transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud uploads to ENA via Aspera"
 
 
+def retrigger_cloud_upload_checksums(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.views.submission_cloud_upload_view import add_verify_checksum_task
+
+    queued = 0
+    for submission in queryset:
+        uploads = submission.submissioncloudupload_set.filter(
+            status=SubmissionCloudUpload.STATUS_UPLOADED,
+            file_upload__isnull=False,
+        ).select_related("submission", "file_upload")
+        for scu in uploads:
+            add_verify_checksum_task(scu)
+            queued += 1
+
+    if modeladmin:
+        modeladmin.message_user(
+            request,
+            _("Queued checksum verification for %(count)s cloud upload(s).") % {"count": queued},
+        )
+
+
+retrigger_cloud_upload_checksums.short_description = "Run checksum checks for cloud uploads"
+
+
 class AuditableTextDataAdmin(admin.ModelAdmin):
     actions = []
 
@@ -538,6 +561,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         cancel_selected_submissions,
         release_submission_study_on_ena,
         transfer_submission_cloud_uploads_to_ena,
+        retrigger_cloud_upload_checksums,
         validate_against_ena,
         submit_to_ena_test,
         modify_ena_objects_with_current_xml,

@@ -20,6 +20,7 @@ from ..admin import (
     re_create_ena_xml,
     register_study_at_ena,
     release_submission_study_on_ena,
+    retrigger_cloud_upload_checksums,
     submit_manifest_to_ena,
     submit_to_ena_test,
     transfer_submission_cloud_uploads_to_ena,
@@ -147,6 +148,12 @@ ACTION_DEFINITIONS = [
         "label": "Transfer cloud uploads to ENA",
         "group": "Uploads",
         "callable": transfer_submission_cloud_uploads_to_ena,
+    },
+    {
+        "key": "retrigger_cloud_upload_checksums",
+        "label": "Run checksum checks for cloud uploads",
+        "group": "Uploads",
+        "callable": retrigger_cloud_upload_checksums,
     },
     {
         "key": "combine_csvs_to_abcd",
