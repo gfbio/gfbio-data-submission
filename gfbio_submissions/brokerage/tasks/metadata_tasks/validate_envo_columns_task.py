@@ -1,5 +1,6 @@
 import logging
 
+from django.core.mail import mail_admins
 from requests import RequestException
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES
@@ -35,6 +36,10 @@ def validate_envo_columns_task(self, previous_task_result=None,  submission_id=N
             status="WARNING", finding_type="Server-Problem"
         )
         validation_task_report.status = "WARNING"
+        mail_admins(
+            subject=" Error: Request to OntoPortal API failed",
+            message=f"An error occured while requesting ontology data from the OntoPortal API: {e} The submission in question is {submission_id}.",
+        )
         return False, msg
     except Exception as e:
         msg = f"Error: Exception on parsing file {report.upload_file}: {e}."
