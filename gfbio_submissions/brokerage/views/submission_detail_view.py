@@ -130,7 +130,7 @@ class SubmissionDetailView(
                     | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 )
                 update_chain()
-        elif instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED or user_has_special_permissions(request.user):
+        elif instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED or instance.status == Submission.ERROR or user_has_special_permissions(request.user):
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
