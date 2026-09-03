@@ -15,6 +15,7 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.transaction import TransactionManagementError
 from django.test import TestCase
 from django.urls import reverse
 from dt_upload.models import MultiPartUpload
@@ -281,6 +282,37 @@ class TestSubmissionCloudUploadView(TestCase):
         # Assert S3 client called correctly
         self.s3_client_mock.create_multipart_upload.assert_called_once()
 
+    def test_duplicate_start_uploads_does_not_raise_transaction_error(self):
+        """IntegrityError on unique file_key must not TME or create a second SubmissionCloudUpload.
+
+        TestCase is enough: ATOMIC_REQUESTS plus Django's test transaction reproduces TME
+        without the nested savepoint around generate_multipart_upload_objects.
+        """
+        self.s3_client_mock.create_multipart_upload.return_value = {"UploadId": self.mock_upload_id}
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+
+        first = self.client.post(url, data=self.test_file_data, format="json")
+        self.assertEqual(201, first.status_code)
+        existing_file_key = backend_based_upload_models.FileUploadRequest.objects.get().file_key
+
+        self.s3_client_mock.create_multipart_upload.return_value = {"UploadId": "second-upload-id"}
+        with patch(
+            "dt_upload.utils.storages.CloudStorage.get_available_name",
+            return_value=existing_file_key,
+        ):
+            try:
+                second = self.client.post(url, data=self.test_file_data, format="json")
+            except TransactionManagementError:
+                self.fail("duplicate start-uploads raised TransactionManagementError")
+
+        self.assertGreaterEqual(second.status_code, 400)
+        self.assertEqual(1, SubmissionCloudUpload.objects.filter(submission=submission).count())
+        self.assertEqual(1, backend_based_upload_models.FileUploadRequest.objects.count())
+
     def test_get_part_url(self):
         file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
             original_filename=self.test_file_data["filename"],
@@ -506,6 +538,7 @@ class TestSubmissionCloudUploadView(TestCase):
         )
         response = self.client.post(url, self.test_file_data, format="json")
         self.assertEqual(response.status_code, 500)
+        self.assertEqual(0, SubmissionCloudUpload.objects.filter(submission=submission).count())
 
     def test_single_call_upload(self):
         submission = Submission.objects.first()
