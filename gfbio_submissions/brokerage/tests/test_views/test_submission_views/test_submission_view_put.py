@@ -307,20 +307,20 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         submission = Submission.objects.first()
         submission.status = Submission.ERROR
         submission.save()
-        self.assertEqual(Submission.ERROR, submission.status)
+        submission = Submission.objects.first()
         response = self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {"target": "ENA", "release": False, "data": _get_submission_request_data()},
             format="json",
         )
-        self.assertEqual(400, response.status_code)
-        content = response.content.decode("utf-8")
-        self.assertIn('"status":"ERROR"', content)
-        self.assertIn(
-            '"broker_submission_id":"{0}"'.format(submission.broker_submission_id),
-            content,
-        )
-        self.assertIn('"error":"no modifications allowed with current status"', content)
+        content = json.loads(response.content.decode("utf-8"))
+        submission = Submission.objects.first()
+        self.assertEqual(200, response.status_code)
+        self.assertFalse("optional_validation" in content["data"].keys())
+        self.assertFalse("optional_validation" in submission.data)
+        submission = Submission.objects.first()
+        self.assertEqual(Submission.ERROR, content.get("status", "NOPE"))
+        self.assertEqual(Submission.ERROR, submission.status)
 
     @responses.activate
     def test_put_on_closed_submission(self):
