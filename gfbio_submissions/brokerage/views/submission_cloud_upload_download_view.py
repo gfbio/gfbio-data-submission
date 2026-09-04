@@ -1,26 +1,53 @@
-﻿# -*- coding: utf-8 -*-
-import requests
-
+# -*- coding: utf-8 -*-
 from django.conf import settings
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, StreamingHttpResponse
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from zipstream import ZipStream
+
 from ..models.submission_cloud_upload import SubmissionCloudUpload
+from ..utils.cloud_upload_download import build_zip_file_entries, stream_file_upload
 
 
-def get_file_stream(url):
-    chunk_size = 1024 * 1024
-    max_chunk_size = settings.MAX_BUCKET_DOWNLOAD_SPEED
-    try:
-        res = requests.get(url, stream=True)
-        for chunk in res.iter_content(chunk_size):
-            #increase chunk_size gradually to allow user-download to start immediately and increase while user-download has gotten busy
-            chunk_size = min(chunk_size * 2, max_chunk_size)
-            yield chunk
-    finally:
-        res.close()
+def _cloud_upload_download_filename(cloud_upload):
+    file_upload = cloud_upload.file_upload
+    if file_upload and file_upload.original_filename:
+        return file_upload.original_filename
+    return f"cloud upload {cloud_upload.pk}"
+
+
+def _is_cloud_upload_downloadable(cloud_upload):
+    file_upload = cloud_upload.file_upload
+    return file_upload is not None and file_upload.status == "COMPLETED"
+
+
+def _non_downloadable_cloud_uploads(cloud_uploads):
+    return [
+        cloud_upload
+        for cloud_upload in cloud_uploads
+        if not _is_cloud_upload_downloadable(cloud_upload)
+    ]
+
+
+def _cloud_upload_file_recency(cloud_upload):
+    file_upload = getattr(cloud_upload, "file_upload", None)
+    if file_upload is not None and file_upload.modified is not None:
+        return (file_upload.modified, cloud_upload.pk)
+    return (cloud_upload.modified, cloud_upload.pk)
+
+
+def _pick_newest_cloud_upload_per_original_filename(cloud_uploads):
+    newest_by_filename = {}
+    for cloud_upload in sorted(
+        cloud_uploads,
+        key=_cloud_upload_file_recency,
+        reverse=True,
+    ):
+        filename = _cloud_upload_download_filename(cloud_upload)
+        if filename not in newest_by_filename:
+            newest_by_filename[filename] = cloud_upload
+    return list(newest_by_filename.values())
 
 
 class SubmissionCloudGetDownloadLinkView(View):
@@ -34,9 +61,12 @@ class SubmissionCloudGetDownloadLinkView(View):
         try:
             if str(cloud_upload.submission.broker_submission_id) != broker_submission_id:
                 return HttpResponseForbidden("The requested file is not part of the submission the the file is requested for.")
-            if not file_upload or file_upload.status != "COMPLETED":
-                return HttpResponse("The requested file was not completely uploaded in the first place.", status=409)
-            response = StreamingHttpResponse(get_file_stream(file_upload.uploaded_file.url), content_type='application/data')
+            if not _is_cloud_upload_downloadable(cloud_upload):
+                return HttpResponse(
+                    "The requested file was not completely uploaded in the first place.",
+                    status=409,
+                )
+            response = StreamingHttpResponse(stream_file_upload(file_upload), content_type='application/data')
             response['Content-Disposition'] = f'attachment; filename={file_upload.original_filename}'
             return response
         except Exception as e:
@@ -45,21 +75,32 @@ class SubmissionCloudGetDownloadLinkView(View):
 
 class SubmissionCloudZipAllFilesAndDownload(View):
     def get(self, request, broker_submission_id):
-        files = SubmissionCloudUpload.objects.filter(submission__broker_submission_id=broker_submission_id).all()
+        files = SubmissionCloudUpload.objects.filter(
+            submission__broker_submission_id=broker_submission_id
+        ).exclude(
+            status=SubmissionCloudUpload.STATUS_DELETED
+        ).select_related("file_upload")
 
-        if files.exclude(status=SubmissionCloudUpload.STATUS_DELETED).filter(file_upload__isnull=True).exists():
+        files_for_zip = _pick_newest_cloud_upload_per_original_filename(files)
+
+        if any(cloud_upload.file_upload is None for cloud_upload in files_for_zip):
             return HttpResponse("There are empty files with no upload. Please delete these files first.", status=409)
 
-        if files.exclude(status=SubmissionCloudUpload.STATUS_DELETED).exclude(file_upload__status="COMPLETED").exists():
+        non_downloadable = _non_downloadable_cloud_uploads(files_for_zip)
+        if non_downloadable:
             error_msg = "Some files were not completely uploaded in the first place. Please delete or reupload the files: "
-            error_msg += ", ".join([file.file_upload.original_filename for file in files.exclude(status=SubmissionCloudUpload.STATUS_DELETED).exclude(file_upload__status="COMPLETED")])
+            error_msg += ", ".join(_cloud_upload_download_filename(cloud_upload) for cloud_upload in non_downloadable)
             return HttpResponse(error_msg, status=409)
+
+        downloadable_files = [cloud_upload for cloud_upload in files_for_zip if _is_cloud_upload_downloadable(cloud_upload)]
+        if not downloadable_files:
+            return HttpResponse("There are no files available for download.", status=409)
 
         filename = f"submission_{broker_submission_id}.zip"
         zip_chunk_size = settings.MAX_USER_DOWNLOAD_SPEED
-        the_files = [{'stream': get_file_stream(file.file_upload.uploaded_file.url), 'name': file.file_upload.original_filename} for file in files]
-        zf = ZipStream(the_files, zip_chunk_size)
-        response = StreamingHttpResponse(zf.stream(), content_type='application/zip')
+        zip_entries, stream_zip = build_zip_file_entries(downloadable_files)
+        zf = ZipStream(zip_entries, zip_chunk_size)
+        response = StreamingHttpResponse(stream_zip(zf.stream()), content_type='application/zip')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
 
