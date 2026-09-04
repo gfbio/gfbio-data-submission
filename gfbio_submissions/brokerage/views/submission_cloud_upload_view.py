@@ -15,7 +15,10 @@ from rest_framework import mixins, generics, permissions, status, parsers, seria
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
-from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import send_message_to_jira_task
+from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import (
+    send_message_to_jira_task,
+    send_pending_checksum_messages_to_jira_task,
+)
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.brokerage.utils.cloud_upload_multipart import restart_multipart_on_file_upload_request
 from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import \
@@ -739,3 +742,31 @@ def add_verify_checksum_task(submission_cloud_upload):
     )
 
     verification_chain.apply_async()
+
+
+def add_sequential_verify_checksum_tasks(submission, submission_cloud_uploads):
+    """Queue checksum verification one file after another.
+
+    Independent apply_async() calls would let the ena_transfer worker hash several
+    large files in parallel via s3fs and exhaust RAM/disk (DASS-3780).
+    Immutable signatures (.si) keep a missing/cancelled file from stopping the rest.
+    """
+    uploads = list(submission_cloud_uploads)
+    if not uploads:
+        return 0
+
+    steps = [
+        verify_file_upload_request_checksum_in_bucket_task.si(
+            submission_id=submission.pk,
+            submission_cloud_upload_id=scu.pk,
+        )
+        for scu in uploads
+    ]
+    steps[0] = steps[0].set(countdown=SUBMISSION_DELAY)
+    steps.append(
+        send_pending_checksum_messages_to_jira_task.si(submission_id=submission.pk).set(
+            countdown=JIRA_MESSAGES_WAIT_DELAY
+        )
+    )
+    chain(*steps).apply_async()
+    return len(uploads)

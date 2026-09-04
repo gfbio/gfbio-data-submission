@@ -12,7 +12,15 @@ from gfbio_submissions.brokerage.admin import (
 )
 from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_HELPDESK_TICKET,
+    JIRA_MESSAGES_WAIT_DELAY,
     PANGAEA_JIRA_TICKET,
+    SUBMISSION_DELAY,
+)
+from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import (
+    send_pending_checksum_messages_to_jira_task,
+)
+from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import (
+    verify_file_upload_request_checksum_in_bucket_task,
 )
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
@@ -131,8 +139,8 @@ class TestSubmissionAdmin(TestCase):
             status=scu_status,
         )
 
-    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_view.add_verify_checksum_task")
-    def test_retrigger_cloud_upload_checksums_queues_uploaded_only(self, mock_verify):
+    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_view.chain")
+    def test_retrigger_cloud_upload_checksums_queues_uploaded_only(self, mock_chain):
         submission = Submission.objects.first()
         uploaded = self._create_cloud_upload(submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED)
         self._create_cloud_upload(
@@ -145,14 +153,42 @@ class TestSubmissionAdmin(TestCase):
 
         retrigger_cloud_upload_checksums(None, None, Submission.objects.filter(pk=submission.pk))
 
-        mock_verify.assert_called_once()
-        self.assertEqual(uploaded.pk, mock_verify.call_args.args[0].pk)
+        mock_chain.assert_called_once()
+        steps = mock_chain.call_args.args
+        self.assertEqual(2, len(steps))
+        self.assertEqual(verify_file_upload_request_checksum_in_bucket_task.name, steps[0].task)
+        self.assertTrue(steps[0].immutable)
+        self.assertEqual(uploaded.pk, steps[0].kwargs["submission_cloud_upload_id"])
+        self.assertEqual(SUBMISSION_DELAY, steps[0].options.get("countdown"))
+        self.assertEqual(send_pending_checksum_messages_to_jira_task.name, steps[1].task)
+        self.assertEqual(JIRA_MESSAGES_WAIT_DELAY, steps[1].options.get("countdown"))
+        mock_chain.return_value.apply_async.assert_called_once()
 
-    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_view.add_verify_checksum_task")
-    def test_retrigger_cloud_upload_checksums_no_uploads(self, mock_verify):
+    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_view.chain")
+    def test_retrigger_cloud_upload_checksums_queues_sequentially(self, mock_chain):
+        submission = Submission.objects.first()
+        first = self._create_cloud_upload(submission, "first.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED)
+        second = self._create_cloud_upload(submission, "second.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED)
+
+        retrigger_cloud_upload_checksums(None, None, Submission.objects.filter(pk=submission.pk))
+
+        mock_chain.assert_called_once()
+        steps = mock_chain.call_args.args
+        self.assertEqual(3, len(steps))
+        verify_ids = [steps[0].kwargs["submission_cloud_upload_id"], steps[1].kwargs["submission_cloud_upload_id"]]
+        self.assertEqual([first.pk, second.pk], verify_ids)
+        self.assertTrue(steps[0].immutable)
+        self.assertTrue(steps[1].immutable)
+        self.assertEqual(SUBMISSION_DELAY, steps[0].options.get("countdown"))
+        self.assertIsNone(steps[1].options.get("countdown"))
+        self.assertEqual(send_pending_checksum_messages_to_jira_task.name, steps[2].task)
+        mock_chain.return_value.apply_async.assert_called_once()
+
+    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_view.chain")
+    def test_retrigger_cloud_upload_checksums_no_uploads(self, mock_chain):
         submission = Submission.objects.first()
         retrigger_cloud_upload_checksums(None, None, Submission.objects.filter(pk=submission.pk))
-        mock_verify.assert_not_called()
+        mock_chain.assert_not_called()
 
     def test_retrigger_cloud_upload_checksums_registered_on_submission_admin(self):
         self.assertIn(retrigger_cloud_upload_checksums, SubmissionAdmin.actions)
