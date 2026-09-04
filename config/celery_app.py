@@ -80,6 +80,7 @@ app.autodiscover_tasks(
         "gfbio_submissions.brokerage.tasks.process_tasks.transfer_cloud_upload_to_ena",
         "gfbio_submissions.brokerage.tasks.process_tasks.notify_admin_on_ena_transfer_completed",
         "gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket_task",
+        "gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task",
         "gfbio_submissions.brokerage.tasks.add_general_comments_to_issue",
     ]
 )

@@ -5,7 +5,10 @@ from django.utils import timezone
 from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET, JIRA_MESSAGES_WAIT_DELAY, JIRA_MESSAGES_MAX_MESSAGES_IN_QUEUE, JIRA_MESSAGES_MAX_DELAY
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
 from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import send_message_to_jira_task
+from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import (
+    send_message_to_jira_task,
+    send_pending_checksum_messages_to_jira_task,
+)
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_comment_response
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
@@ -168,4 +171,39 @@ class TestSendMessageToJiraTasks(TestTasks):
         result_bool, result_msg = self._run_test(TaskProgressReport.CANCELLED)
         self.assertEqual(TaskProgressReport.CANCELLED, result_bool)
         self.assertEqual("Previous Task didn't provide message-id.", result_msg)
+
+    def test_send_pending_checksum_messages_without_messages(self):
+        result_bool, result_msg = send_pending_checksum_messages_to_jira_task(submission_id=self.submission.id)
+        self.assertTrue(result_bool)
+        self.assertEqual("No pending checksum JIRA messages.", result_msg)
+
+    @responses.activate
+    def test_send_pending_checksum_messages_delegates_to_send_task(self):
+        jqmsg = self._create_jqmsg("test.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150)
+        responses.add(
+            responses.POST,
+            "https://example.gfbio.dev/rest/api/2/issue/SAND-123/comment",
+            json=_get_pangaea_comment_response(),
+            status=200,
+        )
+        result_bool, result_msg = send_pending_checksum_messages_to_jira_task(submission_id=self.submission.id)
+        self.assertTrue(result_bool)
+        self.assertIn("Message was sent:", result_msg)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg)
+
+    @responses.activate
+    def test_send_pending_checksum_messages_sends_full_batch(self):
+        jqmsg1 = self._create_jqmsg("test1.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 150)
+        jqmsg2 = self._create_jqmsg("test2.fastq.gz", seconds_ago=JIRA_MESSAGES_WAIT_DELAY + 100)
+        responses.add(
+            responses.POST,
+            "https://example.gfbio.dev/rest/api/2/issue/SAND-123/comment",
+            json=_get_pangaea_comment_response(),
+            status=200,
+        )
+        result_bool, result_msg = send_pending_checksum_messages_to_jira_task(submission_id=self.submission.id)
+        self.assertTrue(result_bool)
+        self.assertIn("2 File(s)", result_msg)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg1)
+        self._assert_jq_msg_status(JiraQueueMessage.STATUS_SENT, jqmsg2)
 
