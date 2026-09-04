@@ -260,7 +260,6 @@ ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
 DJANGO_ADMINS = env.list(
     "DJANGO_ADMINS",
     default=[
-        "Marc Weber:mweber@gfbio.org",
         "Ivaylo Kostadinov:ikostadi@gfbio.org",
     ],
 )
