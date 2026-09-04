@@ -13,9 +13,16 @@ from gfbio_submissions.brokerage.views.submission_cloud_upload_download_view imp
     _non_downloadable_cloud_uploads,
     _pick_newest_cloud_upload_per_original_filename,
 )
+from gfbio_submissions.users.models import User
 
 
-class TestSubmissionCloudUploadDownloadability(TestCase):
+class _CloudUploadDownloadTestMixin:
+    @classmethod
+    def setUpTestData(cls):
+        User.objects.create(username="testuser")
+
+
+class TestSubmissionCloudUploadDownloadability(_CloudUploadDownloadTestMixin, TestCase):
     def _create_cloud_upload(self, submission, filename, fur_status="COMPLETED", scu_status=SubmissionCloudUpload.STATUS_UPLOADED):
         file_upload = FileUploadRequest.objects.create(
             original_filename=filename,
@@ -56,7 +63,7 @@ class TestSubmissionCloudUploadDownloadability(TestCase):
         self.assertTrue(_is_cloud_upload_downloadable(bad_checksum))
 
 
-class TestPickNewestCloudUploadPerOriginalFilename(TestCase):
+class TestPickNewestCloudUploadPerOriginalFilename(_CloudUploadDownloadTestMixin, TestCase):
     def _create_cloud_upload(self, submission, filename, file_key_suffix, fur_status="COMPLETED"):
         file_upload = FileUploadRequest.objects.create(
             original_filename=filename,
@@ -132,7 +139,7 @@ class TestPickNewestCloudUploadPerOriginalFilename(TestCase):
         self.assertEqual([], _non_downloadable_cloud_uploads(deduped))
 
 
-class TestSubmissionCloudUploadDownloadView(TestCase):
+class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestCase):
     def setUp(self):
         self.client = Client()
         self.submission = _create_submission_via_serializer()
