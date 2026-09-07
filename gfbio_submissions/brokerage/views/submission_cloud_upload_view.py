@@ -15,7 +15,10 @@ from rest_framework import mixins, generics, permissions, status, parsers, seria
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
-from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import send_message_to_jira_task
+from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import (
+    send_message_to_jira_task,
+    send_pending_checksum_messages_to_jira_task,
+)
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.brokerage.utils.cloud_upload_multipart import restart_multipart_on_file_upload_request
 from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import \
@@ -78,20 +81,41 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         meta_data = serializer.validated_data.get("meta_data", False)
         attach_to_ticket = serializer.validated_data.get("attach_to_ticket", False)
 
-        # TODO: try and except block
         # TODO: refactor worker code to dedicated methods
 
         upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=request.data)
         upload_serializer.is_valid(raise_exception=True)
 
         prefix_with_folder = f"{broker_submission_id}/"
-        dt_upload_response_status, dt_upload_data, file_upload_request = backend_based_upload_mixins.generate_multipart_upload_objects(
-            request,
-            upload_serializer,
-            file_key_prefix=prefix_with_folder
-        )
+        # Isolate mixin DB work in a savepoint. generate_multipart_upload_objects swallows
+        # IntegrityError; without a rollback ATOMIC_REQUESTS stays broken and later saves
+        # raise TransactionManagementError.
+        with transaction.atomic():
+            dt_upload_response_status, dt_upload_data, file_upload_request = (
+                backend_based_upload_mixins.generate_multipart_upload_objects(
+                    request,
+                    upload_serializer,
+                    file_key_prefix=prefix_with_folder,
+                )
+            )
 
-        obj = self.perform_create(serializer, sub, file_upload_request, meta_data=meta_data, attach_to_ticket=attach_to_ticket)
+        if file_upload_request is None or dt_upload_response_status >= status.HTTP_400_BAD_REQUEST:
+            response = Response(dt_upload_data, status=dt_upload_response_status)
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    url="brokerage:submissions_cloud_upload",
+                    method=RequestLog.POST,
+                    user=sub.user,
+                    submission_id=sub.broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                )
+            return response
+
+        obj = self.perform_create(
+            serializer, sub, file_upload_request, meta_data=meta_data, attach_to_ticket=attach_to_ticket
+        )
 
         headers = self.get_success_headers(serializer.data)
         data_content = dict(serializer.data)
@@ -739,3 +763,31 @@ def add_verify_checksum_task(submission_cloud_upload):
     )
 
     verification_chain.apply_async()
+
+
+def add_sequential_verify_checksum_tasks(submission, submission_cloud_uploads):
+    """Queue checksum verification one file after another.
+
+    Independent apply_async() calls would let the ena_transfer worker hash several
+    large files in parallel via s3fs and exhaust RAM/disk (DASS-3780).
+    Immutable signatures (.si) keep a missing/cancelled file from stopping the rest.
+    """
+    uploads = list(submission_cloud_uploads)
+    if not uploads:
+        return 0
+
+    steps = [
+        verify_file_upload_request_checksum_in_bucket_task.si(
+            submission_id=submission.pk,
+            submission_cloud_upload_id=scu.pk,
+        )
+        for scu in uploads
+    ]
+    steps[0] = steps[0].set(countdown=SUBMISSION_DELAY)
+    steps.append(
+        send_pending_checksum_messages_to_jira_task.si(submission_id=submission.pk).set(
+            countdown=JIRA_MESSAGES_WAIT_DELAY
+        )
+    )
+    chain(*steps).apply_async()
+    return len(uploads)

@@ -13,6 +13,28 @@ from ...tasks.submission_task import SubmissionTask
 logger = logging.getLogger(__name__)
 
 
+@app.task(base=SubmissionTask, bind=True, name="tasks.send_pending_checksum_messages_to_jira_task")
+def send_pending_checksum_messages_to_jira_task(self, previous_result=None, submission_id=None):
+    """Send batched checksum JIRA comments after a sequential re-run.
+
+    Looks up pending messages itself so a cancelled last checksum still reports
+    earlier successful files. The newest message is used so send_message_to_jira_task
+    treats the batch as complete instead of waiting for a later file.
+    """
+    message = (
+        JiraQueueMessage.objects.filter(
+            submission_id=submission_id,
+            type=JiraQueueMessage.TYPE_CHECKSUM_CALCULATED,
+            status=JiraQueueMessage.STATUS_NOT_SENT,
+        )
+        .order_by("-created", "-pk")
+        .first()
+    )
+    if not message:
+        return True, "No pending checksum JIRA messages."
+    return send_message_to_jira_task(message.pk, submission_id)
+
+
 @app.task(base=SubmissionTask, bind=True, name="tasks.send_message_to_jira_task")
 def send_message_to_jira_task(self, previous_result, submission_id):
     if not previous_result or previous_result == TaskProgressReport.CANCELLED:

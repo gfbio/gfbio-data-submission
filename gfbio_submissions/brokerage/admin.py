@@ -495,17 +495,19 @@ transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud upl
 
 
 def retrigger_cloud_upload_checksums(modeladmin, request, queryset):
-    from gfbio_submissions.brokerage.views.submission_cloud_upload_view import add_verify_checksum_task
+    from gfbio_submissions.brokerage.views.submission_cloud_upload_view import add_sequential_verify_checksum_tasks
 
     queued = 0
     for submission in queryset:
-        uploads = submission.submissioncloudupload_set.filter(
-            status=SubmissionCloudUpload.STATUS_UPLOADED,
-            file_upload__isnull=False,
-        ).select_related("submission", "file_upload")
-        for scu in uploads:
-            add_verify_checksum_task(scu)
-            queued += 1
+        uploads = (
+            submission.submissioncloudupload_set.filter(
+                status=SubmissionCloudUpload.STATUS_UPLOADED,
+                file_upload__isnull=False,
+            )
+            .select_related("submission", "file_upload")
+            .order_by("pk")
+        )
+        queued += add_sequential_verify_checksum_tasks(submission, uploads)
 
     if modeladmin:
         modeladmin.message_user(
