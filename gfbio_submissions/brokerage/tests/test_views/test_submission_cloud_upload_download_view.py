@@ -13,6 +13,7 @@ from gfbio_submissions.brokerage.views.submission_cloud_upload_download_view imp
     _non_downloadable_cloud_uploads,
     _pick_newest_cloud_upload_per_original_filename,
 )
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
 
 
@@ -173,6 +174,8 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         return_value=iter([b"file-content"]),
     )
     def test_single_file_download_allows_completed_file_upload(self, _mock_stream):
+        user = User.objects.get(username="testuser")
+        self.client.force_login(user)
         cloud_upload = self._create_cloud_upload("uploaded.fastq.gz")
         url = reverse(
             "brokerage:submissions_cloud_file_download",
@@ -186,6 +189,17 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Disposition"], "attachment; filename=uploaded.fastq.gz")
+        b"".join(response.streaming_content)
+
+        log = RequestLog.objects.get(type=RequestLog.INCOMING, method=RequestLog.GET)
+        self.assertEqual("brokerage:submissions_cloud_file_download", log.url)
+        self.assertEqual(self.submission.broker_submission_id, log.submission_id)
+        self.assertEqual(200, log.response_status)
+        self.assertEqual("", log.response_content)
+        self.assertEqual("single", log.request_details["mode"])
+        self.assertEqual(["uploaded.fastq.gz"], log.request_details["filenames"])
+        self.assertEqual("completed", log.request_details["status"])
+        self.assertEqual(user.pk, log.user_id)
 
     def test_single_file_download_rejects_incomplete_file_upload(self):
         cloud_upload = self._create_cloud_upload(
@@ -206,6 +220,11 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         self.assertEqual(response.status_code, 409)
         self.assertIn("not completely uploaded", response.content.decode())
 
+        log = RequestLog.objects.get(type=RequestLog.INCOMING, method=RequestLog.GET)
+        self.assertEqual(409, log.response_status)
+        self.assertEqual("rejected", log.request_details["status"])
+        self.assertEqual(["pending.fastq.gz"], log.request_details["filenames"])
+
     def test_zip_download_rejects_when_any_active_file_is_not_completed(self):
         self._create_cloud_upload("uploaded.fastq.gz")
         self._create_cloud_upload(
@@ -218,10 +237,20 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
             kwargs={"broker_submission_id": self.submission.broker_submission_id},
         )
 
-        response = self.client.get(url)
+        with patch("gfbio_submissions.brokerage.utils.cloud_upload_download.mail_admins") as mock_mail_admins:
+            response = self.client.get(url)
 
         self.assertEqual(response.status_code, 409)
         self.assertIn("pending.fastq.gz", response.content.decode())
+        mock_mail_admins.assert_not_called()
+
+        log = RequestLog.objects.get(type=RequestLog.INCOMING, method=RequestLog.GET)
+        self.assertEqual("brokerage:submissions_cloud_zip_download", log.url)
+        self.assertEqual(self.submission.broker_submission_id, log.submission_id)
+        self.assertEqual(409, log.response_status)
+        self.assertEqual("zip", log.request_details["mode"])
+        self.assertEqual("rejected", log.request_details["status"])
+        self.assertIn("pending.fastq.gz", log.request_details["filenames"])
 
     @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.ZipStream")
     @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.build_zip_file_entries")
@@ -256,6 +285,16 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         zip_files = mock_zipstream.call_args[0][0]
         self.assertEqual(len(zip_files), 1)
         self.assertEqual(zip_files[0]["name"], "uploaded.fastq.gz")
+        b"".join(response.streaming_content)
+
+        log = RequestLog.objects.get(type=RequestLog.INCOMING, method=RequestLog.GET)
+        self.assertEqual("brokerage:submissions_cloud_zip_download", log.url)
+        self.assertEqual(self.submission.broker_submission_id, log.submission_id)
+        self.assertEqual(200, log.response_status)
+        self.assertEqual("", log.response_content)
+        self.assertEqual("zip", log.request_details["mode"])
+        self.assertEqual(["uploaded.fastq.gz"], log.request_details["filenames"])
+        self.assertEqual("completed", log.request_details["status"])
 
     @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.ZipStream")
     @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.build_zip_file_entries")
@@ -289,3 +328,8 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         downloadable_files = mock_build_zip_file_entries.call_args[0][0]
         self.assertEqual(1, len(downloadable_files))
         self.assertEqual(newer.pk, downloadable_files[0].pk)
+        b"".join(response.streaming_content)
+
+        log = RequestLog.objects.get(type=RequestLog.INCOMING, method=RequestLog.GET)
+        self.assertEqual(["sample.fastq.gz"], log.request_details["filenames"])
+        self.assertEqual("completed", log.request_details["status"])

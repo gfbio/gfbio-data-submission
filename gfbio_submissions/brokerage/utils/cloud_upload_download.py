@@ -7,12 +7,17 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from django.conf import settings
+from django.core.mail import mail_admins
+from django.db import close_old_connections, transaction
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
 
 _STREAM_END = object()
+_CLIENT_DISCONNECT = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, GeneratorExit)
 
 
 class _StreamError:
@@ -28,6 +33,111 @@ class _PrefetchCancelled(Exception):
 
 def get_download_url(file_upload):
     return file_upload.uploaded_file.url
+
+
+def _is_client_disconnect(exc):
+    return isinstance(exc, _CLIENT_DISCONNECT)
+
+
+def create_incoming_download_request_log(
+    *,
+    url,
+    user=None,
+    submission_id=None,
+    response_status=None,
+    response_content="",
+    request_details=None,
+):
+    """Create an incoming GET RequestLog for a cloud download. Never raises."""
+    try:
+        with transaction.atomic():
+            return RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                method=RequestLog.GET,
+                url=url,
+                user=user,
+                submission_id=submission_id,
+                response_status=response_status,
+                response_content=response_content or "",
+                request_details=request_details or {},
+            )
+    except Exception:
+        logger.exception("failed to create download RequestLog | url=%s submission=%s", url, submission_id)
+        return None
+
+
+def finalize_download_request_log(request_log_id, *, status, error=None):
+    """Update download RequestLog outcome after the stream ends."""
+    if not request_log_id:
+        return
+    try:
+        close_old_connections()
+        log = RequestLog.objects.filter(pk=request_log_id).first()
+        if log is None:
+            return
+        details = dict(log.request_details or {})
+        details["status"] = status
+        if error is not None:
+            details["error"] = str(error)
+        log.request_details = details
+        log.save(update_fields=["request_details", "modified"])
+    except Exception:
+        logger.exception(
+            "failed to finalize download RequestLog | request_log_id=%s",
+            request_log_id,
+        )
+
+
+def iter_tracked_download(chunks, request_log_id=None):
+    """Yield a download stream and record completed / failed / client_aborted."""
+    outcome = "completed"
+    error = None
+    try:
+        yield from chunks
+    except _CLIENT_DISCONNECT:
+        outcome = "client_aborted"
+        raise
+    except Exception as exc:
+        outcome = "failed"
+        error = exc
+        raise
+    finally:
+        finalize_download_request_log(request_log_id, status=outcome, error=error)
+
+
+def notify_download_breakdown(*, request_id, member_name, exc, broker_submission_id=None):
+    """Alert admins when a cloud download stream fails after retries."""
+    if _is_client_disconnect(exc):
+        return
+
+    subject = "Cloud download failed after retries"
+    if broker_submission_id:
+        subject = '{0}. Compare submission "{1}"'.format(subject, broker_submission_id)
+
+    message = (
+        "Unrecoverable failure while streaming a cloud download.\n"
+        "broker_submission_id: {0}\n"
+        "request_id: {1}\n"
+        "member: {2}\n"
+        "error: {3}\n"
+    ).format(broker_submission_id, request_id, member_name, exc)
+
+    logger.error(
+        "[DOWNLOAD FAILED] request_id=%s submission=%s member=%s error=%s",
+        request_id,
+        broker_submission_id,
+        member_name,
+        exc,
+        exc_info=(type(exc), exc, exc.__traceback__),
+    )
+    try:
+        mail_admins(subject=subject, message=message)
+    except Exception:
+        logger.exception(
+            "[DOWNLOAD FAILED] mail_admins failed | request_id=%s submission=%s",
+            request_id,
+            broker_submission_id,
+        )
 
 
 def _download_timeouts():
@@ -156,12 +266,18 @@ def _produce_file_chunks(
             pass
 
 
-def _iter_queue_chunks(chunk_queue):
+def _iter_queue_chunks(chunk_queue, *, request_id=None, member_name=None, broker_submission_id=None):
     while True:
         item = chunk_queue.get()
         if item is _STREAM_END:
             return
         if isinstance(item, _StreamError):
+            notify_download_breakdown(
+                request_id=request_id,
+                member_name=member_name,
+                broker_submission_id=broker_submission_id,
+                exc=item.exc,
+            )
             raise item.exc
         yield item
 
@@ -178,22 +294,28 @@ def _download_kwargs(member_name, request_id):
     }
 
 
-def stream_file_upload(file_upload, request_id=None):
+def stream_file_upload(file_upload, request_id=None, broker_submission_id=None):
     chunk_queue = queue.Queue(maxsize=settings.DOWNLOAD_PREFETCH_QUEUE_CHUNKS)
     cancelled = threading.Event()
     member_name = getattr(file_upload, "original_filename", None) or str(file_upload)
+    resolved_request_id = request_id or "single-file"
     thread = threading.Thread(
         target=_produce_file_chunks,
         args=(chunk_queue, file_upload),
         kwargs={
-            **_download_kwargs(member_name, request_id or "single-file"),
+            **_download_kwargs(member_name, resolved_request_id),
             "cancelled": cancelled,
         },
         daemon=True,
     )
     thread.start()
     try:
-        yield from _iter_queue_chunks(chunk_queue)
+        yield from _iter_queue_chunks(
+            chunk_queue,
+            request_id=resolved_request_id,
+            member_name=member_name,
+            broker_submission_id=broker_submission_id,
+        )
     finally:
         cancelled.set()
         thread.join(timeout=1)
@@ -202,9 +324,10 @@ def stream_file_upload(file_upload, request_id=None):
 class ZipDownloadQueuePrefetcher:
     """Prefetch upcoming file downloads into bounded queues in manifest order."""
 
-    def __init__(self, file_uploads, request_id=None):
+    def __init__(self, file_uploads, request_id=None, broker_submission_id=None):
         self.file_uploads = list(file_uploads)
         self.request_id = request_id or "zip-download"
+        self.broker_submission_id = broker_submission_id
         self.parallelism = max(1, settings.DOWNLOAD_PARALLELISM)
         self._executor = ThreadPoolExecutor(max_workers=self.parallelism)
         self._pending = {}
@@ -239,7 +362,14 @@ class ZipDownloadQueuePrefetcher:
         if self._next_submit < len(self.file_uploads):
             self._start_prefetch(self._next_submit)
             self._next_submit += 1
-        yield from _iter_queue_chunks(chunk_queue)
+        file_upload = self.file_uploads[index]
+        member_name = getattr(file_upload, "original_filename", None) or f"file-{index}"
+        yield from _iter_queue_chunks(
+            chunk_queue,
+            request_id=self.request_id,
+            member_name=member_name,
+            broker_submission_id=self.broker_submission_id,
+        )
 
     def zip_entries(self, cloud_uploads):
         entries = []
@@ -263,10 +393,11 @@ class ZipDownloadQueuePrefetcher:
         self._executor.shutdown(wait=False, cancel_futures=True)
 
 
-def build_zip_file_entries(cloud_uploads, request_id=None):
+def build_zip_file_entries(cloud_uploads, request_id=None, broker_submission_id=None):
     prefetcher = ZipDownloadQueuePrefetcher(
         [cloud_upload.file_upload for cloud_upload in cloud_uploads],
         request_id=request_id,
+        broker_submission_id=broker_submission_id,
     )
     zip_entries = prefetcher.zip_entries(cloud_uploads)
 
