@@ -8,11 +8,11 @@ from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
+from gfbio_submissions.brokerage.permissions.is_submission_owner import IsOwnerOrSubmissionOwnerOrHasCuratorRights
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models import SubmissionCloudUpload
 from ..models.submission import Submission
-from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
 
@@ -30,7 +30,7 @@ class SubmissionCloudUploadDetailView(
         parsers.FormParser,
     )
     authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrSubmissionOwnerOrHasCuratorRights)
 
     @extend_schema(exclude=True)
     def put(self, request, *args, **kwargs):
