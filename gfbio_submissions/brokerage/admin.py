@@ -113,7 +113,13 @@ continue_release_submissions.short_description = "Continue submission of selecte
 def release_submission_study_on_ena(modeladmin, request, queryset):
     for obj in queryset:
         submission = Submission.objects.get(pk=obj.pk)
-        release_study_on_ena(submission=submission)
+        response, reason = release_study_on_ena(submission=submission)
+        if modeladmin:
+            if response and response.status_code == 200:
+                modeladmin.message_user(request, f"{obj.broker_submission_id} released on ENA.", level=messages.INFO)
+            else:
+                modeladmin.message_user(request, f"{obj.broker_submission_id} failed to release on ENA. ({reason}).", level=messages.ERROR)
+
 
 
 release_submission_study_on_ena.short_description = "Release Study on ENA"
