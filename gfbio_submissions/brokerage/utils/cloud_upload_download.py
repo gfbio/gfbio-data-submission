@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 from django.conf import settings
 from django.core.mail import mail_admins
-from django.db import close_old_connections, transaction
+from django.db import close_old_connections, connection, transaction
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -66,12 +66,22 @@ def create_incoming_download_request_log(
         return None
 
 
+def _refresh_db_connection_for_stream():
+    """Reconnect only if the request connection died during a long stream."""
+    try:
+        if connection.connection is not None and connection.is_usable():
+            return
+    except Exception:
+        pass
+    close_old_connections()
+
+
 def finalize_download_request_log(request_log_id, *, status, error=None):
     """Update download RequestLog outcome after the stream ends."""
     if not request_log_id:
         return
     try:
-        close_old_connections()
+        _refresh_db_connection_for_stream()
         log = RequestLog.objects.filter(pk=request_log_id).first()
         if log is None:
             return
