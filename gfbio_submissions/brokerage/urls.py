@@ -113,7 +113,7 @@ urlpatterns = [
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/$",
         view=SubmissionCloudUploadDetailView.as_view(),
-        name="submissions_clou_upload_detail",
+        name="submissions_cloud_upload_detail",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/(?P<pk>[0-9]+)/restart-multipart/$",
