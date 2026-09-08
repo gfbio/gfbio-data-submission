@@ -3,6 +3,9 @@ import datetime
 
 from django.test import TestCase
 
+from gfbio_submissions.users.models import User
+
+from ...models.submission import Submission
 from ...serializers.submission_detail_serializer import SubmissionDetailSerializer
 from ...serializers.submission_serializer import SubmissionSerializer
 
@@ -155,3 +158,15 @@ class SubmissionSerializerTest(TestCase):
         )
         valid = serializer.is_valid()
         self.assertTrue(valid)
+
+    def test_user_legal_name_when_submission_has_no_user(self):
+        submission = Submission.objects.create(target="GENERIC")
+        self.assertIsNone(submission.user)
+        data = SubmissionSerializer(submission).data
+        self.assertEqual("", data["user_legal_name"])
+
+    def test_user_legal_name_includes_first_and_last_name(self):
+        user = User.objects.create(username="legal-user", first_name="Ada", last_name="Lovelace")
+        submission = Submission.objects.create(target="GENERIC", user=user)
+        data = SubmissionSerializer(submission).data
+        self.assertEqual("Ada Lovelace", data["user_legal_name"])

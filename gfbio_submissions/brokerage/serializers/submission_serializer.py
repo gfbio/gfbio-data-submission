@@ -134,11 +134,14 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_user_legal_name(self, obj) -> str:
+        user = getattr(obj, "user", None)
+        if user is None:
+            return ""
         legal_name = ""
-        if obj.user.first_name:
-            legal_name += obj.user.first_name + " "
-        if obj.user.last_name:
-            legal_name += obj.user.last_name
+        if user.first_name:
+            legal_name += user.first_name + " "
+        if user.last_name:
+            legal_name += user.last_name
         return legal_name
 
     def validate(self, data):

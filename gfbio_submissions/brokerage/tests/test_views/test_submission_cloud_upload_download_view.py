@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -252,24 +252,14 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         self.assertEqual("rejected", log.request_details["status"])
         self.assertIn("pending.fastq.gz", log.request_details["filenames"])
 
-    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.ZipStream")
-    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.build_zip_file_entries")
-    def test_zip_download_excludes_deleted_files(self, mock_build_zip_file_entries, mock_zipstream):
+    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.stream_submission_zip")
+    def test_zip_download_excludes_deleted_files(self, mock_stream_submission_zip):
         self._create_cloud_upload("uploaded.fastq.gz")
         deleted = self._create_cloud_upload("deleted.fastq.gz")
         deleted.status = SubmissionCloudUpload.STATUS_DELETED
         deleted.save()
 
-        zip_entries = [{"stream": iter([b"file-content"]), "name": "uploaded.fastq.gz"}]
-
-        def stream_zip(zf_stream):
-            yield from zf_stream
-
-        mock_build_zip_file_entries.return_value = (zip_entries, stream_zip)
-
-        mock_zip = MagicMock()
-        mock_zip.stream.return_value = iter([b"zip-content"])
-        mock_zipstream.return_value = mock_zip
+        mock_stream_submission_zip.return_value = iter([b"zip-content"])
 
         url = reverse(
             "brokerage:submissions_cloud_zip_download",
@@ -278,13 +268,11 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        mock_build_zip_file_entries.assert_called_once()
-        downloadable_files = mock_build_zip_file_entries.call_args[0][0]
+        mock_stream_submission_zip.assert_called_once()
+        downloadable_files = mock_stream_submission_zip.call_args[0][0]
         self.assertEqual(len(downloadable_files), 1)
         self.assertEqual(downloadable_files[0].file_upload.original_filename, "uploaded.fastq.gz")
-        zip_files = mock_zipstream.call_args[0][0]
-        self.assertEqual(len(zip_files), 1)
-        self.assertEqual(zip_files[0]["name"], "uploaded.fastq.gz")
+        self.assertEqual(response["X-Accel-Buffering"], "no")
         b"".join(response.streaming_content)
 
         log = RequestLog.objects.get(type=RequestLog.INCOMING, method=RequestLog.GET)
@@ -296,9 +284,8 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         self.assertEqual(["uploaded.fastq.gz"], log.request_details["filenames"])
         self.assertEqual("completed", log.request_details["status"])
 
-    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.ZipStream")
-    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.build_zip_file_entries")
-    def test_zip_download_uses_newest_file_for_duplicate_original_filename(self, mock_build_zip_file_entries, mock_zipstream):
+    @patch("gfbio_submissions.brokerage.views.submission_cloud_upload_download_view.stream_submission_zip")
+    def test_zip_download_uses_newest_file_for_duplicate_original_filename(self, mock_stream_submission_zip):
         older = self._create_cloud_upload("sample.fastq.gz", file_key_suffix="older")
         newer = self._create_cloud_upload("sample.fastq.gz", file_key_suffix="newer")
         FileUploadRequest.objects.filter(pk=older.file_upload_id).update(
@@ -307,16 +294,7 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         older.file_upload.refresh_from_db()
         newer.refresh_from_db()
 
-        zip_entries = [{"stream": iter([b"file-content"]), "name": "sample.fastq.gz"}]
-
-        def stream_zip(zf_stream):
-            yield from zf_stream
-
-        mock_build_zip_file_entries.return_value = (zip_entries, stream_zip)
-
-        mock_zip = MagicMock()
-        mock_zip.stream.return_value = iter([b"zip-content"])
-        mock_zipstream.return_value = mock_zip
+        mock_stream_submission_zip.return_value = iter([b"zip-content"])
 
         url = reverse(
             "brokerage:submissions_cloud_zip_download",
@@ -325,7 +303,7 @@ class TestSubmissionCloudUploadDownloadView(_CloudUploadDownloadTestMixin, TestC
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        downloadable_files = mock_build_zip_file_entries.call_args[0][0]
+        downloadable_files = mock_stream_submission_zip.call_args[0][0]
         self.assertEqual(1, len(downloadable_files))
         self.assertEqual(newer.pk, downloadable_files[0].pk)
         b"".join(response.streaming_content)
