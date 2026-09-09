@@ -7,13 +7,14 @@ const SubmissionStatus = {
     CANCELLED: 'CANCELLED',
 };
 
-const getListOfSubmissions = async () => {
+const getListOfSubmissions = async (params={}) => {
     const url = SUBMISSIONS_API;
     try {
         const response = await axios.get(url, {
             headers: {
                 Authorization: `Token ${getToken()}`,
             },
+            params: params,
         });
 
         const activeSubmissions = response.data.filter(

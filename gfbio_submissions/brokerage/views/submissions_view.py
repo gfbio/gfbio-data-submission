@@ -73,11 +73,18 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         )
 
     def get_queryset(self):
-        submissions = Submission.objects
+        submissions = Submission.objects.get_queryset().order_by("-modified")
         user = self.request.user
         if not user.is_staff and not user.is_superuser and not user.has_perm("brokerage.curate_submissions"):
              submissions = submissions.filter(user=user)
-        return submissions.order_by("-modified")
+
+        if self.request.query_params.get("skip"):
+            skip = int(self.request.query_params.get("skip"))
+            submissions = submissions[skip:]
+        if self.request.query_params.get("take"):
+            take = int(self.request.query_params.get("take"))
+            submissions = submissions[:take]
+        return submissions
 
     @extend_schema(
         operation_id="list submissions",
@@ -91,7 +98,15 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         }
     )
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        list = self.list(request, *args, **kwargs)
+        for submission in list.data:
+            data = submission["data"]
+            requirements = data.get("requirements", [])
+            requirements["samples"] = []
+            requirements["experiments"] = []
+            data["requirements"] = requirements
+            submission["data"] = data
+        return list
 
     @extend_schema(
         operation_id="create submission",
