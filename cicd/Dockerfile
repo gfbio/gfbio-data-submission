@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.10-slim-bookworm
 
 ENV PYTHONUNBUFFERED 1
 # needed for python requests-library
