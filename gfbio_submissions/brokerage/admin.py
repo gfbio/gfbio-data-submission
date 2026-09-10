@@ -28,7 +28,13 @@ from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_refere
     check_meta_referenced_files_in_cloud_uploads_task,
 )
 
-from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY, ENA, ENA_PANGAEA, GFBIO_HELPDESK_TICKET
+from .configuration.settings import (
+    ENA,
+    ENA_PANGAEA,
+    GFBIO_HELPDESK_TICKET,
+    SUBMISSION_DELAY,
+    SUBMISSION_UPLOAD_RETRY_DELAY,
+)
 from .models import SubmissionCloudUpload
 from .models.abcd_conversion_result import AbcdConversionResult
 from .models.additional_reference import AdditionalReference
@@ -188,9 +194,9 @@ def download_auditable_text_data(modeladmin, request, queryset):
 
         for a in submission.auditabletextdata_set.all():
             f = tempfile.NamedTemporaryFile(mode="wb")
-            f.write(smart_bytes("{}".format(a.text_data)))
+            f.write(smart_bytes(f"{a.text_data}"))
             f.seek(0)
-            archive.write(f.name, "{}".format(a.name))
+            archive.write(f.name, f"{a.name}")
         archive.close()
         temp.seek(0)
         wrapper = FileWrapper(temp)
@@ -371,8 +377,8 @@ def create_helpdesk_issue_manually(modeladmin, request, queryset):
         for upload in related_uploads:
             attach_to_submission_issue_task.apply_async(
                 kwargs={
-                    "submission_id": "{0}".format(obj.pk),
-                    "submission_upload_id": "{0}".format(upload.pk),
+                    "submission_id": f"{obj.pk}",
+                    "submission_upload_id": f"{upload.pk}",
                 },
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
             )
@@ -382,8 +388,8 @@ def create_helpdesk_issue_manually(modeladmin, request, queryset):
         for upload in related_cloud_uploads:
             attach_cloud_upload_to_submission_issue_task.apply_async(
                 kwargs={
-                    "submission_id": "{0}".format(obj.pk),
-                    "submission_upload_id": "{0}".format(upload.pk),
+                    "submission_id": f"{obj.pk}",
+                    "submission_upload_id": f"{upload.pk}",
                 },
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
             )
@@ -416,85 +422,104 @@ def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
 combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
 
 
+def _skip_ena_transfer(modeladmin, request, message, level=messages.WARNING, raise_when_unattended=True):
+    if modeladmin:
+        modeladmin.message_user(request, message, level=level)
+        return
+    if raise_when_unattended:
+        raise Exception(message)
+
+
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
-    from .tasks.process_tasks.transfer_cloud_upload_to_ena import transfer_cloud_upload_to_ena_task
-    from .tasks.process_tasks.notify_admin_on_ena_transfer_completed import notify_admin_on_ena_transfer_completed_task
-    from celery import chord
     from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
-    allowed_types = [".fastq", ".fq", ".bam", ".cram", ".fastq.gz", ".fq.gz", ".fq.bz2", ".fastq.bz2", ".fq.bz", ".fastq.bz",  ]
+    from .tasks.process_tasks.transfer_cloud_upload_to_ena import (
+        acquire_ena_transfer_lock,
+        advance_ena_cloud_upload_transfer_task,
+        release_ena_transfer_lock,
+    )
+
+    allowed_types = (
+        ".fastq",
+        ".fq",
+        ".bam",
+        ".cram",
+        ".fastq.gz",
+        ".fq.gz",
+        ".fq.bz2",
+        ".fastq.bz2",
+        ".fq.bz",
+        ".fastq.bz",
+    )
+    allowed_statuses = [
+        SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+        SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+        SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
+        SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+    ]
 
     for obj in queryset:
         submission_cloud_upload_ids = [
-            upload.pk for upload in obj.submissioncloudupload_set.all()
-            if upload.status in [
-                    SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
-                    SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
-                    SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
-                    SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
-                ]
-                and any(upload.file_upload.original_filename.lower().endswith(ext) for ext in allowed_types)
+            upload.pk
+            for upload in (
+                obj.submissioncloudupload_set.filter(
+                    status__in=allowed_statuses,
+                    file_upload__isnull=False,
+                )
+                .select_related("file_upload")
+                .order_by("pk")
+            )
+            if upload.file_upload.original_filename
+            and upload.file_upload.original_filename.lower().endswith(allowed_types)
         ]
-        if submission_cloud_upload_ids:
-            site_config = _safe_get_site_config(obj)
-            if not site_config:
-                if modeladmin:
-                    modeladmin.message_user(
-                        request,
-                        _(
-                            "Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user."
-                        )
-                        % {"sid": obj.broker_submission_id},
-                        level=messages.WARNING,
-                    )
-                    continue
-                else:
-                    raise Exception(
-                        _(
-                            "Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user."
-                        )
-                        % {"sid": obj.broker_submission_id}
-                    )
-            if not site_config.ena_ftp_id:
-                hosting_config = SiteConfiguration.objects.get_hosting_site_configuration()
-                if hosting_config.ena_ftp_id:
-                    site_config = hosting_config
-            try:
-                ensure_ena_webin_submission_folder_via_ftp(site_config, obj.broker_submission_id)
-            except Exception as exc:
-                if modeladmin:
-                    modeladmin.message_user(
-                        request,
-                        _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
-                        % {"sid": obj.broker_submission_id, "err": exc},
-                        level=messages.ERROR,
-                    )
-                    continue
-                else:
-                    raise Exception(
-                        _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
-                        % {"sid": obj.broker_submission_id, "err": exc}
-                    )
-        parallel_transfers = [
-            transfer_cloud_upload_to_ena_task.s(
-                submission_cloud_upload_id=upload_id, submission_id=obj.pk, user_id=request.user.id
-            ).set(countdown=SUBMISSION_DELAY)
-            for upload_id in submission_cloud_upload_ids
-        ]
-        chord(parallel_transfers).apply_async(
-            kwargs={
-                "body":notify_admin_on_ena_transfer_completed_task.s(
-                    submission_id=obj.pk,
-                    submission_cloud_upload_ids=submission_cloud_upload_ids
-                ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES).on_error(
-                    notify_admin_on_ena_transfer_completed_task.s(
-                        submission_id=obj.pk,
-                        submission_cloud_upload_ids=submission_cloud_upload_ids
-                    ).set(countdown=SUBMISSION_DELAY, max_retries=SUBMISSION_MAX_RETRIES)
-                ),
-            },
-            max_retries=SUBMISSION_MAX_RETRIES
-        )
+        if not submission_cloud_upload_ids:
+            continue
+
+        site_config = _safe_get_site_config(obj)
+        if not site_config:
+            _skip_ena_transfer(
+                modeladmin,
+                request,
+                _("Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user.")
+                % {"sid": obj.broker_submission_id},
+            )
+            continue
+        if not site_config.ena_ftp_id:
+            hosting_config = SiteConfiguration.objects.get_hosting_site_configuration()
+            if hosting_config.ena_ftp_id:
+                site_config = hosting_config
+        lock_token = acquire_ena_transfer_lock(obj.pk)
+        if not lock_token:
+            _skip_ena_transfer(
+                modeladmin,
+                request,
+                _("Skipping ENA transfer for submission %(sid)s: a transfer is already running.")
+                % {"sid": obj.broker_submission_id},
+            )
+            continue
+        try:
+            ensure_ena_webin_submission_folder_via_ftp(site_config, obj.broker_submission_id)
+        except Exception as exc:
+            release_ena_transfer_lock(obj.pk, lock_token)
+            _skip_ena_transfer(
+                modeladmin,
+                request,
+                _("Skipping ENA transfer for submission %(sid)s: Webin folder could not be created (%(err)s).")
+                % {"sid": obj.broker_submission_id, "err": exc},
+                level=messages.ERROR,
+            )
+            continue
+        try:
+            advance_ena_cloud_upload_transfer_task.si(
+                submission_id=obj.pk,
+                submission_cloud_upload_ids=submission_cloud_upload_ids,
+                user_id=request.user.id,
+                index=0,
+                lock_token=lock_token,
+            ).apply_async(countdown=SUBMISSION_DELAY)
+        except Exception:
+            release_ena_transfer_lock(obj.pk, lock_token)
+            raise
 
 
 transfer_submission_cloud_uploads_to_ena.short_description = "Transfer cloud uploads to ENA via Aspera"
@@ -619,7 +644,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             ),
         ]
         return custom_urls + urls
-    
+
     def submission_cloud_uploads_view(self, request, object_id, extra_context=None):
         "The 'history' admin view for this model."
         from django.contrib.admin.models import LogEntry
@@ -778,7 +803,7 @@ class SubmissionAdmin(admin.ModelAdmin):
                 check_referenced_files.short_description,
             )
         return actions
-    
+
     @admin.display(description="Ticket")
     def get_ticket(self, obj):
         reference = None

@@ -1,25 +1,35 @@
-# -*- coding: utf-8 -*-
 import json
 import logging
 import os
 import subprocess
+import uuid
 
+import celery
 from celery.exceptions import Retry
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.cache import cache
+from kombu.exceptions import OperationalError as KombuOperationalError
 
 from config.celery_app import app
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+
+from ....generic.models.request_log import RequestLog
+from ....users.models import User
+from ...configuration.settings import (
+    SUBMISSION_DELAY,
+    SUBMISSION_MAX_RETRIES,
+    SUBMISSION_RETRY_DELAY,
+)
+from ...exceptions.transfer_exceptions import TransferServerError
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
-from ....users.models import User
-from ...utils.task_utils import get_submission_and_site_configuration
+from ...tasks.submission_task import SubmissionTask
 from ...utils.ena import open_ftp_to_ena_download_file_and_calculate_checksum
-from ....generic.models.request_log import RequestLog
+from ...utils.task_utils import get_submission_and_site_configuration
+from .notify_admin_on_ena_transfer_completed import (
+    notify_admin_on_ena_transfer_completed_task,
+)
 
 logger = logging.getLogger(__name__)
-
-from ...tasks.submission_task import SubmissionTask
 
 
 def ensure_folder_with_keep(path):
@@ -96,7 +106,11 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
                     f"tasks.py | transfer_cloud_upload_to_ena_task | starting retry | "
                     f"stderr_str={stderr_str} | proc.returncode={proc.returncode} | task_id={task.request.id}"
                 )
-                raise task.retry(exc=Exception(stderr_str))
+                raise task.retry(
+                    exc=Exception(stderr_str),
+                    max_retries=SUBMISSION_MAX_RETRIES,
+                    countdown=SUBMISSION_RETRY_DELAY,
+                )
             else:
                 res = TaskProgressReport.CANCELLED
                 logger.error(
@@ -114,7 +128,7 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         details["retry_raised"] = True
         raise
     except Exception as e:
-        details['error'] = str(e)
+        details["error"] = str(e)
         logger.error(
             f"tasks.py | transfer_cloud_upload_to_ena_task | error={e} | cmd={cmd} | task_id={task.request.id}")
         if submission_cloud_upload.status != SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
@@ -158,12 +172,16 @@ def check_checksum_via_ftp(task, site_configuration, submission, submission_clou
 
             transmission_protocol.append(checksum_message)
             if task.request.retries == 0:
-                raise task.retry(exc=Exception(transmission_protocol))
+                raise task.retry(
+                    exc=Exception(transmission_protocol),
+                    max_retries=SUBMISSION_MAX_RETRIES,
+                    countdown=SUBMISSION_RETRY_DELAY,
+                )
             else:
                 message = (
-                        f"Checksum-Missmatch in submission {submission.broker_submission_id}, cloud_upload {submission_cloud_upload.file_upload.original_filename}: " +
-                        f"The checksum of the transmitted file {submission_cloud_upload.file_upload.original_filename} " +
-                        f"at ENA differs from the expected checksum, even after retrying. {checksum_message}"
+                    f"Checksum-Missmatch in submission {submission.broker_submission_id}, cloud_upload {submission_cloud_upload.file_upload.original_filename}: "
+                    + f"The checksum of the transmitted file {submission_cloud_upload.file_upload.original_filename} "
+                    + f"at ENA differs from the expected checksum, even after retrying. {checksum_message}"
                 )
                 raise Exception(message)
     finally:
@@ -175,7 +193,7 @@ def check_checksum_via_ftp(task, site_configuration, submission, submission_clou
             submission_id=submission.broker_submission_id,
             json=transmission_protocol,
             files=submission_cloud_upload.file_upload.original_filename,
-            data=checksum_message
+            data=checksum_message,
         )
 
 
@@ -244,14 +262,129 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
             f"original={orig_basename} | file_key_basename={key_basename} | task_id={self.request.id}"
         )
 
-    transfer_result = perform_ascp_file_transfer(self, file_path, site_configuration, submission,
-                                                 submission_cloud_upload, user_id, report,
-                                                 target_filename=target_filename)
+    transfer_result = perform_ascp_file_transfer(
+        self,
+        file_path,
+        site_configuration,
+        submission,
+        submission_cloud_upload,
+        user_id,
+        report,
+        target_filename=target_filename,
+    )
     if transfer_result == True:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_IS_TRANSFERRED
         submission_cloud_upload.save()
         submission_cloud_upload.log_change(
-            [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], user_id)
+            [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], user_id
+        )
         check_checksum_via_ftp(self, site_configuration, submission, submission_cloud_upload, admin_user)
 
     return transfer_result
+
+
+ENA_TRANSFER_LOCK_TIMEOUT = 7 * 24 * 60 * 60
+
+
+def ena_transfer_lock_key(submission_id):
+    return f"ena-cloud-upload-transfer:{submission_id}"
+
+
+def acquire_ena_transfer_lock(submission_id):
+    token = str(uuid.uuid4())
+    if cache.add(ena_transfer_lock_key(submission_id), token, ENA_TRANSFER_LOCK_TIMEOUT):
+        return token
+    return None
+
+
+def release_ena_transfer_lock(submission_id, token):
+    key = ena_transfer_lock_key(submission_id)
+    if token and cache.get(key) == token:
+        cache.delete(key)
+
+
+def _apply_async_or_reraise(signature, **options):
+    try:
+        return signature.apply_async(**options)
+    except (ConnectionError, KombuOperationalError) as exc:
+        raise TransferServerError(str(exc)) from exc
+
+
+class EnaTransferDispatcherTask(celery.Task):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        release_ena_transfer_lock(kwargs.get("submission_id"), kwargs.get("lock_token"))
+        super().on_failure(exc, task_id, args, kwargs, einfo)
+
+
+@app.task(
+    base=EnaTransferDispatcherTask,
+    bind=True,
+    name="tasks.advance_ena_cloud_upload_transfer_task",
+    queue="ena_transfer",
+    autoretry_for=(TransferServerError,),
+    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True,
+)
+def advance_ena_cloud_upload_transfer_task(
+    self,
+    previous_result=None,
+    submission_id=None,
+    submission_cloud_upload_ids=None,
+    user_id=None,
+    index=0,
+    lock_token=None,
+):
+    """Schedule the next ENA transfer, or notify when the submission list is done.
+
+    Each transfer is started with the same immutable dispatcher as success and
+    error callback so a terminal failure still continues with the next file.
+    Celery retries keep those links; they do not advance the index.
+    Uses a plain bound task so orchestration does not create TaskProgressReports.
+    """
+    upload_ids = list(submission_cloud_upload_ids or [])
+    if index >= len(upload_ids):
+        logger.info(
+            "tasks.py | advance_ena_cloud_upload_transfer_task | notify | "
+            "submission_id=%s | upload_count=%s | task_id=%s",
+            submission_id,
+            len(upload_ids),
+            self.request.id,
+        )
+        _apply_async_or_reraise(
+            notify_admin_on_ena_transfer_completed_task.si(
+                submission_id=submission_id,
+                submission_cloud_upload_ids=upload_ids,
+            ),
+            countdown=SUBMISSION_DELAY,
+        )
+        release_ena_transfer_lock(submission_id, lock_token)
+        return True
+
+    logger.info(
+        "tasks.py | advance_ena_cloud_upload_transfer_task | schedule transfer | "
+        "submission_id=%s | index=%s | submission_cloud_upload_id=%s | task_id=%s",
+        submission_id,
+        index,
+        upload_ids[index],
+        self.request.id,
+    )
+    continuation = advance_ena_cloud_upload_transfer_task.si(
+        submission_id=submission_id,
+        submission_cloud_upload_ids=upload_ids,
+        user_id=user_id,
+        index=index + 1,
+        lock_token=lock_token,
+    )
+    _apply_async_or_reraise(
+        transfer_cloud_upload_to_ena_task.si(
+            submission_cloud_upload_id=upload_ids[index],
+            submission_id=submission_id,
+            user_id=user_id,
+        ),
+        link=continuation,
+        link_error=continuation.clone(),
+    )
+    return True
