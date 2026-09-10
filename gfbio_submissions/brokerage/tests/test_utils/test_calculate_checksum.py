@@ -6,9 +6,9 @@ from django.test import TestCase, override_settings
 from dt_upload.models import FileUploadRequest
 
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
-from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
+from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
 
-GET_S3_CLIENT_PATH = "gfbio_submissions.brokerage.utils.s3fs.backend_based_upload_mixins.get_s3_client"
+GET_S3_CLIENT_PATH = "gfbio_submissions.brokerage.utils.cloud_upload_checksum.backend_based_upload_mixins.get_s3_client"
 CLIENT_BUCKET = "client-returned-bucket"
 SETTINGS_BUCKET = "settings-bucket"
 FILE_KEY = "broker-id/sample.fastq.gz"

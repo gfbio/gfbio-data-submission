@@ -3,7 +3,7 @@ import logging
 
 from config.celery_app import app
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
-from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
+from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
 
 from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ...models import SubmissionCloudUpload

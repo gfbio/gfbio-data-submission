@@ -1,4 +1,4 @@
-"""Checksums are streamed from S3 via boto3 and no longer use the s3fs FUSE mount."""
+"""Stream MD5/SHA256 checksums for cloud uploads from S3 via boto3."""
 
 import hashlib
 

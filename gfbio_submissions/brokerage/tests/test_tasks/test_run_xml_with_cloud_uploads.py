@@ -15,7 +15,7 @@ from ...models.submission import Submission
 from ...tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
 from .test_tasks_base import TestTasks
 
-GET_S3_CLIENT_PATH = "gfbio_submissions.brokerage.utils.s3fs.backend_based_upload_mixins.get_s3_client"
+GET_S3_CLIENT_PATH = "gfbio_submissions.brokerage.utils.cloud_upload_checksum.backend_based_upload_mixins.get_s3_client"
 OBJECT_BYTES = b"deterministic-cloud-upload-bytes"
 EXPECTED_MD5 = hashlib.md5(OBJECT_BYTES).hexdigest()
 STORED_MD5 = hashlib.md5(b"stored-md5-should-skip-s3").hexdigest()
