@@ -72,6 +72,36 @@ const SubmissionList = (props) => {
         search: "",
     });
 
+    const updateFilters = (updatedFilters) => {
+        setFilters(updatedFilters);
+        setPage(0);
+    }
+
+    const applyFilters = (submissions) => {
+        return submissions.filter((submission) => {
+            var search_value = filters.search ? filters.search.toLowerCase() : filters.search;
+            var user_search_value = filters.user ? filters.user.toLowerCase() : filters.user;
+            return (
+                (!filters.status || submission.status == filters.status)
+                && (!filters.target || submission.target == filters.target)
+                && (!filters.user 
+                    || submission.user.includes(user_search_value)
+                    || (submission.user_email && submission.user_email.toLowerCase().includes(user_search_value))
+                    || (submission.user_legal_name && submission.user_legal_name.toLowerCase().includes(user_search_value))
+                )
+                && (!filters.search 
+                    || submission.broker_submission_id.toLowerCase().includes(search_value)
+                    || submission.user.toLowerCase().includes(search_value)
+                    || (submission.user_email && submission.user_email.toLowerCase().includes(search_value))
+                    || (submission.user_legal_name && submission.user_legal_name.toLowerCase().includes(search_value))
+                    || submission.issue.toLowerCase().includes(search_value)
+                    || submission.data.requirements.title.toLowerCase().includes(search_value)
+                    || submission.data.requirements.description.toLowerCase().includes(search_value)
+                )
+            );
+        });
+    }
+
     const [sorting, setSorting] = useState(sortOptions[0]);
 
     useEffect(() => {
@@ -244,7 +274,7 @@ const SubmissionList = (props) => {
                                         filters.search && (
                                             <span className="badge bg-primary ms-2">
                                                 Search: {filters.search}
-                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, search: ""})} />
+                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => updateFilters({...filters, search: ""})} />
                                             </span>
                                         )
                                     }
@@ -252,7 +282,7 @@ const SubmissionList = (props) => {
                                         filters.user && showCuratorView && (
                                             <span className="badge bg-primary ms-2">
                                                 User: {filters.user}
-                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, user: ""})} />
+                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => updateFilters({...filters, user: ""})} />
                                             </span>
                                         )
                                     }
@@ -260,7 +290,7 @@ const SubmissionList = (props) => {
                                         filters.status && (
                                             <span className="badge bg-primary ms-2">
                                                 Status: {filters.status}
-                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, status: ""})} />
+                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => updateFilters({...filters, status: ""})} />
                                             </span>
                                         )
                                     }
@@ -268,13 +298,13 @@ const SubmissionList = (props) => {
                                         filters.target && (
                                             <span className="badge bg-primary ms-2">
                                                 Target: {filters.target}
-                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => setFilters({...filters, target: ""})} />
+                                                <i className='fa fa-times ms-2 c-pointer' onClick={() => updateFilters({...filters, target: ""})} />
                                             </span>
                                         )
                                     }
                                     {
                                         (filters.status || filters.target || filters.user || filters.search) && (
-                                            <i className='fa fa-repeat fa-rotate-180 ms-4 c-pointer' onClick={() => setFilters({
+                                            <i className='fa fa-repeat fa-rotate-180 ms-4 c-pointer' onClick={() => updateFilters({
                                                 status: "", target: "", user: "", search: "",
                                             })} />
                                         )
@@ -283,24 +313,24 @@ const SubmissionList = (props) => {
                                 <Collapse in={showFilters}>
                                     <div className="filter-section row">
                                         <div className={`col-12 ${showCuratorView ? 'col-xl-5' : 'col-xl-8'}`}>
-                                            <TextInput id="search" label="Search" type="text" value={filters.search} onChange={(e) => setFilters({...filters, search: e.target.value})} />
+                                            <TextInput id="search" label="Search" type="text" value={filters.search} onChange={(e) => updateFilters({...filters, search: e.target.value})} />
                                         </div>
                                         {
                                             showCuratorView && (
                                                 <div className='col-4 col-lg-6 col-xl-3'>
-                                                    <TextInput id="user-filter" label="User" type="text" value={filters.user} onChange={(e) => setFilters({...filters, user: e.target.value})} />
+                                                    <TextInput id="user-filter" label="User" type="text" value={filters.user} onChange={(e) => updateFilters({...filters, user: e.target.value})} />
                                                 </div>
                                             )
                                         }
                                         <div className='d-flex flex-column col-4 col-lg-3 col-xl-2'>
                                             <Select id="status-filter" value={filters.status} label="Status" defaultValue={"All"}
-                                                onChange={(value) => setFilters({...filters, status: value})} 
+                                                onChange={(value) => updateFilters({...filters, status: value})} 
                                                 data={[{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.status))].map(status => ({value: status, label: status}))]} 
                                             />
                                         </div>
                                         <div className='d-flex flex-column col-4 col-lg-3 col-xl-2'>
                                             <Select id="target-filter" value={filters.target} label="Target" defaultValue={"All"}
-                                                onChange={(value) => setFilters({...filters, target: value})} 
+                                                onChange={(value) => updateFilters({...filters, target: value})} 
                                                 data={[{value: "", label: "All"}, ...[...new Set(submissions.map(submission => submission.target))].map(target => ({value: target, label: target}))]}
                                             />
                                         </div>
@@ -356,107 +386,88 @@ const SubmissionList = (props) => {
                                     </div>
                                 </div>
                                 <ul className="list-group">
-                                    {submissions.filter((submission) => {
-                                        var search_value = filters.search ? filters.search.toLowerCase() : filters.search;
-                                        var user_search_value = filters.user ? filters.user.toLowerCase() : filters.user;
-                                        return (
-                                            (!filters.status || submission.status == filters.status)
-                                            && (!filters.target || submission.target == filters.target)
-                                            && (!filters.user 
-                                                || submission.user.includes(user_search_value)
-                                                || (submission.user_email && submission.user_email.toLowerCase().includes(user_search_value))
-                                                || (submission.user_legal_name && submission.user_legal_name.toLowerCase().includes(user_search_value))
-                                            )
-                                            && (!filters.search 
-                                                || submission.broker_submission_id.toLowerCase().includes(search_value)
-                                                || submission.user.toLowerCase().includes(search_value)
-                                                || (submission.user_email && submission.user_email.toLowerCase().includes(search_value))
-                                                || (submission.user_legal_name && submission.user_legal_name.toLowerCase().includes(search_value))
-                                                || submission.issue.toLowerCase().includes(search_value)
-                                                || submission.data.requirements.title.toLowerCase().includes(search_value)
-                                                || submission.data.requirements.description.toLowerCase().includes(search_value)
-                                            )
-                                        );
-                                    }).sort(
-                                        (a, b) => {
-                                            if (sorting.field === "modified") {
-                                                const dateA = new Date(a.modified);
-                                                const dateB = new Date(b.modified);
-                                                return (dateA - dateB) * sorting.direction;
+                                    {
+                                        applyFilters(submissions).sort(
+                                            (a, b) => {
+                                                if (sorting.field === "modified") {
+                                                    const dateA = new Date(a.modified);
+                                                    const dateB = new Date(b.modified);
+                                                    return (dateA - dateB) * sorting.direction;
+                                                }
+                                                else if (sorting.field === "title") {
+                                                    const titleA = a.data.requirements.title.toLowerCase();
+                                                    const titleB = b.data.requirements.title.toLowerCase();
+                                                    if (titleA < titleB) return -sorting.direction;
+                                                    if (titleA > titleB) return sorting.direction;
+                                                    return 0;
+                                                }
                                             }
-                                            else if (sorting.field === "title") {
-                                                const titleA = a.data.requirements.title.toLowerCase();
-                                                const titleB = b.data.requirements.title.toLowerCase();
-                                                if (titleA < titleB) return -sorting.direction;
-                                                if (titleA > titleB) return sorting.direction;
-                                                return 0;
-                                            }
-                                        }
-                                    ).slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((submission) => (
-                                        <li
-                                            key={submission.broker_submission_id}
-                                            className="list-group-item"
-                                        >
-                                            {
-                                                showCuratorView && (
-                                                    <div className="row g-0 curator-details align-items-center">
-                                                        <div className="col-5 col-lg-4 col-xl-3 ">
-                                                            <span className="submission-id font-monospace fs-8">
-                                                                {submission.broker_submission_id}
-                                                            </span>
+                                        ).slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((submission) => (
+                                            <li
+                                                key={submission.broker_submission_id}
+                                                className="list-group-item"
+                                            >
+                                                {
+                                                    showCuratorView && (
+                                                        <div className="row g-0 curator-details align-items-center">
+                                                            <div className="col-5 col-lg-4 col-xl-3 ">
+                                                                <span className="submission-id font-monospace fs-8">
+                                                                    {submission.broker_submission_id}
+                                                                </span>
+                                                            </div>
+                                                            <div className="col-2 col-lg-3 col-xl-5 text-truncate ps-2">
+                                                                <span className="user c-pointer" onClick={() => {updateFilters({...filters, user: submission.user});}}>
+                                                                    <i className='fa align-center fa-user pe-1 fs-9'/>
+                                                                    {submission.user}
+                                                                </span>
+                                                            </div>
+                                                            <div className="col-2 text-center text-lg-end fs-8">
+                                                                <span className="target c-pointer" onClick={() => {updateFilters({...filters, target: submission.target});}}>
+                                                                    {submission.target}
+                                                                </span>
+                                                            </div>
+                                                            <div className="col-3 col-xl-2 text-end font-monospace">
+                                                                <span className="modified text-end">{formatDateTime(submission.modified)}</span>
+                                                            </div>
                                                         </div>
-                                                        <div className="col-2 col-lg-3 col-xl-5 text-truncate ps-2">
-                                                            <span className="user c-pointer" onClick={() => {setFilters({...filters, user: submission.user});}}>
-                                                                <i className='fa align-center fa-user pe-1 fs-9'/>
-                                                                {submission.user}
-                                                            </span>
-                                                        </div>
-                                                        <div className="col-2 text-center text-lg-end fs-8">
-                                                            <span className="target c-pointer" onClick={() => {setFilters({...filters, target: submission.target});}}>
-                                                                {submission.target}
-                                                            </span>
-                                                        </div>
-                                                        <div className="col-3 col-xl-2 text-end font-monospace">
-                                                            <span className="modified text-end">{formatDateTime(submission.modified)}</span>
-                                                        </div>
+                                                    )
+                                                }
+                                                <div className="row g-0">
+                                                    <div className="col-md-10">
+                                                        <Link
+                                                            to={ROUTER_URL_EDIT + submission.broker_submission_id}
+                                                            className="row g-0"
+                                                        >
+                                                            <div className="col-md-8 col-sm-12 align-self-center">
+                                                                <i className="icon ion-md-apps"/>
+                                                                <span>{submission.data.requirements.title}</span>
+                                                            </div>
+                                                            <div className="col-md-2 col-sm-12 align-self-center status">
+                                                                <span>{submission.status}</span>
+                                                            </div>
+                                                            <div className="col-md-2 col-sm-12 align-self-center">
+                                                                <span className="issue">{submission.issue}</span>
+                                                            </div>
+                                                        </Link>
                                                     </div>
-                                                )
-                                            }
-                                            <div className="row g-0">
-                                                <div className="col-md-10">
-                                                    <Link
-                                                        to={ROUTER_URL_EDIT + submission.broker_submission_id}
-                                                        className="row g-0"
-                                                    >
-                                                        <div className="col-md-8 col-sm-12 align-self-center">
-                                                            <i className="icon ion-md-apps"/>
-                                                            <span>{submission.data.requirements.title}</span>
-                                                        </div>
-                                                        <div className="col-md-2 col-sm-12 align-self-center status">
-                                                            <span>{submission.status}</span>
-                                                        </div>
-                                                        <div className="col-md-2 col-sm-12 align-self-center">
-                                                            <span className="issue">{submission.issue}</span>
-                                                        </div>
-                                                    </Link>
+                                                    <div className="col-md-2 col-sm-12 align-self-center actions">
+                                                        <Link
+                                                            to={ROUTER_URL_EDIT + submission.broker_submission_id}
+                                                            className="action h-100 d-inline-block pe-4 btn btn-link"
+                                                        >
+                                                            <i className="icon ion-md-create"/> Edit
+                                                        </Link>
+                                                        <a
+                                                            className="action h-100 d-inline-block btn btn-link"
+                                                            onClick={() => handleDeleteClick(submission)}
+                                                        >
+                                                            <i className="icon ion-md-trash"/>Delete
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                                <div className="col-md-2 col-sm-12 align-self-center actions">
-                                                    <Link
-                                                        to={ROUTER_URL_EDIT + submission.broker_submission_id}
-                                                        className="action h-100 d-inline-block pe-4 btn btn-link"
-                                                    >
-                                                        <i className="icon ion-md-create"/> Edit
-                                                    </Link>
-                                                    <a
-                                                        className="action h-100 d-inline-block btn btn-link"
-                                                        onClick={() => handleDeleteClick(submission)}
-                                                    >
-                                                        <i className="icon ion-md-trash"/>Delete
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    ))}
+                                            </li>
+                                        ))
+                                    }
                                 </ul>
                             </div>
                         </>
@@ -472,23 +483,30 @@ const SubmissionList = (props) => {
                     )
                 }
                 {
-                    submissions && submissions.length > PAGE_SIZE && (
-                        <div className="d-flex justify-content-center mt-3">
-                        
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page - 1)}
-                                className="me-2"
-                                disabled={page === 0}
-                            >
-                                Previous
-                            </Button>
-                            {
-                                [0].map(() => {
-                                    var pages = Math.ceil(submissions.length / PAGE_SIZE)
-                                    var minPage = Math.min(Math.max(0, page - 2), pages - 5);
-                                    var maxPage = Math.max(Math.min(pages, page + 3), 5);
-                                    return Array(maxPage - minPage).fill(1).map((_, index) => (
+                    [0].map(() => {
+                        if (submissions === null || submissions.length === 0) {
+                            return null;
+                        }
+                        var filteredSubmissions = applyFilters(submissions);
+                        var pages = Math.ceil(filteredSubmissions.length / PAGE_SIZE);
+                        var minPage = Math.max(0, Math.min(page - 2, pages - 5));
+                        var maxPage = Math.min(Math.max(5, page + 3), pages);
+                        if (!filteredSubmissions || filteredSubmissions.length <= PAGE_SIZE) {
+                            return null;
+                        }
+                        return (
+                            <div className="d-flex justify-content-center mt-3">
+                            
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setPage(page - 1)}
+                                    className="me-2"
+                                    disabled={page === 0}
+                                >
+                                    Previous
+                                </Button>
+                                {
+                                    Array(maxPage - minPage).fill(1).map((_, index) => (
                                         <Button
                                             key={minPage + index}
                                             variant={minPage + index === page ? "filled" : "outline"}
@@ -498,17 +516,17 @@ const SubmissionList = (props) => {
                                             {minPage + index + 1}
                                         </Button>
                                     ))
-                                })
-                            }
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page + 1)}
-                                disabled={(page + 1) * PAGE_SIZE >= submissions.length}
-                            >
-                                Next
-                            </Button>
-                        </div>
-                    )
+                                }
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setPage(page + 1)}
+                                    disabled={(page + 1) * PAGE_SIZE >= filteredSubmissions.length}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        )
+                    })
                 }
                 <SimpleModal
                     isOpen={isDeleteModalOpen}
