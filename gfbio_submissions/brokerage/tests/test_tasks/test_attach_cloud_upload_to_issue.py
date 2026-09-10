@@ -66,8 +66,17 @@ class TestAttachCloudUploadToIssueTasks(TestHelpDeskTasksBase):
         self.s3_client_mock = MagicMock()
         self.s3_patcher = patch("boto3.client", return_value=self.s3_client_mock)
         self.s3_patcher.start()
+        # Completing an upload queues checksum verification (eager in tests). The boto3
+        # MagicMock would otherwise hash an empty body and post an unmocked JIRA comment.
+        self.checksum_patcher = patch(
+            "gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket."
+            "calculate_checksum_locally",
+            return_value="",
+        )
+        self.checksum_patcher.start()
 
     def tearDown(self):
+        self.checksum_patcher.stop()
         self.s3_patcher.stop()
 
     def _add_submission_upload(self):
