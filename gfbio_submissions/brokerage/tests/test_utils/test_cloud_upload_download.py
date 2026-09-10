@@ -2,7 +2,9 @@
 
 import queue
 import threading
+from io import BytesIO
 from unittest.mock import MagicMock, patch
+from zipfile import ZipFile
 
 from django.test import SimpleTestCase, override_settings
 
@@ -15,6 +17,7 @@ from gfbio_submissions.brokerage.utils.cloud_upload_download import (
     iter_tracked_download,
     notify_download_breakdown,
     stream_file_upload,
+    stream_submission_zip,
 )
 
 
@@ -133,6 +136,52 @@ class TestCloudUploadDownloadUtils(SimpleTestCase):
         self.assertEqual(first, b"data")
         self.assertEqual(second, b"data")
         self.assertEqual(mock_produce.call_count, 2)
+
+    @override_settings(
+        DOWNLOAD_PREFETCH_QUEUE_CHUNKS=4,
+        DOWNLOAD_FILE_CHUNK=1024,
+        DOWNLOAD_CONNECT_TIMEOUT=30,
+        DOWNLOAD_READ_TIMEOUT=600,
+        DOWNLOAD_MAX_RETRIES=3,
+        DOWNLOAD_RETRY_BACKOFF=0,
+        DOWNLOAD_PARALLELISM=3,
+    )
+    @patch("gfbio_submissions.brokerage.utils.cloud_upload_download._produce_file_chunks")
+    def test_zip_prefetcher_starts_up_to_parallelism_files_immediately(self, mock_produce):
+        started = threading.Event()
+        started_files = []
+        lock = threading.Lock()
+        release = threading.Event()
+
+        def fake_produce(out, file_upload, **kwargs):
+            with lock:
+                started_files.append(file_upload)
+                if len(started_files) >= 3:
+                    started.set()
+            release.wait(timeout=2)
+            out.put(b"data")
+            out.put(_STREAM_END)
+
+        mock_produce.side_effect = fake_produce
+        file_uploads = [MagicMock(), MagicMock(), MagicMock()]
+        prefetcher = ZipDownloadQueuePrefetcher(file_uploads)
+        chunks = []
+
+        def consume():
+            chunks.append(b"".join(prefetcher.iter_file_at(0)))
+
+        worker = threading.Thread(target=consume)
+        try:
+            worker.start()
+            self.assertTrue(started.wait(timeout=2))
+            self.assertEqual(3, len(started_files))
+            release.set()
+            worker.join(timeout=2)
+            self.assertEqual([b"data"], chunks)
+        finally:
+            release.set()
+            prefetcher.close()
+            worker.join(timeout=2)
 
     @override_settings(
         DOWNLOAD_PREFETCH_QUEUE_CHUNKS=4,
@@ -258,3 +307,78 @@ class TestCloudUploadDownloadUtils(SimpleTestCase):
         gen.close()
 
         mock_finalize.assert_called_once_with("log-1", status="client_aborted", error=None)
+
+    @override_settings(
+        DOWNLOAD_PREFETCH_QUEUE_CHUNKS=4,
+        DOWNLOAD_FILE_CHUNK=1024,
+        DOWNLOAD_ZIP_CHUNK=1024,
+        DOWNLOAD_CONNECT_TIMEOUT=30,
+        DOWNLOAD_READ_TIMEOUT=600,
+        DOWNLOAD_MAX_RETRIES=3,
+        DOWNLOAD_RETRY_BACKOFF=0,
+        DOWNLOAD_PARALLELISM=1,
+    )
+    @patch("gfbio_submissions.brokerage.utils.cloud_upload_download.mail_admins")
+    @patch("gfbio_submissions.brokerage.utils.cloud_upload_download._produce_file_chunks")
+    def test_stream_submission_zip_aborts_when_a_file_fails(self, mock_produce, mock_mail_admins):
+        def fake_produce(out, file_upload, **kwargs):
+            if getattr(file_upload, "original_filename", None) == "bad.txt":
+                out.put(_StreamError(RuntimeError("S3 down")))
+                return
+            out.put(b"ok-bytes")
+            out.put(_STREAM_END)
+
+        mock_produce.side_effect = fake_produce
+
+        def cloud_upload(pk, filename):
+            upload = MagicMock()
+            upload.pk = pk
+            upload.file_upload = MagicMock()
+            upload.file_upload.original_filename = filename
+            return upload
+
+        with self.assertLogs(
+            "gfbio_submissions.brokerage.utils.cloud_upload_download",
+            level="ERROR",
+        ):
+            with self.assertRaisesMessage(RuntimeError, "S3 down"):
+                b"".join(
+                    stream_submission_zip(
+                        [cloud_upload(1, "ok.txt"), cloud_upload(2, "bad.txt")],
+                        request_id="zip-1",
+                        broker_submission_id="sub-2",
+                    )
+                )
+
+    @override_settings(
+        DOWNLOAD_PREFETCH_QUEUE_CHUNKS=4,
+        DOWNLOAD_FILE_CHUNK=1024,
+        DOWNLOAD_ZIP_CHUNK=1024,
+        DOWNLOAD_CONNECT_TIMEOUT=30,
+        DOWNLOAD_READ_TIMEOUT=600,
+        DOWNLOAD_MAX_RETRIES=3,
+        DOWNLOAD_RETRY_BACKOFF=0,
+        DOWNLOAD_PARALLELISM=1,
+    )
+    @patch("gfbio_submissions.brokerage.utils.cloud_upload_download._produce_file_chunks")
+    def test_stream_submission_zip_uses_original_filenames(self, mock_produce):
+        def fake_produce(out, file_upload, **kwargs):
+            out.put(b"data")
+            out.put(_STREAM_END)
+
+        mock_produce.side_effect = fake_produce
+
+        def cloud_upload(pk, filename):
+            upload = MagicMock()
+            upload.pk = pk
+            upload.file_upload = MagicMock()
+            upload.file_upload.original_filename = filename
+            return upload
+
+        data = b"".join(
+            stream_submission_zip(
+                [cloud_upload(1, "a.fastq.gz"), cloud_upload(2, "b.fastq.gz")]
+            )
+        )
+        with ZipFile(BytesIO(data)) as archive:
+            self.assertEqual(["a.fastq.gz", "b.fastq.gz"], archive.namelist())

@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-from django.conf import settings
-from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, StreamingHttpResponse
+from django.views import View
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
-from zipstream import ZipStream
 
 from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..utils.cloud_upload_download import (
-    build_zip_file_entries,
     create_incoming_download_request_log,
     iter_tracked_download,
     stream_file_upload,
+    stream_submission_zip,
 )
 
 _SINGLE_DOWNLOAD_URL = "brokerage:submissions_cloud_file_download"
@@ -220,18 +218,16 @@ class SubmissionCloudZipAllFilesAndDownload(View):
             status="started",
         )
         filename = f"submission_{broker_submission_id}.zip"
-        zip_chunk_size = settings.MAX_USER_DOWNLOAD_SPEED
-        zip_entries, stream_zip = build_zip_file_entries(
+        stream = stream_submission_zip(
             downloadable_files,
             request_id=str(log.request_id) if log is not None else None,
             broker_submission_id=broker_submission_id,
         )
-        zf = ZipStream(zip_entries, zip_chunk_size)
-        stream = stream_zip(zf.stream())
         if log is not None:
             stream = iter_tracked_download(stream, request_log_id=log.request_id)
         response = StreamingHttpResponse(stream, content_type='application/zip')
         response['Content-Disposition'] = f'attachment; filename={filename}'
+        response["X-Accel-Buffering"] = "no"
         return response
 
     

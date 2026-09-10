@@ -3,13 +3,17 @@ import logging
 import queue
 import threading
 import time
+import zlib
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from stat import S_IFREG
 
 import requests
 from django.conf import settings
 from django.core.mail import mail_admins
 from django.db import close_old_connections, connection, transaction
 from requests.adapters import HTTPAdapter
+from stream_zip import ZIP_64, stream_zip
 from urllib3.util.retry import Retry
 
 from gfbio_submissions.generic.models.request_log import RequestLog
@@ -276,9 +280,21 @@ def _produce_file_chunks(
             pass
 
 
-def _iter_queue_chunks(chunk_queue, *, request_id=None, member_name=None, broker_submission_id=None):
+def _iter_queue_chunks(
+    chunk_queue,
+    *,
+    cancelled=None,
+    request_id=None,
+    member_name=None,
+    broker_submission_id=None,
+):
     while True:
-        item = chunk_queue.get()
+        try:
+            item = chunk_queue.get(timeout=0.5)
+        except queue.Empty:
+            if cancelled is not None and cancelled.is_set():
+                raise _PrefetchCancelled()
+            continue
         if item is _STREAM_END:
             return
         if isinstance(item, _StreamError):
@@ -322,6 +338,7 @@ def stream_file_upload(file_upload, request_id=None, broker_submission_id=None):
     try:
         yield from _iter_queue_chunks(
             chunk_queue,
+            cancelled=cancelled,
             request_id=resolved_request_id,
             member_name=member_name,
             broker_submission_id=broker_submission_id,
@@ -331,6 +348,17 @@ def stream_file_upload(file_upload, request_id=None, broker_submission_id=None):
         thread.join(timeout=1)
 
 
+def _zip_member_name(cloud_upload, index):
+    file_upload = getattr(cloud_upload, "file_upload", None)
+    original_filename = getattr(file_upload, "original_filename", None)
+    if original_filename:
+        return original_filename
+    pk = getattr(cloud_upload, "pk", None)
+    if pk is not None:
+        return f"cloud-upload-{pk}"
+    return f"file-{index}"
+
+
 class ZipDownloadQueuePrefetcher:
     """Prefetch upcoming file downloads into bounded queues in manifest order."""
 
@@ -338,7 +366,7 @@ class ZipDownloadQueuePrefetcher:
         self.file_uploads = list(file_uploads)
         self.request_id = request_id or "zip-download"
         self.broker_submission_id = broker_submission_id
-        self.parallelism = max(1, settings.DOWNLOAD_PARALLELISM)
+        self.parallelism = max(1, int(settings.DOWNLOAD_PARALLELISM))
         self._executor = ThreadPoolExecutor(max_workers=self.parallelism)
         self._pending = {}
         self._next_submit = 0
@@ -376,45 +404,51 @@ class ZipDownloadQueuePrefetcher:
         member_name = getattr(file_upload, "original_filename", None) or f"file-{index}"
         yield from _iter_queue_chunks(
             chunk_queue,
+            cancelled=self._cancelled,
             request_id=self.request_id,
             member_name=member_name,
             broker_submission_id=self.broker_submission_id,
         )
-
-    def zip_entries(self, cloud_uploads):
-        entries = []
-        for index, cloud_upload in enumerate(cloud_uploads):
-            def make_stream(entry_index=index):
-                def _generator():
-                    yield from self.iter_file_at(entry_index)
-
-                return _generator()
-
-            entries.append(
-                {
-                    "stream": make_stream(),
-                    "name": cloud_upload.file_upload.original_filename,
-                }
-            )
-        return entries
 
     def close(self):
         self._cancelled.set()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
 
-def build_zip_file_entries(cloud_uploads, request_id=None, broker_submission_id=None):
+def _zip_chunk_size():
+    return max(1, int(getattr(settings, "DOWNLOAD_ZIP_CHUNK", 64 * 1024)))
+
+
+def stream_submission_zip(cloud_uploads, request_id=None, broker_submission_id=None):
+    """Stream a ZIP64 archive, prefetching files in parallel into bounded queues."""
+    cloud_uploads = list(cloud_uploads)
+    resolved_request_id = request_id or "zip-download"
+    now = datetime.now(timezone.utc)
+    mode = S_IFREG | 0o644
     prefetcher = ZipDownloadQueuePrefetcher(
         [cloud_upload.file_upload for cloud_upload in cloud_uploads],
-        request_id=request_id,
+        request_id=resolved_request_id,
         broker_submission_id=broker_submission_id,
     )
-    zip_entries = prefetcher.zip_entries(cloud_uploads)
 
-    def stream_zip(zf_stream):
-        try:
-            yield from zf_stream
-        finally:
-            prefetcher.close()
+    def members():
+        for index, cloud_upload in enumerate(cloud_uploads):
+            def body_iter(entry_index=index):
+                yield from prefetcher.iter_file_at(entry_index)
 
-    return zip_entries, stream_zip
+            yield (
+                _zip_member_name(cloud_upload, index),
+                now,
+                mode,
+                ZIP_64,
+                body_iter(),
+            )
+
+    try:
+        yield from stream_zip(
+            members(),
+            chunk_size=_zip_chunk_size(),
+            get_compressobj=lambda: zlib.compressobj(level=0, wbits=-zlib.MAX_WBITS),
+        )
+    finally:
+        prefetcher.close()
