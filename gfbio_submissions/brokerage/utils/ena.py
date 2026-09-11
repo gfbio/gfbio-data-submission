@@ -25,7 +25,7 @@ from pytz import timezone
 from gfbio_submissions.brokerage.exceptions.transfer_exceptions import InvalidCenterName
 from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
+from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
 from .email_curators import send_checklist_mapping_error_notification
