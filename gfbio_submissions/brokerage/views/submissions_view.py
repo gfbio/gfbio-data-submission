@@ -1,9 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
 from django.db import transaction
 from django.urls import reverse
+from django.core.exceptions import BadRequest
+from rest_framework.response import Response
 from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest, OpenApiParameter, OpenApiTypes
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
@@ -73,16 +75,42 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         )
 
     def get_queryset(self):
-        submissions = Submission.objects
+        submissions = Submission.objects.get_queryset().order_by("-modified")
         user = self.request.user
         if not user.is_staff and not user.is_superuser and not user.has_perm("brokerage.curate_submissions"):
-             submissions = submissions.filter(user=user)
-        return submissions.order_by("-modified")
+            submissions = submissions.filter(user=user).exclude(status=Submission.CANCELLED)
+
+        try:
+            if self.request.query_params.get("skip"):
+                skip = int(self.request.query_params.get("skip"))
+                submissions = submissions[skip:]
+            if self.request.query_params.get("take"):
+                take = int(self.request.query_params.get("take"))
+                submissions = submissions[:take]
+        except Exception as e:
+            raise BadRequest(f"Please ensure that the parameters skip and take are both positive integers.")
+        return submissions
 
     @extend_schema(
         operation_id="list submissions",
         summary="List submissions",
         description="List all submissions you have permission to access.",
+        parameters=[
+            OpenApiParameter(
+                name="skip",
+                description="Number of submissions to skip (for pagination).",
+                location="query",
+                required=False,
+                type=OpenApiTypes.INT
+            ),
+            OpenApiParameter(
+                name="take",
+                description="Number of submissions to take (for pagination).",
+                location="query",
+                required=False,
+                type=OpenApiTypes.INT
+            )
+        ],
         responses={
             200: OpenApiResponse(
                 response=SubmissionDetailSerializer(many=True),
@@ -91,7 +119,18 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         }
     )
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        try:
+            list = self.list(request, *args, **kwargs)
+            for submission in list.data:
+                data = submission["data"]
+                requirements = data.get("requirements", {})
+                requirements["samples"] = []
+                requirements["experiments"] = []
+                data["requirements"] = requirements
+                submission["data"] = data
+            return list
+        except BadRequest as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
         operation_id="create submission",
