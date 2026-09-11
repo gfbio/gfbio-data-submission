@@ -32,7 +32,6 @@ const router = createBrowserRouter([
             {
                 path: ROUTER_URL_LIST,
                 element: <SubmissionList />,
-                loader: submissionsLoader,
             },
             {path: ROUTER_URL_CREATE, element: <ProfileFormWrapper/>},
             {

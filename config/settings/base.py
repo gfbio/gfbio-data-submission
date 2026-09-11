@@ -458,6 +458,15 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
 # ------------------------------------------------------------------------------
 MAX_USER_DOWNLOAD_SPEED = env.int("MAX_USER_DOWNLOAD_SPEED", default=32 * 1024 * 1024)
 MAX_BUCKET_DOWNLOAD_SPEED = env.int("MAX_BUCKET_DOWNLOAD_SPEED", default=512 * 1024 * 1024)
+DOWNLOAD_CONNECT_TIMEOUT = env.int("DOWNLOAD_CONNECT_TIMEOUT", default=30)
+DOWNLOAD_READ_TIMEOUT = env.int("DOWNLOAD_READ_TIMEOUT", default=600)
+DOWNLOAD_MAX_RETRIES = env.int("DOWNLOAD_MAX_RETRIES", default=3)
+DOWNLOAD_RETRY_BACKOFF = env.float("DOWNLOAD_RETRY_BACKOFF", default=1.5)
+DOWNLOAD_PARALLELISM = env.int("DOWNLOAD_PARALLELISM", default=3)
+DOWNLOAD_FILE_CHUNK = env.int("DOWNLOAD_FILE_CHUNK", default=1024 * 1024)
+DOWNLOAD_ZIP_CHUNK = env.int("DOWNLOAD_ZIP_CHUNK", default=64 * 1024)
+DOWNLOAD_PREFETCH_QUEUE_CHUNKS = env.int("DOWNLOAD_PREFETCH_QUEUE_CHUNKS", default=8)
+DOWNLOAD_RETRYABLE_HTTP_STATUS = {429, 500, 502, 503, 504}
 
 # Fallbacks
 # ------------------------------------------------------------------------------

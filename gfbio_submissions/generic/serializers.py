@@ -22,7 +22,8 @@ from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
 
-EMBARGO_DATE_FIELD = "customfield_10200"
+EMBARGO_DATE_FIELD_ID = "customfield_10200"
+EMBARGO_DATE_FIELD_NAME = "Embargo Ends"
 
 
 class JiraHookRequestSerializer(serializers.Serializer):
@@ -73,7 +74,9 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def has_embargo_date_changelog_item(self):
         changelog_items = self.initial_data.get("changelog", {}).get("items", [])
         return any(
-            item.get("fieldId") == EMBARGO_DATE_FIELD or item.get("field") == EMBARGO_DATE_FIELD
+            item.get("fieldId") == EMBARGO_DATE_FIELD_ID 
+                or item.get("field") == EMBARGO_DATE_FIELD_ID
+                or item.get("field") == EMBARGO_DATE_FIELD_NAME
             for item in changelog_items
             if isinstance(item, dict)
         )
@@ -213,7 +216,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         return self._data_get(self.initial_data, ["issue", "fields", "customfield_10303"])
 
     def get_embargo_date_field_value(self):
-        return self._data_get(self.initial_data, ["issue", "fields", EMBARGO_DATE_FIELD])
+        return self._data_get(self.initial_data, ["issue", "fields", EMBARGO_DATE_FIELD_ID])
 
     def schema_validation(self, data):
         path = os.path.join(

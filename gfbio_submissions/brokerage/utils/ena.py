@@ -25,7 +25,7 @@ from pytz import timezone
 from gfbio_submissions.brokerage.exceptions.transfer_exceptions import InvalidCenterName
 from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.s3fs import calculate_checksum_locally
+from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
 from .email_curators import send_checklist_mapping_error_notification
@@ -820,10 +820,17 @@ def register_study_at_ena(submission, study_text_data):
 
 
 def release_study_on_ena(submission):
+    if not submission.brokerobject_set:
+        logger.warning(f"ena.py | release_study_on_ena | no brokerobject_set found | submission_id={submission.broker_submission_id}")
+        return None, "no brokerobjects found for the submission"
+
+    submission_study = submission.brokerobject_set.filter(type="study").first()
+    if not submission_study or not submission_study.persistentidentifier_set:
+        logger.warning(f"ena.py | release_study_on_ena | no PIDs found | submission_id={submission.broker_submission_id}")
+        return None, "can't find any persistent identifiers for the submission"
+    
     study_primary_accession = (
-        submission.brokerobject_set.filter(type="study")
-        .first()
-        .persistentidentifier_set.filter(pid_type="PRJ")
+        submission_study.persistentidentifier_set.filter(pid_type="PRJ")
         .first()
     )
     site_config = submission.user.site_configuration
@@ -833,7 +840,7 @@ def release_study_on_ena(submission):
                 submission.broker_submission_id
             )
         )
-        return None
+        return None, "no site_configuration found for submission"
     if study_primary_accession:
         logger.info(
             "ena.py | release_study_on_ena | primary accession no "
@@ -856,7 +863,7 @@ def release_study_on_ena(submission):
                     submission.broker_submission_id, ex
                 )
             )
-            return None
+            return None, "invalid center_name"
 
         current_datetime = datetime.datetime.now(timezone("UTC")).isoformat()
 
@@ -886,7 +893,7 @@ def release_study_on_ena(submission):
         }
         data = {"SUBMISSION": ("submission.xml", submission_xml)}
 
-        return logged_requests.post(
+        result, log_id = logged_requests.post(
             url=site_config.ena_server.url,
             submission=submission,
             return_log_id=True,
@@ -894,12 +901,29 @@ def release_study_on_ena(submission):
             files=data,
             verify=False,
         )
+
+        if result.status_code == 200:
+            now = datetime.datetime.now(timezone("Europe/Berlin")).date()
+            if not submission.embargo or submission.embargo > now:
+                submission.embargo = now
+            try:
+                submission.close(save=False)
+            except IllegalStatusTransition:
+                pass
+            submission.save()
+        
+            reference_key = submission.get_primary_helpdesk_reference()
+            if reference_key and site_config and site_config.helpdesk_server:
+                jira_client = JiraClient(resource=site_config.helpdesk_server)
+                jira_message = "The submission was released manually on ENA by the curator."
+                jira_client.add_comment(key_or_issue=reference_key, text=jira_message, is_internal=True)
+        return result, None
     else:
         logger.warning(
             "ena.py | release_study_on_ena | no primary accession no "
             "found for study | submission_id={0}".format(submission.broker_submission_id)
         )
-        return None
+        return None, "no primary accession number found for study"
 
 
 def parse_ena_submission_response(response_content=""):
