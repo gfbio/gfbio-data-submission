@@ -2,11 +2,6 @@ import axios from "axios";
 import {SUBMISSIONS_API} from "../settings";
 import getToken from "./utils/getToken.jsx";
 
-/* eslint-disable react-refresh/only-export-components */
-const SubmissionStatus = {
-    CANCELLED: 'CANCELLED',
-};
-
 const getListOfSubmissions = async (params={}) => {
     const url = SUBMISSIONS_API;
     try {
@@ -17,11 +12,7 @@ const getListOfSubmissions = async (params={}) => {
             params: params,
         });
 
-        const activeSubmissions = response.data.filter(
-            submission => submission.status !== SubmissionStatus.CANCELLED
-        );
-
-        return activeSubmissions;
+        return response.data;
     } catch (error) {
         console.error("Error retrieving list of submissions:", error);
     }
