@@ -24,6 +24,7 @@ from pytz import timezone
 
 from gfbio_submissions.brokerage.exceptions.transfer_exceptions import InvalidCenterName
 from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
+from gfbio_submissions.brokerage.utils.ena_experiment_definitions_utils import find_correct_platform_and_model
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
 from gfbio_submissions.generic.utils import logged_requests
@@ -39,7 +40,6 @@ from ..models.ena_report import EnaReport
 from ..models.persistent_identifier import PersistentIdentifier
 from ..models.submission import IllegalStatusTransition, Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
-from ..utils.csv import find_correct_platform_and_model
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
