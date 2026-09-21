@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import re
 from collections import defaultdict
 
 from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
+from gfbio_submissions.brokerage.utils.ena_experiment_definitions_utils import get_library_column_validation_rules_from_ena_experiment_definitions
+
 
 ALWAYS_MANDATORY_FIELDS = [
     "sample_title",
@@ -174,6 +177,8 @@ def validate_ena_mandatory_fields(csv_file):
                     }
                 )
 
+    validation_rules = get_library_column_validation_rules_from_ena_experiment_definitions()
+
     sample_title_rows = defaultdict(list)
     data_row_number = 1
     for row in rows:
@@ -212,6 +217,23 @@ def validate_ena_mandatory_fields(csv_file):
                         "help_text": FIELD_HELP_TEXT.get(field_name, ""),
                     }
                 )
+
+        for field_name, rule in validation_rules.items():
+            if field_name not in present_fields:
+                continue
+            if _has_value(row.get(field_name)):
+                if rule["rule"] == "in_enum" and row.get(field_name) not in rule["enum"]:
+                    findings.append(
+                        {
+                            "status": "ERROR",
+                            "row": row_number,
+                            "column": _column_index(fieldnames, field_name),
+                            "column_name": field_name,
+                            "finding_type": "Invalid Field Value",
+                            "message": f"Invalid value for field '{field_name}': {row.get(field_name)}.",
+                            "help_text": "Please provide a valid value from the allowed options: " + ", ".join(rule["enum"]),
+                        }
+                    )
 
         sample_title = row.get("sample_title")
         if _has_value(sample_title):
