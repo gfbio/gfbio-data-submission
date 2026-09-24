@@ -235,6 +235,25 @@ class TestCSVParsing(TestCase):
             self.submissionupload_checker.check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first())
         )
 
+    def test_sample_accession_header_is_metadata_without_sample_title(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+        SubmissionUpload.objects.create(
+            submission=submission,
+            user=submission.user,
+            meta_data=True,
+            file=SimpleUploadedFile(
+                "accession_only.csv",
+                b"library_layout;Sample_Accession\nsingle;SAMEA115886020\n",
+            ),
+        )
+        self.assertTrue(
+            self.submissionupload_checker.check_minimum_header_cols(
+                submission.submissionupload_set.filter(file__endswith=".csv").first()
+            )
+        )
+
     def test_check_metadata_rule(self):
         self.submissionupload_checker.submission = Submission.objects.first()
         self.assertTrue(self.submissionupload_checker.check_metadata_rule())

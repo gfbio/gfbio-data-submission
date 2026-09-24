@@ -186,9 +186,11 @@ class Submission(TimeStampedModel):
             if "experiment_alias" in e.data.keys():
                 e.data["experiment_alias"] = experiment_aliases.get(e.data["experiment_alias"], "no_experiment_alias")
                 e.data["study_ref"] = new_study_alias
-                e.data["design"]["sample_descriptor"] = sample_aliases.get(
-                    e.data["design"]["sample_descriptor"], "no_sample_descriptor"
-                )
+                design = e.data["design"]
+                # Accession-linked designs, and designs without any sample reference, stay untouched.
+                if design.get("sample_accession") or not design.get("sample_descriptor"):
+                    continue
+                design["sample_descriptor"] = sample_aliases.get(design["sample_descriptor"], "no_sample_descriptor")
 
         return experiment_aliases, experiments
 

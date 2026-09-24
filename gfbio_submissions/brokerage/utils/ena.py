@@ -482,13 +482,17 @@ class Enalizer(object):
         self.create_subelement_with_attribute(experiment, "study_ref", "refname", data)
         design_data = data.get("design", {})
         sample_decriptor = design_data.get("sample_descriptor")
+        sample_accession = design_data.get("sample_accession") or ""
 
         design = SubElement(experiment, "DESIGN")
         if "design_description" in design_data.keys():
             self.create_subelement(design, "design_description", design_data)
         else:
             SubElement(design, "DESIGN_DESCRIPTION")
-        self.create_subelement_with_attribute(design, "sample_descriptor", "refname", design_data)
+        if sample_accession:
+            SubElement(design, "SAMPLE_DESCRIPTOR", {"accession": sample_accession})
+        elif sample_decriptor:
+            self.create_subelement_with_attribute(design, "sample_descriptor", "refname", design_data)
 
         library_descriptor_data = design_data.get("library_descriptor", {})
         library_descriptor = SubElement(design, "LIBRARY_DESCRIPTOR")
@@ -500,8 +504,13 @@ class Enalizer(object):
 
         self.create_library_layout(library_descriptor, library_descriptor_data)
 
-        targeted_loci_dict = OrderedDict()  # {}
-        targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
+        if sample_accession:
+            targeted_loci_dict = {}
+            if design_data.get("targeted_loci"):
+                targeted_loci_dict["targeted_loci"] = design_data["targeted_loci"]
+        else:
+            targeted_loci_dict = OrderedDict()  # {}
+            targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
 
         if len(targeted_loci_dict) > 0:
             targeted_loci = SubElement(library_descriptor, "TARGETED_LOCI")
@@ -512,7 +521,8 @@ class Enalizer(object):
 
         platform_data = data.get("platform", {})
         if len(platform_data) > 0:
-            sample_descriptor_platform_mappings[sample_decriptor] = platform_data
+            if sample_decriptor and not sample_accession:
+                sample_descriptor_platform_mappings[sample_decriptor] = platform_data
             platform = SubElement(experiment, "PLATFORM")
             self.create_platform(platform, platform_data)
 
@@ -643,29 +653,25 @@ class Enalizer(object):
             sample_descriptor_platform_mappings,
             experiment_xml,
         ) = self.create_experiment_xml()
-        sample_xml = self.create_sample_xml(sample_descriptor_platform_mappings=sample_descriptor_platform_mappings)
-
-        if len(self.samples_with_checklist_errors):
-            self.set_submission_state_to_error()
-            # TODO: email curators about sample errors
-            send_checklist_mapping_error_notification(self.submission_id, self.samples_with_checklist_errors)
-
+        submission_data = {
+            "STUDY": ("study.xml", smart_str(self.create_study_xml())),
+        }
+        if self.sample:
+            sample_xml = self.create_sample_xml(
+                sample_descriptor_platform_mappings=sample_descriptor_platform_mappings
+            )
+            if len(self.samples_with_checklist_errors):
+                self.set_submission_state_to_error()
+                # TODO: email curators about sample errors
+                send_checklist_mapping_error_notification(self.submission_id, self.samples_with_checklist_errors)
+            submission_data["SAMPLE"] = ("sample.xml", smart_str(sample_xml))
+        submission_data["EXPERIMENT"] = ("experiment.xml", smart_str(experiment_xml))
         if len(self.run):
-            return {
-                "STUDY": ("study.xml", smart_str(self.create_study_xml())),
-                "SAMPLE": ("sample.xml", smart_str(sample_xml)),
-                "EXPERIMENT": ("experiment.xml", smart_str(experiment_xml)),
-                "RUN": (
-                    "run.xml",
-                    smart_str(self.create_run_xml(broker_submission_id=broker_submission_id)),
-                ),
-            }
-        else:
-            return {
-                "STUDY": ("study.xml", smart_str(self.create_study_xml())),
-                "SAMPLE": ("sample.xml", smart_str(sample_xml)),
-                "EXPERIMENT": ("experiment.xml", smart_str(experiment_xml)),
-            }
+            submission_data["RUN"] = (
+                "run.xml",
+                smart_str(self.create_run_xml(broker_submission_id=broker_submission_id)),
+            )
+        return submission_data
 
     def prepare_submission_xml_for_sending(self, action="VALIDATE", outgoing_request_id=None):
         return (

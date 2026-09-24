@@ -178,3 +178,30 @@ class TestValidateMetadataFileCountriesTask(TestTasks):
         task_report = report.validationtaskreport_set.get()
         self.assertEqual("SUCCESS", task_report.status)
         self.assertEqual(0, task_report.validationfinding_set.count())
+
+    @patch(_OPENER_PATH)
+    def test_accession_row_skips_empty_country_and_normal_row_does_not(self, mock_opener):
+        report = self._create_report()
+        header = HEADER.replace("\n", ";Sample_Accession\n")
+        mock_opener.return_value = _FakeOpener(
+            header + ";123;Belly Button;;SAMEA115886020\n" + "Normal;123;Belly Button;;\n"
+        )
+
+        self._run(report)
+
+        task_report = report.validationtaskreport_set.get()
+        self.assertEqual("ERROR", task_report.status)
+        finding = task_report.validationfinding_set.get()
+        self.assertEqual(3, finding.row)
+        self.assertEqual("Geographic Location is missing.", finding.message)
+
+    @patch(_OPENER_PATH)
+    def test_accession_only_file_without_country_column_is_not_an_error(self, mock_opener):
+        report = self._create_report()
+        mock_opener.return_value = _FakeOpener("sample_title;Sample_Accession\n;SAMEA115886020\n")
+
+        self._run(report)
+
+        task_report = report.validationtaskreport_set.get()
+        self.assertEqual("SUCCESS", task_report.status)
+        self.assertEqual(0, task_report.validationfinding_set.count())

@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
+    every_data_row_has_valid_sample_accession,
+    row_has_valid_sample_accession,
+)
 from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER_MAPPING
 from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import (
     MIXS_ENVIRONMENTAL_PACKAGE_ALIASES,
@@ -391,15 +395,19 @@ def validate_mixs_metadata_fields(csv_file):
         csv_reader.fieldnames[index] = field.strip().lower()
 
     present_fields = set(fieldnames)
-    findings.extend(_validate_header(present_fields, fieldnames))
+    rows = list(csv_reader)
+    if not every_data_row_has_valid_sample_accession(rows):
+        findings.extend(_validate_header(present_fields, fieldnames))
     findings.extend(_validate_legacy_column_headers(present_fields, fieldnames))
 
     rule_field_names = {rule["field_name"] for rule in MIXS_VALIDATION_RULES}
 
     data_row_number = 1
-    for row in csv_reader:
+    for row in rows:
         data_row_number += 1
         row_number = data_row_number
+        if row_has_valid_sample_accession(row):
+            continue
         row_package = row.get("environmental package")
 
         for field_name in MIXS_ROW_ALWAYS_MANDATORY_FIELDS:

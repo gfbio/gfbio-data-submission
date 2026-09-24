@@ -3,6 +3,7 @@ import requests
 
 from gfbio_submissions.brokerage.configuration.settings import ENA_TAXONOMY_URL_PREFIX
 from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import row_has_valid_sample_accession
 
 
 class SubmittableDataHandler():
@@ -88,7 +89,11 @@ class SubmittableTaxIdHandler(SubmittableDataHandler):
     def get_data(self, file):
         tax_ids = set()
         csv_reader, _csv_format = open_csv_reader(file)
+        if csv_reader.fieldnames:
+            csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
         for row in csv_reader:
+            if row_has_valid_sample_accession(row):
+                continue
             tax_id = row.get("taxon_id", "")
             if tax_id:
                 tax_ids.add(tax_id)

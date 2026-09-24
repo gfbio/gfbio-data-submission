@@ -150,6 +150,18 @@ class TestEnaMixsValidation(TestCase):
             )
         )
 
+    def test_accession_row_skips_mixs_rules_and_normal_row_does_not(self):
+        header = VALID_HEADER + ";sample_accession"
+        empty_date = VALID_WATER_ROW.replace("2020-01-01", "")
+        findings = self._validate(f"{header}\n{empty_date};SAMEA115886020\n{empty_date};\n")
+        missing_rows = {finding["row"] for finding in findings if finding["finding_type"] == "Missing value"}
+        self.assertNotIn(2, missing_rows)
+        self.assertIn(3, missing_rows)
+
+    def test_accession_only_file_without_mixs_columns_is_header_valid(self):
+        findings = self._validate("sample_accession\nSAMEA115886020\n")
+        self.assertFalse(any(finding["finding_type"] == "Required column missing" for finding in findings))
+
     def test_water_row_does_not_warn_about_built_environment_fields(self):
         csv_content = f"{VALID_HEADER}\n{VALID_WATER_ROW}\n"
         findings = self._validate(csv_content)

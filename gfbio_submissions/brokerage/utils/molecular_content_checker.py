@@ -26,10 +26,10 @@ class MolecularContentChecker():
                 line = csv_file.readline()
                 csv_file.seek(0)
                 _reader, csv_format = open_csv_reader(csv_file)
-                splitted = line.replace('"', "").lower().split(csv_format.delimiter)
+                splitted = [column.strip() for column in line.replace('"', "").lower().split(csv_format.delimiter)]
 
-                res = {col in splitted for col in SUBMISSION_MIN_COLS}
-                if len(res) == 1 and (True in res):
+                has_min_cols = all(col in splitted for col in SUBMISSION_MIN_COLS)
+                if has_min_cols or "sample_accession" in splitted:
                     return True
                 else:
                     self.messages.append(f"Info: {cloud_upload_file} is not a valid file-list.")

@@ -68,7 +68,54 @@ FIELD_HELP_TEXT = {
     "checksum_method": (
         'Method used to calculate read file checksums (allowed value: "MD5").'
     ),
+    "sample_accession": (
+        "Existing ENA sample accession (ERS, DRS, or SRS plus at least 6 digits) "
+        "or BioSample accession (SAME, SAMD, or SAMN, optional extra letter, then digits). "
+        "When set, this row links to that sample and no new sample is created."
+    ),
 }
+
+# Sample-level columns. Still required unless every data row has a valid sample_accession.
+SAMPLE_LEVEL_COLUMNS = ("sample_title", "taxon_id")
+
+# Case-insensitive form of attribute_value_blacklist in csv.py.
+_SAMPLE_ACCESSION_BLACKLIST = {"na", "n/a"}
+_SAMPLE_ACCESSION_RE = re.compile(r"(E|D|S)RS[0-9]{6,}")
+_BIOSAMPLE_ACCESSION_RE = re.compile(r"SAM(E|D|N)[A-Z]?[0-9]+")
+
+
+def sample_accession_value(value):
+    """Return the upper-cased accession when the cell counts as set, else None.
+
+    A cell counts as set only after strip, when it is non-empty and not a blacklist token.
+    Format is not checked here.
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or text.lower() in _SAMPLE_ACCESSION_BLACKLIST:
+        return None
+    return text.upper()
+
+
+def is_valid_sample_accession(value):
+    accession = sample_accession_value(value)
+    if accession is None:
+        return False
+    return (
+        _SAMPLE_ACCESSION_RE.fullmatch(accession) is not None
+        or _BIOSAMPLE_ACCESSION_RE.fullmatch(accession) is not None
+    )
+
+
+def row_has_valid_sample_accession(row):
+    if not row:
+        return False
+    return is_valid_sample_accession(row.get("sample_accession"))
+
+
+def every_data_row_has_valid_sample_accession(rows):
+    return bool(rows) and all(row_has_valid_sample_accession(row) for row in rows)
 
 
 def _is_missing_value(value):
@@ -143,7 +190,14 @@ def validate_ena_mandatory_fields(csv_file):
         csv_reader.fieldnames[index] = field.strip().lower()
 
     present_fields = set(fieldnames)
-    for field_name in ALWAYS_MANDATORY_FIELDS:
+    rows = list(csv_reader)
+    existing_samples_only = every_data_row_has_valid_sample_accession(rows)
+    mandatory_columns = [
+        field_name
+        for field_name in ALWAYS_MANDATORY_FIELDS
+        if not (existing_samples_only and field_name in SAMPLE_LEVEL_COLUMNS)
+    ]
+    for field_name in mandatory_columns:
         if field_name not in present_fields:
             findings.append(
                 {
@@ -157,7 +211,6 @@ def validate_ena_mandatory_fields(csv_file):
                 }
             )
 
-    rows = list(csv_reader)
     has_paired_rows = any(_normalize_layout(row.get("library_layout")) == "paired" for row in rows)
     if has_paired_rows:
         for field_name in PAIRED_MANDATORY_FIELDS:
@@ -184,6 +237,24 @@ def validate_ena_mandatory_fields(csv_file):
     for row in rows:
         data_row_number += 1
         row_number = data_row_number
+        uses_existing_sample = row_has_valid_sample_accession(row)
+        accession = sample_accession_value(row.get("sample_accession"))
+        if "sample_accession" in present_fields and accession and not uses_existing_sample:
+            findings.append(
+                {
+                    "status": "ERROR",
+                    "row": row_number,
+                    "column": _column_index(fieldnames, "sample_accession"),
+                    "column_name": "sample_accession",
+                    "finding_type": "Invalid Sample Accession",
+                    "message": (
+                        f"Invalid sample_accession '{accession}'. "
+                        "Expected an ENA sample accession ((E|D|S)RS followed by at least 6 digits) "
+                        "or a BioSample accession (SAM(E|D|N), optional letter, then digits)."
+                    ),
+                    "help_text": FIELD_HELP_TEXT["sample_accession"],
+                }
+            )
 
         layout = _normalize_layout(row.get("library_layout"))
         if layout and layout not in {"single", "paired"}:
@@ -204,6 +275,8 @@ def validate_ena_mandatory_fields(csv_file):
 
         for field_name in ALWAYS_MANDATORY_FIELDS:
             if field_name not in present_fields:
+                continue
+            if uses_existing_sample and field_name in SAMPLE_LEVEL_COLUMNS:
                 continue
             if _is_missing_value(row.get(field_name)):
                 findings.append(
@@ -237,7 +310,7 @@ def validate_ena_mandatory_fields(csv_file):
 
         sample_title = row.get("sample_title")
         if _has_value(sample_title):
-            sample_title_rows[str(sample_title).strip()].append(row_number)
+            sample_title_rows[str(sample_title).strip()].append((row_number, accession))
 
         if layout == "paired":
             for field_name in PAIRED_MANDATORY_FIELDS:
@@ -277,9 +350,89 @@ def validate_ena_mandatory_fields(csv_file):
                         }
                     )
 
-    for title, row_numbers in sample_title_rows.items():
-        if len(row_numbers) > 1:
-            row_list = ", ".join(str(row_number) for row_number in row_numbers)
+    accession_title_rows = defaultdict(list)
+    for title, entries in sample_title_rows.items():
+        for row_number, accession in entries:
+            if accession:
+                accession_title_rows[accession].append((row_number, title))
+
+    titles_with_consistency_error = set()
+    for title, entries in sample_title_rows.items():
+        row_numbers = [row_number for row_number, _accession in entries]
+        set_accessions = {accession for _row_number, accession in entries if accession}
+        has_row_without_accession = any(accession is None for _row_number, accession in entries)
+        row_list = ", ".join(str(row_number) for row_number in row_numbers)
+        if len(set_accessions) > 1:
+            titles_with_consistency_error.add(title)
+            findings.append(
+                {
+                    "status": "ERROR",
+                    "row": row_numbers[0],
+                    "column": _column_index(fieldnames, "sample_title"),
+                    "column_name": "sample_title",
+                    "finding_type": "Inconsistent Sample Accession",
+                    "message": (
+                        f"The sample_title '{title}' is used with different sample accessions (lines: {row_list})."
+                    ),
+                    "help_text": "Use one sample accession for every row that shares this sample_title.",
+                }
+            )
+        if set_accessions and has_row_without_accession:
+            titles_with_consistency_error.add(title)
+            findings.append(
+                {
+                    "status": "ERROR",
+                    "row": row_numbers[0],
+                    "column": _column_index(fieldnames, "sample_title"),
+                    "column_name": "sample_title",
+                    "finding_type": "Inconsistent Sample Accession",
+                    "message": (
+                        f"The sample_title '{title}' is used both with and without a sample accession "
+                        f"(lines: {row_list})."
+                    ),
+                    "help_text": (
+                        "Either link every row of this sample_title to the same existing accession, "
+                        "or leave the accession empty so a new sample is created."
+                    ),
+                }
+            )
+
+    for accession, entries in accession_title_rows.items():
+        nonempty_titles = []
+        for _row_number, title in entries:
+            if title not in nonempty_titles:
+                nonempty_titles.append(title)
+        if len(nonempty_titles) <= 1:
+            continue
+        titles_with_consistency_error.update(nonempty_titles)
+        row_numbers = [row_number for row_number, _title in entries]
+        row_list = ", ".join(str(row_number) for row_number in row_numbers)
+        title_list = ", ".join(f"'{title}'" for title in nonempty_titles)
+        findings.append(
+            {
+                "status": "ERROR",
+                "row": row_numbers[0],
+                "column": _column_index(fieldnames, "sample_accession"),
+                "column_name": "sample_accession",
+                "finding_type": "Inconsistent Sample Accession",
+                "message": (
+                    f"Sample accession '{accession}' is used with different sample titles "
+                    f"(lines: {row_list}): {title_list}."
+                ),
+                "help_text": (
+                    "Rows that share a sample accession must use the same sample_title, or leave the title empty."
+                ),
+            }
+        )
+
+    for title, entries in sample_title_rows.items():
+        if len(entries) <= 1 or title in titles_with_consistency_error:
+            continue
+        row_numbers = [row_number for row_number, _accession in entries]
+        set_accessions = {accession for _row_number, accession in entries if accession}
+        has_row_without_accession = any(accession is None for _row_number, accession in entries)
+        row_list = ", ".join(str(row_number) for row_number in row_numbers)
+        if not set_accessions:
             findings.append(
                 {
                     "status": "INFO",
@@ -295,6 +448,22 @@ def validate_ena_mandatory_fields(csv_file):
                     "help_text": (
                         "Please ensure that you actually want to group these samples or choose unique sample titles to prevent the clustering."
                     ),
+                }
+            )
+        elif len(set_accessions) == 1 and not has_row_without_accession:
+            accession = next(iter(set_accessions))
+            findings.append(
+                {
+                    "status": "INFO",
+                    "row": row_numbers[0],
+                    "column": _column_index(fieldnames, "sample_title"),
+                    "column_name": "sample_title",
+                    "finding_type": "Existing Sample Accession",
+                    "message": (
+                        f"The sample_title '{title}' was used more than once (lines: {row_list}) "
+                        f"with sample accession '{accession}'. No new sample will be created."
+                    ),
+                    "help_text": "Rows that share this accession are linked to the existing ENA sample.",
                 }
             )
 
