@@ -15,7 +15,7 @@ from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER
 from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
 from ..configuration.settings import ATAX, ENA, SUBMISSION_UPLOAD_RETRY_DELAY
 from ..utils.csv_format import detect_csv_format, open_csv_reader
-from ..utils.ena_mandatory_fields import sample_accession_value
+from ..utils.ena_mandatory_fields import row_has_sample_title_or_set_accession, sample_accession_value
 from ..utils.encodings import sniff_encoding
 
 logger = logging.getLogger(__name__)
@@ -444,10 +444,10 @@ def parse_molecular_csv(csv_file, submission):
 
     for row in rows:
         # Rows with neither a title nor an accession are ignored.
+        if not row_has_sample_title_or_set_accession(row):
+            continue
         title = row.get("sample_title") or ""
         accession = sample_accession_value(row.get("sample_accession"))
-        if not title and not accession:
-            continue
         experiment_id = short_id.generate()
         if accession:
             experiment = extract_experiment(experiment_id, row, sample_accession=accession)

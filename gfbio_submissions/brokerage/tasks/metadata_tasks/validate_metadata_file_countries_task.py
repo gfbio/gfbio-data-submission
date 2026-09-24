@@ -11,6 +11,7 @@ from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
 from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
     every_data_row_has_valid_sample_accession,
     row_has_valid_sample_accession,
+    row_is_blank,
 )
 from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import INSDC_MISSING_VALUE_PATTERN
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
@@ -63,7 +64,7 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                             row = 1,
                         )
                         return
-                if row_has_valid_sample_accession(row):
+                if row_is_blank(row) or row_has_valid_sample_accession(row):
                     continue
                 location_name = row.get(column_name, "")
                 if not location_name:

@@ -124,6 +124,19 @@ class TestEnaMandatoryFieldsValidation(TestCase):
         )
         self.assertFalse(any(finding["row"] == 2 for finding in empty_sample_errors))
 
+    def test_accession_only_file_with_trailing_empty_row_does_not_require_sample_columns(self):
+        header = (
+            "sample_accession;sequencing_platform;library_strategy;library_source;library_selection;"
+            "library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method"
+        )
+        csv_content = (
+            f"{header}\n"
+            "SAMEA115886020;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;read1.fastq.gz;abc123;MD5\n"
+            ";;;;;;;;\n"
+        )
+        findings = self._validate(csv_content)
+        self.assertEqual([], findings)
+
     def test_accession_only_file_does_not_require_sample_columns(self):
         header = (
             "sample_accession;sequencing_platform;library_strategy;library_source;library_selection;"

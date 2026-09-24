@@ -162,6 +162,10 @@ class TestEnaMixsValidation(TestCase):
         findings = self._validate("sample_accession\nSAMEA115886020\n")
         self.assertFalse(any(finding["finding_type"] == "Required column missing" for finding in findings))
 
+    def test_accession_only_file_with_trailing_empty_row_is_header_valid(self):
+        findings = self._validate("sample_accession;\nSAMEA115886020;\n;\n")
+        self.assertFalse(any(finding["finding_type"] == "Required column missing" for finding in findings))
+
     def test_water_row_does_not_warn_about_built_environment_fields(self):
         csv_content = f"{VALID_HEADER}\n{VALID_WATER_ROW}\n"
         findings = self._validate(csv_content)

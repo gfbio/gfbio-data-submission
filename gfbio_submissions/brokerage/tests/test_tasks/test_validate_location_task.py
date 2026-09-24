@@ -205,3 +205,14 @@ class TestValidateMetadataFileCountriesTask(TestTasks):
         task_report = report.validationtaskreport_set.get()
         self.assertEqual("SUCCESS", task_report.status)
         self.assertEqual(0, task_report.validationfinding_set.count())
+
+    @patch(_OPENER_PATH)
+    def test_accession_only_file_with_trailing_empty_row_is_not_an_error(self, mock_opener):
+        report = self._create_report()
+        mock_opener.return_value = _FakeOpener("sample_title;Sample_Accession\n;SAMEA115886020\n;\n")
+
+        self._run(report)
+
+        task_report = report.validationtaskreport_set.get()
+        self.assertEqual("SUCCESS", task_report.status)
+        self.assertEqual(0, task_report.validationfinding_set.count())

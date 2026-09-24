@@ -114,8 +114,31 @@ def row_has_valid_sample_accession(row):
     return is_valid_sample_accession(row.get("sample_accession"))
 
 
+def row_has_sample_title_or_set_accession(row):
+    """Return whether parse_molecular_csv keeps this row.
+
+    A row is kept when it has a sample_title or a set sample_accession.
+    Titles are stripped. Accession cells count as set only via sample_accession_value
+    (non-empty after strip, and not a blacklist token).
+    """
+    if not row:
+        return False
+    title = row.get("sample_title") or ""
+    if not isinstance(title, str):
+        title = str(title)
+    return bool(title.strip()) or sample_accession_value(row.get("sample_accession")) is not None
+
+
 def every_data_row_has_valid_sample_accession(rows):
-    return bool(rows) and all(row_has_valid_sample_accession(row) for row in rows)
+    data_rows = [row for row in rows if row_has_sample_title_or_set_accession(row)]
+    return bool(data_rows) and all(row_has_valid_sample_accession(row) for row in data_rows)
+
+
+def row_is_blank(row):
+    """True when the row has no cell text. Trailing Excel lines look like this."""
+    if not row:
+        return True
+    return all(value is None or str(value).strip() == "" for value in row.values())
 
 
 def _is_missing_value(value):
@@ -237,6 +260,8 @@ def validate_ena_mandatory_fields(csv_file):
     for row in rows:
         data_row_number += 1
         row_number = data_row_number
+        if row_is_blank(row):
+            continue
         uses_existing_sample = row_has_valid_sample_accession(row)
         accession = sample_accession_value(row.get("sample_accession"))
         if "sample_accession" in present_fields and accession and not uses_existing_sample:

@@ -1,7 +1,10 @@
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.ontology_column_validator import OntologyColumnValidator
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.ontology_matcher import MediumOntologyMatcher, OntologyMatcher
 from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
-from gfbio_submissions.brokerage.utils.ena_mandatory_fields import every_data_row_has_valid_sample_accession
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
+    every_data_row_has_valid_sample_accession,
+    row_is_blank,
+)
 
 
 class EnvoCsvValidator:
@@ -36,6 +39,8 @@ class EnvoCsvValidator:
             for column in self.columns:
                 column.set_column_index()
         for row_number, row in enumerate(rows, start=2):
+            if row_is_blank(row):
+                continue
             for column in self.columns:
                 column.validate_row_value(row, row_number=row_number)
 

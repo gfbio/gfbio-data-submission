@@ -5,6 +5,7 @@ from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
 from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
     every_data_row_has_valid_sample_accession,
     row_has_valid_sample_accession,
+    row_is_blank,
 )
 from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER_MAPPING
 from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import (
@@ -406,7 +407,7 @@ def validate_mixs_metadata_fields(csv_file):
     for row in rows:
         data_row_number += 1
         row_number = data_row_number
-        if row_has_valid_sample_accession(row):
+        if row_is_blank(row) or row_has_valid_sample_accession(row):
             continue
         row_package = row.get("environmental package")
 
