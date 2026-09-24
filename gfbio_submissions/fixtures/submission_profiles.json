@@ -180,6 +180,16 @@
         }
     },
     {
+        "model": "submission_profile.fieldtype",
+        "pk": 19,
+        "fields": {
+            "created": "2026-09-24T12:00:00.000Z",
+            "modified": "2026-09-24T12:00:00.000Z",
+            "type": "agree-to-nagoya-protocol",
+            "comment": "Field for legal requirements of ENA. All submissions to ENA need to be compliant."
+        }
+    },
+    {
         "model": "submission_profile.field",
         "pk": 1,
         "fields": {
@@ -498,6 +508,23 @@
             "comment": "",
             "position": "main",
             "order": 1,
+            "system_wide_mandatory": false,
+            "placeholder": ""
+        }
+    },
+    {
+        "model": "submission_profile.field",
+        "pk": 20,
+        "fields": {
+            "created": "2026-09-24T12:00:00.000Z",
+            "modified": "2026-09-24T12:00:00.000Z",
+            "field_name": "overview",
+            "field_type": 19,
+            "title": "Submitting molecular data to ENA",
+            "description": "",
+            "comment": "",
+            "position": "main",
+            "order": 500,
             "system_wide_mandatory": false,
             "placeholder": ""
         }
@@ -855,6 +882,28 @@
         }
     },
     {
+        "model": "submission_profile.fieldoption",
+        "pk": 33,
+        "fields": {
+            "field": 20,
+            "order": 1,
+            "option": "yes",
+            "description": "<div>I am submitting moelcular squence data and I confirm the following:</div><ul><li> I comply with applicable national and international access and benefit sharing obligations and EMBL-EBI Terms of Use (ToU).</li><li> I continue to provide, where known, the geographic location from which genetic resources were collected from and from which sequence data they were derived, together with any relevant provenance metadata.</li><li>I confirm, to the best of their knowledge, that the submitted data are not subject to restrictions that would prohibit their open sharing through ENA.</li></ul>",
+            "help_link": ""
+        }
+    },
+    {
+        "model": "submission_profile.fieldoption",
+        "pk": 34,
+        "fields": {
+            "field": 20,
+            "order": 2,
+            "option": "no",
+            "description": "My submission does not include data or samples of genetic material.",
+            "help_link": ""
+        }
+    },
+    {
         "model": "submission_profile.profile",
         "pk": 1,
         "fields": {
@@ -1063,6 +1112,28 @@
         "pk": 19,
         "fields": {
             "field": 2,
+            "profile": 2,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 20,
+        "fields": {
+            "field": 20,
+            "profile": 1,
+            "mandatory": true,
+            "visible": true,
+            "default": ""
+        }
+    },
+    {
+        "model": "submission_profile.profilefield",
+        "pk": 21,
+        "fields": {
+            "field": 20,
             "profile": 2,
             "mandatory": true,
             "visible": true,

@@ -35,6 +35,18 @@ class SubmissionDetailSerializer(SubmissionSerializer):
                 raise serializers.ValidationError({"data": [e.message for e in errors]})
             else:
                 data["status"] = Submission.SUBMITTED
+
+        submission_data = data.get("data", {})
+        if (
+            data.get("broker_submission_id", False)
+            and submission_data and "requirements" in submission_data
+            and "agree-to-nagoya-protocol" in submission_data["requirements"] 
+            and submission_data["requirements"]["agree-to-nagoya-protocol"] != "yes"
+        ):
+            existing = Submission.objects.get(broker_submission_id=data.get("broker_submission_id"))
+            if "requirements" in existing.data and "agree-to-nagoya-protocol" in existing.data["requirements"] and existing.data["requirements"]["agree-to-nagoya-protocol"] == "yes":
+                raise serializers.ValidationError({"data": ["You can't opt-out of the nagoya-protocol after opting in once."]})
+
         else:
             valid, errors = validate_data_min(data.get("data", {}))
             full_valid, full_errors = validate_data_full(data=data.get("data", {}), target=target)

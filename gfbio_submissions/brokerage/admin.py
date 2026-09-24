@@ -27,6 +27,7 @@ from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_
 from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads import (
     check_meta_referenced_files_in_cloud_uploads_task,
 )
+from gfbio_submissions.brokerage.utils.jira import JiraClient
 
 from .configuration.settings import (
     ENA,
@@ -59,6 +60,32 @@ from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import 
 from .utils.ena import ensure_ena_webin_submission_folder_via_ftp, release_study_on_ena
 from .utils.submission_process import SubmissionProcessHandler
 from .utils.task_utils import _safe_get_site_config, jira_cancel_issue
+
+
+def check_nagoya_protocol_was_agreed_to(modeladmin, request, submission, action_name):
+    submission_data = submission.data
+    if (
+        submission_data and "requirements" in submission_data 
+        and "agree-to-nagoya-protocol" in submission_data["requirements"] 
+        and submission_data["requirements"]["agree-to-nagoya-protocol"] == "yes"
+    ):
+        return True
+
+    if modeladmin:
+        modeladmin.message_user(request, f"Can't execute {action_name} for {submission.broker_submission_id}, because the user didn't agreed to compliance to the nagoya protocol.", level=messages.ERROR)
+    
+    reference_key = submission.get_primary_helpdesk_reference()
+    if reference_key and submission.user and submission.user.site_configuration and submission.user.site_configuration.helpdesk_server:        
+        comment = (
+            "{color:#de350b}"
+            f"ENA requires that all data submitted is in compliance with the Nagoya-Protocol. "
+            f"Because the user didn't agreed to compliance in the submission, the action {action_name} couldn't be executed. "
+            f"Please ask the user to agree to compliance with the Nagoya-Protocol to continue."
+            "{color}"
+        )
+        jira_client = JiraClient(resource=submission.user.site_configuration.helpdesk_server)
+        jira_client.add_comment(key_or_issue=reference_key, text=comment, is_internal=True)
+    return False
 
 
 class PersistentIdentifierInline(admin.TabularInline):
@@ -213,6 +240,8 @@ def validate_against_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.validate_against_ena import validate_against_ena_task
 
     for obj in queryset:
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+            continue
         validate_against_ena_task.apply_async(kwargs={"submission_id": obj.pk}, countdown=SUBMISSION_DELAY)
 
 
@@ -223,6 +252,7 @@ def submit_to_ena_test(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_to_ena_test_server import submit_to_ena_test_server_task
 
     for obj in queryset:
+        
         submit_to_ena_test_server_task.apply_async(
             kwargs={"submission_id": obj.pk, "action": "ADD"},
             countdown=SUBMISSION_DELAY,
@@ -299,6 +329,8 @@ def register_study_at_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
 
     for obj in queryset:
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, "Register Study at ENA"):
+            continue
         chain = (
             create_study_broker_objects_only_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
             | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
@@ -459,6 +491,8 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     ]
 
     for obj in queryset:
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, transfer_submission_cloud_uploads_to_ena.short_description):
+            continue
         submission_cloud_upload_ids = [
             upload.pk
             for upload in (
