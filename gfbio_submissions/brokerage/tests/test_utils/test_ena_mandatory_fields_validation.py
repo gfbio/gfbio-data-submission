@@ -137,6 +137,24 @@ class TestEnaMandatoryFieldsValidation(TestCase):
         findings = self._validate(csv_content)
         self.assertEqual([], findings)
 
+    def test_nonblank_row_without_accession_requires_sample_title_column(self):
+        header = (
+            "sample_accession;sequencing_platform;library_strategy;library_source;library_selection;"
+            "library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method"
+        )
+        csv_content = (
+            f"{header}\n"
+            "SAMEA115886020;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;read1.fastq.gz;abc123;MD5\n"
+            ";Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;read2.fastq.gz;def456;MD5\n"
+        )
+        findings = self._validate(csv_content)
+        self.assertTrue(
+            any(
+                finding["column_name"] == "sample_title" and finding["status"] == "ERROR"
+                for finding in findings
+            )
+        )
+
     def test_accession_only_file_does_not_require_sample_columns(self):
         header = (
             "sample_accession;sequencing_platform;library_strategy;library_source;library_selection;"

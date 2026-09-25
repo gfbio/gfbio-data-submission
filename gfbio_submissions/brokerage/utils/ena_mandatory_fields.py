@@ -130,7 +130,12 @@ def row_has_sample_title_or_set_accession(row):
 
 
 def every_data_row_has_valid_sample_accession(rows):
-    data_rows = [row for row in rows if row_has_sample_title_or_set_accession(row)]
+    """True when every non-blank row has a valid sample accession.
+
+    Blank rows stay excluded. A non-blank row without a valid accession keeps
+    sample-level columns mandatory, even when other rows have an accession.
+    """
+    data_rows = [row for row in rows if not row_is_blank(row)]
     return bool(data_rows) and all(row_has_valid_sample_accession(row) for row in data_rows)
 
 
