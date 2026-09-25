@@ -1,6 +1,8 @@
 import re
 
-from gfbio_submissions.brokerage.utils.ena_mandatory_fields import row_has_valid_sample_accession
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
+    row_has_valid_sample_accession,
+)
 
 
 class OntologyColumnValidator:
@@ -84,7 +86,7 @@ class OntologyColumnValidator:
         self.validation_task_report.validationfinding_set.create(
             message=message, help_text=help_text, column_name=self.column_name, status=status,
             finding_type=finding_type,
-            row=row if row > 0 else (self._current_row or self.csv_reader.line_num),
+            row=row if row > 0 else self._current_row,
             column=self.column_index if self.column_index else None,
         )
 
