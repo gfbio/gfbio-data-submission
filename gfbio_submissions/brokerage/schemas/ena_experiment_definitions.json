@@ -398,6 +398,11 @@
                 "type": "string",
                 "minLength": 1
             },
+            "sample_accession": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^((E|D|S)RS[0-9]{6,}|SAM(E|D|N)[A-Z]?[0-9]+)$"
+            },
             "design_description": {
                 "type": "string"
             },
@@ -406,8 +411,7 @@
             }
         },
         "required": [
-            "library_descriptor",
-            "sample_descriptor"
+            "library_descriptor"
         ]
     },
     "files": {

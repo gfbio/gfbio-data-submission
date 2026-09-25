@@ -4,6 +4,9 @@ import os
 
 from django.test import TestCase
 
+from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full, validate_ena_relations
+
 
 class JSONSchemaContentTest(TestCase):
     @classmethod
@@ -49,3 +52,77 @@ class JSONSchemaContentTest(TestCase):
                     if "id" in schema_b_dict.keys():
                         schema_b_dict.pop("id")
                     self.assertDictEqual(schema_a_dict, schema_b_dict)
+
+
+def _accession_only_requirements(sample_accession="SAMEA115886020"):
+    return {
+        "requirements": {
+            "title": "Accession only",
+            "description": "Links to an existing ENA sample",
+            "samples": [],
+            "experiments": [
+                {
+                    "experiment_alias": "experiment1",
+                    "platform": "AB 3730xL Genetic Analyzer",
+                    "design": {
+                        "sample_accession": sample_accession,
+                        "library_descriptor": {
+                            "library_strategy": "AMPLICON",
+                            "library_source": "METAGENOMIC",
+                            "library_selection": "PCR",
+                            "library_layout": {"layout_type": "single"},
+                        },
+                    },
+                    "files": {"forward_read_file_name": "read.fastq.gz"},
+                }
+            ],
+        }
+    }
+
+
+class EnaSampleAccessionSchemaTest(TestCase):
+    schema_dirs = (
+        JSONSchemaContentTest._get_brokerage_schema_dir_path(),
+        JSONSchemaContentTest._get_static_schema_dir_path(),
+    )
+
+    def _validate_in_both_schema_copies(self, data):
+        return [
+            validate_data_full(
+                data=data,
+                target=ENA,
+                schema_location=os.path.join(schema_dir, "ena_requirements.json"),
+            )
+            for schema_dir in self.schema_dirs
+        ]
+
+    def test_empty_samples_and_sample_accession_are_valid_in_both_schema_copies(self):
+        data = _accession_only_requirements()
+        for valid, errors in self._validate_in_both_schema_copies(data):
+            self.assertTrue(valid, errors)
+        self.assertEqual([], validate_ena_relations(data))
+
+    def test_descriptor_and_accession_together_are_invalid(self):
+        data = _accession_only_requirements()
+        data["requirements"]["samples"] = [{"sample_alias": "sample1", "sample_title": "Sample", "taxon_id": 1234}]
+        data["requirements"]["experiments"][0]["design"]["sample_descriptor"] = "sample1"
+        errors = validate_ena_relations(data)
+        self.assertTrue(any("cannot both be set" in error.message for error in errors))
+
+    def test_neither_descriptor_nor_accession_is_invalid(self):
+        data = _accession_only_requirements()
+        data["requirements"]["experiments"][0]["design"].pop("sample_accession")
+        errors = validate_ena_relations(data)
+        self.assertEqual(1, len(errors))
+        self.assertIn("must reference either a sample_descriptor or a sample_accession", errors[0].message)
+
+    def test_sample_accession_pattern_accepts_ena_and_biosample_formats(self):
+        for accession in ("ERS123456", "SAMEA115886020"):
+            for valid, errors in self._validate_in_both_schema_copies(_accession_only_requirements(accession)):
+                self.assertTrue(valid, f"{accession}: {errors}")
+
+    def test_sample_accession_pattern_rejects_malformed_and_lower_case_values(self):
+        for accession in ("ERS12345", "SAMEA", "ers123456", "samea115886020", "XERS123456", "ERS123456X"):
+            for valid, errors in self._validate_in_both_schema_copies(_accession_only_requirements(accession)):
+                self.assertFalse(valid, accession)
+                self.assertTrue(any("sample_accession" in str(error) for error in errors), errors)

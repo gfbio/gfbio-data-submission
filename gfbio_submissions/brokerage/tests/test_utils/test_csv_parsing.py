@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 import os
 from collections import OrderedDict
 from pprint import pprint
@@ -10,8 +11,10 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.configuration.settings import ATAX, ENA, ENA_PANGAEA, GENERIC, GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import (
+    build_targeted_loci,
     check_submittable_taxon_id,
     extract_sample,
+    parse_molecular_csv,
     parse_molecular_csv_with_encoding_detection,
 )
 from gfbio_submissions.brokerage.utils.encodings import sniff_encoding
@@ -1238,3 +1241,113 @@ class TestCSVParsing(TestCase):
             messages,
         )
         self.assertTrue(check_performed)
+
+    def _parse_rows(self, content):
+        return parse_molecular_csv(io.StringIO(content), self.submission)
+
+    def test_parse_accession_only_creates_no_sample(self):
+        requirements = self._parse_rows(
+            "library_layout;Sample_Accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "single;samea115886020;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;read.fastq.gz;abc;MD5\n"
+        )
+        self.assertEqual([], requirements["samples"])
+        self.assertEqual(1, len(requirements["experiments"]))
+        design = requirements["experiments"][0]["design"]
+        self.assertEqual("SAMEA115886020", design["sample_accession"])
+        self.assertNotIn("sample_descriptor", design)
+
+    def test_parse_invalid_accession_with_title_creates_no_fallback_sample(self):
+        requirements = self._parse_rows(
+            "sample_title;taxon_id;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "Sample A;1234;ers12;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5\n"
+        )
+        self.assertEqual([], requirements["samples"])
+        self.assertEqual(1, len(requirements["experiments"]))
+        design = requirements["experiments"][0]["design"]
+        self.assertEqual("ERS12", design["sample_accession"])
+        self.assertNotIn("sample_descriptor", design)
+
+    def test_parse_same_accession_and_title_creates_no_sample(self):
+        requirements = self._parse_rows(
+            "sample_title;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "Sample A;ERS123456;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5\n"
+            "Sample A;ers123456;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;b.fastq.gz;def;MD5\n"
+        )
+        self.assertEqual([], requirements["samples"])
+        self.assertEqual(2, len(requirements["experiments"]))
+        for experiment in requirements["experiments"]:
+            self.assertEqual("ERS123456", experiment["design"]["sample_accession"])
+            self.assertNotIn("sample_descriptor", experiment["design"])
+
+    def test_title_with_accession_on_one_row_creates_no_sample(self):
+        requirements = self._parse_rows(
+            "sample_title;taxon_id;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "Sample A;1234;;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5\n"
+            "Sample A;5678;SAMEA115886020;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;b.fastq.gz;def;MD5\n"
+        )
+        self.assertEqual([], requirements["samples"])
+        sibling = requirements["experiments"][0]["design"]
+        linked = requirements["experiments"][1]["design"]
+        self.assertNotIn("sample_descriptor", sibling)
+        self.assertNotIn("sample_accession", sibling)
+        self.assertEqual("SAMEA115886020", linked["sample_accession"])
+        self.assertNotIn("sample_descriptor", linked)
+
+    def test_parse_mixed_file_keeps_new_sample_and_links_accession(self):
+        requirements = self._parse_rows(
+            "sample_title;taxon_id;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method;"
+            "target gene;pcr primers\n"
+            "New sample;1234;;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5;16S rRNA;FWD\n"
+            ";999;SAMEA115886020;Ion Torrent PGM;AMPLICON;METAGENOMIC;PCR;single;b.fastq.gz;def;MD5;16S rRNA;REV\n"
+        )
+        self.assertEqual(1, len(requirements["samples"]))
+        self.assertEqual("New sample", requirements["samples"][0]["sample_title"])
+        attribute_tags = [attribute["tag"] for attribute in requirements["samples"][0]["sample_attributes"]]
+        self.assertIn("target gene", attribute_tags)
+        self.assertIn("pcr primers", attribute_tags)
+        self.assertNotIn("sample_accession", attribute_tags)
+        new_design = requirements["experiments"][0]["design"]
+        accession_design = requirements["experiments"][1]["design"]
+        self.assertIn("sample_descriptor", new_design)
+        self.assertNotIn("sample_accession", new_design)
+        self.assertNotIn("targeted_loci", new_design)
+        self.assertEqual("SAMEA115886020", accession_design["sample_accession"])
+        self.assertEqual(
+            {"locus_name": "16S rRNA", "description": "16S rRNA; REV"},
+            accession_design["targeted_loci"],
+        )
+
+    def test_parse_ignores_row_without_title_or_accession(self):
+        requirements = self._parse_rows(
+            "sample_title;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            ";;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5\n"
+            ";NA;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;b.fastq.gz;def;MD5\n"
+        )
+        self.assertEqual([], requirements["samples"])
+        self.assertEqual([], requirements["experiments"])
+
+    def test_build_targeted_loci_gene_and_primer_rules(self):
+        self.assertEqual({"locus_name": "16S rRNA"}, build_targeted_loci("16S", ""))
+        self.assertEqual(
+            {"locus_name": "other", "description": "custom marker"},
+            build_targeted_loci("custom marker", ""),
+        )
+        self.assertEqual(
+            {"locus_name": "other", "description": "FWD"},
+            build_targeted_loci("", "FWD"),
+        )
+        self.assertEqual(
+            {"locus_name": "16S rRNA", "description": "16S rRNA; FWD"},
+            build_targeted_loci("16S rRNA", "FWD"),
+        )
+        self.assertEqual(
+            {"locus_name": "other", "description": "custom marker; FWD"},
+            build_targeted_loci("custom marker", "FWD"),
+        )
+        self.assertIsNone(build_targeted_loci("NA", "n/a"))

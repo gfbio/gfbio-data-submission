@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 from datetime import datetime
 from unittest import mock
 from uuid import uuid4
@@ -15,6 +16,7 @@ from gfbio_submissions.brokerage.tests.utils import (
 from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import (
     update_ena_embargo_task,
 )
+from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv
 from gfbio_submissions.brokerage.utils.ena import (
     Enalizer,
     prepare_ena_data,
@@ -263,6 +265,67 @@ class TestEnalizer(TestCase):
             )
 
         self.assertTrue(enalizer.experiments_contain_files)
+
+    def _submission_from_csv(self, csv_content):
+        submission = Submission.objects.first()
+        requirements = parse_molecular_csv(io.StringIO(csv_content), submission)
+        data = submission.data
+        data["requirements"]["samples"] = requirements["samples"]
+        data["requirements"]["experiments"] = requirements["experiments"]
+        submission.data = data
+        submission.save()
+        submission.brokerobject_set.all().delete()
+        BrokerObject.objects.add_submission_data(submission)
+        return submission
+
+    def test_accession_experiment_xml_uses_accession_and_targeted_loci(self):
+        submission = self._submission_from_csv(
+            "sample_title;taxon_id;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method;"
+            "target gene;pcr primers\n"
+            "New sample;1234;;Illumina HiSeq 1000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5;16S rRNA;\n"
+            ";999;samea115886020;Ion Torrent PGM;AMPLICON;METAGENOMIC;PCR;single;b.fastq.gz;def;MD5;16S rRNA;FWD\n"
+            ";999;ERS123456;Illumina MiSeq;AMPLICON;METAGENOMIC;PCR;single;c.fastq.gz;ghi;MD5;custom marker;\n"
+            ";999;DRS123456;Illumina MiSeq;AMPLICON;METAGENOMIC;PCR;single;d.fastq.gz;jkl;MD5;;ONLYPRIMER\n"
+            ";999;SRS123456;Illumina MiSeq;AMPLICON;METAGENOMIC;PCR;single;e.fastq.gz;mno;MD5;28S;\n"
+        )
+        xml_data = Enalizer(submission, "test-accession").prepare_submission_data()
+        _name, sample_xml = xml_data["SAMPLE"]
+        _name, experiment_xml = xml_data["EXPERIMENT"]
+        self.assertIn('<SAMPLE_DESCRIPTOR accession="SAMEA115886020" />', experiment_xml)
+        self.assertNotIn('accession="SAMEA115886020" refname', experiment_xml)
+        self.assertIn('<SAMPLE_DESCRIPTOR accession="ERS123456" />', experiment_xml)
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS locus_name="16S rRNA" description="16S rRNA; FWD" /></TARGETED_LOCI>',
+            experiment_xml,
+        )
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS locus_name="other" description="custom marker" /></TARGETED_LOCI>',
+            experiment_xml,
+        )
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS locus_name="other" description="ONLYPRIMER" /></TARGETED_LOCI>',
+            experiment_xml,
+        )
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS locus_name="28S rRNA" /></TARGETED_LOCI>',
+            experiment_xml,
+        )
+        self.assertIn("<TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE>", sample_xml)
+        self.assertNotIn("Ion Torrent PGM", sample_xml)
+        self.assertEqual(1, sample_xml.count("<TAG>sequencing method</TAG>"))
+
+    def test_no_sample_xml_when_every_row_uses_an_existing_accession(self):
+        submission = self._submission_from_csv(
+            "sample_accession;sequencing_platform;library_strategy;library_source;library_selection;"
+            "library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "SAMEA115886020;Illumina HiSeq 1000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5\n"
+        )
+        xml_data = Enalizer(submission, "test-accession").prepare_submission_data()
+        self.assertNotIn("SAMPLE", xml_data)
+        _name, experiment_xml = xml_data["EXPERIMENT"]
+        self.assertIn('<SAMPLE_DESCRIPTOR accession="SAMEA115886020" />', experiment_xml)
+        self.assertNotIn("refname=", experiment_xml.split("SAMPLE_DESCRIPTOR", 1)[1][:80])
 
     def test_experiment_xml_targeted_loci(self):
         submission = Submission.objects.last()

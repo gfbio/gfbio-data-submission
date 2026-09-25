@@ -15,6 +15,7 @@ from gfbio_submissions.brokerage.utils.ena_mixs_column_mapping import ENA_HEADER
 from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmittableDataHandler, SubmittableScientificNameHandler, SubmittableTaxIdHandler
 from ..configuration.settings import ATAX, ENA, SUBMISSION_UPLOAD_RETRY_DELAY
 from ..utils.csv_format import detect_csv_format, open_csv_reader
+from ..utils.ena_mandatory_fields import row_has_sample_title_or_set_accession, sample_accession_value
 from ..utils.encodings import sniff_encoding
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ experiment_core_fields = [
     "reverse_read_file_name",
     "reverse_read_file_checksum",
     "checksum_method",
+    "sample_accession",
 ]
 
 core_fields = sample_core_fields + experiment_core_fields
@@ -278,7 +280,46 @@ def extract_sample(row, field_names, sample_id):
     return sample, template_attribute_replaced
 
 
-def extract_experiment(experiment_id, row, sample_id):
+def _blank_metadata_value(value):
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if text in attribute_value_blacklist:
+        return ""
+    return text
+
+
+def build_targeted_loci(gene_text, primers):
+    """Map target gene and PCR primers the same way as Enalizer.translate_target_gene_insensitiv.
+
+    Known gene: locus_name only. Unknown gene: locus_name "other" and the gene text as description.
+    Primers fill description when it is still empty. Gene text and primers together use
+    "{gene text}; {primers}".
+    """
+    from gfbio_submissions.brokerage.utils.ena import locus_attribute_mappings
+
+    gene_text = _blank_metadata_value(gene_text)
+    primers = _blank_metadata_value(primers)
+    if not gene_text and not primers:
+        return None
+
+    locus = {}
+    if gene_text:
+        mapped_locus = locus_attribute_mappings.get(gene_text.lower())
+        if mapped_locus is not None:
+            locus["locus_name"] = mapped_locus
+        else:
+            locus["locus_name"] = "other"
+            locus["description"] = gene_text
+    if primers and "description" not in locus:
+        locus.setdefault("locus_name", "other")
+        locus["description"] = primers
+    if gene_text and primers:
+        locus["description"] = f"{gene_text}; {primers}"
+    return locus
+
+
+def extract_experiment(experiment_id, row, sample_id=None, sample_accession=None):
     try:
         design_description = int(row.get("design_description", "-1"))
     except ValueError as e:
@@ -295,7 +336,13 @@ def extract_experiment(experiment_id, row, sample_id):
 
     library_layout = row.get("library_layout", "").lower()
 
-    dpath.new(experiment, "design/sample_descriptor", sample_id)
+    if sample_accession:
+        dpath.new(experiment, "design/sample_accession", sample_accession)
+        targeted_loci = build_targeted_loci(row.get("target gene"), row.get("pcr primers"))
+        if targeted_loci:
+            dpath.new(experiment, "design/targeted_loci", targeted_loci)
+    elif sample_id:
+        dpath.new(experiment, "design/sample_descriptor", sample_id)
     dpath.new(
         experiment,
         "design/library_descriptor/library_strategy",
@@ -382,23 +429,43 @@ def parse_molecular_csv(csv_file, submission):
     short_id = ShortId()
     sample_titles = []
     sample_ids = []
+    rows = []
     for row in csv_reader:
-        # every row is one sample (except header)
-        title = row.get("sample_title", None)
-        if title:
-            experiment_id = short_id.generate()
-            if title not in sample_titles:
-                sample_titles.append(title)
-                sample_id = short_id.generate()
-                sample_ids.append(sample_id)
-                sample, template_attributes_replaced = extract_sample(row, field_names, sample_id)
-                molecular_requirements["samples"].append(sample)
+        for key, value in row.items():
+            if isinstance(value, str):
+                row[key] = value.strip()
+        rows.append(row)
 
-                experiment = extract_experiment(experiment_id, row, sample_id)
-            else:
-                experiment = extract_experiment(experiment_id, row, sample_ids[sample_titles.index(title)])
+    titles_with_accession = set()
+    for row in rows:
+        title = row.get("sample_title") or ""
+        if title and sample_accession_value(row.get("sample_accession")):
+            titles_with_accession.add(title)
 
-            molecular_requirements["experiments"].append(experiment)
+    for row in rows:
+        # Rows with neither a title nor an accession are ignored.
+        if not row_has_sample_title_or_set_accession(row):
+            continue
+        title = row.get("sample_title") or ""
+        accession = sample_accession_value(row.get("sample_accession"))
+        experiment_id = short_id.generate()
+        if accession:
+            experiment = extract_experiment(experiment_id, row, sample_accession=accession)
+        elif title in titles_with_accession:
+            # Another row of this title has an accession. Do not create a sample and do not
+            # copy that accession onto this row.
+            experiment = extract_experiment(experiment_id, row)
+        elif title not in sample_titles:
+            sample_titles.append(title)
+            sample_id = short_id.generate()
+            sample_ids.append(sample_id)
+            sample, template_attributes_replaced = extract_sample(row, field_names, sample_id)
+            molecular_requirements["samples"].append(sample)
+            experiment = extract_experiment(experiment_id, row, sample_id)
+        else:
+            experiment = extract_experiment(experiment_id, row, sample_ids[sample_titles.index(title)])
+
+        molecular_requirements["experiments"].append(experiment)
     if template_attributes_replaced:
         from ..tasks.jira_tasks.add_general_comment_to_issue import add_general_comment_to_issue_task
         add_general_comment_to_issue_task.apply_async(
