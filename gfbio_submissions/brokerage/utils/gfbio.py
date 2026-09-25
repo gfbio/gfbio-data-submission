@@ -49,7 +49,9 @@ def check_length_for_jira(requirements):
 
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, prepare_for_update=False):
     requirements = submission.data.get("requirements", {})
-    if reporter is None:
+    # DASS-3816: on update, never set reporter (avoids overwriting with brokeragent on failed lookup).
+    # Fallback to brokeragent only applies when creating an issue.
+    if not prepare_for_update and reporter is None:
         reporter = {
             "jira_user_name": JIRA_FALLBACK_USERNAME,
             "email": JIRA_FALLBACK_EMAIL,
@@ -113,7 +115,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         "summary": "{0}".format(summary),
         "description": "{0}".format(description),
         "issuetype": {"name": "Data Submission"},
-        "reporter": {"name": reporter.get("jira_user_name", site_config.contact)},
         "customfield_10200": "{0}".format(submission.embargo.isoformat())
         if submission.embargo is not None
         else "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
@@ -152,5 +153,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         #     requirements.get('data_center', ''), '')
         # if len(assignee) > 0:
         #     mutual_data['assignee'] = {'name': assignee}
+        mutual_data["reporter"] = {"name": reporter.get("jira_user_name", site_config.contact)}
         mutual_data["customfield_10010"] = jira_request_type
     return mutual_data

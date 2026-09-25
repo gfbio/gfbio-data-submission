@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import json
 from io import StringIO
 from unittest import skip
 
@@ -608,6 +609,12 @@ class TestJiraClient(TestCase):
         )
         self.assertIsNone(jira_client.error)
         self.assertEqual("SAND-1661", jira_client.issue.key)
+
+        put_calls = [c for c in responses.calls if c.request.method == "PUT"]
+        self.assertEqual(1, len(put_calls))
+        put_body = json.loads(put_calls[0].request.body)
+        self.assertNotIn("reporter", put_body.get("fields", {}))
+        self.assertIn("summary", put_body.get("fields", {}))
 
     @responses.activate
     def test_force_submission_issue(self):

@@ -7,11 +7,15 @@ from unittest import skip
 
 import responses
 
-from gfbio_submissions.brokerage.tests.utils import _get_ena_release_xml_response, _get_submission_request_data
+from gfbio_submissions.brokerage.tests.utils import (
+    _get_ena_release_xml_response,
+    _get_jira_issue_response,
+    _get_submission_request_data,
+)
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from .test_submission_view_base import TestSubmissionView
-from ....configuration.settings import JIRA_ISSUE_URL, GENERIC
+from ....configuration.settings import JIRA_ISSUE_URL, GENERIC, GFBIO_HELPDESK_TICKET
 from ....models.broker_object import BrokerObject
 from ....models.center_name import CenterName
 from ....models.persistent_identifier import PersistentIdentifier
@@ -20,6 +24,10 @@ from ....models.task_progress_report import TaskProgressReport
 
 
 class TestSubmissionViewPutRequests(TestSubmissionView):
+    @staticmethod
+    def _getorcreateuser_call_count():
+        return sum(1 for c in responses.calls if "getorcreateuser.php" in c.request.url)
+
     @responses.activate
     def test_put_submission(self):
         self._add_create_ticket_response()
@@ -44,6 +52,76 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertTrue(isinstance(content, dict))
         self.assertIn("0815", content["data"]["requirements"]["title"])
         self.assertEqual(1, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_put_skips_helpdesk_username_and_omits_reporter(self):
+        # DASS-3816: submission UPDATE must not call getorcreateuser.php or send reporter.
+        self._add_create_ticket_response()
+        self._post_submission()
+        getorcreate_count_after_post = self._getorcreateuser_call_count()
+        self.assertGreater(getorcreate_count_after_post, 0)
+
+        submission = Submission.objects.first()
+        ticket_key = "SAND-1661"
+        issue_json = _get_jira_issue_response()
+        primary_ref = submission.additionalreference_set.filter(primary=True).first()
+        if primary_ref:
+            primary_ref.reference_key = ticket_key
+            primary_ref.save()
+        else:
+            submission.additionalreference_set.create(
+                type=GFBIO_HELPDESK_TICKET,
+                reference_key=ticket_key,
+                primary=True,
+            )
+
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            "{0}/rest/api/2/issue/{1}".format(site_config.helpdesk_server.url, ticket_key),
+            json=issue_json,
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            "{0}/rest/api/2/issue/{1}".format(site_config.helpdesk_server.url, issue_json["id"]),
+            json=issue_json,
+            status=200,
+        )
+        responses.add(
+            responses.PUT,
+            "{0}/rest/api/2/issue/{1}".format(site_config.helpdesk_server.url, issue_json["id"]),
+            body="",
+            status=204,
+        )
+
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ENA",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description 2",
+                    }
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(getorcreate_count_after_post, self._getorcreateuser_call_count())
+        self.assertTrue(
+            TaskProgressReport.objects.filter(task_name="tasks.update_submission_issue_task").exists()
+        )
+
+        put_calls = [
+            c
+            for c in responses.calls
+            if c.request.method == "PUT" and "/rest/api/2/issue/" in c.request.url
+        ]
+        self.assertGreaterEqual(len(put_calls), 1)
+        put_body = json.loads(put_calls[0].request.body)
+        self.assertNotIn("reporter", put_body.get("fields", {}))
 
     @skip("refactor for future update ticket tests")
     @responses.activate
