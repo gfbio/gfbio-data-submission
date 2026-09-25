@@ -262,7 +262,6 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
     };
 
     const handleSubmit = (values) => {
-        setProcessing(true);
         if (uploadLimitExceeded || (values.files && values.files.some(file => file.invalid))) {
             return;
         }
@@ -274,9 +273,9 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         setErrorList(clientErrorList);
 
         if (clientErrorList.length > 0) {
-            setProcessing(false);
             return false;
         }
+        setProcessing(true);
 
         // Extract embargo_date before filtering other values
         const embargoDate = values.embargo;
