@@ -286,7 +286,7 @@ class TestInitialChainTasks(TestCase):
         ]
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
-        self.assertEqual(14, len(task_reports))
+        self.assertEqual(13, len(task_reports))
 
     @responses.activate
     def test_atx_post_with_release_initial_chain(self):
