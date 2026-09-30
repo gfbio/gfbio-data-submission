@@ -26,22 +26,36 @@ def _prefixed_subject(subject):
     return "{0}{1}".format(settings.EMAIL_SUBJECT_PREFIX, subject)
 
 
-def mail_curators(subject, message, fallback_to_admins=True):
-    """Send email to Curators group; fall back to mail_admins if no recipients exist."""
+def mail_curators(subject, message, fallback_to_admins=True, also_notify_admins=False):
+    """Send email to Curators group; fall back to mail_admins if no recipients exist.
+
+    When also_notify_admins is True and curators exist, send one mail to the unique
+    union of curator emails and settings.ADMINS emails (subject prefixed once).
+    """
     curator_emails = get_curator_emails()
     if curator_emails:
+        recipient_list = list(curator_emails)
+        if also_notify_admins:
+            admin_emails = [email for _, email in settings.ADMINS if email]
+            recipient_list = list(dict.fromkeys(recipient_list + admin_emails))
         send_mail(
             subject=_prefixed_subject(subject),
             message=message,
             from_email=settings.SERVER_EMAIL,
-            recipient_list=curator_emails,
+            recipient_list=recipient_list,
             fail_silently=False,
         )
-        logger.info(
-            "email_curators.py | mail_curators | sent to {0} curator(s) | subject={1}".format(
-                len(curator_emails), subject
+        if also_notify_admins:
+            logger.info(
+                "email_curators.py | mail_curators | sent to {0} recipient(s) "
+                "(curators+admins) | subject={1}".format(len(recipient_list), subject)
             )
-        )
+        else:
+            logger.info(
+                "email_curators.py | mail_curators | sent to {0} curator(s) | subject={1}".format(
+                    len(recipient_list), subject
+                )
+            )
         return True
 
     logger.warning(

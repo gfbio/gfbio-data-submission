@@ -8,6 +8,7 @@ from unittest import skip
 import jira
 import requests
 import responses
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.core import mail
@@ -187,6 +188,8 @@ class TestJiraClient(TestCase):
         self.assertIsNone(jira_client.issue)
         self.assertEqual(1, len(mail.outbox))
         self.assertIn("curator@example.org", mail.outbox[0].to)
+        for _, admin_email in settings.ADMINS:
+            self.assertIn(admin_email, mail.outbox[0].to)
         self.assertIn("JIRA - create issue error", mail.outbox[0].subject)
         self.assertIn("Action: create issue", mail.outbox[0].body)
         self.assertIn("Jira ticket/key: not provided", mail.outbox[0].body)
@@ -251,6 +254,27 @@ class TestJiraClient(TestCase):
         self.assertEqual("SAND-1661", jira_client.issue.key)
 
     @responses.activate
+    def test_update_issue_client_error(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        url = "{0}/rest/api/2/issue/16814?notifyUsers=false".format(self.site_config.helpdesk_server.url)
+        responses.add(responses.PUT, url, json={"error": "client"}, status=400)
+        self._add_jira_id_response(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        mail.outbox.clear()
+        jira_client.update_issue(key="SAND-1661", fields={"summary": "updated summary"})
+        self.assertIsNotNone(jira_client.error)
+        self.assertEqual(1, len(mail.outbox))
+        self.assertIn("curator@example.org", mail.outbox[0].to)
+        for _, admin_email in settings.ADMINS:
+            self.assertIn(admin_email, mail.outbox[0].to)
+        self.assertIn("JIRA - update issue error", mail.outbox[0].subject)
+        self.assertIn("Action: update issue", mail.outbox[0].body)
+        self.assertIn("Jira ticket/key: SAND-1661", mail.outbox[0].body)
+        self.assertIn("Status code: 400", mail.outbox[0].body)
+        self.assertIn("updated summary", mail.outbox[0].body)
+
+    @responses.activate
     def test_add_comment(self):
         self._add_create_ticket_responses(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -282,6 +306,8 @@ class TestJiraClient(TestCase):
         self.assertIsNone(jira_client.comment)
         self.assertEqual(1, len(mail.outbox))
         self.assertIn("curator@example.org", mail.outbox[0].to)
+        for _, admin_email in settings.ADMINS:
+            self.assertIn(admin_email, mail.outbox[0].to)
         self.assertIn("JIRA - add comment error for SAND-1661", mail.outbox[0].subject)
         self.assertIn("Action: add comment", mail.outbox[0].body)
         self.assertIn("Jira ticket/key: SAND-1661", mail.outbox[0].body)
@@ -449,10 +475,17 @@ class TestJiraClient(TestCase):
 
         attachment = StringIO()
         attachment.write(":-)")
+        mail.outbox.clear()
         res = jira_client.add_attachment("SAND-1661", attachment, "attachment")
         attachment.close()
         self.assertIsNone(res)
         self.assertIsNotNone(jira_client.error)
+        self.assertEqual(1, len(mail.outbox))
+        self.assertIn("curator@example.org", mail.outbox[0].to)
+        for _, admin_email in settings.ADMINS:
+            self.assertNotIn(admin_email, mail.outbox[0].to)
+        self.assertIn("JIRA - add attachment error", mail.outbox[0].subject)
+
 
     @responses.activate
     def test_add_attachment_server_error(self):

@@ -104,7 +104,9 @@ class JiraClient(object):
             return ""
         return "Relevant content:\n{}".format(payload)
 
-    def _mail_curators_on_jira_error(self, action, error, jira_key=None, submission=None, payload=None):
+    def _mail_curators_on_jira_error(
+        self, action, error, jira_key=None, submission=None, payload=None, notify_admins=False
+    ):
         subject = "JIRA - {} error".format(action)
         if jira_key:
             subject = "{} for {}".format(subject, jira_key)
@@ -123,7 +125,11 @@ class JiraClient(object):
         if payload_context:
             message_parts.extend(["", payload_context])
 
-        mail_curators(subject=subject, message="\n".join(message_parts))
+        mail_curators(
+            subject=subject,
+            message="\n".join(message_parts),
+            also_notify_admins=notify_admins,
+        )
 
     # generic methods ----------------------------------------------------------
 
@@ -147,6 +153,7 @@ class JiraClient(object):
                 error=e,
                 submission=submission,
                 payload=json.dumps(fields, default=str),
+                notify_admins=True,
             )
             self.issue = None
             self.error = e
@@ -192,6 +199,7 @@ class JiraClient(object):
                 jira_key=key,
                 submission=submission,
                 payload=json.dumps(fields, default=str),
+                notify_admins=True,
             )
         RequestLog.objects.create_jira_log(log_arguments)
 
@@ -221,6 +229,7 @@ class JiraClient(object):
                 jira_key=key_or_issue,
                 submission=submission,
                 payload=text,
+                notify_admins=True,
             )
             log_arguments["request_details"]["error"] = "{}".format(e)
         RequestLog.objects.create_jira_log(log_arguments)
