@@ -1,10 +1,12 @@
 import json
 import logging
 import os
+import signal
 import subprocess
 import uuid
 
 import celery
+from billiard.exceptions import SoftTimeLimitExceeded
 from celery.exceptions import Retry
 from django.conf import settings
 from django.core.cache import cache
@@ -15,6 +17,10 @@ from config.celery_app import app
 from ....generic.models.request_log import RequestLog
 from ....users.models import User
 from ...configuration.settings import (
+    ENA_ASCP_RATE_LIMIT,
+    ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT,
+    ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT,
+    ENA_POST_TRANSFER_CHECKSUM_ENABLED,
     SUBMISSION_DELAY,
     SUBMISSION_MAX_RETRIES,
     SUBMISSION_RETRY_DELAY,
@@ -25,11 +31,39 @@ from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
 from ...utils.ena import open_ftp_to_ena_download_file_and_calculate_checksum
 from ...utils.task_utils import get_submission_and_site_configuration
-from .notify_admin_on_ena_transfer_completed import (
-    notify_admin_on_ena_transfer_completed_task,
-)
+from .notify_admin_on_ena_transfer_completed import notify_admin_on_ena_transfer_completed_task
 
 logger = logging.getLogger(__name__)
+
+# Brief grace period so ascp can exit after SIGTERM before SIGKILL.
+_ASCP_STOP_WAIT_SECONDS = 5
+
+
+def _terminate_ascp_process_group(proc):
+    """Stop a still-running ascp process group. No-op after a normal exit."""
+    if proc is None or proc.poll() is not None:
+        return
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        proc.wait(timeout=_ASCP_STOP_WAIT_SECONDS)
+    except subprocess.TimeoutExpired:
+        pass
+    if proc.poll() is not None:
+        return
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    try:
+        proc.wait(timeout=_ASCP_STOP_WAIT_SECONDS)
+    except subprocess.TimeoutExpired:
+        logger.warning(
+            "tasks.py | transfer_cloud_upload_to_ena_task | ascp still alive after SIGKILL | pid=%s",
+            proc.pid,
+        )
 
 
 def ensure_folder_with_keep(path):
@@ -57,13 +91,22 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         else f"/{submission.broker_submission_id}/"
     )
     remote_dest = f"{aspera_user}@{aspera_host}:{aspera_target_path}"
-    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-l", "100M", file_path, remote_dest]
+    # -k 1 resumes by comparing file sizes. Do not use -k 2 or -k 3.
+    cmd = [settings.ASPERA_ASCP_PATH, "-QT", "-k", "1", "-l", ENA_ASCP_RATE_LIMIT, file_path, remote_dest]
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | execute cmd={cmd} | task_id={task.request.id}")
     res = TaskProgressReport.CANCELLED
     details = {"cmd": cmd}
+    # Keep proc defined if Popen itself fails, so finally does not raise NameError.
+    proc = None
     try:
         logger.info(f"tasks.py | trying to execute | task_id={task.request.id}")
-        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
         logger.info(f"tasks.py | subprocess opened | execute proc={proc} | task_id={task.request.id}")
 
         stdout, stderr = proc.communicate(input=f"{site_configuration.ena_aspera_server.password}\n".encode("ASCII"))
@@ -127,6 +170,32 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
     except Retry:
         details["retry_raised"] = True
         raise
+    except SoftTimeLimitExceeded:
+        # Catchable during communicate. Do not swallow it and do not return
+        # CANCELLED: Celery must end the task, and finally must stop ascp.
+        # There is no automatic retry on soft timeout.
+        details["error"] = "SoftTimeLimitExceeded"
+        logger.error(
+            "tasks.py | transfer_cloud_upload_to_ena_task | SoftTimeLimitExceeded | "
+            f"cmd={cmd} | task_id={task.request.id}"
+        )
+        if submission_cloud_upload.status != SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
+            submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
+            submission_cloud_upload.save()
+            submission_cloud_upload.log_change(
+                [{"changed": {"fields": [
+                    f"status changed to {submission_cloud_upload.status} due to SoftTimeLimitExceeded"
+                ]}}],
+                user_id,
+            )
+        else:
+            submission_cloud_upload.log_change(
+                [{"changed": {"fields": [
+                    f"status kept at {submission_cloud_upload.status} due to SoftTimeLimitExceeded"
+                ]}}],
+                user_id,
+            )
+        raise
     except Exception as e:
         details["error"] = str(e)
         logger.error(
@@ -141,6 +210,7 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
                 "fields": [f"status kept at {submission_cloud_upload.status} due to {details['error']}"]}}], user_id)
         raise
     finally:
+        _terminate_ascp_process_group(proc)
         RequestLog.objects.create(
             type=RequestLog.OUTGOING,
             url=site_configuration.ena_aspera_server.url,
@@ -205,6 +275,8 @@ def check_checksum_via_ftp(task, site_configuration, submission, submission_clou
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
     queue="ena_transfer",
+    time_limit=ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT,
+    soft_time_limit=ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT,
 )
 def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None,
                                       user_id=None):
@@ -278,7 +350,8 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         submission_cloud_upload.log_change(
             [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], user_id
         )
-        check_checksum_via_ftp(self, site_configuration, submission, submission_cloud_upload, admin_user)
+        if ENA_POST_TRANSFER_CHECKSUM_ENABLED:
+            check_checksum_via_ftp(self, site_configuration, submission, submission_cloud_upload, admin_user)
 
     return transfer_result
 

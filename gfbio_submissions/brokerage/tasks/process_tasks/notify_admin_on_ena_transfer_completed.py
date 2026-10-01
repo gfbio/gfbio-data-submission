@@ -7,7 +7,11 @@ from config.celery_app import app
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...configuration.settings import (
+    ENA_POST_TRANSFER_CHECKSUM_ENABLED,
+    SUBMISSION_MAX_RETRIES,
+    SUBMISSION_RETRY_DELAY,
+)
 from ...utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
 
 logger = logging.getLogger(__name__)
@@ -15,16 +19,26 @@ logger = logging.getLogger(__name__)
 from ..submission_task import SubmissionTask
 
 
+def _ena_transfer_success_statuses():
+    """Statuses that count as a successful ENA file transfer.
+
+    While the post-transfer checksum is disabled, ``transferred`` is success as
+    well as ``transferred_with_checked_checksum``. Both the problem list and the
+    success list must use this set; otherwise ``transferred`` appears in neither.
+    """
+    statuses = {SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM}
+    if not ENA_POST_TRANSFER_CHECKSUM_ENABLED:
+        statuses.add(SubmissionCloudUpload.STATUS_IS_TRANSFERRED)
+    return statuses
+
+
 def build_ena_transfer_completion_message(submission, submission_cloud_uploads):
     jira_message = (
         f"Transfer to ENA for Submission {submission.broker_submission_id} executed.\n"
         f"Check {settings.HOST_URL_ROOT}/{settings.ADMIN_URL}/brokerage/submission/{submission.pk}/submission-cloud-upload-view/ for detailed information.\n"
     )
-    files_with_errors = [
-        file
-        for file in submission_cloud_uploads
-        if file.status != SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
-    ]
+    success_statuses = _ena_transfer_success_statuses()
+    files_with_errors = [file for file in submission_cloud_uploads if file.status not in success_statuses]
 
     if files_with_errors:
         jira_message += f"\nProcess ran into problems for {len(files_with_errors)} file(s):\n"
@@ -46,7 +60,7 @@ def build_ena_transfer_completion_message(submission, submission_cloud_uploads):
     successes = [
         file.file_upload.original_filename
         for file in submission_cloud_uploads
-        if file.status == SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
+        if file.status in success_statuses
     ]
     if successes:
         jira_message += "\nSuccessfully transmitted:\n"

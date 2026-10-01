@@ -69,6 +69,56 @@ class TestBuildEnaTransferCompletionMessage(SimpleTestCase):
         self.assertIn("ok-49.fastq.gz", message)
         self.assertNotIn("ok-10.fastq.gz", message)
 
+    def _message_sections(self, uploads):
+        message = build_ena_transfer_completion_message(self.submission, uploads)
+        problem_section, success_section = message.split("Successfully transmitted:", 1)
+        return problem_section, success_section
+
+    @patch(
+        "gfbio_submissions.brokerage.tasks.process_tasks.notify_admin_on_ena_transfer_completed."
+        "ENA_POST_TRANSFER_CHECKSUM_ENABLED",
+        False,
+    )
+    def test_transferred_is_success_when_checksum_check_disabled(self):
+        uploads = [
+            _upload("plain.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED),
+            _upload("checked.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM),
+            _upload("bad.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM),
+            _upload("failed.fastq.gz", SubmissionCloudUpload.STATUS_TRANSFER_FAILED),
+        ]
+
+        problem_section, success_section = self._message_sections(uploads)
+
+        self.assertIn("plain.fastq.gz", success_section)
+        self.assertNotIn("plain.fastq.gz", problem_section)
+        self.assertIn("checked.fastq.gz", success_section)
+        self.assertNotIn("checked.fastq.gz", problem_section)
+        self.assertIn("bad.fastq.gz", problem_section)
+        self.assertNotIn("bad.fastq.gz", success_section)
+        self.assertIn("failed.fastq.gz", problem_section)
+        self.assertNotIn("failed.fastq.gz", success_section)
+
+    @patch(
+        "gfbio_submissions.brokerage.tasks.process_tasks.notify_admin_on_ena_transfer_completed."
+        "ENA_POST_TRANSFER_CHECKSUM_ENABLED",
+        True,
+    )
+    def test_transferred_stays_a_problem_when_checksum_check_enabled(self):
+        uploads = [
+            _upload("plain.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED),
+            _upload("checked.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM),
+            _upload("bad.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM),
+        ]
+
+        problem_section, success_section = self._message_sections(uploads)
+
+        self.assertIn("plain.fastq.gz", problem_section)
+        self.assertNotIn("plain.fastq.gz", success_section)
+        self.assertIn("checked.fastq.gz", success_section)
+        self.assertNotIn("checked.fastq.gz", problem_section)
+        self.assertIn("bad.fastq.gz", problem_section)
+        self.assertNotIn("bad.fastq.gz", success_section)
+
 
 class TestNotifyAdminOnEnaTransferCompletedTask(TestCase):
     def _create_cloud_upload(self, submission, filename, scu_status):
