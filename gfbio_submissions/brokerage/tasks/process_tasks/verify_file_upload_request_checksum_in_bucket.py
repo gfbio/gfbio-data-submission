@@ -1,28 +1,24 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from config.celery_app import app
-from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
-from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
+from botocore.exceptions import ClientError
 
-from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError
+from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
+from gfbio_submissions.brokerage.utils.cloud_upload_checksum import (
+    _is_transient_s3_error,
+    calculate_checksum_locally,
+)
+
 from ...models import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...utils.task_utils import get_submission_and_site_configuration
-from ..submission_task import SubmissionTask
+from ..submission_task import submission_task
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.verify_file_upload_request_checksum_in_bucket_task",
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-    queue="ena_transfer",
-)
+@submission_task("tasks.verify_file_upload_request_checksum_in_bucket_task", queue="ena_transfer")
 def verify_file_upload_request_checksum_in_bucket_task(
     self, previous_result=None, submission_cloud_upload_id=None, submission_id=None
 ):
@@ -54,7 +50,12 @@ def verify_file_upload_request_checksum_in_bucket_task(
         )
         return TaskProgressReport.CANCELLED
 
-    calculated_md5sum = calculate_checksum_locally("md5", submission_cloud_upload)
+    try:
+        calculated_md5sum = calculate_checksum_locally("md5", submission_cloud_upload)
+    except ClientError as exc:
+        if _is_transient_s3_error(exc):
+            raise TransferServerError(str(exc)) from exc
+        raise
     if calculated_md5sum == "":
         logger.error(
             f"tasks.py | check_transfer_cloud_upload_checksums_task | object not found in S3 | "

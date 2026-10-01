@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from botocore.exceptions import ClientError
+from celery.exceptions import Retry
 from dt_upload.models import FileUploadRequest
 
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
@@ -131,6 +132,26 @@ class TestVerifyFileUploadRequestChecksumInBucket(TestTasks):
             self._run_task(submission_cloud_upload)
 
         self.assertIs(error, caught.exception)
+        submission_cloud_upload.refresh_from_db()
+        self.assertEqual(original_status, submission_cloud_upload.status)
+        self.assertFalse(JiraQueueMessage.objects.filter(submission_id=submission_cloud_upload.submission_id).exists())
+
+    @patch(CALCULATE_CHECKSUM_PATH)
+    def test_transient_request_timeout_retries_without_status_change_or_jira_message(self, mock_calculate):
+        error = ClientError(
+            {
+                "Error": {"Code": "RequestTimeout", "Message": "timeout"},
+                "ResponseMetadata": {"HTTPStatusCode": 400},
+            },
+            "GetObject",
+        )
+        mock_calculate.side_effect = error
+        submission_cloud_upload = self._create_cloud_upload()
+        original_status = submission_cloud_upload.status
+
+        with self.assertRaises(Retry):
+            self._run_task(submission_cloud_upload)
+
         submission_cloud_upload.refresh_from_db()
         self.assertEqual(original_status, submission_cloud_upload.status)
         self.assertFalse(JiraQueueMessage.objects.filter(submission_id=submission_cloud_upload.submission_id).exists())
