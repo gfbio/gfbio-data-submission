@@ -1351,3 +1351,48 @@ class TestCSVParsing(TestCase):
             build_targeted_loci("custom marker", "FWD"),
         )
         self.assertIsNone(build_targeted_loci("NA", "n/a"))
+
+    def test_extract_sample_temperature_units(self):
+        row = OrderedDict(
+            [
+                ("sample_title", "sample-1234"),
+                ("temperature", "4"),
+                ("air temperature", "-5"),
+                ("sample storage temperature", "6.5"),
+                ("sample transportation temperature", "7"),
+                ("mean annual and seasonal temperature", "8"),
+                ("host body temperature", "-37.45e+2"),
+            ]
+        )
+        field_names = [
+            "sample_title",
+            "temperature",
+            "air temperature",
+            "host body temperature",
+            "mean annual and seasonal temperature",
+            "sample storage temperature",
+            "sample transportation temperature",
+        ]
+        sample, attributes_replaced = extract_sample(row=row, field_names=field_names, sample_id="sample-1234")
+        self.assertFalse(attributes_replaced)
+        attributes = sample["sample_attributes"]
+        tags = [attribute["tag"] for attribute in attributes]
+        self.assertIn("temperature", tags)
+        self.assertIn("air temperature", tags)
+        self.assertIn("host body temperature", tags)
+        self.assertIn("mean annual and seasonal temperature", tags)
+        self.assertIn("sample storage temperature", tags)
+        self.assertIn("sample transportation temperature", tags)
+        
+        def get_unit_for_attribute(tag):
+            for attribute in attributes:
+                if attribute["tag"] == tag:
+                    return attribute.get("units")
+            return None
+        
+        self.assertEqual("&#186;C", get_unit_for_attribute("temperature"))
+        self.assertEqual("&#186;C", get_unit_for_attribute("air temperature"))
+        self.assertEqual("&#186;C", get_unit_for_attribute("host body temperature"))
+        self.assertEqual("&#186;C", get_unit_for_attribute("mean annual and seasonal temperature"))
+        self.assertEqual("&#176;C", get_unit_for_attribute("sample storage temperature"))
+        self.assertEqual("&#176;C", get_unit_for_attribute("sample transportation temperature"))

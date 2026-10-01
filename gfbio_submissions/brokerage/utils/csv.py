@@ -59,6 +59,11 @@ unit_mapping = {
     "Salinity": "psu",
     "salinity": "psu",
     "temperature": "&#186;C",
+    "air temperature": "&#186;C",
+    "host body temperature": "&#186;C",
+    "mean annual and seasonal temperature": "&#186;C",
+    "sample storage temperature": "&#176;C",
+    "sample transportation temperature": "&#176;C",
     "total depth of water column": "m",
 }
 

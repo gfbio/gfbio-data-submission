@@ -334,6 +334,7 @@ class Enalizer(object):
         # remove xml encoding for temperature unit
         bytestring = ET.tostring(root, encoding="utf-8", method="xml")
         xmlstring = bytestring.decode("utf-8").replace("&amp;#186;C", "&#186;C")
+        xmlstring = bytestring.decode("utf-8").replace("&amp;#176;C", "&#176;C")
         return xmlstring.encode("utf-8")
 
     @staticmethod
