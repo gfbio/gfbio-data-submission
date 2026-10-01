@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+import os
 import signal
 import subprocess
+import sys
+import tempfile
+import time
 from unittest.mock import MagicMock, patch
 
 from billiard.exceptions import SoftTimeLimitExceeded
@@ -15,6 +19,8 @@ from gfbio_submissions.brokerage.configuration.settings import (
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.brokerage.tasks.process_tasks.transfer_cloud_upload_to_ena import (
+    _ASCP_PARENT_DEATH_LAUNCHER,
+    _ascp_launch_command,
     perform_ascp_file_transfer,
     transfer_cloud_upload_to_ena_task,
 )
@@ -23,6 +29,16 @@ from gfbio_submissions.generic.models.resource_credential import ResourceCredent
 from .test_tasks_base import TestTasks
 
 TRANSFER_MODULE = "gfbio_submissions.brokerage.tasks.process_tasks.transfer_cloud_upload_to_ena"
+
+
+def _process_is_alive(pid):
+    """A zombie is not alive. PID 1 in the test container does not reap it."""
+    try:
+        with open(f"/proc/{pid}/stat") as stat:
+            state = stat.read().split(")", 1)[1].split()[0]
+    except FileNotFoundError:
+        return False
+    return state != "Z"
 
 
 class TestTransferCloudUploadTaskLimits(SimpleTestCase):
@@ -38,6 +54,60 @@ class TestTransferCloudUploadTaskLimits(SimpleTestCase):
             transfer_cloud_upload_to_ena_task.soft_time_limit,
             transfer_cloud_upload_to_ena_task.time_limit,
         )
+
+
+class TestAscpParentDeathLauncher(SimpleTestCase):
+    def test_launcher_requests_sigterm_when_its_parent_dies(self):
+        # PR_GET_PDEATHSIG is 2. The value is read in the exec'd process, so it
+        # survived replacing the launcher with the target program.
+        probe = (
+            "import ctypes, signal, sys\n"
+            "libc = ctypes.CDLL('libc.so.6')\n"
+            "signum = ctypes.c_int()\n"
+            "if libc.prctl(2, ctypes.byref(signum)) != 0:\n"
+            "    sys.exit(2)\n"
+            "sys.exit(0 if signum.value == signal.SIGTERM else 3)\n"
+        )
+        completed = subprocess.run(
+            _ascp_launch_command([sys.executable, "-c", probe]),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_child_exits_when_parent_is_killed(self):
+        parent_code = (
+            "import os, signal, subprocess, sys, time\n"
+            "child = subprocess.Popen(\n"
+            "    [sys.executable, '-c', sys.argv[1], 'sleep', '60'],\n"
+            "    start_new_session=True,\n"
+            ")\n"
+            "open(sys.argv[2], 'w').write(str(child.pid))\n"
+            "time.sleep(0.5)\n"
+            "os.kill(os.getpid(), signal.SIGKILL)\n"
+        )
+        with tempfile.NamedTemporaryFile() as pid_file:
+            parent = subprocess.Popen(
+                [sys.executable, "-c", parent_code, _ASCP_PARENT_DEATH_LAUNCHER, pid_file.name]
+            )
+            parent.wait(timeout=30)
+            pid_file.seek(0)
+            child_pid = int(pid_file.read())
+
+        deadline = time.monotonic() + 5
+        still_alive = True
+        while time.monotonic() < deadline:
+            if not _process_is_alive(child_pid):
+                still_alive = False
+                break
+            time.sleep(0.1)
+        if still_alive:
+            os.kill(child_pid, signal.SIGKILL)
+        self.assertFalse(still_alive)
+        self.assertNotEqual(0, parent.returncode)
 
 
 class TestPerformAscpFileTransfer(TestTasks):
@@ -113,7 +183,9 @@ class TestPerformAscpFileTransfer(TestTasks):
         result = self._perform()
 
         self.assertIs(result, True)
-        cmd = mock_popen.call_args.args[0]
+        launch_cmd = mock_popen.call_args.args[0]
+        self.assertEqual(launch_cmd[:3], [sys.executable, "-c", _ASCP_PARENT_DEATH_LAUNCHER])
+        cmd = launch_cmd[3:]
         self.assertIn("-k", cmd)
         self.assertEqual("1", cmd[cmd.index("-k") + 1])
         self.assertEqual(ENA_ASCP_RATE_LIMIT, cmd[cmd.index("-l") + 1])

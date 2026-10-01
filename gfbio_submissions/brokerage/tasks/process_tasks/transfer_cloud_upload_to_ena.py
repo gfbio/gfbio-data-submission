@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import subprocess
+import sys
 import uuid
 
 import celery
@@ -37,6 +38,32 @@ logger = logging.getLogger(__name__)
 
 # Brief grace period so ascp can exit after SIGTERM before SIGKILL.
 _ASCP_STOP_WAIT_SECONDS = 5
+
+# Fresh interpreter, not preexec_fn: a Celery worker can hold locks in other
+# threads, and preexec_fn after fork can deadlock. This process sets
+# PR_SET_PDEATHSIG (1) to SIGTERM, then execs ascp. The signal survives exec,
+# so a SIGKILL of the worker still stops ascp. A changed parent pid covers the
+# window where the parent died before prctl. Comparing with pid 1 is wrong
+# when the worker itself is pid 1.
+_ASCP_PARENT_DEATH_LAUNCHER = """
+import ctypes
+import os
+import signal
+import sys
+
+parent_pid = os.getppid()
+libc = ctypes.CDLL("libc.so.6", use_errno=True)
+if libc.prctl(1, signal.SIGTERM) != 0:
+    sys.exit(1)
+if os.getppid() != parent_pid:
+    sys.exit(1)
+os.execvp(sys.argv[1], sys.argv[1:])
+"""
+
+
+def _ascp_launch_command(ascp_cmd):
+    """Run ascp so it receives SIGTERM when the worker process dies."""
+    return [sys.executable, "-c", _ASCP_PARENT_DEATH_LAUNCHER, *ascp_cmd]
 
 
 def _terminate_ascp_process_group(proc):
@@ -101,7 +128,7 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
     try:
         logger.info(f"tasks.py | trying to execute | task_id={task.request.id}")
         proc = subprocess.Popen(
-            cmd,
+            _ascp_launch_command(cmd),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
