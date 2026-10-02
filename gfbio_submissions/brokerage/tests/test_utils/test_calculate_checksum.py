@@ -6,7 +6,10 @@ from django.test import TestCase, override_settings
 from dt_upload.models import FileUploadRequest
 
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
-from gfbio_submissions.brokerage.utils.cloud_upload_checksum import calculate_checksum_locally
+from gfbio_submissions.brokerage.utils.cloud_upload_checksum import (
+    _is_transient_s3_error,
+    calculate_checksum_locally,
+)
 
 GET_S3_CLIENT_PATH = "gfbio_submissions.brokerage.utils.cloud_upload_checksum.backend_based_upload_mixins.get_s3_client"
 CLIENT_BUCKET = "client-returned-bucket"
@@ -176,3 +179,21 @@ class TestChecksumUtils(TestCase):
             calculate_checksum_locally("sha1", self.submission_cloud_upload)
 
         get_s3_mock.assert_not_called()
+
+
+class TestIsTransientS3Error(TestCase):
+    def test_request_timeout_with_http_400_is_transient(self):
+        self.assertTrue(_is_transient_s3_error(_client_error("RequestTimeout", status=400)))
+
+    def test_http_500_without_error_code_is_transient(self):
+        error = ClientError(
+            {"Error": {"Message": "boom"}, "ResponseMetadata": {"HTTPStatusCode": 500}},
+            "GetObject",
+        )
+        self.assertTrue(_is_transient_s3_error(error))
+
+    def test_http_429_with_code_outside_named_set_is_transient(self):
+        self.assertTrue(_is_transient_s3_error(_client_error("TooManyRequests", status=429)))
+
+    def test_access_denied_with_403_is_not_transient(self):
+        self.assertFalse(_is_transient_s3_error(_client_error("AccessDenied", status=403)))
