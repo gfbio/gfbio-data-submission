@@ -172,6 +172,36 @@ class SubmissionTest(TestCase):
             self.assertIn(r, experiment_aliases)
             self.assertEqual(2, len(r.split(":")))
 
+    def test_set_experiment_aliases_keeps_sample_accession(self):
+        submission = _create_submission_via_serializer()
+        experiment = submission.brokerobject_set.filter(type="experiment").first()
+        data = experiment.data
+        data["design"].pop("sample_descriptor", None)
+        data["design"]["sample_accession"] = "ERS123456"
+        experiment.data = data
+        experiment.save()
+
+        _aliases, experiments = submission.set_experiment_aliases("postfix", "study-alias", {})
+        design = experiments[0].data["design"]
+        self.assertEqual("ERS123456", design["sample_accession"])
+        self.assertNotIn("sample_descriptor", design)
+        self.assertNotIn("no_sample_descriptor", design.values())
+
+    def test_set_experiment_aliases_without_descriptor_or_accession_leaves_design_untouched(self):
+        submission = _create_submission_via_serializer()
+        experiment = submission.brokerobject_set.filter(type="experiment").first()
+        data = experiment.data
+        data["design"].pop("sample_descriptor", None)
+        data["design"].pop("sample_accession", None)
+        experiment.data = data
+        experiment.save()
+
+        _aliases, experiments = submission.set_experiment_aliases("postfix", "study-alias", {})
+        design = experiments[0].data["design"]
+        self.assertNotIn("sample_descriptor", design)
+        self.assertNotIn("no_sample_descriptor", design.values())
+        self.assertEqual("study-alias", experiments[0].data["study_ref"])
+
     def test_queuing_of_closed_submissions(self):
         with patch(
             "gfbio_submissions.brokerage.tasks.process_tasks.trigger_submission_process.trigger_submission_process_task.apply_async"

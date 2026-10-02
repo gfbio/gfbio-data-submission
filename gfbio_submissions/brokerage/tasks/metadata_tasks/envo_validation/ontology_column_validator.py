@@ -1,5 +1,9 @@
 import re
 
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
+    row_has_valid_sample_accession,
+)
+
 
 class OntologyColumnValidator:
     perfect_regex = re.compile(r"^\s*(?P<name>[\w]+(?:[\s\-][\w]+)*)\s*\[(?P<id>\w+:\d+)\]\s*$")
@@ -11,6 +15,7 @@ class OntologyColumnValidator:
         self.column_index = None
         self.csv_reader = csv_reader
         self.ontology_matcher = ontology_matcher
+        self._current_row = None
 
     def set_column_index(self):
         if self.column_name in self.csv_reader.fieldnames:
@@ -23,7 +28,11 @@ class OntologyColumnValidator:
                 row = 1,
             )
 
-    def validate_row_value(self, row):
+    def validate_row_value(self, row, row_number=None):
+        if row_number is not None:
+            self._current_row = row_number
+        if row_has_valid_sample_accession(row):
+            return
         if self.column_index == None:
             return # No column with the name was found so skip
         envo_col_value = row.get(self.column_name, "")
@@ -77,7 +86,7 @@ class OntologyColumnValidator:
         self.validation_task_report.validationfinding_set.create(
             message=message, help_text=help_text, column_name=self.column_name, status=status,
             finding_type=finding_type,
-            row=row if row > 0 else self.csv_reader.line_num,
+            row=row if row > 0 else self._current_row,
             column=self.column_index if self.column_index else None,
         )
 

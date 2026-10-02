@@ -8,6 +8,11 @@ from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RE
 from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
 from gfbio_submissions.brokerage.tasks.metadata_tasks.data.allowed_location_names import allowed_location_names
 from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import (
+    every_data_row_has_valid_sample_accession,
+    row_has_valid_sample_accession,
+    row_is_blank,
+)
 from gfbio_submissions.brokerage.utils.ena_mixs_validation_rules import INSDC_MISSING_VALUE_PATTERN
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 
@@ -36,11 +41,18 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
             dialect = csv.Sniffer().sniff(meta_file.read(200))
             meta_file.seek(0)
             csv_reader = csv.DictReader(meta_file, dialect=dialect)
+            if csv_reader.fieldnames:
+                csv_reader.fieldnames = [
+                    field.strip().lower() if isinstance(field, str) else field for field in csv_reader.fieldnames
+                ]
+            rows = list(csv_reader)
             column_index = -1
-            for row in csv_reader:
-                if csv_reader.line_num == 2:
+            for row_number, row in enumerate(rows, start=2):
+                if row_number == 2:
                     if column_name in csv_reader.fieldnames:
                         column_index = csv_reader.fieldnames.index(column_name) + 1
+                    elif every_data_row_has_valid_sample_accession(rows):
+                        break
                     else:
                         validation_task_report.status = "ERROR"
                         validation_task_report.validationfinding_set.create(
@@ -52,6 +64,8 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                             row = 1,
                         )
                         return
+                if row_is_blank(row) or row_has_valid_sample_accession(row):
+                    continue
                 location_name = row.get(column_name, "")
                 if not location_name:
                     validation_task_report.status = "ERROR"
@@ -61,7 +75,7 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                         help_text=f"Please ensure there is a geographic location name set for every row in column '{column_name}'.",
                         column_name=column_name,
                         status = "ERROR",
-                        row = csv_reader.line_num,
+                        row=row_number,
                         column = column_index,
                     )
                 else:
@@ -91,7 +105,7 @@ def validate_metadata_file_countries_task(self, previous_task_result=None, submi
                             help_text=help_text,
                             column_name=column_name,
                             status = "ERROR",
-                            row = csv_reader.line_num,
+                            row=row_number,
                             column = column_index,
                         )
 

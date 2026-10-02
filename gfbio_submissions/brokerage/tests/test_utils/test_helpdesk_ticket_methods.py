@@ -19,6 +19,7 @@ from gfbio_submissions.generic.models.site_configuration import SiteConfiguratio
 from gfbio_submissions.users.models import User
 from ...configuration.settings import (
     GFBIO_HELPDESK_TICKET,
+    JIRA_FALLBACK_USERNAME,
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
     JIRA_USERNAME_URL_TEMPLATE,
 )
@@ -140,6 +141,32 @@ class TestHelpDeskTicketMethods(TestCase):
         site_config = SiteConfiguration.objects.first()
         payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
+
+    def test_prepare_helpdesk_payload_update_omits_reporter(self):
+        with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
+            data = json.load(data_file)
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
+        serializer.is_valid()
+        submission = serializer.save(user=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+
+        update_payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission,
+            reporter=None,
+            prepare_for_update=True,
+        )
+        self.assertNotIn("reporter", update_payload)
+        self.assertIn("summary", update_payload)
+
+        create_payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission,
+            reporter=None,
+            prepare_for_update=False,
+        )
+        self.assertIn("reporter", create_payload)
+        self.assertEqual(JIRA_FALLBACK_USERNAME, create_payload["reporter"]["name"])
 
     @skip("metadata_schema is no longer used. compare GFBIO-2742")
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):

@@ -11,6 +11,7 @@ from dt_upload.models import FileUploadRequest
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
 
+from ...configuration.settings import ENA_POST_TRANSFER_CHECKSUM_ENABLED
 from ...models.submission_cloud_upload import SubmissionCloudUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...utils.csv import parse_molecular_csv_with_encoding_detection
@@ -180,13 +181,16 @@ def generate_upload_report(submission, meta_upload, referenced_files):
     missing = sorted(list(referenced_set - {file["name"] for file in uploaded}))
     extra_uploads = [file for file in uploaded if file["name"] not in referenced_set]
     uploaded = [file for file in uploaded if file["name"] in referenced_set]
-    uploads_with_issues = [
-        file for file in uploaded 
-        if file["status"] not in [
-            SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
-            SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
-        ]
-    ]
+    acceptable_statuses = {
+        SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+        SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM,
+    }
+    # With the FTP checksum disabled, a completed transfer is not a problem.
+    # The "checksum-check wasn't executed" headline stays in BAD_STATES for when
+    # the check is enabled again and the status is still transferred.
+    if not ENA_POST_TRANSFER_CHECKSUM_ENABLED:
+        acceptable_statuses.add(SubmissionCloudUpload.STATUS_IS_TRANSFERRED)
+    uploads_with_issues = [file for file in uploaded if file["status"] not in acceptable_statuses]
 
     return {
         "submission_id": submission.pk,

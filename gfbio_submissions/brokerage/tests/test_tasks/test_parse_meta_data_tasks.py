@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from unittest.mock import patch
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.admin import reparse_csv_metadata
@@ -249,3 +252,82 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_reparse_without_samples_deletes_sample_xml(self):
+        submission = Submission.objects.first()
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
+        self.assertEqual(1, submission.auditabletextdata_set.filter(name="sample.xml").count())
+
+        csv_content = (
+            "sample_accession;sequencing_platform;library_strategy;library_source;library_selection;"
+            "library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "samea115886020;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;read1.fastq.gz;abc123;MD5\n"
+        )
+        upload = SubmissionUpload.objects.create(
+            submission=submission,
+            user=User.objects.first(),
+            meta_data=True,
+            file=SimpleUploadedFile("accession_only.csv", csv_content.encode("utf-8")),
+        )
+        self.assertTrue(clean_submission_for_update_task.apply_async(kwargs={"submission_id": submission.pk}).get())
+        self.assertTrue(
+            parse_csv_to_update_clean_submission_task.apply_async(kwargs={"submission_upload_id": upload.pk}).get()
+        )
+        self.assertTrue(
+            create_broker_objects_from_submission_data_task.apply_async(kwargs={"submission_id": submission.pk}).get()
+        )
+        self.assertTrue(update_ena_submission_data_task.apply_async(kwargs={"submission_id": submission.pk}).get())
+
+        submission.refresh_from_db()
+        self.assertEqual(0, submission.auditabletextdata_set.filter(name="sample.xml").count())
+        self.assertEqual(0, submission.brokerobject_set.filter(type="sample").count())
+        experiment = submission.auditabletextdata_set.get(name="experiment.xml")
+        self.assertIn('accession="SAMEA115886020"', experiment.text_data)
+
+    def test_sibling_row_without_accession_does_not_break_ena_data_preparation(self):
+        submission = Submission.objects.first()
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
+        self.assertEqual(1, submission.auditabletextdata_set.filter(name="sample.xml").count())
+
+        csv_content = (
+            "sample_title;taxon_id;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method\n"
+            "A;1234;SAMEA115886020;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc123;MD5\n"
+            "A;1234;;Illumina HiSeq 2000;AMPLICON;METAGENOMIC;PCR;single;b.fastq.gz;def456;MD5\n"
+        )
+        upload = SubmissionUpload.objects.create(
+            submission=submission,
+            user=User.objects.first(),
+            meta_data=True,
+            file=SimpleUploadedFile("sibling_rows.csv", csv_content.encode("utf-8")),
+        )
+        self.assertTrue(clean_submission_for_update_task.apply_async(kwargs={"submission_id": submission.pk}).get())
+        # The sibling row references no sample, so the relation check rejects the parsed data.
+        self.assertEqual(
+            TaskProgressReport.CANCELLED,
+            parse_csv_to_update_clean_submission_task.apply_async(kwargs={"submission_upload_id": upload.pk}).get(),
+        )
+        self.assertTrue(
+            create_broker_objects_from_submission_data_task.apply_async(kwargs={"submission_id": submission.pk}).get()
+        )
+        submission.refresh_from_db()
+        self.assertEqual(0, submission.brokerobject_set.filter(type="sample").count())
+        self.assertEqual(2, submission.brokerobject_set.filter(type="experiment").count())
+
+        with patch("gfbio_submissions.brokerage.utils.ena.JiraClient") as jira_client:
+            ena_submission_data = prepare_ena_data(submission=submission)
+            self.assertTrue(update_ena_submission_data_task.apply_async(kwargs={"submission_id": submission.pk}).get())
+        jira_client.assert_not_called()
+
+        self.assertNotIn("SAMPLE", ena_submission_data)
+        _name, experiment_xml = ena_submission_data["EXPERIMENT"]
+        self.assertEqual(2, experiment_xml.count("<EXPERIMENT "))
+        self.assertEqual(1, experiment_xml.count("<SAMPLE_DESCRIPTOR"))
+        self.assertIn('<SAMPLE_DESCRIPTOR accession="SAMEA115886020" />', experiment_xml)
+        self.assertNotIn("refname=", experiment_xml.split("<SAMPLE_DESCRIPTOR", 1)[1].split("/>", 1)[0])
+
+        submission.refresh_from_db()
+        self.assertNotEqual(Submission.ERROR, submission.status)
+        self.assertEqual(0, submission.auditabletextdata_set.filter(name="sample.xml").count())

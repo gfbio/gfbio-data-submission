@@ -88,6 +88,43 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(Submission.SUBMITTED, content.get("status", "NOPE"))
         self.assertEqual("", submission.download_url)
 
+    @staticmethod
+    def _get_accession_only_request_data(sample_accession):
+        data = _get_submission_request_data()
+        data["requirements"]["samples"] = []
+        design = data["requirements"]["experiments"][0]["design"]
+        design.pop("sample_descriptor")
+        design["sample_accession"] = sample_accession
+        return data
+
+    @responses.activate
+    def test_valid_max_post_with_existing_sample_accession(self):
+        self._add_create_ticket_response()
+        response = self.api_client.post(
+            "/api/submissions/",
+            {"target": "ENA", "release": True, "data": self._get_accession_only_request_data("SAMEA115886020")},
+            format="json",
+        )
+        self.assertEqual(201, response.status_code, response.content)
+        self.assertEqual(1, len(Submission.objects.all()))
+        requirements = Submission.objects.first().data["requirements"]
+        self.assertEqual([], requirements["samples"])
+        design = requirements["experiments"][0]["design"]
+        self.assertEqual("SAMEA115886020", design["sample_accession"])
+        self.assertNotIn("sample_descriptor", design)
+
+    @responses.activate
+    def test_max_post_with_invalid_sample_accession_is_rejected(self):
+        self._add_create_ticket_response()
+        response = self.api_client.post(
+            "/api/submissions/",
+            {"target": "ENA", "release": True, "data": self._get_accession_only_request_data("ERS12345")},
+            format="json",
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertIn("sample_accession", response.content.decode("utf-8"))
+        self.assertEqual(0, len(Submission.objects.all()))
+
     @responses.activate
     def test_valid_max_post_of_fresh_user(self):
         self._add_create_ticket_response()

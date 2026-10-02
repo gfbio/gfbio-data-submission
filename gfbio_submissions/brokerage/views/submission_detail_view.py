@@ -119,13 +119,11 @@ class SubmissionDetailView(
                 instance.embargo = new_embargo
                 instance.save()
                 from ..tasks.jira_tasks.update_submission_issue import update_submission_issue_task
-                from ..tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
                 from ..tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
                 from ..tasks.jira_tasks.notify_user_embargo_changed import notify_user_embargo_changed_task
 
                 update_chain = (
-                    get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                    | update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                     | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                     | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 )
@@ -145,9 +143,6 @@ class SubmissionDetailView(
             from ..tasks.jira_tasks.update_submission_issue import (
                 update_submission_issue_task,
             )
-            from ..tasks.jira_tasks.get_gfbio_helpdesk_username import (
-                get_gfbio_helpdesk_username_task,
-            )
             from ..tasks.process_tasks.update_ena_embargo import (
                 update_ena_embargo_task,
             )
@@ -155,9 +150,7 @@ class SubmissionDetailView(
                 notify_user_embargo_changed_task,
             )
 
-            update_chain = get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(
-                countdown=SUBMISSION_DELAY
-            ) | update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+            update_chain = update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
 
             if new_embargo and instance.embargo != new_embargo:
                 update_chain = (

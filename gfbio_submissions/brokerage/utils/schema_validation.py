@@ -70,23 +70,35 @@ def validate_ena_relations(data):
 
     experiment_aliases = [e.get("experiment_alias", "") for e in data.get("requirements", {}).get("experiments", [])]
 
-    experiment_sample_descriptors = [
-        e.get("design", {}).get("sample_descriptor", "") for e in data.get("requirements", {}).get("experiments", [])
-    ]
-
     # experiment_study_refs = [e.get('study_ref', '') for e in
     #                          data.get('requirements', {}).get('experiments',
     #                                                           [])]
 
     run_experiment_refs = [r.get("experiment_ref") for r in data.get("requirements", {}).get("runs", [])]
 
-    for e in experiment_sample_descriptors:
-        if e not in sample_aliases:
+    for experiment in data.get("requirements", {}).get("experiments", []):
+        design = experiment.get("design") or {}
+        descriptor = design.get("sample_descriptor") or ""
+        accession = design.get("sample_accession") or ""
+        has_descriptor = bool(str(descriptor).strip())
+        has_accession = bool(str(accession).strip())
+        if has_descriptor and has_accession:
+            errors.append(
+                ValidationError(
+                    'experiment: sample_descriptor "{}" and sample_accession "{}" '
+                    "cannot both be set".format(descriptor, accession)
+                )
+            )
+        elif not has_descriptor and not has_accession:
+            errors.append(
+                ValidationError("experiment: design must reference either a sample_descriptor or a sample_accession")
+            )
+        elif has_descriptor and descriptor not in sample_aliases:
             errors.append(
                 ValidationError(
                     'experiment: sample_descriptor "{}" in '
                     "experiment does not match any sample_alias "
-                    "defined in samples".format(e)
+                    "defined in samples".format(descriptor)
                 )
             )
 
@@ -104,7 +116,7 @@ def validate_ena_relations(data):
                 ValidationError(
                     'run: experiment_ref "{}" in run does not '
                     "match any experiment_alias defined in "
-                    "experiments".format(e)
+                    "experiments".format(r)
                 )
             )
     return errors

@@ -7,6 +7,7 @@ from dt_upload.views import backend_based_upload_mixins
 
 CHUNK_SIZE = 8 * 1024 * 1024
 _MISSING_OBJECT_CODES = {"404", "NoSuchKey", "NotFound"}
+_TRANSIENT_S3_ERROR_CODES = {"SlowDown", "RequestTimeout", "InternalError", "ServiceUnavailable"}
 
 
 def _is_missing_object_error(exc):
@@ -14,6 +15,17 @@ def _is_missing_object_error(exc):
     code = (response.get("Error") or {}).get("Code")
     status = (response.get("ResponseMetadata") or {}).get("HTTPStatusCode")
     return code in _MISSING_OBJECT_CODES or status == 404
+
+
+def _is_transient_s3_error(exc):
+    response = getattr(exc, "response", None) or {}
+    code = (response.get("Error") or {}).get("Code")
+    status = (response.get("ResponseMetadata") or {}).get("HTTPStatusCode")
+    try:
+        status = int(status)
+    except (TypeError, ValueError):
+        status = None
+    return code in _TRANSIENT_S3_ERROR_CODES or status in (408, 429) or (status is not None and 500 <= status <= 599)
 
 
 def calculate_checksum_locally(checksum_method, submission_cloud_upload):

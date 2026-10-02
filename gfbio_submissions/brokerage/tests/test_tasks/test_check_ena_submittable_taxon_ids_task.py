@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from dt_upload.models import FileUploadRequest
 
+from gfbio_submissions.brokerage.utils.ena_submittable_data_handlers import SubmittableTaxIdHandler
+
 from ...models.metadata_validation_report import MetadataValidationReport
 from ...models.submission import Submission
 from ...models.submission_cloud_upload import SubmissionCloudUpload
@@ -125,3 +127,32 @@ class TestCheckEnaSubmittableTaxonIdsTask(TestTasks):
         finding = task_report.validationfinding_set.get()
         self.assertEqual("WARNING", finding.status)
         self.assertIn("could not be performed", finding.message)
+
+    @patch(f"{TASK_MODULE}.create_submission_file_opener")
+    @patch(f"{TASK_MODULE}.check_submittable_taxon_id")
+    def test_accession_row_is_not_reported_for_invalid_taxon_id(self, mock_check, mock_opener):
+        report = self._create_report()
+        mock_check.return_value = (
+            False,
+            ["Data with the following taxon ids is not submittable: 123"],
+            True,
+        )
+        mock_opener.return_value = FakeFileOpener(
+            "sample_title;taxon_id;Sample_Accession\n;123;SAMEA115886020\nNormal;123;\n"
+        )
+
+        self._run(report)
+
+        task_report = report.validationtaskreport_set.get()
+        findings = list(task_report.validationfinding_set.order_by("row"))
+        self.assertEqual(1, len(findings))
+        self.assertEqual(3, findings[0].row)
+        self.assertIn("123", findings[0].message)
+
+
+class TestSubmittableTaxIdHandlerAccessionSkip(TestTasks):
+    def test_accession_row_is_skipped_even_when_taxon_id_is_set(self):
+        handler = SubmittableTaxIdHandler(file_opener=None)
+        csv_content = "sample_title;taxon_id;Sample_Accession\n;999;SAMEA115886020\nNormal;;\nNormal;123;\n"
+        tax_ids = handler.get_data(io.StringIO(csv_content))
+        self.assertEqual({"123"}, tax_ids)

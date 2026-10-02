@@ -72,4 +72,6 @@ def update_ena_submission_data_task(self, previous_task_result=None, submission_
                     )
                 )
                 return TaskProgressReport.CANCELLED
+        if "SAMPLE" not in ena_submission_data:
+            submission.auditabletextdata_set.filter(name="sample.xml").delete()
         return True

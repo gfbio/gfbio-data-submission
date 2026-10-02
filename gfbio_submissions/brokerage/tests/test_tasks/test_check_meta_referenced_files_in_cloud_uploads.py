@@ -10,6 +10,7 @@ from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads import (
     check_meta_referenced_files_in_cloud_uploads_task,
     generate_jira_message,
+    generate_upload_report,
 )
 from .test_tasks_base import TestTasks
 
@@ -247,3 +248,39 @@ class TestCheckMetaReferencedFilesInCloudUploads(TestTasks):
         self.assertIn("File3.fastq.gz", jira_message)
         self.assertIn("File4.fastq.gz", jira_message)
         self.assertNotIn("FileX.fastq.gz", jira_message)
+
+    def _transferred_reference_report(self):
+        submission = Submission.objects.first()
+        meta_upload = self._create_cloud_upload(submission, "meta.csv", meta=True)
+        self._create_cloud_upload(
+            submission,
+            "transferred.fastq.gz",
+            scu_status=SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+        )
+        return generate_upload_report(submission, meta_upload, ["transferred.fastq.gz"])
+
+    @patch(
+        "gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads."
+        "ENA_POST_TRANSFER_CHECKSUM_ENABLED",
+        False,
+    )
+    def test_transferred_is_not_a_problem_when_checksum_check_disabled(self):
+        report = self._transferred_reference_report()
+        transferred_key = f"cloud_upload_state_{SubmissionCloudUpload.STATUS_IS_TRANSFERRED}"
+
+        self.assertEqual([file["name"] for file in report["found"]], ["transferred.fastq.gz"])
+        self.assertNotIn(transferred_key, report["found_with_problems"])
+
+    @patch(
+        "gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_referenced_files_in_cloud_uploads."
+        "ENA_POST_TRANSFER_CHECKSUM_ENABLED",
+        True,
+    )
+    def test_transferred_is_a_problem_when_checksum_check_enabled(self):
+        report = self._transferred_reference_report()
+        transferred_key = f"cloud_upload_state_{SubmissionCloudUpload.STATUS_IS_TRANSFERRED}"
+
+        self.assertEqual(report["found_with_problems"][transferred_key], ["transferred.fastq.gz"])
+        jira_message = generate_jira_message(report)
+        self.assertIn("After transfer to ENA the checksum-check wasn't executed:", jira_message)
+        self.assertIn("transferred.fastq.gz", jira_message)

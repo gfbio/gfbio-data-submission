@@ -15,6 +15,7 @@ from gfbio_submissions.brokerage.models.metadata_validation_report import (
 )
 from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
 from gfbio_submissions.brokerage.utils.csv import check_submittable_taxon_id
+from gfbio_submissions.brokerage.utils.ena_mandatory_fields import row_has_valid_sample_accession
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 
 logger = logging.getLogger(__name__)
@@ -92,6 +93,8 @@ def _findings_for_invalid_taxon_ids(upload_file, submission, invalid_taxon_ids):
             data_row_number = 1
             for row in csv_reader:
                 data_row_number += 1
+                if row_has_valid_sample_accession(row):
+                    continue
                 taxon_id = str(row.get("taxon_id", "")).strip()
                 if taxon_id and taxon_id in invalid_taxon_ids:
                     findings.append(
