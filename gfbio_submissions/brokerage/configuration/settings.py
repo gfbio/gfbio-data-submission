@@ -439,6 +439,22 @@ SUBMISSION_RETRY_DELAY = getattr(
     3600,
 )
 
+# Post-transfer FTP checksum is off until ENA download is reliable again.
+ENA_POST_TRANSFER_CHECKSUM_ENABLED = getattr(settings, "ENA_POST_TRANSFER_CHECKSUM_ENABLED", False)
+
+# ascp -l rate limit for cloud-upload transfers to ENA.
+ENA_ASCP_RATE_LIMIT = getattr(settings, "ENA_ASCP_RATE_LIMIT", "500M")
+
+# Hard limit (SIGKILL) for transfer_cloud_upload_to_ena_task only.
+ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT = getattr(settings, "ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT", 4 * 60 * 60)
+
+# Soft limit must stay below the hard limit so Python cleanup can stop ascp.
+ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT = getattr(
+    settings,
+    "ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT",
+    4 * 60 * 60 - 5 * 60,
+)
+
 SUBMISSION_ISSUE_CHECK_DELAY = getattr(
     settings,
     "SUBMISSION_ISSUE_CHECK_DELAY",
