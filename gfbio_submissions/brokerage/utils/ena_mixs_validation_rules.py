@@ -438,7 +438,8 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
         pattern=_ebi_numeric_pattern(signed=True),
         environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
         description=(
-            "Temperature is an optional field for all MIxS environmental packages."
+            "Temperature is an optional field for all MIxS environmental packages. "
+            "If the column is present, the value should be ideally valid or marked as missing."
         ),
         finding_status="ERROR",
     ),
@@ -447,7 +448,8 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
         pattern=_ebi_numeric_pattern(signed=True),
         environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
         description=(
-            "Air temperature is an optional field for all MIxS environmental packages."
+            "Air temperature is an optional field for all MIxS environmental packages. "
+            "If the column is present, the value should be ideally valid or marked as missing."
         ),
         finding_status="ERROR",
     ),
@@ -456,7 +458,8 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
         pattern=_ebi_numeric_pattern(signed=True),
         environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
         description=(
-            "Host body temperature is an optional field for all MIxS environmental packages."
+            "Host body temperature is an optional field for all MIxS environmental packages. "
+            "If the column is present, the value should be ideally valid or marked as missing."
         ),
         finding_status="ERROR",
     ),
@@ -465,7 +468,8 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
         pattern=_ebi_numeric_pattern(signed=True),
         environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
         description=(
-            "Mean annual and seasonal temperature is an optional field for all MIxS environmental packages."
+            "Mean annual and seasonal temperature is an optional field for all MIxS environmental packages. "
+            "If the column is present, the value should be ideally valid or marked as missing."
         ),
         finding_status="ERROR",
     ),
@@ -474,7 +478,8 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
         pattern=_ebi_numeric_pattern(signed=True),
         environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
         description=(
-            "Sample storage temperature is an optional field for all MIxS environmental packages."
+            "Sample storage temperature is an optional field for all MIxS environmental packages. "
+            "If the column is present, the value should be ideally valid or marked as missing."
         ),
         finding_status="ERROR",
     ),
@@ -483,7 +488,8 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
         pattern=_ebi_numeric_pattern(signed=True),
         environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
         description=(
-            "Sample transportation temperature is an optional field for all MIxS environmental packages."
+            "Sample transportation temperature is an optional field for all MIxS environmental packages. "
+            "If the column is present, the value should be ideally valid or marked as missing."
         ),
         finding_status="ERROR",
     ),
