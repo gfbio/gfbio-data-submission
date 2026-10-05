@@ -51,6 +51,7 @@ class TestEnaMixsValidation(TestCase):
                 for f in findings
             )
         )
+        self.assertTrue(all(f["status"] == "WARNING" for f in findings))
 
     def test_depth_range_value_is_accepted(self):
         row = VALID_WATER_ROW.replace("12.5", "0.1-0.2")

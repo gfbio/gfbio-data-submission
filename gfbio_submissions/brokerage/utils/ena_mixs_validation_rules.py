@@ -329,7 +329,7 @@ def _validation_rule(
     environmental_packages: list[str] | None = None,
     unit: str | None = None,
     description: str,
-    finding_status: str | None = "ERROR",
+    finding_status: str | None = None,
 ) -> MixsValidationRule:
     return {
         "rule_number": rule_number,
