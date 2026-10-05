@@ -42,6 +42,7 @@ class MixsValidationRule(TypedDict):
     unit: str | None
     description: str
     help_text: str
+    finding_status: str | None
 
 
 # Shared suffix for INSDC missing-value reporting terms (ENA / EBI checklists).
@@ -294,6 +295,24 @@ MIXS_FIELD_HELP_TEXT = {
     "geographic location (region and locality)": (
         "Free-text description of the region and locality where the sample was taken."
     ),
+    "temperature": (
+        "Temperature in degrees Celsius. Optional. If provided, it needs to be a valid number and in degrees Celsius (e.g., '25.5'), but with no unit given."
+    ),
+    "air temperature": (
+        "Air temperature in degrees Celsius. Optional. If provided, it needs to be a valid number and in degrees Celsius (e.g., '25.5'), but with no unit given."
+    ),
+    "host body temperature": (
+        "Host body temperature in degrees Celsius. Optional. If provided, it needs to be a valid number and in degrees Celsius (e.g., '25.5'), but with no unit given."
+    ),
+    "mean annual and seasonal temperature": (
+        "Mean annual and seasonal temperature in degrees Celsius. Optional. If provided, it needs to be a valid number and in degrees Celsius (e.g., '25.5'), but with no unit given."
+    ),
+    "sample storage temperature": (
+        "Sample storage temperature in degrees Celsius. Optional. If provided, it needs to be a valid number and in degrees Celsius (e.g., '25.5'), but with no unit given."
+    ),
+    "sample transportation temperature": (
+        "Sample transportation temperature in degrees Celsius. Optional. If provided, it needs to be a valid number and in degrees Celsius (e.g., '25.5'), but with no unit given."
+    ),
 }
 
 
@@ -310,6 +329,7 @@ def _validation_rule(
     environmental_packages: list[str] | None = None,
     unit: str | None = None,
     description: str,
+    finding_status: str | None = "ERROR",
 ) -> MixsValidationRule:
     return {
         "rule_number": rule_number,
@@ -320,6 +340,7 @@ def _validation_rule(
         "unit": unit,
         "description": description,
         "help_text": MIXS_FIELD_HELP_TEXT[field_name],
+        "finding_status": finding_status,
     }
 
 
@@ -412,8 +433,61 @@ MIXS_VALIDATION_RULES: list[MixsValidationRule] = [
             "Free-text format when present."
         ),
     ),
+    _validation_rule(
+        11, "temperature", "format",
+        pattern=_ebi_numeric_pattern(signed=True),
+        environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
+        description=(
+            "Temperature is an optional field for all MIxS environmental packages."
+        ),
+        finding_status="ERROR",
+    ),
+    _validation_rule(
+        12, "air temperature", "format",
+        pattern=_ebi_numeric_pattern(signed=True),
+        environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
+        description=(
+            "Air temperature is an optional field for all MIxS environmental packages."
+        ),
+        finding_status="ERROR",
+    ),
+    _validation_rule(
+        13, "host body temperature", "format",
+        pattern=_ebi_numeric_pattern(signed=True),
+        environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
+        description=(
+            "Host body temperature is an optional field for all MIxS environmental packages."
+        ),
+        finding_status="ERROR",
+    ),
+    _validation_rule(
+        14, "mean annual and seasonal temperature", "format",
+        pattern=_ebi_numeric_pattern(signed=True),
+        environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
+        description=(
+            "Mean annual and seasonal temperature is an optional field for all MIxS environmental packages."
+        ),
+        finding_status="ERROR",
+    ),
+    _validation_rule(
+        15, "sample storage temperature", "format",
+        pattern=_ebi_numeric_pattern(signed=True),
+        environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
+        description=(
+            "Sample storage temperature is an optional field for all MIxS environmental packages."
+        ),
+        finding_status="ERROR",
+    ),
+    _validation_rule(
+        16, "sample transportation temperature", "format",
+        pattern=_ebi_numeric_pattern(signed=True),
+        environmental_packages=ALL_MIXS_ENVIRONMENTAL_PACKAGES,
+        description=(
+            "Sample transportation temperature is an optional field for all MIxS environmental packages."
+        ),
+        finding_status="ERROR",
+    ),
 ]
-
 
 def _to_format_rule(rule: MixsValidationRule) -> MixsFormatRule:
     return {
@@ -423,6 +497,7 @@ def _to_format_rule(rule: MixsValidationRule) -> MixsFormatRule:
         "unit": rule["unit"],
         "description": rule["description"],
         "help_text": rule["help_text"],
+        "finding_status": rule["finding_status"],
     }
 
 

@@ -170,3 +170,22 @@ class TestEnaMixsValidation(TestCase):
         csv_content = f"{VALID_HEADER}\n{VALID_WATER_ROW}\n"
         findings = self._validate(csv_content)
         self.assertFalse(any(f["column_name"] == "indoor space" for f in findings))
+
+    def test_temperature_fields_accept_valid_values(self):
+        header = f"{VALID_HEADER};temperature;air temperature;host body temperature;mean annual and seasonal temperature;sample storage temperature;sample transportation temperature"
+        row = (
+            f"{VALID_WATER_ROW};25.5;20.0;37.0;15.0;-20.0;4.0"
+        )
+        csv_content = f"{header}\n{row}\n"
+        findings = self._validate(csv_content)
+        self.assertEqual(0, len(findings))
+
+    def test_bad_temperature_fields_results_in_error(self):
+        header = f"{VALID_HEADER};temperature;air temperature;host body temperature;mean annual and seasonal temperature;sample storage temperature;sample transportation temperature"
+        row = (
+            f"{VALID_WATER_ROW};25.5°C;20,301;Seven-ish;15.0 F;-20K;4.0.34"
+        )
+        csv_content = f"{header}\n{row}\n"
+        findings = self._validate(csv_content)
+        self.assertEqual(6, len(findings))
+        self.assertTrue(all(f["status"] == "ERROR" for f in findings))
