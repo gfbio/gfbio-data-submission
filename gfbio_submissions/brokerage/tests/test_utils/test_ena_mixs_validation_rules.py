@@ -145,7 +145,7 @@ class TestEnaMixsValidationRules(SimpleTestCase):
         self.assertEqual("ERC000019", MIXS_ENVIRONMENTAL_PACKAGE_ACCESSIONS["microbial mat biolfilm"])
 
     def test_validation_rules_cover_rules_one_to_ten(self):
-        self.assertEqual(list(range(1, 11)), [rule["rule_number"] for rule in MIXS_VALIDATION_RULES])
+        self.assertEqual(list(range(1, 17)), [rule["rule_number"] for rule in MIXS_VALIDATION_RULES])
 
     def test_depth_column_names_include_legacy_header(self):
         self.assertEqual("depth", ENA_HEADER_MAPPING["geographic location (depth)"])
@@ -190,3 +190,11 @@ class TestEnaMixsValidationRules(SimpleTestCase):
     def test_gfbio_template_region_field_stays_mandatory(self):
         self.assertIn("geographic location (region and locality)", MIXS_HEADER_MANDATORY_FIELDS)
         self.assertIn("geographic location (region and locality)", MIXS_ROW_ALWAYS_MANDATORY_FIELDS)
+
+    def test_temperature_formats(self):
+        temperature_rule = get_format_rule("temperature")
+        self.assertTrue(format_rule_value_matches(temperature_rule, "25.5"))
+        self.assertTrue(format_rule_value_matches(temperature_rule, "-10.0"))
+        self.assertTrue(format_rule_value_matches(temperature_rule, "not applicable"))
+        self.assertFalse(format_rule_value_matches(temperature_rule, "25.5°C"))
+        self.assertFalse(format_rule_value_matches(temperature_rule, "seventy five"))
