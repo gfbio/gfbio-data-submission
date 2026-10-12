@@ -18,6 +18,7 @@ from config.celery_app import app
 from ....generic.models.request_log import RequestLog
 from ....users.models import User
 from ...configuration.settings import (
+    ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS,
     ENA_ASCP_RATE_LIMIT,
     ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT,
     ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT,
@@ -105,7 +106,7 @@ def ensure_folder_with_keep(path):
 
 
 def perform_ascp_file_transfer(task, file_path, site_configuration, submission, submission_cloud_upload, user_id,
-                               report, target_filename=None):
+                               report, target_filename=None, auth_retry_count=0):
     # according to: https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html#using-aspera-ascp-command-line-program
     # Rename on upload: put the final name in the remote path (…/submission_id/original_filename).
     if target_filename:
@@ -161,6 +162,21 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
         ]
         if proc.returncode != 0:
             stderr_str = stderr.decode(errors="replace").lower()
+            # Auth wins even when stderr also contains a network pattern.
+            # Countdown uses the current counter; the next run stores counter + 1.
+            # Celery replaces request kwargs, so copy them before adding the counter.
+            auth_failure = "failed to authenticate" in stderr_str
+            if auth_failure and auth_retry_count < len(ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS):
+                countdown = ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS[auth_retry_count]
+                retry_kwargs = dict(task.request.kwargs or {})
+                retry_kwargs["auth_retry_count"] = auth_retry_count + 1
+                raise task.retry(
+                    kwargs=retry_kwargs,
+                    countdown=countdown,
+                    max_retries=task.request.retries + 1,
+                    exc=Exception(stderr_str),
+                )
+
             if submission_cloud_upload.status != SubmissionCloudUpload.STATUS_TRANSFER_FAILED:
                 submission_cloud_upload.status = SubmissionCloudUpload.STATUS_TRANSFER_FAILED
                 submission_cloud_upload.save()
@@ -171,16 +187,21 @@ def perform_ascp_file_transfer(task, file_path, site_configuration, submission, 
                     [{"changed": {"fields": [f"status kept at {submission_cloud_upload.status} due to {stderr_str}"]}}],
                     user_id)
 
-            if any(pattern in stderr_str for pattern in retryable_patterns):
-                logger.info(
-                    f"tasks.py | transfer_cloud_upload_to_ena_task | starting retry | "
-                    f"stderr_str={stderr_str} | proc.returncode={proc.returncode} | task_id={task.request.id}"
-                )
-                raise task.retry(
-                    exc=Exception(stderr_str),
-                    max_retries=SUBMISSION_MAX_RETRIES,
-                    countdown=SUBMISSION_RETRY_DELAY,
-                )
+            network_failure = (not auth_failure) and any(pattern in stderr_str for pattern in retryable_patterns)
+            if network_failure:
+                network_used = max(0, task.request.retries - auth_retry_count)
+                if network_used < SUBMISSION_MAX_RETRIES:
+                    logger.info(
+                        f"tasks.py | transfer_cloud_upload_to_ena_task | starting retry | "
+                        f"stderr_str={stderr_str} | proc.returncode={proc.returncode} | task_id={task.request.id}"
+                    )
+                    raise task.retry(
+                        exc=Exception(stderr_str),
+                        countdown=SUBMISSION_RETRY_DELAY,
+                        max_retries=task.request.retries + 1,
+                    )
+                # Caught below: Celery FAILURE and link_error, not CANCELLED.
+                raise Exception(stderr_str)
             else:
                 res = TaskProgressReport.CANCELLED
                 logger.error(
@@ -306,7 +327,7 @@ def check_checksum_via_ftp(task, site_configuration, submission, submission_clou
     soft_time_limit=ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT,
 )
 def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_cloud_upload_id=None, submission_id=None,
-                                      user_id=None):
+                                      user_id=None, auth_retry_count=0):
     logger.info(f"tasks.py | transfer_cloud_upload_to_ena_task | queue={self.queue} | task_id={self.request.id}")
     if previous_result == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
@@ -324,6 +345,11 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         return TaskProgressReport.CANCELLED
 
     report, created = TaskProgressReport.objects.create_initial_report(submission=submission, task=self)
+    # on_retry leaves the report at RETRY, and create_initial_report does not reset it.
+    report.status = TaskProgressReport.RUNNING
+    report.task_args = "{}".format(self.request.args)
+    report.task_kwargs = json.dumps(self.request.kwargs)
+    report.save()
     try:
         submission_cloud_upload = SubmissionCloudUpload.objects.get(pk=submission_cloud_upload_id)
     except SubmissionCloudUpload.DoesNotExist:
@@ -370,6 +396,7 @@ def transfer_cloud_upload_to_ena_task(self, previous_result=None, submission_clo
         user_id,
         report,
         target_filename=target_filename,
+        auth_retry_count=auth_retry_count,
     )
     if transfer_result == True:
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_IS_TRANSFERRED

@@ -445,6 +445,13 @@ ENA_POST_TRANSFER_CHECKSUM_ENABLED = getattr(settings, "ENA_POST_TRANSFER_CHECKS
 # ascp -l rate limit for cloud-upload transfers to ENA.
 ENA_ASCP_RATE_LIMIT = getattr(settings, "ENA_ASCP_RATE_LIMIT", "500M")
 
+# Separate from network retries. Tuple length is the number of auth retries.
+ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS = getattr(
+    settings,
+    "ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS",
+    (5 * 60, 15 * 60, 30 * 60, 60 * 60),
+)
+
 # Hard limit (SIGKILL) for transfer_cloud_upload_to_ena_task only.
 ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT = getattr(settings, "ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT", 4 * 60 * 60)
 

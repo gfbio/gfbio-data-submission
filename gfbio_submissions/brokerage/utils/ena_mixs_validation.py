@@ -89,9 +89,10 @@ def _finding(
     row: int | None = None,
     column: int | None = None,
     column_name: str | None = None,
+    status: str = MIXS_FINDING_STATUS,
 ) -> dict:
     return {
-        "status": MIXS_FINDING_STATUS,
+        "status": status,
         "row": row,
         "column": column,
         "column_name": column_name,
@@ -275,6 +276,7 @@ def _validate_format_rule(
                     f"for '{field_name}'."
                 ),
                 help_text=format_rule["help_text"],
+                status=MIXS_FINDING_STATUS if not "finding_status" in format_rule or not format_rule["finding_status"] else format_rule["finding_status"],
             )
         )
     return findings

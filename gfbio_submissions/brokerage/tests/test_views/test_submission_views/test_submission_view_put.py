@@ -509,3 +509,107 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertEqual(datetime.date(2020, 10, 15), new_submission.embargo)
         self.assertEqual(200, request_log.response_status)
         self.assertTrue('accession "PRJEB0815"' in request_log.response_content)
+
+
+    @responses.activate
+    def test_put_submission_agree_to_nagoya_protocol(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        self.assertNotIn("agree-to-nagoya-protocol", submission.data["requirements"])
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ENA",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description 2",
+                        "agree-to-nagoya-protocol": "no"
+                    }
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode("utf-8"))
+        self.assertTrue(isinstance(content, dict))
+        self.assertIn("0815", content["data"]["requirements"]["title"])
+        self.assertIn("agree-to-nagoya-protocol",  content["data"]["requirements"])
+        self.assertEqual("no",  content["data"]["requirements"]["agree-to-nagoya-protocol"])
+        self.assertEqual("no", Submission.objects.first().data["requirements"]["agree-to-nagoya-protocol"])
+        self.assertEqual(1, len(Submission.objects.all()))
+        
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ENA",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description 2",
+                        "agree-to-nagoya-protocol": "yes"
+                    }
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode("utf-8"))
+        self.assertEqual("yes",  content["data"]["requirements"]["agree-to-nagoya-protocol"])
+        self.assertEqual("yes", Submission.objects.first().data["requirements"]["agree-to-nagoya-protocol"])
+        
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ENA",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description 2",
+                        "agree-to-nagoya-protocol": "yes"
+                    }
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode("utf-8"))
+        self.assertEqual("yes",  content["data"]["requirements"]["agree-to-nagoya-protocol"])
+        self.assertEqual("yes", Submission.objects.first().data["requirements"]["agree-to-nagoya-protocol"])
+
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ENA",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description 2",
+                    }
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode("utf-8"))
+        self.assertEqual("yes",  content["data"]["requirements"]["agree-to-nagoya-protocol"])
+        self.assertEqual("yes", Submission.objects.first().data["requirements"]["agree-to-nagoya-protocol"])
+    
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ENA",
+                "data": {
+                    "requirements": {
+                        "title": "A Title 0815",
+                        "description": "A Description 2",
+                        "agree-to-nagoya-protocol": "no"
+                    }
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertEqual("yes", Submission.objects.first().data["requirements"]["agree-to-nagoya-protocol"])

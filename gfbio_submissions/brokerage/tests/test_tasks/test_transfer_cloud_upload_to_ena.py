@@ -8,22 +8,27 @@ import time
 from unittest.mock import MagicMock, patch
 
 from billiard.exceptions import SoftTimeLimitExceeded
+from celery.exceptions import Retry
 from django.test import SimpleTestCase
 from dt_upload.models import FileUploadRequest, MultiPartUpload
 
 from gfbio_submissions.brokerage.configuration.settings import (
+    ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS,
     ENA_ASCP_RATE_LIMIT,
     ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT,
     ENA_CLOUD_UPLOAD_TRANSFER_TIME_LIMIT,
+    SUBMISSION_RETRY_DELAY,
 )
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
 from gfbio_submissions.brokerage.tasks.process_tasks.transfer_cloud_upload_to_ena import (
     _ASCP_PARENT_DEATH_LAUNCHER,
     _ascp_launch_command,
     perform_ascp_file_transfer,
     transfer_cloud_upload_to_ena_task,
 )
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 from .test_tasks_base import TestTasks
@@ -90,9 +95,7 @@ class TestAscpParentDeathLauncher(SimpleTestCase):
             "os.kill(os.getpid(), signal.SIGKILL)\n"
         )
         with tempfile.NamedTemporaryFile() as pid_file:
-            parent = subprocess.Popen(
-                [sys.executable, "-c", parent_code, _ASCP_PARENT_DEATH_LAUNCHER, pid_file.name]
-            )
+            parent = subprocess.Popen([sys.executable, "-c", parent_code, _ASCP_PARENT_DEATH_LAUNCHER, pid_file.name])
             parent.wait(timeout=30)
             pid_file.seek(0)
             child_pid = int(pid_file.read())
@@ -123,11 +126,11 @@ class TestPerformAscpFileTransfer(TestTasks):
         self.default_site_config.save()
         self.submission = Submission.objects.first()
         self.cloud_upload = self._create_cloud_upload("sample.fastq.gz")
-        self.log_change = patch(
+        log_change_patcher = patch(
             "gfbio_submissions.brokerage.models.submission_cloud_upload.SubmissionCloudUpload.log_change"
         )
-        self.log_change.start()
-        self.addCleanup(self.log_change.stop)
+        self.log_change = log_change_patcher.start()
+        self.addCleanup(log_change_patcher.stop)
 
     def _create_cloud_upload(self, filename):
         fur = FileUploadRequest.objects.create(
@@ -147,10 +150,12 @@ class TestPerformAscpFileTransfer(TestTasks):
             status=SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
         )
 
-    def _task(self):
+    def _task(self, retries=0, kwargs=None):
         task = MagicMock()
         task.request.id = "ascp-task"
-        task.request.retries = 0
+        task.request.retries = retries
+        task.request.kwargs = {} if kwargs is None else kwargs
+        task.retry.side_effect = Retry
         return task
 
     def _proc(self, returncode=0, poll_result=0, communicate_side_effect=None):
@@ -164,16 +169,45 @@ class TestPerformAscpFileTransfer(TestTasks):
             proc.communicate.return_value = (b"stdout", b"")
         return proc
 
-    def _perform(self):
+    def _perform(self, auth_retry_count=0, retries=0, kwargs=None, report=None, task=None):
+        if report is None:
+            report = MagicMock()
+        if task is None:
+            task = self._task(retries=retries, kwargs=kwargs)
         return perform_ascp_file_transfer(
-            self._task(),
+            task,
             "/mnt/s3bucket/sample.fastq.gz",
             self.default_site_config,
             self.submission,
             self.cloud_upload,
             self.submission.user.pk,
-            MagicMock(),
+            report,
+            auth_retry_count=auth_retry_count,
         )
+
+    def _transfer_with_stderr(self, stderr, auth_retry_count=0, retries=0, request_kwargs=None):
+        task = self._task(retries=retries, kwargs=request_kwargs)
+        report = MagicMock()
+        proc = self._proc(returncode=1)
+        proc.communicate.return_value = (b"", stderr)
+        with (
+            patch(f"{TRANSFER_MODULE}.os.killpg"),
+            patch(f"{TRANSFER_MODULE}.subprocess.Popen", return_value=proc),
+        ):
+            try:
+                result = perform_ascp_file_transfer(
+                    task,
+                    "/mnt/s3bucket/sample.fastq.gz",
+                    self.default_site_config,
+                    self.submission,
+                    self.cloud_upload,
+                    self.submission.user.pk,
+                    report,
+                    auth_retry_count=auth_retry_count,
+                )
+            except Exception as exc:
+                return exc, task, report, None
+        return None, task, report, result
 
     @patch(f"{TRANSFER_MODULE}.os.killpg")
     @patch(f"{TRANSFER_MODULE}.subprocess.Popen")
@@ -233,6 +267,172 @@ class TestPerformAscpFileTransfer(TestTasks):
             [(4321, signal.SIGTERM), (4321, signal.SIGKILL)],
             [call.args for call in mock_killpg.call_args_list],
         )
+
+    def test_auth_failure_retries_without_changing_upload_status(self):
+        request_kwargs = {"submission_id": self.submission.pk, "user_id": self.submission.user.pk}
+        logs_before = RequestLog.objects.filter(submission_id=self.submission.broker_submission_id).count()
+
+        exc, task, _report, result = self._transfer_with_stderr(
+            b"Session Failed to Authenticate",
+            auth_retry_count=0,
+            retries=0,
+            request_kwargs=request_kwargs,
+        )
+
+        self.assertIsInstance(exc, Retry)
+        self.assertIsNone(result)
+        retry_kwargs = task.retry.call_args.kwargs
+        self.assertEqual(300, retry_kwargs["countdown"])
+        self.assertEqual(ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS[0], retry_kwargs["countdown"])
+        self.assertEqual(1, retry_kwargs["max_retries"])
+        self.assertEqual(self.submission.pk, retry_kwargs["kwargs"]["submission_id"])
+        self.assertEqual(self.submission.user.pk, retry_kwargs["kwargs"]["user_id"])
+        self.assertEqual(1, retry_kwargs["kwargs"]["auth_retry_count"])
+        self.assertNotIn("auth_retry_count", request_kwargs)
+        self.cloud_upload.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM, self.cloud_upload.status)
+        self.log_change.assert_not_called()
+        logs_after = RequestLog.objects.filter(submission_id=self.submission.broker_submission_id).count()
+        self.assertEqual(logs_before + 1, logs_after)
+
+    def test_auth_retry_backoff_uses_counter_before_increment(self):
+        cases = (
+            (1, 900, 2),
+            (2, 1800, 3),
+            (3, 3600, 4),
+        )
+        for auth_retry_count, countdown, next_count in cases:
+            with self.subTest(auth_retry_count=auth_retry_count):
+                self.log_change.reset_mock()
+                request_kwargs = {
+                    "submission_id": self.submission.pk,
+                    "auth_retry_count": auth_retry_count,
+                }
+                exc, task, _report, result = self._transfer_with_stderr(
+                    b"failed to authenticate",
+                    auth_retry_count=auth_retry_count,
+                    retries=auth_retry_count,
+                    request_kwargs=request_kwargs,
+                )
+
+                self.assertIsInstance(exc, Retry)
+                self.assertIsNone(result)
+                retry_kwargs = task.retry.call_args.kwargs
+                self.assertEqual(countdown, retry_kwargs["countdown"])
+                self.assertEqual(ENA_ASCP_AUTH_RETRY_BACKOFF_SECONDS[auth_retry_count], retry_kwargs["countdown"])
+                self.assertEqual(auth_retry_count + 1, retry_kwargs["max_retries"])
+                self.assertEqual(self.submission.pk, retry_kwargs["kwargs"]["submission_id"])
+                self.assertEqual(next_count, retry_kwargs["kwargs"]["auth_retry_count"])
+                self.cloud_upload.refresh_from_db()
+                self.assertEqual(
+                    SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+                    self.cloud_upload.status,
+                )
+                self.log_change.assert_not_called()
+
+    def test_exhausted_auth_retries_cancel_without_network_retry(self):
+        report = MagicMock()
+        task = self._task(
+            retries=4,
+            kwargs={"submission_id": self.submission.pk, "auth_retry_count": 4},
+        )
+        proc = self._proc(returncode=1)
+        proc.communicate.return_value = (b"", b"failed to authenticate: timeout")
+        with (
+            patch(f"{TRANSFER_MODULE}.os.killpg"),
+            patch(f"{TRANSFER_MODULE}.subprocess.Popen", return_value=proc),
+        ):
+            result = perform_ascp_file_transfer(
+                task,
+                "/mnt/s3bucket/sample.fastq.gz",
+                self.default_site_config,
+                self.submission,
+                self.cloud_upload,
+                self.submission.user.pk,
+                report,
+                auth_retry_count=4,
+            )
+
+        task.retry.assert_not_called()
+        self.assertEqual(TaskProgressReport.CANCELLED, result)
+        self.assertIn("Bad response from Aspera", report.task_exception)
+        self.cloud_upload.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, self.cloud_upload.status)
+        self.log_change.assert_called()
+
+    def test_auth_match_wins_over_timeout_pattern(self):
+        exc, task, _report, result = self._transfer_with_stderr(
+            b"failed to authenticate: timeout",
+            auth_retry_count=0,
+            retries=0,
+            request_kwargs={"submission_id": self.submission.pk},
+        )
+
+        self.assertIsInstance(exc, Retry)
+        self.assertIsNone(result)
+        self.assertEqual(300, task.retry.call_args.kwargs["countdown"])
+        self.assertEqual(1, task.retry.call_args.kwargs["kwargs"]["auth_retry_count"])
+        self.cloud_upload.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM, self.cloud_upload.status)
+        self.log_change.assert_not_called()
+
+    def test_network_failure_retries_on_remaining_budget(self):
+        exc, task, _report, result = self._transfer_with_stderr(
+            b"failed to connect",
+            auth_retry_count=4,
+            retries=4,
+            request_kwargs={"submission_id": self.submission.pk, "auth_retry_count": 4},
+        )
+
+        self.assertIsInstance(exc, Retry)
+        self.assertIsNone(result)
+        self.assertEqual(1, task.retry.call_count)
+        retry_kwargs = task.retry.call_args.kwargs
+        self.assertEqual(SUBMISSION_RETRY_DELAY, retry_kwargs["countdown"])
+        self.assertEqual(5, retry_kwargs["max_retries"])
+        self.assertNotIn("kwargs", retry_kwargs)
+        self.cloud_upload.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, self.cloud_upload.status)
+
+    def test_network_failure_still_retries_when_one_network_attempt_remains(self):
+        exc, task, _report, result = self._transfer_with_stderr(
+            b"failed to connect",
+            auth_retry_count=4,
+            retries=5,
+            request_kwargs={"submission_id": self.submission.pk, "auth_retry_count": 4},
+        )
+
+        self.assertIsInstance(exc, Retry)
+        self.assertIsNone(result)
+        retry_kwargs = task.retry.call_args.kwargs
+        self.assertEqual(SUBMISSION_RETRY_DELAY, retry_kwargs["countdown"])
+        self.assertEqual(6, retry_kwargs["max_retries"])
+        self.assertNotIn("kwargs", retry_kwargs)
+        self.cloud_upload.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, self.cloud_upload.status)
+
+    def test_network_failure_raises_when_budget_is_empty(self):
+        cases = (
+            (6, 4),
+            (2, 0),
+        )
+        for retries, auth_retry_count in cases:
+            with self.subTest(retries=retries, auth_retry_count=auth_retry_count):
+                self.cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
+                self.cloud_upload.save()
+                exc, task, _report, result = self._transfer_with_stderr(
+                    b"failed to connect",
+                    auth_retry_count=auth_retry_count,
+                    retries=retries,
+                    request_kwargs={"submission_id": self.submission.pk},
+                )
+
+                self.assertIsNone(result)
+                self.assertIs(type(exc), Exception)
+                self.assertIn("failed to connect", str(exc))
+                task.retry.assert_not_called()
+                self.cloud_upload.refresh_from_db()
+                self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, self.cloud_upload.status)
 
 
 class TestTransferCloudUploadChecksumFlag(TestTasks):
@@ -306,3 +506,56 @@ class TestTransferCloudUploadChecksumFlag(TestTasks):
         mock_checksum.assert_called_once()
         self.assertEqual(self.cloud_upload, mock_checksum.call_args.args[3])
         self.assertEqual(SubmissionCloudUpload.STATUS_IS_TRANSFERRED, self.cloud_upload.status)
+
+    def _apply_with_patched_transfer(self, extra_kwargs=None, task_id=None, perform_side_effect=None):
+        kwargs = {
+            "submission_cloud_upload_id": self.cloud_upload.pk,
+            "submission_id": self.submission.pk,
+            "user_id": self.submission.user.pk,
+        }
+        if extra_kwargs:
+            kwargs.update(extra_kwargs)
+        perform_patch_kwargs = {"return_value": True}
+        if perform_side_effect is not None:
+            perform_patch_kwargs = {"side_effect": perform_side_effect}
+        with (
+            patch(f"{TRANSFER_MODULE}.os.path.exists", return_value=True),
+            patch(f"{TRANSFER_MODULE}.ensure_folder_with_keep"),
+            patch(f"{TRANSFER_MODULE}.perform_ascp_file_transfer", **perform_patch_kwargs) as mock_perform,
+        ):
+            result = transfer_cloud_upload_to_ena_task.apply(kwargs=kwargs, task_id=task_id).get()
+        return result, mock_perform
+
+    def test_forwards_auth_retry_count_to_ascp_transfer(self):
+        _result, mock_perform = self._apply_with_patched_transfer(extra_kwargs={"auth_retry_count": 2})
+
+        self.assertEqual(2, mock_perform.call_args.kwargs["auth_retry_count"])
+
+    def test_defaults_auth_retry_count_when_omitted(self):
+        _result, mock_perform = self._apply_with_patched_transfer()
+
+        self.assertEqual(0, mock_perform.call_args.kwargs["auth_retry_count"])
+
+    def test_marks_progress_report_running_when_transfer_starts(self):
+        task_id = "38643864-3864-3864-3864-386438643864"
+        TaskProgressReport.objects.create(
+            task_id=task_id,
+            task_name="tasks.transfer_cloud_upload_to_ena_task",
+            status="RETRY",
+        )
+        captured = {}
+
+        def _read_report(*args, **kwargs):
+            report = TaskProgressReport.objects.get(task_id=task_id)
+            captured["status"] = report.status
+            captured["submission_id"] = report.submission_id
+            captured["task_kwargs"] = report.task_kwargs
+            return True
+
+        result, _mock_perform = self._apply_with_patched_transfer(task_id=task_id, perform_side_effect=_read_report)
+
+        self.assertIs(result, True)
+        self.assertEqual(TaskProgressReport.RUNNING, captured["status"])
+        self.assertEqual(self.submission.pk, captured["submission_id"])
+        self.assertIn("submission_cloud_upload_id", captured["task_kwargs"])
+        self.assertIn(str(self.cloud_upload.pk), captured["task_kwargs"])
