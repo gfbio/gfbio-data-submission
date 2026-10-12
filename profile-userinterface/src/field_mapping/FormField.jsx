@@ -16,6 +16,7 @@ import SubmissionOverview from "./input_fields/SubmissionOverview.jsx";
 import TaskProgressReports from "./input_fields/TaskProgressReports.jsx";
 import CuratorActions from "./input_fields/CuratorActions.jsx";
 import SubmissionStatus from "./input_fields/SubmissionStatus.jsx";
+import AgreeToNagoyaProtocol from "./input_fields/AgreeToNagoyaProtocol.jsx"
 
 const FormField = ({ formField, form, onFilesChange, submissionData, submissionFiles, localSubmissionFiles }) => {
     const fieldParameters = {
@@ -83,6 +84,8 @@ const FormField = ({ formField, form, onFilesChange, submissionData, submissionF
                 return <CuratorActions {...fieldParameters}></CuratorActions>
             case "submission-status":
                 return <SubmissionStatus {...fieldParameters}></SubmissionStatus>
+            case "agree-to-nagoya-protocol":
+                return <AgreeToNagoyaProtocol {...fieldParameters}></AgreeToNagoyaProtocol>
             default:
                 return <TextField {...fieldParameters}></TextField>;
         }

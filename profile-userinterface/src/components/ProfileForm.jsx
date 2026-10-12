@@ -270,8 +270,12 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         const validationResult = form.validate();
         const clientErrorList = buildClientErrorList(validationResult.errors);
 
-        setProcessing(true);
         setErrorList(clientErrorList);
+
+        if (clientErrorList.length > 0) {
+            return false;
+        }
+        setProcessing(true);
 
         // Extract embargo_date before filtering other values
         const embargoDate = values.embargo;

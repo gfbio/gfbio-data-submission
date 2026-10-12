@@ -42,6 +42,8 @@ class SubmissionDetailView(
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
+        if not request.data.get("broker_submission_id", False):
+            request.data["broker_submission_id"] = kwargs["broker_submission_id"]
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         merged = instance.data.get('requirements', {}) | serializer.validated_data.get("data", {}).get('requirements',

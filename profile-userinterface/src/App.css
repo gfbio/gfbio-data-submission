@@ -205,6 +205,10 @@ body {
     }
   }
 
+  .mantine-RadioGroup-root.mantine-InputWrapper-required .mantine-InputWrapper-label::after {
+    content: "" !important;
+  }
+
   .info-box .list-group-flush {
     .fa-archive::before, .fa-tags::before {
       font-size: 1.25rem;

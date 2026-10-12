@@ -7,6 +7,7 @@ from dt_upload.models import FileUploadRequest, MultiPartUpload
 
 from gfbio_submissions.brokerage.admin import (
     SubmissionAdmin,
+    check_nagoya_protocol_was_agreed_to,
     re_create_ena_xml,
     retrigger_cloud_upload_checksums,
     submit_to_ena_test,
@@ -93,6 +94,8 @@ class TestSubmissionAdmin(TestCase):
 
     def test_re_create_ena_xml(self):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         AuditableTextData.objects.create(name="test-file", submission=submission)
         re_create_ena_xml(None, None, Submission.objects.all())
         submission = Submission.objects.first()
@@ -103,7 +106,15 @@ class TestSubmissionAdmin(TestCase):
         )
 
     def test_validate_against_ena(self):
-        validate_against_ena(None, None, Submission.objects.all())
+        all_submissions = Submission.objects.all()
+        for submission in all_submissions:
+            if not submission.data:
+                submission.data = {}
+            if "requirements" not in submission.data:
+                submission.data = {"requirements": {}}
+            submission.data["requirements"]["agree-to-nagoya-protocol"] = "yes"
+            submission.save()
+        validate_against_ena(None, None, all_submissions)
 
         self.assertEqual(
             "No resource credentials found for ENA",
@@ -116,7 +127,15 @@ class TestSubmissionAdmin(TestCase):
         )
 
     def test_submit_to_ena_test(self):
-        submit_to_ena_test(None, None, Submission.objects.all())
+        all_submissions = Submission.objects.all()
+        for submission in all_submissions:
+            if not submission.data:
+                submission.data = {}
+            if "requirements" not in submission.data:
+                submission.data = {"requirements": {}}
+            submission.data["requirements"]["agree-to-nagoya-protocol"] = "yes"
+            submission.save()
+        submit_to_ena_test(None, None, all_submissions)
 
         self.assertEqual(
             "No resource credentials found for ENA-Testserver",
@@ -226,6 +245,8 @@ class TestSubmissionAdmin(TestCase):
     @patch_ena_transfer_action
     def test_transfer_to_ena_queues_eligible_uploads_only(self, mock_si, mock_ftp):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         first = self._create_cloud_upload(
             submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
@@ -279,6 +300,8 @@ class TestSubmissionAdmin(TestCase):
         )
         submission.user.site_configuration = None
         submission.user.save()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         modeladmin = MagicMock()
 
         transfer_submission_cloud_uploads_to_ena(
@@ -292,6 +315,8 @@ class TestSubmissionAdmin(TestCase):
     @patch_ena_transfer_action
     def test_transfer_to_ena_skips_when_webin_folder_fails(self, mock_si, mock_ftp):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         self._create_cloud_upload(
             submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
@@ -309,6 +334,8 @@ class TestSubmissionAdmin(TestCase):
     @patch_ena_transfer_action
     def test_transfer_to_ena_raises_for_curator_when_transfer_already_running(self, mock_si, mock_ftp):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         self._create_cloud_upload(
             submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
@@ -326,6 +353,8 @@ class TestSubmissionAdmin(TestCase):
     @patch_ena_transfer_action
     def test_transfer_to_ena_messages_admin_when_transfer_already_running(self, mock_si, mock_ftp):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         self._create_cloud_upload(
             submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
@@ -344,6 +373,8 @@ class TestSubmissionAdmin(TestCase):
     @patch_ena_transfer_action
     def test_transfer_to_ena_releases_lock_when_dispatcher_start_fails(self, mock_si, mock_ftp):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         self._create_cloud_upload(
             submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
@@ -361,6 +392,8 @@ class TestSubmissionAdmin(TestCase):
     @patch_ena_transfer_action
     def test_transfer_to_ena_starts_independent_dispatchers_per_submission(self, mock_si, mock_ftp):
         submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
         other_user = User.objects.create(username="user2", site_configuration=submission.user.site_configuration)
         other_submission = Submission.objects.create(
             user=other_user,
@@ -368,7 +401,7 @@ class TestSubmissionAdmin(TestCase):
             center_name=submission.center_name,
             target="ENA",
             release=False,
-            data={},
+            data={"requirements": { "agree-to-nagoya-protocol": "yes"}},
         )
         first = self._create_cloud_upload(
             submission, "a.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
@@ -403,3 +436,89 @@ class TestSubmissionAdmin(TestCase):
         ]
         self.assertEqual(1, len(matching))
         self.assertEqual(transfer_submission_cloud_uploads_to_ena, matching[0]["callable"])
+
+    @patch("gfbio_submissions.brokerage.admin.JiraClient")
+    def test_check_nagoya_protocol_was_agreed_to_was_agreed(self, mock_jira_cls):
+        resource_cred = ResourceCredential.objects.create(
+            title="Resource Title", url="https://www.example.com", authentication_string="letMeIn",
+        )
+        site_configuration = SiteConfiguration.objects.create(
+            title="Default Conf", ena_server=resource_cred, helpdesk_server=resource_cred, comment="Default configuration",
+        )
+        user = User.objects.create(username="nagoya-test-user", site_configuration=site_configuration)
+        submission = Submission.objects.create(
+            user=user, status="OPEN", target="ENA", release=False,
+            data={
+                "requirements": {
+                    "agree-to-nagoya-protocol": "yes"
+                }
+            },
+        )
+        submission.additionalreference_set.create(primary=True, reference_key="SAND-1", type=GFBIO_HELPDESK_TICKET)
+        mock_jira = MagicMock()
+        mock_jira_cls.return_value = mock_jira
+        
+        modeladmin = MagicMock()
+        result = check_nagoya_protocol_was_agreed_to(modeladmin, None, submission, "Test-Action")
+        
+        self.assertTrue(result)
+        modeladmin.message_user.assert_not_called()
+        mock_jira.add_comment.assert_not_called()
+
+    @patch("gfbio_submissions.brokerage.admin.JiraClient")
+    def test_check_nagoya_protocol_was_agreed_to_disagreed(self, mock_jira_cls):
+        resource_cred = ResourceCredential.objects.create(
+            title="Resource Title", url="https://www.example.com", authentication_string="letMeIn",
+        )
+        site_configuration = SiteConfiguration.objects.create(
+            title="Default Conf", ena_server=resource_cred, helpdesk_server=resource_cred, comment="Default configuration",
+        )
+        user = User.objects.create(username="nagoya-test-user", site_configuration=site_configuration)
+        submission = Submission.objects.create(
+            user=user, status="OPEN", target="ENA", release=False,
+            data={
+                "requirements": {
+                    "agree-to-nagoya-protocol": "no"
+                }
+            },
+        )
+        submission.additionalreference_set.create(primary=True, reference_key="SAND-1", type=GFBIO_HELPDESK_TICKET)
+        mock_jira = MagicMock()
+        mock_jira_cls.return_value = mock_jira
+        
+        modeladmin = MagicMock()
+        result = check_nagoya_protocol_was_agreed_to(modeladmin, None, submission, "Test-Action")
+        
+        self.assertFalse(result)
+        modeladmin.message_user.assert_called_once()
+        mock_jira.add_comment.assert_called_once()
+        comment_text = mock_jira.add_comment.call_args.kwargs["text"]
+        self.assertIn("the user didn't agreed to compliance", comment_text)
+
+    @patch("gfbio_submissions.brokerage.admin.JiraClient")
+    def test_check_nagoya_protocol_was_agreed_to_missing(self, mock_jira_cls):
+        resource_cred = ResourceCredential.objects.create(
+            title="Resource Title", url="https://www.example.com", authentication_string="letMeIn",
+        )
+        site_configuration = SiteConfiguration.objects.create(
+            title="Default Conf", ena_server=resource_cred, helpdesk_server=resource_cred, comment="Default configuration",
+        )
+        user = User.objects.create(username="nagoya-test-user", site_configuration=site_configuration)
+        submission = Submission.objects.create(
+            user=user, status="OPEN", target="ENA", release=False,
+            data={
+                "requirements": { }
+            },
+        )
+        submission.additionalreference_set.create(primary=True, reference_key="SAND-1", type=GFBIO_HELPDESK_TICKET)
+        mock_jira = MagicMock()
+        mock_jira_cls.return_value = mock_jira
+        
+        modeladmin = MagicMock()
+        result = check_nagoya_protocol_was_agreed_to(modeladmin, None, submission, "Test-Action")
+        
+        self.assertFalse(result)
+        modeladmin.message_user.assert_called_once()
+        mock_jira.add_comment.assert_called_once()
+        comment_text = mock_jira.add_comment.call_args.kwargs["text"]
+        self.assertIn("the user didn't agreed to compliance", comment_text)
