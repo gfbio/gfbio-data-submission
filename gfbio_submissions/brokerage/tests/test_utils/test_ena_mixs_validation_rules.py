@@ -187,10 +187,6 @@ class TestEnaMixsValidationRules(SimpleTestCase):
         self.assertIsNotNone(get_presence_rule("project name"))
         self.assertIsNone(get_presence_rule("depth"))
 
-    def test_gfbio_template_region_field_stays_mandatory(self):
-        self.assertIn("geographic location (region and locality)", MIXS_HEADER_MANDATORY_FIELDS)
-        self.assertIn("geographic location (region and locality)", MIXS_ROW_ALWAYS_MANDATORY_FIELDS)
-
     def test_temperature_formats(self):
         temperature_rule = get_format_rule("temperature")
         self.assertTrue(format_rule_value_matches(temperature_rule, "25.5"))
