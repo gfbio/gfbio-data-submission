@@ -89,7 +89,6 @@ def _ebi_decimal_degrees_pattern() -> str:
 # ---------------------------------------------------------------------------
 
 # GFBIO template mandatory fields are kept mandatory even when ENA marks them optional
-# (e.g. geographic location (region and locality)).
 _MIXS_GEO_ENVO_AND_DATE_FIELDS = [
     "collection date",
     "geographic location (latitude)",
@@ -106,7 +105,6 @@ MIXS_HEADER_MANDATORY_FIELDS = [
     *_MIXS_GEO_ENVO_AND_DATE_FIELDS,
     "depth",
     "elevation",
-    "geographic location (region and locality)",
 ]
 
 MIXS_ENVIRONMENTAL_PACKAGE_HEADER_FIELDS = ["project name"]
@@ -115,7 +113,6 @@ MIXS_ROW_ALWAYS_MANDATORY_FIELDS = [
     "investigation type",
     "environmental package",
     *_MIXS_GEO_ENVO_AND_DATE_FIELDS,
-    "geographic location (region and locality)",
 ]
 
 MIXS_ROW_ENVIRONMENTAL_PACKAGE_MANDATORY_FIELDS = ["project name"]
