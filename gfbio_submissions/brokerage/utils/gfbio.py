@@ -47,6 +47,10 @@ def check_length_for_jira(requirements):
     return description, summary, truncated_description
 
 
+def is_ena_data_center(data_center):
+    return isinstance(data_center, str) and data_center.startswith("ENA")
+
+
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, prepare_for_update=False):
     requirements = submission.data.get("requirements", {})
     # DASS-3816: on update, never set reporter (avoids overwriting with brokeragent on failed lookup).
@@ -100,13 +104,15 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
     #     requirements.get('data_center', ''),
     #     GFBIO_REQUEST_TYPE_MAPPINGS.get('default', '')
     # )
-    jira_request_target = "molecular" if requirements.get("data_center", "").startswith("ENA") else "generic"
+    # DASS-3766: molecular request type only for an ENA data_center string.
+    data_center = requirements.get("data_center", "")
+    jira_request_target = "molecular" if is_ena_data_center(data_center) else "generic"
 
     jira_request_type = "sand/{0}-data".format(jira_request_target)
     if site_config.jira_project_key == SiteConfiguration.DSUB:
         jira_request_type = (
             "dsub/{0}".format(jira_request_target)
-            if jira_request_type == "molecular"
+            if jira_request_target == "molecular"
             else "dsub/general-data-submission"
         )
 
@@ -154,5 +160,9 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         # if len(assignee) > 0:
         #     mutual_data['assignee'] = {'name': assignee}
         mutual_data["reporter"] = {"name": reporter.get("jira_user_name", site_config.contact)}
+        mutual_data["customfield_10010"] = jira_request_type
+    elif jira_request_target == "molecular":
+        # On update, set the request type only for molecular submissions so an
+        # existing Generic Data type is not reset.
         mutual_data["customfield_10010"] = jira_request_type
     return mutual_data

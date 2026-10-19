@@ -2,6 +2,8 @@
 import logging
 
 from config.celery_app import app
+from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
+from gfbio_submissions.brokerage.utils.gfbio import is_ena_data_center
 from gfbio_submissions.brokerage.utils.molecular_content_checker import MolecularContentChecker
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
 from ...models.task_progress_report import TaskProgressReport
@@ -33,9 +35,27 @@ def check_for_molecular_content_in_submission_task(self, previous_task_result=No
         "process submission={}.".format(submission.broker_submission_id)
     )
 
+    data_center_before = submission.data.get("requirements", {}).get("data_center")
+
     file_opener = create_submission_file_opener(submission)
     checker = MolecularContentChecker(submission, file_opener)
     molecular_data_available, messages, check_performed, infos = checker.run_check()
+
+    data_center_after = submission.data.get("requirements", {}).get("data_center")
+    # Follow-up stays off the Celery chain: the next task needs this task's return dict.
+    became_ena = is_ena_data_center(data_center_after) and not is_ena_data_center(data_center_before)
+    if became_ena and submission.get_primary_helpdesk_reference():
+        from gfbio_submissions.brokerage.tasks.jira_tasks.update_submission_issue import update_submission_issue_task
+
+        logger.info(
+            msg="check_for_molecular_content_in_submission_task. "
+            "data_center changed to ENA, schedule update_submission_issue_task "
+            "for submission={}.".format(submission.broker_submission_id)
+        )
+        update_submission_issue_task.apply_async(
+            kwargs={"submission_id": submission.pk},
+            countdown=SUBMISSION_DELAY,
+        )
 
     logger.info(
         msg="check_for_molecular_content_in_submission_task. "
