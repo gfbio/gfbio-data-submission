@@ -251,6 +251,13 @@ class TestSubmissionAdmin(TestCase):
             submission, "ready.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
         second = self._create_cloud_upload(submission, "RETRY.BAM", SubmissionCloudUpload.STATUS_TRANSFER_FAILED)
+        bad_checksum = self._create_cloud_upload(
+            submission, "bad-checksum.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM
+        )
+        self._create_cloud_upload(submission, "transferred.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED)
+        self._create_cloud_upload(
+            submission, "checked.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
+        )
         self._create_cloud_upload(submission, "notes.csv", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM)
         self._create_cloud_upload(submission, "unchecked.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED)
         self._create_cloud_upload(submission, "new.fastq.gz", SubmissionCloudUpload.STATUS_NEW)
@@ -273,7 +280,40 @@ class TestSubmissionAdmin(TestCase):
         self.assertTrue(lock_token)
         mock_si.assert_called_once_with(
             submission_id=submission.pk,
-            submission_cloud_upload_ids=[first.pk, second.pk],
+            submission_cloud_upload_ids=[first.pk, second.pk, bad_checksum.pk],
+            user_id=submission.user.id,
+            index=0,
+            lock_token=lock_token,
+        )
+        dispatcher_sig.apply_async.assert_called_once_with(countdown=SUBMISSION_DELAY)
+
+    @patch(
+        "gfbio_submissions.brokerage.configuration.settings.ENA_POST_TRANSFER_CHECKSUM_ENABLED",
+        True,
+    )
+    @patch_ena_transfer_action
+    def test_transfer_to_ena_queues_transferred_when_post_transfer_checksum_enabled(self, mock_si, mock_ftp):
+        submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
+        transferred = self._create_cloud_upload(
+            submission, "transferred.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED
+        )
+        self._create_cloud_upload(
+            submission, "checked.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_CHECKED_CHECKSUM
+        )
+        dispatcher_sig = MagicMock()
+        mock_si.return_value = dispatcher_sig
+
+        transfer_submission_cloud_uploads_to_ena(
+            None, self._request_for(submission.user), Submission.objects.filter(pk=submission.pk)
+        )
+
+        lock_token = cache.get(f"ena-cloud-upload-transfer:{submission.pk}")
+        self.assertTrue(lock_token)
+        mock_si.assert_called_once_with(
+            submission_id=submission.pk,
+            submission_cloud_upload_ids=[transferred.pk],
             user_id=submission.user.id,
             index=0,
             lock_token=lock_token,
@@ -406,7 +446,7 @@ class TestSubmissionAdmin(TestCase):
         first = self._create_cloud_upload(
             submission, "a.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
         )
-        second = self._create_cloud_upload(other_submission, "b.fastq.gz", SubmissionCloudUpload.STATUS_IS_TRANSFERRED)
+        second = self._create_cloud_upload(other_submission, "b.fastq.gz", SubmissionCloudUpload.STATUS_TRANSFER_FAILED)
         mock_si.return_value = MagicMock()
 
         transfer_submission_cloud_uploads_to_ena(
