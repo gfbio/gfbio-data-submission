@@ -472,6 +472,7 @@ def _skip_ena_transfer(modeladmin, request, message, level=messages.WARNING, rai
 
 
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.configuration.settings import ENA_POST_TRANSFER_CHECKSUM_ENABLED
     from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
     from .tasks.process_tasks.transfer_cloud_upload_to_ena import (
@@ -494,10 +495,11 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     )
     allowed_statuses = [
         SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
-        SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
-        SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
         SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+        SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
     ]
+    if ENA_POST_TRANSFER_CHECKSUM_ENABLED:
+        allowed_statuses.append(SubmissionCloudUpload.STATUS_IS_TRANSFERRED)
 
     for obj in queryset:
         if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, transfer_submission_cloud_uploads_to_ena.short_description):
