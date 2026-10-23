@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import copy
 import json
 import os
 import random
@@ -73,6 +74,21 @@ class TestHelpDeskTicketMethods(TestCase):
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
 
+    def _load_generic_data(self):
+        with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
+            return json.load(data_file)
+
+    def _save_submission(self, data):
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        return serializer.save(user=User.objects.first())
+
+    def _dsub_site_config(self):
+        # Unsaved in-memory copy so the stored site configuration stays SAND.
+        site_config = SiteConfiguration.objects.first()
+        site_config.jira_project_key = SiteConfiguration.DSUB
+        return site_config
+
     def test_prepare_helpdesk_payload(self):
         with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
             data = json.load(data_file)
@@ -141,6 +157,75 @@ class TestHelpDeskTicketMethods(TestCase):
         site_config = SiteConfiguration.objects.first()
         payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
+
+    def test_dsub_create_request_type(self):
+        dsub_config = self._dsub_site_config()
+        ena_data = self._load_generic_data()
+        ena_submission = self._save_submission(ena_data)
+        ena_create = gfbio_prepare_create_helpdesk_payload(site_config=dsub_config, submission=ena_submission)
+        self.assertEqual("dsub/molecular", ena_create["customfield_10010"])
+        self.assertIn("reporter", ena_create)
+
+        other_data = copy.deepcopy(ena_data)
+        other_data["requirements"]["data_center"] = (
+            "GFBio Data Centers - our curators will suggest the appropriate one(s)"
+        )
+        other_create = gfbio_prepare_create_helpdesk_payload(
+            site_config=dsub_config, submission=self._save_submission(other_data)
+        )
+        self.assertEqual("dsub/general-data-submission", other_create["customfield_10010"])
+
+        missing_data = copy.deepcopy(ena_data)
+        missing_data["requirements"].pop("data_center")
+        missing_create = gfbio_prepare_create_helpdesk_payload(
+            site_config=dsub_config, submission=self._save_submission(missing_data)
+        )
+        self.assertEqual("dsub/general-data-submission", missing_create["customfield_10010"])
+
+    def test_dsub_update_request_type(self):
+        dsub_config = self._dsub_site_config()
+        ena_data = self._load_generic_data()
+        ena_update = gfbio_prepare_create_helpdesk_payload(
+            site_config=dsub_config,
+            submission=self._save_submission(ena_data),
+            prepare_for_update=True,
+        )
+        self.assertEqual("dsub/molecular", ena_update["customfield_10010"])
+        self.assertNotIn("reporter", ena_update)
+
+        other_data = copy.deepcopy(ena_data)
+        other_data["requirements"]["data_center"] = (
+            "GFBio Data Centers - our curators will suggest the appropriate one(s)"
+        )
+        other_update = gfbio_prepare_create_helpdesk_payload(
+            site_config=dsub_config,
+            submission=self._save_submission(other_data),
+            prepare_for_update=True,
+        )
+        self.assertNotIn("customfield_10010", other_update)
+
+    def test_sand_update_request_type_molecular(self):
+        sand_config = SiteConfiguration.objects.first()
+        self.assertEqual(SiteConfiguration.SAND, sand_config.jira_project_key)
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=sand_config,
+            submission=self._save_submission(self._load_generic_data()),
+            prepare_for_update=True,
+        )
+        self.assertEqual("sand/molecular-data", payload["customfield_10010"])
+
+    def test_request_type_non_string_data_center(self):
+        dsub_config = self._dsub_site_config()
+        submission = self._save_submission(self._load_generic_data())
+        submission.data["requirements"]["data_center"] = None
+        none_create = gfbio_prepare_create_helpdesk_payload(site_config=dsub_config, submission=submission)
+        self.assertEqual("dsub/general-data-submission", none_create["customfield_10010"])
+        none_update = gfbio_prepare_create_helpdesk_payload(
+            site_config=dsub_config,
+            submission=submission,
+            prepare_for_update=True,
+        )
+        self.assertNotIn("customfield_10010", none_update)
 
     def test_prepare_helpdesk_payload_update_omits_reporter(self):
         with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:

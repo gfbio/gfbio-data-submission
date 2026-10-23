@@ -472,6 +472,7 @@ def _skip_ena_transfer(modeladmin, request, message, level=messages.WARNING, rai
 
 
 def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.configuration.settings import ENA_POST_TRANSFER_CHECKSUM_ENABLED
     from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
     from .tasks.process_tasks.transfer_cloud_upload_to_ena import (
@@ -494,10 +495,11 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     )
     allowed_statuses = [
         SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
-        SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
-        SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
         SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+        SubmissionCloudUpload.STATUS_IS_TRANSFERRED_WITH_BAD_CHECKSUM,
     ]
+    if ENA_POST_TRANSFER_CHECKSUM_ENABLED:
+        allowed_statuses.append(SubmissionCloudUpload.STATUS_IS_TRANSFERRED)
 
     for obj in queryset:
         if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, transfer_submission_cloud_uploads_to_ena.short_description):
@@ -755,9 +757,9 @@ class SubmissionAdmin(admin.ModelAdmin):
                     tasks_by_upload[scu_id].append({"id": task_report["task_id"], "status": task_return_value[0:1]})
 
         # One bulk query for admin log history instead of one LogEntry query per upload.
-        # Use DISTINCT ON so Postgres returns only the earliest log row per upload, otherwise
-        # fall back to fetching matching rows in Python and keeping only the first per upload.
-        first_log_by_upload_id = {}
+        # Order newest first so Postgres DISTINCT ON and the Python fallback both keep
+        # the latest log row per upload. On equal action_time, the higher pk wins.
+        latest_log_by_upload_id = {}
         if cloud_upload_ids:
             from django.db.utils import NotSupportedError
 
@@ -766,18 +768,18 @@ class SubmissionAdmin(admin.ModelAdmin):
                     content_type=40,
                     object_id__in=[str(upload_id) for upload_id in cloud_upload_ids],
                 )
-                .order_by("object_id", "action_time", "pk")
+                .order_by("object_id", "-action_time", "-pk")
                 .only("object_id", "action_time", "change_message")
             )
             try:
-                first_log_by_upload_id = {
+                latest_log_by_upload_id = {
                     log_entry.object_id: log_entry
                     for log_entry in log_entries_qs.distinct("object_id")
                 }
             except NotSupportedError:
                 for log_entry in log_entries_qs:
-                    if log_entry.object_id not in first_log_by_upload_id:
-                        first_log_by_upload_id[log_entry.object_id] = log_entry
+                    if log_entry.object_id not in latest_log_by_upload_id:
+                        latest_log_by_upload_id[log_entry.object_id] = log_entry
 
         cloud_upload_list = {}
         known_status_names = [SubmissionCloudUpload.get_status_name(state) for state in orderlist]
@@ -785,7 +787,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             cloud_upload_list[status_name] = []
 
         for cloud_upload in submission_cloud_uploads:
-            last_action = first_log_by_upload_id.get(str(cloud_upload["pk"]))
+            last_action = latest_log_by_upload_id.get(str(cloud_upload["pk"]))
             status = SubmissionCloudUpload.get_status_name(cloud_upload["status"])
             if not status in cloud_upload_list:
                 cloud_upload_list[status] = []
