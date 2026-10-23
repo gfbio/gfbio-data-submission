@@ -1,8 +1,13 @@
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import TestCase
+from django.urls import reverse
+from django.utils import timezone
 from dt_upload.models import FileUploadRequest, MultiPartUpload
 
 from gfbio_submissions.brokerage.admin import (
@@ -562,3 +567,75 @@ class TestSubmissionAdmin(TestCase):
         mock_jira.add_comment.assert_called_once()
         comment_text = mock_jira.add_comment.call_args.kwargs["text"]
         self.assertIn("the user didn't agreed to compliance", comment_text)
+
+
+class TestSubmissionCloudUploadAdminLatestLog(TestCase):
+    def _ensure_log_content_type(self):
+        if ContentType.objects.filter(pk=40).exists():
+            return
+        app_label = "brokerage"
+        model_name = "dass3881logtarget"
+        suffix = 0
+        while ContentType.objects.filter(app_label=app_label, model=model_name).exists():
+            suffix += 1
+            model_name = f"dass3881logtarget{suffix}"
+        ContentType.objects.create(pk=40, app_label=app_label, model=model_name)
+
+    def test_cloud_upload_list_shows_latest_log_entry(self):
+        resource_cred = ResourceCredential.objects.create(
+            title="dass-3881-resource",
+            url="https://www.example.com",
+            authentication_string="letMeIn",
+        )
+        site_configuration = SiteConfiguration.objects.create(
+            title="dass-3881-conf",
+            ena_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment="DASS-3881 configuration",
+        )
+        user = User.objects.create(
+            username="dass-3881-staff",
+            is_staff=True,
+            is_active=True,
+            site_configuration=site_configuration,
+        )
+        submission = Submission.objects.create(
+            user=user,
+            status="OPEN",
+            target="ENA",
+            release=False,
+            data={},
+        )
+        self._ensure_log_content_type()
+        upload = SubmissionCloudUpload.objects.create(
+            submission=submission,
+            attach_to_ticket=False,
+            meta_data=False,
+            file_upload=None,
+        )
+        older_message = "older cloud upload history"
+        newer_message = "latest cloud upload note"
+        upload.log_change(older_message)
+        upload.log_change(newer_message)
+
+        log_entries = list(LogEntry.objects.filter(content_type_id=40, object_id=str(upload.pk)).order_by("pk"))
+        self.assertEqual(2, len(log_entries))
+        log_entries[0].action_time = timezone.localtime(log_entries[1].action_time) - timedelta(hours=1)
+        log_entries[0].save(update_fields=["action_time"])
+        latest_entry = LogEntry.objects.get(pk=log_entries[1].pk)
+
+        self.client.force_login(user)
+        response = self.client.get(
+            reverse("admin:submission_submission_submission_cloud_upload_view", args=[submission.pk])
+        )
+        self.assertEqual(200, response.status_code)
+
+        status_name = SubmissionCloudUpload.get_status_name(upload.status)
+        rows = response.context["cloud_upload_list"][status_name]
+        matching = [row for row in rows if row["pk"] == upload.pk]
+        self.assertEqual(1, len(matching))
+        row = matching[0]
+        self.assertEqual(newer_message, row["last_change_message"])
+        self.assertEqual(latest_entry.action_time, row["last_change_action_time"])
