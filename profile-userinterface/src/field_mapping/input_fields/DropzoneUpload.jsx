@@ -2,8 +2,6 @@ import { Center, Text } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import deleteSubmissionUpload from "../../api/deleteSubmissionUpload.jsx";
-import patchSubmissionUpload from "../../api/patchSubmissionUploadMetadata.jsx";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import UploadMessage from "../../utils/UploadMessage.jsx";
@@ -41,7 +39,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
-        onFilesChange(newFiles, !withinLimits, metadataIndex);
+        onFilesChange(newFiles, !withinLimits, metadataIndex, null);
         form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
@@ -56,18 +54,14 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         setMetadataIndex(newMetadata);
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
-        onFilesChange(newFiles, !withinLimits, newMetadata);
+        onFilesChange(newFiles, !withinLimits, newMetadata, null);
         form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
     const handleRemoveServer = async (index) => {
-        if (!submissionData?.broker_submission_id) return;
-
-        const brokerSubmissionId = submissionData?.broker_submission_id;
-
         try {
             const fileToDelete = serverFiles[index];
-            await deleteSubmissionUpload(brokerSubmissionId, fileToDelete.pk);
+            onFilesChange(localFiles, uploadLimitExceeded, metadataIndex, fileToDelete.pk);
 
             const newServerFiles = serverFiles.filter((_, i) => i !== index);
             setServerFiles(newServerFiles);
@@ -81,37 +75,13 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         }
     };
 
-    const updateServerMetadata = async (file, isMetadata) => {
-        if (!submissionData?.broker_submission_id) return;
-
-        const brokerSubmissionId = submissionData?.broker_submission_id;
-
-        try {
-            const formData = new FormData();
-            formData.append("meta_data", isMetadata);
-            await patchSubmissionUpload(brokerSubmissionId, file.pk, formData);
-        } catch (error) {
-            console.error("Error updating metadata flag:", error);
-        }
-    };
-
-    const deselectServerFile = async (index) => {
-        if (!submissionData?.broker_submission_id || !serverFiles[index]) return;
-        await updateServerMetadata(serverFiles[index], false);
-    };
-
     const handleMetadataToggle = async (index, source) => {
         if (source === "local") {
-            // Deselect previously selected server file if exists
-            if (metadataIndex.source === "server" && metadataIndex.indices.length > 0) {
-                await deselectServerFile(metadataIndex.indices[0]);
-            }
-
             if (localFiles[index].meta_data) {
                 // Deselect current file if it's selected
                 localFiles[index].meta_data = false;
                 setMetadataIndex({ indices: [], source: null });
-                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null });
+                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null }, null);
             } else {
                 // Ensure only one local file is marked as metadata:
                 localFiles.forEach((file, i) => {
@@ -119,7 +89,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 });
                 const newMetaIndex = { indices: [index], source: "local" };
                 setMetadataIndex(newMetaIndex);
-                onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex);
+                onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex, null);
             }
             setLocalFiles([...localFiles]);
         } else if (source === "server") {
@@ -129,21 +99,15 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
             // Deselect current file if it's selected
             if (isCurrentlySelected) {
-                await deselectServerFile(index);
+                serverFiles[index].meta_data = false;
                 setMetadataIndex({ indices: [], source: null });
-                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null });
+                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null }, null);
                 return;
             }
 
-            // Deselect previously selected server file if exists
-            if (metadataIndex.source === "server" && metadataIndex.indices.length > 0) {
-                await deselectServerFile(metadataIndex.indices[0]);
-            }
-
-            await updateServerMetadata(serverFiles[index], true);
             const newMetaIndex = { indices: [index], source: "server" };
             setMetadataIndex(newMetaIndex);
-            onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex);
+            onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex, null);
         }
     };
 

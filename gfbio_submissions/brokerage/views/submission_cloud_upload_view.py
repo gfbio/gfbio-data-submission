@@ -248,14 +248,15 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
             if hasattr(mpu.file_upload_request, "submissioncloudupload"):
                 mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
 
-            add_metadata_file_validation_task.apply_async(
-                kwargs={
-                    "submission_id": "{0}".format(mpu.file_upload_request.submissioncloudupload.submission.pk),
-                    "submission_upload_id": "{0}".format(submission_cloud_upload.pk),
-                    "triggered_by_user_id": self.request.user.pk,
-                },
-                countdown=SUBMISSION_DELAY,
-            )
+            if mpu.file_upload_request.submissioncloudupload.submission.status not in [Submission.CLOSED, Submission.CANCELLED]:
+                add_metadata_file_validation_task.apply_async(
+                    kwargs={
+                        "submission_id": "{0}".format(mpu.file_upload_request.submissioncloudupload.submission.pk),
+                        "submission_upload_id": "{0}".format(submission_cloud_upload.pk),
+                        "triggered_by_user_id": self.request.user.pk,
+                    },
+                    countdown=SUBMISSION_DELAY,
+                )
         return response
 
 
