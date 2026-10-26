@@ -71,6 +71,7 @@ DJANGO_APPS = [
     "django.forms",
 ]
 THIRD_PARTY_APPS = [
+    "auditlog",
     "crispy_forms",
     "allauth",
     "allauth.account",
@@ -153,6 +154,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "gfbio_submissions.utils.middleware.AuditlogActorMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     # "django.middleware.common.BrokenLinkEmailsMiddleware",
     "gfbio_submissions.utils.middleware.LogBrokenLinksMiddleware",

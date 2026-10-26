@@ -2,7 +2,7 @@ from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from django.contrib.admin.models import LogEntry
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import TestCase
@@ -639,3 +639,18 @@ class TestSubmissionCloudUploadAdminLatestLog(TestCase):
         row = matching[0]
         self.assertEqual(newer_message, row["last_change_message"])
         self.assertEqual(latest_entry.action_time, row["last_change_action_time"])
+
+        LogEntry.objects.create(
+            user=user,
+            content_type_id=40,
+            object_id=str(upload.pk),
+            object_repr="upload",
+            action_flag=CHANGE,
+            change_message="Admin action: Set the state of the selected cloud-uploads to deleted",
+        )
+        response = self.client.get(
+            reverse("admin:submission_submission_submission_cloud_upload_view", args=[submission.pk])
+        )
+        rows = response.context["cloud_upload_list"][status_name]
+        row = [item for item in rows if item["pk"] == upload.pk][0]
+        self.assertEqual(newer_message, row["last_change_message"])
