@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
@@ -72,10 +72,7 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual(302, response.status_code)
         submission.refresh_from_db()
         self.assertEqual(Submission.CANCELLED, submission.status)
-
-        history = LogEntry.objects.get(object_id=str(submission.pk))
-        self.assertEqual(self.staff.pk, history.user_id)
-        self.assertEqual("Admin action: Cancel selected submissions", history.change_message)
+        self.assertFalse(LogEntry.objects.filter(change_message__startswith="Admin action:").exists())
 
         entry = _updates(submission).get()
         self.assertEqual(self.staff.pk, entry.actor_id)
@@ -97,13 +94,11 @@ class TestSubmissionAudit(TestCase):
             },
         )
         self.assertEqual(302, response.status_code)
-        logged_ids = set(
-            LogEntry.objects.filter(
-                object_id__in=[str(first.pk), str(second.pk)],
-                change_message__startswith="Admin action:",
-            ).values_list("object_id", flat=True)
-        )
-        self.assertEqual({str(first.pk), str(second.pk)}, logged_ids)
+        self.assertFalse(LogEntry.objects.filter(change_message__startswith="Admin action:").exists())
+        for submission in (first, second):
+            entry = _updates(submission).get()
+            self.assertEqual("admin", entry.additional_data["channel"])
+            self.assertEqual("Cancel selected submissions", entry.additional_data["action"])
 
     def test_download_action_is_not_logged(self):
         submission = _submission(self.staff)
@@ -153,10 +148,13 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual(302, response.status_code)
         self.assertEqual(1, apply_async.call_count)
         self.assertEqual(agreed.pk, apply_async.call_args.kwargs["kwargs"]["submission_id"])
-        logged_ids = set(
-            LogEntry.objects.filter(change_message__startswith="Admin action:").values_list("object_id", flat=True)
-        )
-        self.assertEqual({str(agreed.pk)}, logged_ids)
+        self.assertFalse(LogEntry.objects.filter(change_message__startswith="Admin action:").exists())
+        entry = _updates(agreed).get()
+        self.assertEqual(self.staff.pk, entry.actor_id)
+        self.assertEqual("admin", entry.additional_data["channel"])
+        self.assertEqual("Validate against ENA production server", entry.additional_data["action"])
+        self.assertEqual({}, entry.changes_dict)
+        self.assertFalse(_updates(declined).exists())
 
     @patch("gfbio_submissions.brokerage.admin.jira_cancel_issue")
     def test_negative_action_index_uses_the_last_posted_action(self, _jira_cancel):
@@ -174,8 +172,10 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual(302, response.status_code)
         submission.refresh_from_db()
         self.assertEqual(Submission.CANCELLED, submission.status)
-        history = LogEntry.objects.get(object_id=str(submission.pk))
-        self.assertEqual("Admin action: Cancel selected submissions", history.change_message)
+        self.assertFalse(LogEntry.objects.filter(change_message__startswith="Admin action:").exists())
+        entry = _updates(submission).get()
+        self.assertEqual("Cancel selected submissions", entry.additional_data["action"])
+        self.assertEqual("admin", entry.additional_data["channel"])
 
     def test_audit_view_requires_model_permission_and_shows_diff(self):
         submission = _submission(self.staff)
@@ -197,6 +197,79 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, "SUBMITTED")
 
+    def test_admin_change_form_records_admin_channel(self):
+        from django.contrib.admin.sites import AdminSite
+
+        from gfbio_submissions.brokerage.admin import SubmissionAdmin
+
+        submission = _submission(self.staff)
+        submission.release = True
+        from auditlog.context import set_actor
+
+        with set_actor(self.staff):
+            SubmissionAdmin(Submission, AdminSite()).save_model(None, submission, None, True)
+
+        entry = _updates(submission).get()
+        self.assertEqual(self.staff.pk, entry.actor_id)
+        self.assertEqual("admin", entry.additional_data["channel"])
+        self.assertEqual("Save", entry.additional_data["action"])
+        self.assertIn("release", entry.changes_dict)
+
+
+class _QuietCelerySignature:
+    def set(self, *args, **kwargs):
+        return self
+
+    def __or__(self, other):
+        return self
+
+    def __call__(self, *args, **kwargs):
+        return None
+
+
+def _quiet_celery_signature(*args, **kwargs):
+    return _QuietCelerySignature()
+
+
+@patch(
+    "gfbio_submissions.brokerage.tasks.submission_tasks."
+    "check_for_molecular_content_in_submission.check_for_molecular_content_in_submission_task.s",
+    _quiet_celery_signature,
+)
+@patch(
+    "gfbio_submissions.brokerage.tasks.process_tasks."
+    "trigger_submission_process_for_updates.trigger_submission_process_for_updates_task.s",
+    _quiet_celery_signature,
+)
+@patch(
+    "gfbio_submissions.brokerage.tasks.jira_tasks.update_submission_issue.update_submission_issue_task.s",
+    _quiet_celery_signature,
+)
+class TestFrontendSaveChannel(APITestCase):
+    def test_profile_put_records_frontend_channel(self):
+        owner = User.objects.create_user(username="profile-owner", password="secret")
+        owner.is_user = True
+        owner.save()
+        token = Token.objects.create(user=owner)
+        submission = _submission(owner)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+        response = client.put(
+            reverse("brokerage:submissions_detail", kwargs={"broker_submission_id": submission.broker_submission_id}),
+            {
+                "target": "GENERIC",
+                "data": {"requirements": {"title": "A title", "description": "A description"}},
+            },
+            format="json",
+        )
+        self.assertEqual(200, response.status_code, response.content)
+        entry = _updates(submission).get()
+        self.assertEqual(owner.pk, entry.actor_id)
+        self.assertEqual("frontend", entry.additional_data["channel"])
+        self.assertEqual("Save", entry.additional_data["action"])
+        self.assertIn("target", entry.changes_dict)
+
 
 class TestCuratorAndTokenAudit(APITestCase):
     def setUp(self):
@@ -216,10 +289,7 @@ class TestCuratorAndTokenAudit(APITestCase):
         )
         response = self.client.post(url, {"action": "cancel_selected_submissions"}, format="json")
         self.assertEqual(200, response.status_code)
-
-        history = LogEntry.objects.get(object_id=str(submission.pk))
-        self.assertEqual(self.curator.pk, history.user_id)
-        self.assertEqual("Curator action: Cancel selected submissions", history.change_message)
+        self.assertFalse(LogEntry.objects.filter(change_message__startswith="Curator action:").exists())
 
         entry = _updates(submission).get()
         self.assertEqual(self.curator.pk, entry.actor_id)
@@ -234,9 +304,7 @@ class TestCuratorAndTokenAudit(APITestCase):
         )
         response = self.client.post(url, {"state": Submission.CANCELLED}, format="json")
         self.assertEqual(200, response.status_code)
-
-        history = LogEntry.objects.get(object_id=str(submission.pk))
-        self.assertEqual("Curator action: Set state to CANCELLED", history.change_message)
+        self.assertFalse(LogEntry.objects.filter(change_message__startswith="Curator action:").exists())
         entry = _updates(submission).get()
         self.assertEqual(self.curator.pk, entry.actor_id)
         self.assertEqual("curator", entry.additional_data["channel"])
@@ -257,6 +325,7 @@ class TestCuratorAndTokenAudit(APITestCase):
         self.assertEqual(200, response.status_code)
         apply_async.assert_not_called()
         self.assertFalse(LogEntry.objects.filter(change_message__startswith="Curator action:").exists())
+        self.assertFalse(_updates(submission).exclude(additional_data=None).exists())
 
 
 class TestJiraWebhookAudit(APITestCase):

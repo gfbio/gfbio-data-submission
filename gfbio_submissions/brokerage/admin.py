@@ -39,6 +39,7 @@ from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_refere
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 
 from .admin_action_log import AdminActionLogMixin, skip_admin_action_log
+from .audit_context import submission_audit_context
 from .configuration.settings import (
     ENA,
     ENA_PANGAEA,
@@ -686,7 +687,8 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
         old_sub = Submission.objects.filter(id=obj.pk).first()
         if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
-        super(SubmissionAdmin, self).save_model(request, obj, form, change)
+        with submission_audit_context("Save", "admin"):
+            super(SubmissionAdmin, self).save_model(request, obj, form, change)
     
 
     def get_urls(self):

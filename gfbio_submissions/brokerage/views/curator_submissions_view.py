@@ -27,7 +27,7 @@ from ..admin import (
     validate_against_ena,
     validate_manifest_at_ena,
 )
-from ..admin_action_log import log_admin_action, skipped_admin_action_scope
+from ..admin_action_log import current_audit_pk, log_admin_action, skipped_admin_action_scope
 from ..audit_context import submission_audit_context
 from ..models.submission import Submission
 from ..models.task_progress_report import TaskProgressReport
@@ -224,10 +224,17 @@ class CuratorSubmissionActionView(APIView):
         if is_download:
             result = action["callable"](None, request, queryset)
         else:
+            audited_since_pk = current_audit_pk()
             with submission_audit_context(description, "curator"), skipped_admin_action_scope() as skipped:
                 result = action["callable"](None, request, queryset)
                 if str(submission.pk) not in skipped:
-                    log_admin_action(request.user, [submission], description, "curator")
+                    log_admin_action(
+                        request.user,
+                        [submission],
+                        description,
+                        "curator",
+                        audited_since_pk=audited_since_pk,
+                    )
 
         if isinstance(result, HttpResponse):
             return result
@@ -268,9 +275,16 @@ class CuratorSubmissionStateView(APIView):
             return Response({"detail": "Submission not found."}, status=status.HTTP_404_NOT_FOUND)
 
         description = f"Set state to {new_state}"
+        audited_since_pk = current_audit_pk()
         with submission_audit_context(description, "curator"):
             submission.status = new_state
             submission.save()
-        log_admin_action(request.user, [submission], description, "curator")
+        log_admin_action(
+            request.user,
+            [submission],
+            description,
+            "curator",
+            audited_since_pk=audited_since_pk,
+        )
 
         return Response({"state": new_state})
