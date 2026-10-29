@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from auditlog.registry import auditlog
 from django.db import models
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
-from .submission import Submission
+
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
+from .submission import Submission
 
 
 class SubmissionCloudUpload(TimeStampedModel):
@@ -148,3 +150,21 @@ class SubmissionCloudUpload(TimeStampedModel):
                 status_name = status_choice[1]
                 break
         return status_name
+
+    def get_additional_data(self):
+        from gfbio_submissions.brokerage.audit_context import current_submission_audit_context
+
+        return current_submission_audit_context()
+
+
+auditlog.register(
+    SubmissionCloudUpload,
+    include_fields=[
+        "status",
+        "submission",
+        "user",
+        "attach_to_ticket",
+        "meta_data",
+        "attachment_id",
+    ],
+)

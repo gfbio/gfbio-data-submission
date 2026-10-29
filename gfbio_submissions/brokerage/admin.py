@@ -617,6 +617,65 @@ def retrigger_cloud_upload_checksums(modeladmin, request, queryset):
 retrigger_cloud_upload_checksums.short_description = "Run checksum checks for cloud uploads"
 
 
+def audit_rows_for(obj):
+    """Rows for the shared submission and cloud-upload audit page."""
+    entries = AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type")
+    audit_rows = []
+    for entry in entries:
+        extra = entry.additional_data or {}
+        if entry.actor_id:
+            actor_label = str(entry.actor)
+        elif extra.get("jira_user"):
+            actor_label = extra["jira_user"]
+        else:
+            actor_label = _("system")
+        changes = []
+        for field_name, values in entry.changes_display_dict.items():
+            if isinstance(values, (list, tuple)) and len(values) == 2:
+                old, new = values
+            else:
+                old, new = "", values
+            if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
+                changes.append(f"{field_name}: changed")
+            else:
+                changes.append(f"{field_name}: {old} → {new}")
+        audit_rows.append(
+            {
+                "timestamp": entry.timestamp,
+                "actor": actor_label,
+                "channel": extra.get("channel") or "",
+                "action": extra.get("action") or "",
+                "changes": changes,
+            }
+        )
+    return audit_rows
+
+
+def render_audit_log(model_admin, request, object_id, extra_context=None):
+    obj = model_admin.get_object(request, unquote(object_id))
+    if obj is None:
+        return model_admin._get_obj_does_not_exist_redirect(request, model_admin.model._meta, object_id)
+    if not model_admin.has_view_or_change_permission(request, obj):
+        raise PermissionDenied
+
+    context = {
+        **model_admin.admin_site.each_context(request),
+        "title": _("Audit log: %s") % obj,
+        "subtitle": None,
+        "audit_rows": audit_rows_for(obj),
+        "module_name": str(model_admin.opts.verbose_name_plural),
+        "object": obj,
+        "opts": model_admin.opts,
+        **(extra_context or {}),
+    }
+    request.current_app = model_admin.admin_site.name
+    return TemplateResponse(
+        request,
+        "admin/brokerage/submission/submission_audit.html",
+        context,
+    )
+
+
 class AuditableTextDataAdmin(AdminActionLogMixin, admin.ModelAdmin):
     actions = []
 
@@ -860,61 +919,7 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
         )
 
     def submission_audit_view(self, request, object_id, extra_context=None):
-        obj = self.get_object(request, unquote(object_id))
-        if obj is None:
-            return self._get_obj_does_not_exist_redirect(request, self.model._meta, object_id)
-        if not self.has_view_or_change_permission(request, obj):
-            raise PermissionDenied
-
-        entries = (
-            AuditLogEntry.objects.get_for_object(obj)
-            .select_related("actor", "content_type")
-        )
-        audit_rows = []
-        for entry in entries:
-            extra = entry.additional_data or {}
-            if entry.actor_id:
-                actor_label = str(entry.actor)
-            elif extra.get("jira_user"):
-                actor_label = extra["jira_user"]
-            else:
-                actor_label = _("system")
-            changes = []
-            for field_name, values in entry.changes_display_dict.items():
-                if isinstance(values, (list, tuple)) and len(values) == 2:
-                    old, new = values
-                else:
-                    old, new = "", values
-                if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
-                    changes.append(f"{field_name}: changed")
-                else:
-                    changes.append(f"{field_name}: {old} → {new}")
-            audit_rows.append(
-                {
-                    "timestamp": entry.timestamp,
-                    "actor": actor_label,
-                    "channel": extra.get("channel") or "",
-                    "action": extra.get("action") or "",
-                    "changes": changes,
-                }
-            )
-
-        context = {
-            **self.admin_site.each_context(request),
-            "title": _("Audit log: %s") % obj,
-            "subtitle": None,
-            "audit_rows": audit_rows,
-            "module_name": str(self.opts.verbose_name_plural),
-            "object": obj,
-            "opts": self.opts,
-            **(extra_context or {}),
-        }
-        request.current_app = self.admin_site.name
-        return TemplateResponse(
-            request,
-            "admin/brokerage/submission/submission_audit.html",
-            context,
-        )
+        return render_audit_log(self, request, object_id, extra_context)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -1207,7 +1212,33 @@ class SubmissionCloudUploadAdmin(AdminActionLogMixin, ReverseModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.file_upload_id:
             obj.file_upload._validation_triggered_by_user_id = request.user.pk
-        super().save_model(request, obj, form, change)
+        with submission_audit_context("Save", "admin"):
+            super().save_model(request, obj, form, change)
+
+    def get_urls(self):
+        from functools import update_wrapper
+
+        from django.urls import path
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            wrapper.model_admin = self
+            return update_wrapper(wrapper, view)
+
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/audit/",
+                wrap(self.submission_cloud_upload_audit_view),
+                name="brokerage_submissioncloudupload_audit",
+            ),
+        ]
+        return custom_urls + urls
+
+    def submission_cloud_upload_audit_view(self, request, object_id, extra_context=None):
+        return render_audit_log(self, request, object_id, extra_context)
 
     def file_upload_link(self, obj):
         return mark_safe('<a href="{}">{}</a>'.format(

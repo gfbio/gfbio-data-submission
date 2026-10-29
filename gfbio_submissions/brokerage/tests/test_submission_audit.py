@@ -11,7 +11,9 @@ from rest_framework.test import APIClient, APITestCase
 
 from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
 from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
 from gfbio_submissions.users.models import User
 
 
@@ -482,3 +484,190 @@ class TestJiraWebhookAudit(APITestCase):
         self.assertIsNone(entry.actor)
         self.assertEqual("fallback@jira.example", entry.additional_data["jira_user"])
         self.assertFalse(LogEntry.objects.filter(object_id=str(submission.pk)).exists())
+
+
+def _cloud_upload(user):
+    submission = _submission(user)
+    return SubmissionCloudUpload.objects.create(
+        submission=submission,
+        user=user,
+        attach_to_ticket=False,
+        meta_data=False,
+        file_upload=None,
+    )
+
+
+def _cloud_upload_updates(upload):
+    return AuditLogEntry.objects.get_for_object(upload).filter(action=AuditLogEntry.Action.UPDATE)
+
+
+class TestSubmissionCloudUploadAudit(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(username="cloud-audit-staff", password="secret")
+        self.staff.is_staff = True
+        self.staff.is_superuser = True
+        self.staff.save()
+
+    def test_status_change_outside_request_has_no_actor_or_payload(self):
+        upload = _cloud_upload(self.staff)
+        upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+        upload.save()
+
+        entry = _cloud_upload_updates(upload).get()
+        self.assertIsNone(entry.actor)
+        self.assertIsNone(entry.additional_data)
+        self.assertIn("status", entry.changes_dict)
+        self.assertIsNone(entry.serialized_data)
+        self.assertNotIn("file_upload", entry.changes_dict)
+        self.assertNotIn("modified_recently", entry.changes_dict)
+
+    def test_admin_action_that_saves_status_is_a_single_prefixed_audit_row(self):
+        from gfbio_submissions.brokerage.admin import SubmissionCloudUploadAdmin
+
+        def mark_uploaded(modeladmin, request, queryset):
+            for upload in queryset:
+                upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+                upload.save()
+
+        mark_uploaded.short_description = "Mark selected cloud uploads uploaded"
+        upload = _cloud_upload(self.staff)
+        original_actions = SubmissionCloudUploadAdmin.actions
+        SubmissionCloudUploadAdmin.actions = [mark_uploaded]
+        try:
+            self.client.force_login(self.staff)
+            response = self.client.post(
+                reverse("admin:brokerage_submissioncloudupload_changelist"),
+                {
+                    "action": "mark_uploaded",
+                    "index": "0",
+                    "select_across": "0",
+                    "_selected_action": [str(upload.pk)],
+                },
+            )
+        finally:
+            SubmissionCloudUploadAdmin.actions = original_actions
+
+        self.assertEqual(302, response.status_code)
+        upload.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_UPLOADED, upload.status)
+        updates = _cloud_upload_updates(upload)
+        self.assertEqual(1, updates.count())
+        entry = updates.get()
+        self.assertIn("status", entry.changes_dict)
+        self.assertEqual("admin", entry.additional_data["channel"])
+        self.assertEqual("Admin Action: Mark selected cloud uploads uploaded", entry.additional_data["action"])
+        self.assertFalse(
+            LogEntry.objects.filter(
+                object_id=str(upload.pk),
+                change_message__startswith="Admin action:",
+            ).exists()
+        )
+
+    def test_admin_action_without_audited_field_change_writes_empty_prefixed_row(self):
+        from gfbio_submissions.brokerage.admin import SubmissionCloudUploadAdmin
+
+        def note_uploads(modeladmin, request, queryset):
+            return None
+
+        note_uploads.short_description = "Note selected cloud uploads"
+        upload = _cloud_upload(self.staff)
+        original_actions = SubmissionCloudUploadAdmin.actions
+        SubmissionCloudUploadAdmin.actions = [note_uploads]
+        try:
+            self.client.force_login(self.staff)
+            response = self.client.post(
+                reverse("admin:brokerage_submissioncloudupload_changelist"),
+                {
+                    "action": "note_uploads",
+                    "index": "0",
+                    "select_across": "0",
+                    "_selected_action": [str(upload.pk)],
+                },
+            )
+        finally:
+            SubmissionCloudUploadAdmin.actions = original_actions
+
+        self.assertEqual(302, response.status_code)
+        empty_rows = AuditLogEntry.objects.get_for_object(upload).filter(changes="{}")
+        self.assertEqual(1, empty_rows.count())
+        entry = empty_rows.get()
+        self.assertEqual({}, entry.changes_dict)
+        self.assertEqual(AuditLogEntry.Action.UPDATE, entry.action)
+        self.assertEqual("admin", entry.additional_data["channel"])
+        self.assertEqual("Admin Action: Note selected cloud uploads", entry.additional_data["action"])
+
+    def test_audit_view_requires_permission_and_shows_status_label(self):
+        upload = _cloud_upload(self.staff)
+        upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+        upload.save()
+        url = reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk])
+
+        staff = User.objects.create_user(username="cloud-audit-plain", password="secret")
+        staff.is_staff = True
+        staff.save()
+        self.client.force_login(staff)
+        self.assertEqual(403, self.client.get(url).status_code)
+
+        view_perm = Permission.objects.get(codename="view_submissioncloudupload")
+        staff.user_permissions.add(view_perm)
+        staff = User.objects.get(pk=staff.pk)
+        self.client.force_login(staff)
+        response = self.client.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "In our bucket")
+
+    def test_admin_change_form_records_admin_channel(self):
+        from auditlog.context import set_actor
+        from django.contrib.admin.sites import AdminSite
+
+        from gfbio_submissions.brokerage.admin import SubmissionCloudUploadAdmin
+
+        upload = _cloud_upload(self.staff)
+        upload.attach_to_ticket = True
+        with set_actor(self.staff):
+            SubmissionCloudUploadAdmin(SubmissionCloudUpload, AdminSite()).save_model(None, upload, None, True)
+
+        entry = _cloud_upload_updates(upload).get()
+        self.assertEqual(self.staff.pk, entry.actor_id)
+        self.assertEqual("admin", entry.additional_data["channel"])
+        self.assertEqual("Save", entry.additional_data["action"])
+        self.assertIn("attach_to_ticket", entry.changes_dict)
+
+    def test_other_model_admin_action_keeps_a_single_history_prefix(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        from gfbio_submissions.brokerage.admin import BrokerObjectAdmin
+
+        def touch_broker_objects(modeladmin, request, queryset):
+            return None
+
+        touch_broker_objects.short_description = "Touch broker objects"
+        broker_object = BrokerObject.objects.create(type="study", user=self.staff)
+        had_own_actions = "actions" in BrokerObjectAdmin.__dict__
+        previous_actions = BrokerObjectAdmin.__dict__.get("actions")
+        BrokerObjectAdmin.actions = [touch_broker_objects]
+        try:
+            self.client.force_login(self.staff)
+            response = self.client.post(
+                reverse("admin:brokerage_brokerobject_changelist"),
+                {
+                    "action": "touch_broker_objects",
+                    "index": "0",
+                    "select_across": "0",
+                    "_selected_action": [str(broker_object.pk)],
+                },
+            )
+        finally:
+            if had_own_actions:
+                BrokerObjectAdmin.actions = previous_actions
+            else:
+                del BrokerObjectAdmin.actions
+
+        self.assertEqual(302, response.status_code)
+        content_type = ContentType.objects.get_for_model(BrokerObject)
+        messages = list(
+            LogEntry.objects.filter(content_type=content_type, object_id=str(broker_object.pk)).values_list(
+                "change_message", flat=True
+            )
+        )
+        self.assertEqual(["Admin action: Touch broker objects"], messages)

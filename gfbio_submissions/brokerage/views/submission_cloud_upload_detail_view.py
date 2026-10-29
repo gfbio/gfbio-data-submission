@@ -10,6 +10,8 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 
 from gfbio_submissions.brokerage.permissions.is_submission_owner import IsOwnerOrSubmissionOwnerOrHasCuratorRights
 from gfbio_submissions.generic.models.request_log import RequestLog
+
+from ..audit_context import submission_audit_context
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models import SubmissionCloudUpload
 from ..models.submission import Submission
@@ -70,7 +72,8 @@ class SubmissionCloudUploadDetailView(
                     response_status=response.status_code,
                 )
             return response
-        response = self.update(request, *args, **kwargs)
+        with submission_audit_context("Save", "frontend"):
+            response = self.update(request, *args, **kwargs)
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
@@ -128,8 +131,9 @@ class SubmissionCloudUploadDetailView(
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        instance.status = 'deleted'
-        instance.save()
+        with submission_audit_context("Delete", "frontend"):
+            instance.status = 'deleted'
+            instance.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
