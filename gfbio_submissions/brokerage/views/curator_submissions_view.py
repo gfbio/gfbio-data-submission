@@ -274,6 +274,9 @@ class CuratorSubmissionStateView(APIView):
         if not submission:
             return Response({"detail": "Submission not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        if submission.status == new_state:
+            return Response({"state": new_state})
+
         description = f"Set state to {new_state}"
         audited_since_pk = current_audit_pk()
         with submission_audit_context(description, "curator"):

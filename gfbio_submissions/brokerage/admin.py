@@ -617,6 +617,26 @@ def retrigger_cloud_upload_checksums(modeladmin, request, queryset):
 retrigger_cloud_upload_checksums.short_description = "Run checksum checks for cloud uploads"
 
 
+def _cloud_upload_overview_message(entry):
+    """Text for the cloud-upload list. Action-only admin rows return None."""
+    extra = entry.additional_data or {}
+    if extra.get("detail"):
+        return str(extra["detail"])
+    if not entry.changes_dict:
+        return None
+    parts = []
+    for field_name, values in entry.changes_display_dict.items():
+        if isinstance(values, (list, tuple)) and len(values) == 2:
+            old, new = values
+        else:
+            old, new = "", values
+        if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
+            parts.append(f"{field_name}: changed")
+        else:
+            parts.append(f"{field_name}: {old} → {new}")
+    return "; ".join(parts) if parts else None
+
+
 def audit_rows_for(obj):
     """Rows for the shared submission and cloud-upload audit page."""
     entries = AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type")
@@ -639,6 +659,8 @@ def audit_rows_for(obj):
                 changes.append(f"{field_name}: changed")
             else:
                 changes.append(f"{field_name}: {old} → {new}")
+        if extra.get("detail"):
+            changes.append(str(extra["detail"]))
         audit_rows.append(
             {
                 "timestamp": entry.timestamp,
@@ -780,8 +802,6 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
 
     def submission_cloud_uploads_view(self, request, object_id, extra_context=None):
         "The 'history' admin view for this model."
-        from django.contrib.admin.models import LogEntry
-
         model = self.model
         obj = Submission.objects.filter(pk=object_id).first()
         if obj is None:
@@ -844,32 +864,28 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
                     task_return_value = task_report["task_return_value"] or ""
                     tasks_by_upload[scu_id].append({"id": task_report["task_id"], "status": task_return_value[0:1]})
 
-        # One bulk query for admin log history instead of one LogEntry query per upload.
-        # Order newest first so Postgres DISTINCT ON and the Python fallback both keep
-        # the latest log row per upload. On equal action_time, the higher pk wins.
+        # Newest audit note per upload. Action-only admin rows are skipped so a
+        # status note stays visible. On equal timestamps the higher pk wins.
         latest_log_by_upload_id = {}
         if cloud_upload_ids:
-            from django.db.utils import NotSupportedError
+            from django.contrib.contenttypes.models import ContentType
 
-            log_entries_qs = (
-                LogEntry.objects.filter(
-                    content_type=40,
-                    object_id__in=[str(upload_id) for upload_id in cloud_upload_ids],
+            content_type = ContentType.objects.get_for_model(SubmissionCloudUpload)
+            log_entries = (
+                AuditLogEntry.objects.filter(
+                    content_type=content_type,
+                    object_pk__in=[str(upload_id) for upload_id in cloud_upload_ids],
                 )
-                .exclude(change_message__startswith="Admin action:")
-                .exclude(change_message__startswith="Curator action:")
-                .order_by("object_id", "-action_time", "-pk")
-                .only("object_id", "action_time", "change_message")
+                .select_related("content_type")
+                .order_by("-timestamp", "-pk")
             )
-            try:
-                latest_log_by_upload_id = {
-                    log_entry.object_id: log_entry
-                    for log_entry in log_entries_qs.distinct("object_id")
-                }
-            except NotSupportedError:
-                for log_entry in log_entries_qs:
-                    if log_entry.object_id not in latest_log_by_upload_id:
-                        latest_log_by_upload_id[log_entry.object_id] = log_entry
+            for log_entry in log_entries:
+                if log_entry.object_pk in latest_log_by_upload_id:
+                    continue
+                message = _cloud_upload_overview_message(log_entry)
+                if message is None:
+                    continue
+                latest_log_by_upload_id[log_entry.object_pk] = (log_entry, message)
 
         cloud_upload_list = {}
         known_status_names = [SubmissionCloudUpload.get_status_name(state) for state in orderlist]
@@ -894,8 +910,8 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
                 "pk": cloud_upload["pk"],
                 "name": upload_name,
                 "status": status,
-                "last_change_action_time": last_action.action_time if last_action else cloud_upload["modified"],
-                "last_change_message": last_action.get_change_message() if last_action else "",
+                "last_change_action_time": last_action[0].timestamp if last_action else cloud_upload["modified"],
+                "last_change_message": last_action[1] if last_action else "",
                 "related_tasks": tasks_by_upload.get(cloud_upload["pk"], []),
             })
 

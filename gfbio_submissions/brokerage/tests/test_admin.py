@@ -2,12 +2,10 @@ from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from django.contrib.admin.models import CHANGE, LogEntry
-from django.contrib.contenttypes.models import ContentType
+from auditlog.models import LogEntry as AuditLogEntry
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 from dt_upload.models import FileUploadRequest, MultiPartUpload
 
 from gfbio_submissions.brokerage.admin import (
@@ -570,17 +568,6 @@ class TestSubmissionAdmin(TestCase):
 
 
 class TestSubmissionCloudUploadAdminLatestLog(TestCase):
-    def _ensure_log_content_type(self):
-        if ContentType.objects.filter(pk=40).exists():
-            return
-        app_label = "brokerage"
-        model_name = "dass3881logtarget"
-        suffix = 0
-        while ContentType.objects.filter(app_label=app_label, model=model_name).exists():
-            suffix += 1
-            model_name = f"dass3881logtarget{suffix}"
-        ContentType.objects.create(pk=40, app_label=app_label, model=model_name)
-
     def test_cloud_upload_list_shows_latest_log_entry(self):
         resource_cred = ResourceCredential.objects.create(
             title="dass-3881-resource",
@@ -608,7 +595,6 @@ class TestSubmissionCloudUploadAdminLatestLog(TestCase):
             release=False,
             data={},
         )
-        self._ensure_log_content_type()
         upload = SubmissionCloudUpload.objects.create(
             submission=submission,
             attach_to_ticket=False,
@@ -620,11 +606,15 @@ class TestSubmissionCloudUploadAdminLatestLog(TestCase):
         upload.log_change(older_message)
         upload.log_change(newer_message)
 
-        log_entries = list(LogEntry.objects.filter(content_type_id=40, object_id=str(upload.pk)).order_by("pk"))
+        log_entries = [
+            entry
+            for entry in AuditLogEntry.objects.get_for_object(upload).order_by("pk")
+            if (entry.additional_data or {}).get("detail")
+        ]
         self.assertEqual(2, len(log_entries))
-        log_entries[0].action_time = timezone.localtime(log_entries[1].action_time) - timedelta(hours=1)
-        log_entries[0].save(update_fields=["action_time"])
-        latest_entry = LogEntry.objects.get(pk=log_entries[1].pk)
+        log_entries[0].timestamp = log_entries[1].timestamp - timedelta(hours=1)
+        log_entries[0].save(update_fields=["timestamp"])
+        latest_entry = AuditLogEntry.objects.get(pk=log_entries[1].pk)
 
         self.client.force_login(user)
         response = self.client.get(
@@ -638,15 +628,17 @@ class TestSubmissionCloudUploadAdminLatestLog(TestCase):
         self.assertEqual(1, len(matching))
         row = matching[0]
         self.assertEqual(newer_message, row["last_change_message"])
-        self.assertEqual(latest_entry.action_time, row["last_change_action_time"])
+        self.assertEqual(latest_entry.timestamp, row["last_change_action_time"])
 
-        LogEntry.objects.create(
-            user=user,
-            content_type_id=40,
-            object_id=str(upload.pk),
-            object_repr="upload",
-            action_flag=CHANGE,
-            change_message="Admin action: Set the state of the selected cloud-uploads to deleted",
+        AuditLogEntry.objects.log_create(
+            upload,
+            action=AuditLogEntry.Action.UPDATE,
+            changes="{}",
+            actor=user,
+            additional_data={
+                "action": "Admin Action: Set the state of the selected cloud-uploads to deleted",
+                "channel": "admin",
+            },
         )
         response = self.client.get(
             reverse("admin:submission_submission_submission_cloud_upload_view", args=[submission.pk])

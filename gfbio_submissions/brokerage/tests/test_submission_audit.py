@@ -366,6 +366,16 @@ class TestCuratorAndTokenAudit(APITestCase):
         self.assertEqual("curator", entry.additional_data["channel"])
         self.assertEqual("Set state to CANCELLED", entry.additional_data["action"])
 
+    def test_curator_state_unchanged_writes_no_audit_row(self):
+        submission = _submission(self.curator, status=Submission.OPEN)
+        url = reverse(
+            "brokerage:curator_submissions_set_state",
+            kwargs={"broker_submission_id": str(submission.broker_submission_id)},
+        )
+        response = self.client.post(url, {"state": Submission.OPEN}, format="json")
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(_updates(submission).exists())
+
     @patch(
         "gfbio_submissions.brokerage.tasks.process_tasks.validate_against_ena.validate_against_ena_task.apply_async"
     )
@@ -633,6 +643,36 @@ class TestSubmissionCloudUploadAudit(TestCase):
         self.assertEqual("admin", entry.additional_data["channel"])
         self.assertEqual("Save", entry.additional_data["action"])
         self.assertIn("attach_to_ticket", entry.changes_dict)
+
+    def test_status_note_is_attached_to_the_status_diff(self):
+        upload = _cloud_upload(self.staff)
+        upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+        upload.save()
+        upload.log_change(
+            [{"changed": {"fields": [f"status changed to {upload.status} due to timeout"]}}],
+            self.staff.pk,
+        )
+
+        entry = _cloud_upload_updates(upload).get()
+        self.assertIn("status", entry.changes_dict)
+        self.assertEqual(f"status changed to {upload.status} due to timeout", entry.additional_data["detail"])
+
+    def test_status_kept_note_is_its_own_audit_row(self):
+        upload = _cloud_upload(self.staff)
+        upload.log_change("status kept at new")
+
+        entry = _cloud_upload_updates(upload).get()
+        self.assertEqual({}, entry.changes_dict)
+        self.assertEqual("status kept at new", entry.additional_data["detail"])
+
+    def test_empty_audit_page_uses_a_generic_message(self):
+        upload = _cloud_upload(self.staff)
+        AuditLogEntry.objects.get_for_object(upload).delete()
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "This object has no audit entries.")
+        self.assertNotContains(response, "This submission has no audit entries.")
 
     def test_other_model_admin_action_keeps_a_single_history_prefix(self):
         from django.contrib.contenttypes.models import ContentType

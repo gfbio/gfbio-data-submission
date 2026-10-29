@@ -24,6 +24,7 @@ from gfbio_submissions.brokerage.utils.cloud_upload_multipart import restart_mul
 from gfbio_submissions.brokerage.tasks.process_tasks.verify_file_upload_request_checksum_in_bucket import \
     verify_file_upload_request_checksum_in_bucket_task
 from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
+from ..audit_context import submission_audit_context
 from ..configuration.settings import ATAX, SUBMISSION_DELAY, ENA, JIRA_MESSAGES_WAIT_DELAY
 from ..models.submission import Submission
 from ..models.submission_cloud_upload import SubmissionCloudUpload
@@ -242,8 +243,12 @@ class SubmissionCloudUploadCompleteView(backend_based_upload_views.CompleteMulti
             #submission_cloud_upload = mpu.file_upload_request.submissioncloudupload
             submission_cloud_upload = SubmissionCloudUpload.objects.get(pk=mpu.file_upload_request.submissioncloudupload.pk)
             submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED
-            submission_cloud_upload.save()
-            submission_cloud_upload.log_change([{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}], self.request.user.id)
+            with submission_audit_context("Save", "frontend"):
+                submission_cloud_upload.save()
+                submission_cloud_upload.log_change(
+                    [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}],
+                    self.request.user.id,
+                )
             add_verify_checksum_task(mpu.file_upload_request.submissioncloudupload)
             if hasattr(mpu.file_upload_request, "submissioncloudupload"):
                 mpu.file_upload_request.submissioncloudupload.trigger_attach_to_issue()
@@ -349,7 +354,8 @@ class SubmissionCloudUploadRestartMultipartView(generics.GenericAPIView):
 
         if cloud_upload.status != SubmissionCloudUpload.STATUS_NEW:
             cloud_upload.status = SubmissionCloudUpload.STATUS_ACTIVE
-            cloud_upload.save(update_fields=["status"])
+            with submission_audit_context("Save", "frontend"):
+                cloud_upload.save(update_fields=["status"])
 
         response_data = {
             "id": cloud_upload.pk,
@@ -506,11 +512,12 @@ class SubmissionCloudUploadSingleCallView(generics.GenericAPIView):
 
         file_upload_request.refresh_from_db()
         submission_cloud_upload.status = SubmissionCloudUpload.STATUS_UPLOADED
-        submission_cloud_upload.save(update_fields=["status"])
-        submission_cloud_upload.log_change(
-            [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}],
-            self.request.user.id
-        )
+        with submission_audit_context("Save", "frontend"):
+            submission_cloud_upload.save(update_fields=["status"])
+            submission_cloud_upload.log_change(
+                [{"changed": {"fields": [f"status changed to {submission_cloud_upload.status}"]}}],
+                self.request.user.id,
+            )
         add_verify_checksum_task(submission_cloud_upload)
         submission_cloud_upload.trigger_attach_to_issue()
 
