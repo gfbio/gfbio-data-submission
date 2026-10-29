@@ -1256,6 +1256,9 @@ class SubmissionCloudUploadAdmin(AdminActionLogMixin, ReverseModelAdmin):
     def submission_cloud_upload_audit_view(self, request, object_id, extra_context=None):
         return render_audit_log(self, request, object_id, extra_context)
 
+    def history_view(self, request, object_id, extra_context=None):
+        return self.submission_cloud_upload_audit_view(request, object_id, extra_context)
+
     def file_upload_link(self, obj):
         return mark_safe('<a href="{}">{}</a>'.format(
             reverse("admin:index") + f"dt_upload/fileuploadrequest/{obj.file_upload.pk}/change/",

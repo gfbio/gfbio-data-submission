@@ -149,7 +149,13 @@ class SubmissionCloudUpload(TimeStampedModel):
             extra = dict(latest.additional_data or {})
             extra["detail"] = note
             latest.additional_data = extra
-            latest.save(update_fields=["additional_data"])
+            update_fields = ["additional_data"]
+            if latest.actor_id is None and user_id:
+                actor = get_user_model().objects.filter(pk=user_id).first()
+                if actor is not None:
+                    latest.actor = actor
+                    update_fields.append("actor")
+            latest.save(update_fields=update_fields)
             return
 
         actor = None

@@ -656,6 +656,31 @@ class TestSubmissionCloudUploadAudit(TestCase):
         entry = _cloud_upload_updates(upload).get()
         self.assertIn("status", entry.changes_dict)
         self.assertEqual(f"status changed to {upload.status} due to timeout", entry.additional_data["detail"])
+        self.assertEqual(self.staff.pk, entry.actor_id)
+
+    def test_status_note_keeps_an_existing_actor(self):
+        from auditlog.context import set_actor
+
+        other = User.objects.create_user(username="cloud-note-actor", password="secret")
+        upload = _cloud_upload(self.staff)
+        upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+        with set_actor(other):
+            upload.save()
+        upload.log_change(
+            [{"changed": {"fields": ["status changed to uploaded"]}}],
+            self.staff.pk,
+        )
+
+        entry = _cloud_upload_updates(upload).get()
+        self.assertEqual(other.pk, entry.actor_id)
+
+    def test_history_url_shows_the_audit_note(self):
+        upload = _cloud_upload(self.staff)
+        upload.log_change("status kept at new")
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submissioncloudupload_history", args=[upload.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "status kept at new")
 
     def test_status_kept_note_is_its_own_audit_row(self):
         upload = _cloud_upload(self.staff)

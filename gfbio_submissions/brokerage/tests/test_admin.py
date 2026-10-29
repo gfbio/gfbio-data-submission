@@ -629,6 +629,11 @@ class TestSubmissionCloudUploadAdminLatestLog(TestCase):
         row = matching[0]
         self.assertEqual(newer_message, row["last_change_message"])
         self.assertEqual(latest_entry.timestamp, row["last_change_action_time"])
+        self.assertContains(
+            response,
+            reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk]),
+        )
+        self.assertNotContains(response, f"submissioncloudupload/{upload.pk}/history/")
 
         AuditLogEntry.objects.log_create(
             upload,
