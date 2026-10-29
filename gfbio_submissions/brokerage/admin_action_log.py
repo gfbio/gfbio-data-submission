@@ -23,6 +23,10 @@ _CHANNEL_PREFIX = {
     "curator": "Curator action: ",
 }
 
+# Shown in the submission audit Action column. Django history for other models
+# keeps the lowercase prefix in _CHANNEL_PREFIX.
+AUDIT_ADMIN_ACTION_PREFIX = "Admin Action: "
+
 # Objects an action skipped. None outside an action request.
 _skipped_action_pks = ContextVar("skipped_admin_action_pks", default=None)
 
@@ -174,6 +178,8 @@ class AdminActionLogMixin:
         description = None
         if action_name and action_name not in ACTIONS_WITHOUT_AUDIT_LOG:
             description = action_description(self, request, action_name)
+            if description:
+                description = f"{AUDIT_ADMIN_ACTION_PREFIX}{description}"
         pks = selected_pks(request, queryset)
         audited_since_pk = current_audit_pk()
         with skipped_admin_action_scope() as skipped:

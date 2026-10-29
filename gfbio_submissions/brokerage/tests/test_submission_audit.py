@@ -118,7 +118,7 @@ class TestSubmissionAudit(TestCase):
         entry = _updates(submission).get()
         self.assertEqual(self.staff.pk, entry.actor_id)
         self.assertEqual("admin", entry.additional_data["channel"])
-        self.assertEqual("Cancel selected submissions", entry.additional_data["action"])
+        self.assertEqual("Admin Action: Cancel selected submissions", entry.additional_data["action"])
 
     @patch("gfbio_submissions.brokerage.admin.jira_cancel_issue")
     def test_select_across_logs_every_matching_submission(self, _jira_cancel):
@@ -139,7 +139,7 @@ class TestSubmissionAudit(TestCase):
         for submission in (first, second):
             entry = _updates(submission).get()
             self.assertEqual("admin", entry.additional_data["channel"])
-            self.assertEqual("Cancel selected submissions", entry.additional_data["action"])
+            self.assertEqual("Admin Action: Cancel selected submissions", entry.additional_data["action"])
 
     def test_download_action_is_not_logged(self):
         submission = _submission(self.staff)
@@ -193,7 +193,7 @@ class TestSubmissionAudit(TestCase):
         entry = _updates(agreed).get()
         self.assertEqual(self.staff.pk, entry.actor_id)
         self.assertEqual("admin", entry.additional_data["channel"])
-        self.assertEqual("Validate against ENA production server", entry.additional_data["action"])
+        self.assertEqual("Admin Action: Validate against ENA production server", entry.additional_data["action"])
         self.assertEqual({}, entry.changes_dict)
         self.assertFalse(_updates(declined).exists())
 
@@ -215,7 +215,7 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual(Submission.CANCELLED, submission.status)
         self.assertFalse(LogEntry.objects.filter(change_message__startswith="Admin action:").exists())
         entry = _updates(submission).get()
-        self.assertEqual("Cancel selected submissions", entry.additional_data["action"])
+        self.assertEqual("Admin Action: Cancel selected submissions", entry.additional_data["action"])
         self.assertEqual("admin", entry.additional_data["channel"])
 
     def test_audit_view_requires_model_permission_and_shows_diff(self):
