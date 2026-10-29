@@ -22,6 +22,12 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         }
     }, [serverFiles, metadataIndex.source]);
 
+    const handleFilesChange = (newLocalFiles, withinLimits, newMetadataIndex, deleted) => {
+        // set files field to mark form as dirty
+        form.setFieldValue("filesChanged", true);
+        onFilesChange(newLocalFiles, withinLimits, newMetadataIndex, deleted)
+    }
+
     const checkUploadLimits = (localFiles, serverFiles) => {
         const totalCount = localFiles.length + serverFiles.length;
         const totalSize =
@@ -39,7 +45,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
 
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
-        onFilesChange(newFiles, !withinLimits, metadataIndex, null);
+        handleFilesChange(newFiles, !withinLimits, metadataIndex, null);
         form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
@@ -54,14 +60,14 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
         setMetadataIndex(newMetadata);
         setLocalFiles(newFiles);
         setUploadLimitExceeded(!withinLimits);
-        onFilesChange(newFiles, !withinLimits, newMetadata, null);
+        handleFilesChange(newFiles, !withinLimits, newMetadata, null);
         form.setFieldValue("files", [...serverFiles, ...newFiles]);
     };
 
     const handleRemoveServer = async (index) => {
         try {
             const fileToDelete = serverFiles[index];
-            onFilesChange(localFiles, uploadLimitExceeded, metadataIndex, fileToDelete.pk);
+            handleFilesChange(localFiles, uploadLimitExceeded, metadataIndex, fileToDelete.pk);
 
             const newServerFiles = serverFiles.filter((_, i) => i !== index);
             setServerFiles(newServerFiles);
@@ -81,7 +87,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 // Deselect current file if it's selected
                 localFiles[index].meta_data = false;
                 setMetadataIndex({ indices: [], source: null });
-                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null }, null);
+                handleFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null }, null);
             } else {
                 // Ensure only one local file is marked as metadata:
                 localFiles.forEach((file, i) => {
@@ -89,7 +95,7 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
                 });
                 const newMetaIndex = { indices: [index], source: "local" };
                 setMetadataIndex(newMetaIndex);
-                onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex, null);
+                handleFilesChange(localFiles, uploadLimitExceeded, newMetaIndex, null);
             }
             setLocalFiles([...localFiles]);
         } else if (source === "server") {
@@ -101,13 +107,13 @@ const DropzoneUpload = ({ title, description, form, onFilesChange, submissionDat
             if (isCurrentlySelected) {
                 serverFiles[index].meta_data = false;
                 setMetadataIndex({ indices: [], source: null });
-                onFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null }, null);
+                handleFilesChange(localFiles, uploadLimitExceeded, { indices: [], source: null }, null);
                 return;
             }
 
             const newMetaIndex = { indices: [index], source: "server" };
             setMetadataIndex(newMetaIndex);
-            onFilesChange(localFiles, uploadLimitExceeded, newMetaIndex, null);
+            handleFilesChange(localFiles, uploadLimitExceeded, newMetaIndex, null);
         }
     };
 

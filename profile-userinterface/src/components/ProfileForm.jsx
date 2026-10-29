@@ -58,6 +58,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         // Start with minimal required values
         const values = {
             files: filesValue,
+            filesChanged: false,
             embargo: submissionData?.embargo || formatDateToYYYYMMDD(defaultEmbargoDate),
             download_url: submissionData?.download_url || "",
         };
@@ -359,7 +360,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         // Filter out empty values and embargo_date
         const filteredValues = Object.entries(values).reduce((acc, [key, value]) => {
             // Skip embargo date and files as they're handled separately
-            if (key === "embargo" || key === "files") return acc;
+            if (key === "embargo" || key === "files" || key == "filesChanged") return acc;
 
             // Keep arrays even if empty
             if (Array.isArray(value)) {
