@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import arrow
 from auditlog.models import LogEntry as AuditLogEntry
-from django.contrib.admin.models import LogEntry
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from django.urls import reverse
@@ -268,6 +268,21 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual("admin", entry.additional_data["channel"])
         self.assertEqual("Save", entry.additional_data["action"])
         self.assertIn("release", entry.changes_dict)
+
+    def test_submission_change_form_lists_cloud_uploads_then_audit_then_history(self):
+        submission = _submission(self.staff)
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submission_change", args=[submission.pk]))
+        self.assertEqual(200, response.status_code)
+        content = response.content.decode()
+        cloud_uploads = reverse(
+            "admin:submission_submission_submission_cloud_upload_view",
+            args=[submission.pk],
+        )
+        audit = reverse("admin:brokerage_submission_audit", args=[submission.pk])
+        history = reverse("admin:brokerage_submission_history", args=[submission.pk])
+        self.assertLess(content.index(cloud_uploads), content.index(audit))
+        self.assertLess(content.index(audit), content.index(history))
 
 
 class _QuietCelerySignature:
@@ -674,13 +689,34 @@ class TestSubmissionCloudUploadAudit(TestCase):
         entry = _cloud_upload_updates(upload).get()
         self.assertEqual(other.pk, entry.actor_id)
 
-    def test_history_url_shows_the_audit_note(self):
+    def test_history_url_shows_django_log_not_the_audit_note(self):
+        from django.contrib.contenttypes.models import ContentType
+
         upload = _cloud_upload(self.staff)
         upload.log_change("status kept at new")
+        LogEntry.objects.log_action(
+            user_id=self.staff.pk,
+            content_type_id=ContentType.objects.get_for_model(SubmissionCloudUpload).pk,
+            object_id=upload.pk,
+            object_repr=str(upload),
+            action_flag=CHANGE,
+            change_message=[{"changed": {"fields": ["Status"]}}],
+        )
         self.client.force_login(self.staff)
         response = self.client.get(reverse("admin:brokerage_submissioncloudupload_history", args=[upload.pk]))
         self.assertEqual(200, response.status_code)
-        self.assertContains(response, "status kept at new")
+        self.assertContains(response, "Changed Status.")
+        self.assertNotContains(response, "status kept at new")
+        audit = self.client.get(reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk]))
+        self.assertContains(audit, "status kept at new")
+
+    def test_change_form_shows_audit_and_history_buttons(self):
+        upload = _cloud_upload(self.staff)
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submissioncloudupload_change", args=[upload.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk]))
+        self.assertContains(response, reverse("admin:brokerage_submissioncloudupload_history", args=[upload.pk]))
 
     def test_status_kept_note_is_its_own_audit_row(self):
         upload = _cloud_upload(self.staff)
