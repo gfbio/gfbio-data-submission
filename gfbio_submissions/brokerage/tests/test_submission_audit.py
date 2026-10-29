@@ -9,6 +9,7 @@ from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
+from config.celery_app import app as celery_app
 from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
 from gfbio_submissions.brokerage.models.broker_object import BrokerObject
@@ -671,3 +672,138 @@ class TestSubmissionCloudUploadAudit(TestCase):
             )
         )
         self.assertEqual(["Admin action: Touch broker objects"], messages)
+
+
+# Registered here so production autodiscover stays unchanged. Invoked with
+# delay/apply_async/apply so Celery sends task_prerun and task_postrun.
+@celery_app.task(name="tasks.audit_test_save_status_task")
+def audit_test_save_status_task(submission_id, status):
+    submission = Submission.objects.get(pk=submission_id)
+    submission.status = status
+    submission.save()
+
+
+@celery_app.task(name="tasks.audit_test_inner_save_status_task")
+def audit_test_inner_save_status_task(submission_id, status):
+    submission = Submission.objects.get(pk=submission_id)
+    submission.status = status
+    submission.save()
+
+
+@celery_app.task(name="tasks.audit_test_outer_save_status_task")
+def audit_test_outer_save_status_task(submission_id, inner_status, outer_status):
+    audit_test_inner_save_status_task.delay(submission_id, inner_status)
+    submission = Submission.objects.get(pk=submission_id)
+    submission.status = outer_status
+    submission.save()
+
+
+@celery_app.task(name="tasks.audit_test_failing_save_status_task")
+def audit_test_failing_save_status_task(submission_id, status):
+    submission = Submission.objects.get(pk=submission_id)
+    submission.status = status
+    submission.save()
+    raise RuntimeError("audit test task failed")
+
+
+def _update_for(submission, channel, action):
+    matches = [
+        entry
+        for entry in _updates(submission)
+        if (entry.additional_data or {}).get("channel") == channel
+        and (entry.additional_data or {}).get("action") == action
+    ]
+    if len(matches) != 1:
+        raise AssertionError(
+            "expected one UPDATE with channel={0!r} action={1!r}, found {2}".format(
+                channel, action, [(entry.additional_data, entry.changes) for entry in _updates(submission)]
+            )
+        )
+    return matches[0]
+
+
+class TestCeleryAuditChannel(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(username="celery-audit-staff", password="secret")
+
+    def test_task_save_is_celery_channel_with_task_name_and_no_actor(self):
+        submission = _submission(self.staff)
+        audit_test_save_status_task.delay(submission.pk, Submission.SUBMITTED)
+
+        self.assertEqual(1, _updates(submission).count())
+        entry = _update_for(submission, "celery", audit_test_save_status_task.name)
+        self.assertEqual(audit_test_save_status_task.name, entry.additional_data["action"])
+        self.assertIn("status", entry.changes_dict)
+        self.assertIsNone(entry.actor)
+
+    def test_task_save_restores_outer_frontend_context(self):
+        from gfbio_submissions.brokerage.audit_context import (
+            current_submission_audit_context,
+            submission_audit_context,
+        )
+
+        submission = _submission(self.staff)
+        with submission_audit_context("Save", "frontend"):
+            audit_test_save_status_task.apply_async(args=[submission.pk, Submission.SUBMITTED])
+            self.assertEqual({"action": "Save", "channel": "frontend"}, current_submission_audit_context())
+            submission.refresh_from_db()
+            submission.status = Submission.CLOSED
+            submission.save()
+
+        self.assertEqual(2, _updates(submission).count())
+        celery_entry = _update_for(submission, "celery", audit_test_save_status_task.name)
+        frontend_entry = _update_for(submission, "frontend", "Save")
+        self.assertIn("status", celery_entry.changes_dict)
+        self.assertIn("status", frontend_entry.changes_dict)
+        self.assertEqual("Save", frontend_entry.additional_data["action"])
+
+    def test_nested_tasks_stack_and_a_failure_restores_the_outer_context(self):
+        from gfbio_submissions.brokerage.audit_context import (
+            current_submission_audit_context,
+            submission_audit_context,
+        )
+
+        submission = _submission(self.staff)
+        with submission_audit_context("Save", "frontend"):
+            audit_test_outer_save_status_task.apply(
+                args=[submission.pk, Submission.SUBMITTED, Submission.CLOSED],
+            )
+            self.assertEqual({"action": "Save", "channel": "frontend"}, current_submission_audit_context())
+            submission.refresh_from_db()
+            submission.status = Submission.ERROR
+            submission.save()
+
+        self.assertEqual(3, _updates(submission).count())
+        inner_entry = _update_for(submission, "celery", audit_test_inner_save_status_task.name)
+        outer_entry = _update_for(submission, "celery", audit_test_outer_save_status_task.name)
+        frontend_entry = _update_for(submission, "frontend", "Save")
+        self.assertIn("status", inner_entry.changes_dict)
+        self.assertIn("status", outer_entry.changes_dict)
+        self.assertEqual(Submission.SUBMITTED, inner_entry.changes_dict["status"][1])
+        self.assertEqual(Submission.CLOSED, outer_entry.changes_dict["status"][1])
+        self.assertEqual("Save", frontend_entry.additional_data["action"])
+        self.assertIn("status", frontend_entry.changes_dict)
+
+    def test_failed_task_restores_the_outer_context(self):
+        from gfbio_submissions.brokerage.audit_context import (
+            current_submission_audit_context,
+            submission_audit_context,
+        )
+
+        failed = _submission(self.staff, status=Submission.OPEN)
+        with submission_audit_context("Save", "frontend"):
+            with self.assertRaises(RuntimeError):
+                audit_test_failing_save_status_task.delay(failed.pk, Submission.SUBMITTED)
+            self.assertEqual({"action": "Save", "channel": "frontend"}, current_submission_audit_context())
+            failed.refresh_from_db()
+            failed.status = Submission.CLOSED
+            failed.save()
+
+        self.assertEqual(2, _updates(failed).count())
+        failed_task_entry = _update_for(failed, "celery", audit_test_failing_save_status_task.name)
+        restored_entry = _update_for(failed, "frontend", "Save")
+        self.assertIn("status", failed_task_entry.changes_dict)
+        self.assertIsNone(failed_task_entry.actor)
+        self.assertEqual("frontend", restored_entry.additional_data["channel"])
+        self.assertEqual("Save", restored_entry.additional_data["action"])
+        self.assertIn("status", restored_entry.changes_dict)
