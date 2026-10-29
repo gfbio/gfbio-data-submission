@@ -59,6 +59,7 @@ from .models.persistent_identifier import PersistentIdentifier
 from .models.submission import Submission
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
+from .submission_data_audit import DATA_CHANGED_LABEL
 from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
 from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
     create_broker_objects_from_submission_data_task,
@@ -884,7 +885,10 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
                     old, new = values
                 else:
                     old, new = "", values
-                changes.append(f"{field_name}: {old} → {new}")
+                if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
+                    changes.append(f"{field_name}: changed")
+                else:
+                    changes.append(f"{field_name}: {old} → {new}")
             audit_rows.append(
                 {
                     "timestamp": entry.timestamp,

@@ -49,12 +49,53 @@ class TestSubmissionAudit(TestCase):
         self.assertIsNone(entry.additional_data)
         self.assertIn("status", entry.changes_dict)
 
-    def test_data_only_change_is_not_audited(self):
+    def test_data_only_change_is_marked_without_the_payload(self):
         submission = _submission(self.staff)
-        submission.data = {"requirements": {"title": "changed"}}
+        submission.data = {"requirements": {"title": "secret title"}}
         submission.save()
 
-        self.assertFalse(_updates(submission).exists())
+        entry = _updates(submission).get()
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertNotIn("secret title", entry.changes)
+        self.assertIsNone(entry.serialized_data)
+        self.assertIsNone(entry.additional_data)
+
+    def test_data_and_status_share_one_audit_row(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "secret title"}}
+        submission.status = Submission.SUBMITTED
+        submission.save()
+
+        entry = _updates(submission).get()
+        self.assertIn("status", entry.changes_dict)
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertNotIn("secret title", entry.changes)
+
+    def test_update_fields_without_data_does_not_mark_data(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "secret title"}}
+        submission.status = Submission.SUBMITTED
+        submission.save(update_fields=["status"])
+
+        entry = _updates(submission).get()
+        self.assertIn("status", entry.changes_dict)
+        self.assertNotIn("data", entry.changes_dict)
+        submission.refresh_from_db()
+        self.assertEqual({}, submission.data)
+
+    def test_data_only_change_keeps_the_channel(self):
+        from gfbio_submissions.brokerage.audit_context import submission_audit_context
+
+        submission = _submission(self.staff)
+        with submission_audit_context("Save", "frontend"):
+            submission.data = {"requirements": {"title": "secret title"}}
+            submission.save()
+
+        entry = _updates(submission).get()
+        self.assertEqual("frontend", entry.additional_data["channel"])
+        self.assertEqual("Save", entry.additional_data["action"])
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertNotIn("secret title", entry.changes)
 
     @patch("gfbio_submissions.brokerage.admin.jira_cancel_issue")
     def test_admin_cancel_logs_action_and_channel(self, _jira_cancel):
@@ -197,6 +238,16 @@ class TestSubmissionAudit(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, "SUBMITTED")
 
+    def test_audit_view_shows_data_changed_without_the_payload(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "secret title"}}
+        submission.save()
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submission_audit", args=[submission.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "data: changed")
+        self.assertNotContains(response, "secret title")
+
     def test_admin_change_form_records_admin_channel(self):
         from django.contrib.admin.sites import AdminSite
 
@@ -269,6 +320,8 @@ class TestFrontendSaveChannel(APITestCase):
         self.assertEqual("frontend", entry.additional_data["channel"])
         self.assertEqual("Save", entry.additional_data["action"])
         self.assertIn("target", entry.changes_dict)
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertNotIn("A title", entry.changes)
 
 
 class TestCuratorAndTokenAudit(APITestCase):

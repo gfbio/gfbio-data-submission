@@ -4,6 +4,7 @@ import uuid
 from auditlog.registry import auditlog
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import pre_save
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
@@ -12,6 +13,7 @@ from gfbio_submissions.generic.fields import JsonDictField
 
 from ..configuration.settings import GFBIO_HELPDESK_TICKET, PANGAEA_JIRA_TICKET
 from ..managers.submission_manager import SubmissionManager
+from ..submission_data_audit import note_submission_data_change, record_submission_data_change
 from .center_name import CenterName
 
 
@@ -284,6 +286,8 @@ class Submission(TimeStampedModel):
         ]
 
 
+# note runs before auditlog writes the diff; record attaches the data marker afterwards.
+pre_save.connect(note_submission_data_change, sender=Submission, dispatch_uid="submission_data_audit_note")
 auditlog.register(
     Submission,
     include_fields=[
@@ -297,3 +301,4 @@ auditlog.register(
         "download_url",
     ],
 )
+pre_save.connect(record_submission_data_change, sender=Submission, dispatch_uid="submission_data_audit_record")
