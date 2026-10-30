@@ -6,6 +6,10 @@ import {useBlocker, useNavigate} from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
+import deleteSubmissionCloudUpload from "../api/deleteSubmissionCloudUpload.jsx";
+import patchSubmissionCloudUpload from "../api/patchSubmissionCloudUploadMetadata.jsx";
+import deleteSubmissionUpload from "../api/deleteSubmissionUpload.jsx";
+import patchSubmissionUpload from "../api/patchSubmissionUploadMetadata.jsx";
 import {uploadFileToS3} from "../api/s3UploadSubmission.jsx";
 import getToken from "../api/utils/getToken.jsx";
 import FormField from "../field_mapping/FormField.jsx";
@@ -19,8 +23,14 @@ import { buildSubmissionErrorList, mergeErrorLists } from "../utils/humanizeSubm
 const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmissionFiles }) => {
     const [isProcessing, setProcessing] = useState(false);
     const [files, setFiles] = useState([]);
+    const [filesDeletedFromServer, setFilesDeletedFromServer] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
     const [metadataIndex, setMetadataIndex] = useState(-1);
+    const [initialMetadataFiles, setInitialMetadataFiles] = useState(
+        localSubmissionFiles.length > 0
+            ? localSubmissionFiles?.filter(file => file.meta_data)
+            : submissionFiles?.filter(file => file.meta_data) 
+    );
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState(null);
     const [errorList, setErrorList] = useState([]);
@@ -48,6 +58,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         // Start with minimal required values
         const values = {
             files: filesValue,
+            filesChanged: false,
             embargo: submissionData?.embargo || formatDateToYYYYMMDD(defaultEmbargoDate),
             download_url: submissionData?.download_url || "",
         };
@@ -153,10 +164,13 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         }
     };
 
-    const handleFilesChange = (uploadedFiles, isValid, metaIndex) => {
+    const handleFilesChange = (uploadedFiles, isValid, metaIndex, deletedFile) => {
         setFiles(uploadedFiles);
         setUploadLimitExceeded(isValid);
         setMetadataIndex(metaIndex);
+        if (deletedFile) {
+            setFilesDeletedFromServer([...filesDeletedFromServer, deletedFile]);
+        }
     };
 
     function setUploadProgressPercent(file, progressPercent) {
@@ -191,7 +205,31 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         console.log("Upload complete");
     };
 
-    const collectPostSaveWarnings = async (brokerSubmissionId, comment) => {
+    const updateServerMetadata = async (file, isMetadata) => {
+        try {
+            const formData = new FormData();
+            formData.append("meta_data", isMetadata);
+            if (uploadType === "local") {
+                await patchSubmissionUpload(
+                    submissionData.broker_submission_id,
+                    file.pk,
+                    formData,
+                );
+            }
+            else {
+                await patchSubmissionCloudUpload(
+                    submissionData.broker_submission_id,
+                    file.pk,
+                    formData,
+                );
+            }
+        } catch (error) {
+            console.error("Error updating server metadata:", error);
+            throw new Error(error.message);
+        }
+    };
+
+    const handlePostSave = async (brokerSubmissionId, comment) => {
         const warnings = [];
 
         if (comment) {
@@ -212,6 +250,45 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                     isMetadata = metadataIndex.indices.length > 0 && metadataIndex.indices[0] === index;
                 }
                 return handleFileUpload(file, brokerSubmissionId, isMetadata);
+            }),
+        );
+        const filesValue = (localSubmissionFiles && localSubmissionFiles.length > 0)
+            ? localSubmissionFiles
+            : submissionFiles || [];
+
+        if (initialMetadataFiles != -1 && (metadataIndex != -1)) {
+            try {
+                initialMetadataFiles.forEach(async (file) => {
+                    if (!metadataIndex.source ||metadataIndex.source === "local" || metadataIndex.indices.length > 0 && filesValue[metadataIndex.indices[0]].pk != file.pk) {
+                        await updateServerMetadata(file, false);
+                    }
+                });
+            } catch (error) {
+                warnings.push(
+                    "The metadata flag for the selected server file could not be updated (deselecting).",
+                );
+            }            
+        }
+
+        if (metadataIndex != -1 && metadataIndex.source === "server" && metadataIndex.indices.length > 0 && !initialMetadataFiles.some((f) => f.pk === filesValue[metadataIndex.indices[0]].pk)) {
+            try {
+                await updateServerMetadata(filesValue[metadataIndex.indices[0]], true);
+            } catch (error) {
+                console.error("Error updating server metadata:", error);
+                warnings.push(
+                    "The metadata flag for the selected server file could not be updated.",
+                );
+            }
+        }
+
+        await Promise.allSettled(
+            filesDeletedFromServer.map((filePk) => {
+                if (uploadType === "local") {
+                    return deleteSubmissionUpload(brokerSubmissionId, filePk);
+                }
+                else {
+                    return deleteSubmissionCloudUpload(brokerSubmissionId, filePk);
+                }
             }),
         );
 
@@ -283,7 +360,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
         // Filter out empty values and embargo_date
         const filteredValues = Object.entries(values).reduce((acc, [key, value]) => {
             // Skip embargo date and files as they're handled separately
-            if (key === "embargo" || key === "files") return acc;
+            if (key === "embargo" || key === "files" || key == "filesChanged") return acc;
 
             // Keep arrays even if empty
             if (Array.isArray(value)) {
@@ -313,7 +390,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then(async (result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        const warnings = await collectPostSaveWarnings(
+                        const warnings = await handlePostSave(
                             brokerSubmissionId,
                             result?.comment,
                         );
@@ -339,7 +416,7 @@ const ProfileForm = ({ profileData, submissionData, submissionFiles, localSubmis
                 .then(async (result) => {
                     if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
-                        const warnings = await collectPostSaveWarnings(
+                        const warnings = await handlePostSave(
                             brokerSubmissionId,
                             result?.comment,
                         );

@@ -106,14 +106,14 @@ class SubmissionCloudUploadPatchView(mixins.UpdateModelMixin, generics.GenericAP
                 response_content=response.data,
                 response_status=response.status_code,
             )
-
-        add_metadata_file_validation_task.apply_async(
-            kwargs={
-                "submission_id": "{0}".format(instance.submission.pk),
-                "submission_upload_id": "{0}".format(instance.pk),
-                "triggered_by_user_id": request.user.pk,
-            },
-            countdown=SUBMISSION_DELAY,
-        )
+        if instance.submission.status not in [Submission.CLOSED, Submission.CANCELLED]:
+            add_metadata_file_validation_task.apply_async(
+                kwargs={
+                    "submission_id": "{0}".format(instance.submission.pk),
+                    "submission_upload_id": "{0}".format(instance.pk),
+                    "triggered_by_user_id": request.user.pk,
+                },
+                countdown=SUBMISSION_DELAY,
+            )
         return response
 
