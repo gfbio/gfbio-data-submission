@@ -9,7 +9,7 @@ const deleteSubmissionUpload = (brokerSubmissionId, fileKey) => {
         },
     };
 
-    const url = `${SUBMISSIONS_API}${brokerSubmissionId}${UPLOAD}${fileKey}`;
+    const url = `${SUBMISSIONS_API}${brokerSubmissionId}${UPLOAD}${fileKey}/`;
 
     return axios
         .delete(url, config)

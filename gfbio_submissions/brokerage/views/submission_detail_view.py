@@ -8,6 +8,7 @@ from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
+from ..audit_context import submission_audit_context
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models.submission import Submission
 from ..permissions.is_owner_or_readonly import IsOwnerOrHasCuratorRightsOrReadOnly
@@ -119,7 +120,8 @@ class SubmissionDetailView(
             # check for ena embargo update
             if instance.embargo != new_embargo:
                 instance.embargo = new_embargo
-                instance.save()
+                with submission_audit_context("Save", "frontend"):
+                    instance.save()
                 from ..tasks.jira_tasks.update_submission_issue import update_submission_issue_task
                 from ..tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
                 from ..tasks.jira_tasks.notify_user_embargo_changed import notify_user_embargo_changed_task
@@ -131,7 +133,8 @@ class SubmissionDetailView(
                 )
                 update_chain()
         elif instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED or instance.status == Submission.ERROR or user_has_special_permissions(request.user):
-            response = self.update(request, *args, **kwargs)
+            with submission_audit_context("Save", "frontend"):
+                response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
@@ -213,8 +216,9 @@ class SubmissionDetailView(
     )
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.status = Submission.CANCELLED
-        instance.save()
+        with submission_audit_context("Cancel", "frontend"):
+            instance.status = Submission.CANCELLED
+            instance.save()
         jira_cancel_issue(submission_id=instance.pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

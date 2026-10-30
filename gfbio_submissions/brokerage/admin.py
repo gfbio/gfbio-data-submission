@@ -1,26 +1,35 @@
 # -*- coding: utf-8 -*-
+import json
 import tempfile
 import zipfile
-import json
 from wsgiref.util import FileWrapper
 
-from django.urls import reverse
 import requests
+from auditlog.models import LogEntry as AuditLogEntry
 from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
+from django.core.exceptions import PermissionDenied
 from django.db.models import Case, Count, IntegerField, Value, When
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.encoding import smart_bytes
-from django.utils.safestring import mark_safe    
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django_reverse_admin import ReverseModelAdmin
 from dt_upload import admin as dt_admin
-from dt_upload.models import DTUpload, FileUploadRequest, FileUploadRequestMirror, FailedMirrorBackupLog
+from dt_upload.models import DTUpload, FailedMirrorBackupLog, FileUploadRequest, FileUploadRequestMirror
 from dt_upload.models.model_dt_upload_mirror import DTUploadMirror
 
 from gfbio_submissions.brokerage.models.jira_queue_message import JiraQueueMessage
-from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport, ValidationFinding, ValidationTaskReport
-from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import add_metadata_file_validation_task
+from gfbio_submissions.brokerage.models.metadata_validation_report import (
+    MetadataValidationReport,
+    ValidationFinding,
+    ValidationTaskReport,
+)
+from gfbio_submissions.brokerage.tasks.metadata_tasks.add_metadata_file_validation_task import (
+    add_metadata_file_validation_task,
+)
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_submittable_taxon_id import (
     check_submittable_taxon_id_task,
 )
@@ -29,6 +38,8 @@ from gfbio_submissions.brokerage.tasks.submission_upload_tasks.check_meta_refere
 )
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 
+from .admin_action_log import AdminActionLogMixin, skip_admin_action_log
+from .audit_context import submission_audit_context
 from .configuration.settings import (
     ENA,
     ENA_PANGAEA,
@@ -48,6 +59,7 @@ from .models.persistent_identifier import PersistentIdentifier
 from .models.submission import Submission
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
+from .submission_data_audit import DATA_CHANGED_LABEL
 from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
 from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
     create_broker_objects_from_submission_data_task,
@@ -85,6 +97,7 @@ def check_nagoya_protocol_was_agreed_to(modeladmin, request, submission, action_
         )
         jira_client = JiraClient(resource=submission.user.site_configuration.helpdesk_server)
         jira_client.add_comment(key_or_issue=reference_key, text=comment, is_internal=True)
+    skip_admin_action_log(submission)
     return False
 
 
@@ -95,7 +108,7 @@ class PersistentIdentifierInline(admin.TabularInline):
         return 1
 
 
-class BrokerObjectAdmin(admin.ModelAdmin):
+class BrokerObjectAdmin(AdminActionLogMixin, admin.ModelAdmin):
     inlines = (PersistentIdentifierInline,)
     list_filter = (
         "type",
@@ -107,7 +120,7 @@ class BrokerObjectAdmin(admin.ModelAdmin):
     ]
 
 
-class PersistentIdentifierAdmin(admin.ModelAdmin):
+class PersistentIdentifierAdmin(AdminActionLogMixin, admin.ModelAdmin):
     list_filter = (
         "pid_type",
         "archive",
@@ -203,13 +216,18 @@ re_create_ena_xml.short_description = "Re-Create XML (ENA)"
 
 
 def delete_broker_objects_and_ena_xml(modeladmin, request, queryset):
-    for obj in queryset.exclude(status=Submission.CLOSED):
+    for obj in queryset:
+        if obj.status == Submission.CLOSED:
+            skip_admin_action_log(obj)
+            continue
         broker_objects_with_pids = obj.brokerobject_set.annotate(pid_count=Count("persistentidentifier")).filter(
             pid_count__gte=1
         )
-        if len(broker_objects_with_pids) == 0:
-            obj.auditabletextdata_set.all().delete()
-            obj.brokerobject_set.all().delete()
+        if len(broker_objects_with_pids) != 0:
+            skip_admin_action_log(obj)
+            continue
+        obj.auditabletextdata_set.all().delete()
+        obj.brokerobject_set.all().delete()
 
 
 delete_broker_objects_and_ena_xml.short_description = "(!) Delete BrokerObjects & XML"
@@ -518,6 +536,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
             and upload.file_upload.original_filename.lower().endswith(allowed_types)
         ]
         if not submission_cloud_upload_ids:
+            skip_admin_action_log(obj)
             continue
 
         site_config = _safe_get_site_config(obj)
@@ -528,6 +547,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
                 _("Skipping ENA transfer for submission %(sid)s: no site configuration for the submitting user.")
                 % {"sid": obj.broker_submission_id},
             )
+            skip_admin_action_log(obj)
             continue
         if not site_config.ena_ftp_id:
             hosting_config = SiteConfiguration.objects.get_hosting_site_configuration()
@@ -541,6 +561,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
                 _("Skipping ENA transfer for submission %(sid)s: a transfer is already running.")
                 % {"sid": obj.broker_submission_id},
             )
+            skip_admin_action_log(obj)
             continue
         try:
             ensure_ena_webin_submission_folder_via_ftp(site_config, obj.broker_submission_id)
@@ -553,6 +574,7 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
                 % {"sid": obj.broker_submission_id, "err": exc},
                 level=messages.ERROR,
             )
+            skip_admin_action_log(obj)
             continue
         try:
             advance_ena_cloud_upload_transfer_task.si(
@@ -595,7 +617,88 @@ def retrigger_cloud_upload_checksums(modeladmin, request, queryset):
 retrigger_cloud_upload_checksums.short_description = "Run checksum checks for cloud uploads"
 
 
-class AuditableTextDataAdmin(admin.ModelAdmin):
+def _cloud_upload_overview_message(entry):
+    """Text for the cloud-upload list. Action-only admin rows return None."""
+    extra = entry.additional_data or {}
+    if extra.get("detail"):
+        return str(extra["detail"])
+    if not entry.changes_dict:
+        return None
+    parts = []
+    for field_name, values in entry.changes_display_dict.items():
+        if isinstance(values, (list, tuple)) and len(values) == 2:
+            old, new = values
+        else:
+            old, new = "", values
+        if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
+            parts.append(f"{field_name}: changed")
+        else:
+            parts.append(f"{field_name}: {old} → {new}")
+    return "; ".join(parts) if parts else None
+
+
+def audit_rows_for(obj):
+    """Rows for the shared submission and cloud-upload audit page."""
+    entries = AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type")
+    audit_rows = []
+    for entry in entries:
+        extra = entry.additional_data or {}
+        if entry.actor_id:
+            actor_label = str(entry.actor)
+        elif extra.get("jira_user"):
+            actor_label = extra["jira_user"]
+        else:
+            actor_label = _("system")
+        changes = []
+        for field_name, values in entry.changes_display_dict.items():
+            if isinstance(values, (list, tuple)) and len(values) == 2:
+                old, new = values
+            else:
+                old, new = "", values
+            if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
+                changes.append(f"{field_name}: changed")
+            else:
+                changes.append(f"{field_name}: {old} → {new}")
+        if extra.get("detail"):
+            changes.append(str(extra["detail"]))
+        audit_rows.append(
+            {
+                "timestamp": entry.timestamp,
+                "actor": actor_label,
+                "channel": extra.get("channel") or "",
+                "action": extra.get("action") or "",
+                "changes": changes,
+            }
+        )
+    return audit_rows
+
+
+def render_audit_log(model_admin, request, object_id, extra_context=None):
+    obj = model_admin.get_object(request, unquote(object_id))
+    if obj is None:
+        return model_admin._get_obj_does_not_exist_redirect(request, model_admin.model._meta, object_id)
+    if not model_admin.has_view_or_change_permission(request, obj):
+        raise PermissionDenied
+
+    context = {
+        **model_admin.admin_site.each_context(request),
+        "title": _("Audit log: %s") % obj,
+        "subtitle": None,
+        "audit_rows": audit_rows_for(obj),
+        "module_name": str(model_admin.opts.verbose_name_plural),
+        "object": obj,
+        "opts": model_admin.opts,
+        **(extra_context or {}),
+    }
+    request.current_app = model_admin.admin_site.name
+    return TemplateResponse(
+        request,
+        "admin/brokerage/submission/submission_audit.html",
+        context,
+    )
+
+
+class AuditableTextDataAdmin(AdminActionLogMixin, admin.ModelAdmin):
     actions = []
 
 
@@ -606,7 +709,7 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
         return 1
 
 
-class SubmissionAdmin(admin.ModelAdmin):
+class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
     list_display = (
@@ -666,12 +769,14 @@ class SubmissionAdmin(admin.ModelAdmin):
         old_sub = Submission.objects.filter(id=obj.pk).first()
         if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
-        super(SubmissionAdmin, self).save_model(request, obj, form, change)
+        with submission_audit_context("Save", "admin"):
+            super(SubmissionAdmin, self).save_model(request, obj, form, change)
     
 
     def get_urls(self):
-        from django.urls import path
         from functools import update_wrapper
+
+        from django.urls import path
 
         def wrap(view):
             def wrapper(*args, **kwargs):
@@ -687,13 +792,16 @@ class SubmissionAdmin(admin.ModelAdmin):
                 wrap(self.submission_cloud_uploads_view),
                 name="submission_submission_submission_cloud_upload_view",
             ),
+            path(
+                "<path:object_id>/audit/",
+                wrap(self.submission_audit_view),
+                name="brokerage_submission_audit",
+            ),
         ]
         return custom_urls + urls
 
     def submission_cloud_uploads_view(self, request, object_id, extra_context=None):
         "The 'history' admin view for this model."
-        from django.contrib.admin.models import LogEntry
-
         model = self.model
         obj = Submission.objects.filter(pk=object_id).first()
         if obj is None:
@@ -756,30 +864,28 @@ class SubmissionAdmin(admin.ModelAdmin):
                     task_return_value = task_report["task_return_value"] or ""
                     tasks_by_upload[scu_id].append({"id": task_report["task_id"], "status": task_return_value[0:1]})
 
-        # One bulk query for admin log history instead of one LogEntry query per upload.
-        # Order newest first so Postgres DISTINCT ON and the Python fallback both keep
-        # the latest log row per upload. On equal action_time, the higher pk wins.
+        # Newest audit note per upload. Action-only admin rows are skipped so a
+        # status note stays visible. On equal timestamps the higher pk wins.
         latest_log_by_upload_id = {}
         if cloud_upload_ids:
-            from django.db.utils import NotSupportedError
+            from django.contrib.contenttypes.models import ContentType
 
-            log_entries_qs = (
-                LogEntry.objects.filter(
-                    content_type=40,
-                    object_id__in=[str(upload_id) for upload_id in cloud_upload_ids],
+            content_type = ContentType.objects.get_for_model(SubmissionCloudUpload)
+            log_entries = (
+                AuditLogEntry.objects.filter(
+                    content_type=content_type,
+                    object_pk__in=[str(upload_id) for upload_id in cloud_upload_ids],
                 )
-                .order_by("object_id", "-action_time", "-pk")
-                .only("object_id", "action_time", "change_message")
+                .select_related("content_type")
+                .order_by("-timestamp", "-pk")
             )
-            try:
-                latest_log_by_upload_id = {
-                    log_entry.object_id: log_entry
-                    for log_entry in log_entries_qs.distinct("object_id")
-                }
-            except NotSupportedError:
-                for log_entry in log_entries_qs:
-                    if log_entry.object_id not in latest_log_by_upload_id:
-                        latest_log_by_upload_id[log_entry.object_id] = log_entry
+            for log_entry in log_entries:
+                if log_entry.object_pk in latest_log_by_upload_id:
+                    continue
+                message = _cloud_upload_overview_message(log_entry)
+                if message is None:
+                    continue
+                latest_log_by_upload_id[log_entry.object_pk] = (log_entry, message)
 
         cloud_upload_list = {}
         known_status_names = [SubmissionCloudUpload.get_status_name(state) for state in orderlist]
@@ -804,8 +910,8 @@ class SubmissionAdmin(admin.ModelAdmin):
                 "pk": cloud_upload["pk"],
                 "name": upload_name,
                 "status": status,
-                "last_change_action_time": last_action.action_time if last_action else cloud_upload["modified"],
-                "last_change_message": last_action.get_change_message() if last_action else "",
+                "last_change_action_time": last_action[0].timestamp if last_action else cloud_upload["modified"],
+                "last_change_message": last_action[1] if last_action else "",
                 "related_tasks": tasks_by_upload.get(cloud_upload["pk"], []),
             })
 
@@ -827,6 +933,9 @@ class SubmissionAdmin(admin.ModelAdmin):
             "admin/brokerage/submission/submission_submission_cloud_upload_list.html",
             context,
         )
+
+    def submission_audit_view(self, request, object_id, extra_context=None):
+        return render_audit_log(self, request, object_id, extra_context)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -884,7 +993,7 @@ class ValidationFindingInlineAdmin(admin.TabularInline):
         return 1
 
 
-class ValidationTaskReportAdmin(admin.ModelAdmin):
+class ValidationTaskReportAdmin(AdminActionLogMixin, admin.ModelAdmin):
     inlines = (
         ValidationFindingInlineAdmin,
     )
@@ -901,7 +1010,7 @@ class ValidationTaskReportInlineAdmin(admin.TabularInline):
         return 0
 
 
-class MetadataValidationReportAdmin(admin.ModelAdmin):
+class MetadataValidationReportAdmin(AdminActionLogMixin, admin.ModelAdmin):
     autocomplete_fields = ["upload_file", "submission"]
     list_per_page = 50
     show_full_result_count = False
@@ -959,10 +1068,12 @@ def reparse_csv_metadata_cloud_uploads(modeladmin, request, queryset):
     if non_ena_submission_cloud_uploads:
         msg = f"The following cloud uploads have not the target '{ENA}' or '{ENA_PANGAEA}' and can't be processed: <br />" 
         msg += ", <br />".join([f"{scu}" for scu in non_ena_submission_cloud_uploads])
-        from django.utils.safestring import mark_safe
         from django.contrib import messages
+        from django.utils.safestring import mark_safe
         modeladmin.message_user(request, mark_safe(msg), level=messages.ERROR)        
         non_ena_scu_ids = [scu.id for scu in non_ena_submission_cloud_uploads]
+        for scu in non_ena_submission_cloud_uploads:
+            skip_admin_action_log(scu)
 
     run_csv_reparse_task_in_reparse_pipeline(
         queryset.exclude(id__in=non_ena_scu_ids),
@@ -982,10 +1093,12 @@ def run_validate_metadata_cloud_uploads(modeladmin, request, queryset):
     if non_ena_submission_cloud_uploads:
         msg = f"The following cloud uploads have either not the target '{ENA}' or missing the metadata-flag and can't be processed: <br />" 
         msg += ", <br />".join([f"{scu}" for scu in non_ena_submission_cloud_uploads])
-        from django.utils.safestring import mark_safe
         from django.contrib import messages
+        from django.utils.safestring import mark_safe
         modeladmin.message_user(request, mark_safe(msg), level=messages.ERROR)        
         non_ena_scu_ids = [scu.id for scu in non_ena_submission_cloud_uploads]
+        for scu in non_ena_submission_cloud_uploads:
+            skip_admin_action_log(scu)
 
     for metadata_file in queryset.exclude(id__in=non_ena_scu_ids):
         chain = (
@@ -1021,7 +1134,7 @@ def download_submission_upload_file(modeladmin, request, queryset):
 download_submission_upload_file.short_description = "Download the file of the selected SubmissionUpload."
 
 
-class SubmissionUploadAdmin(admin.ModelAdmin):
+class SubmissionUploadAdmin(AdminActionLogMixin, admin.ModelAdmin):
     list_display = ("__str__", "meta_data", "user", "attachment_id", "attach_to_ticket")
     date_hierarchy = "created"
     list_filter = ("user", "meta_data", "attach_to_ticket")
@@ -1032,7 +1145,7 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
     ]
 
 
-class TaskProgressReportAdmin(admin.ModelAdmin):
+class TaskProgressReportAdmin(AdminActionLogMixin, admin.ModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
     readonly_fields = (
@@ -1047,11 +1160,11 @@ class TaskProgressReportAdmin(admin.ModelAdmin):
     list_display = ("task_name", "created", "modified")
 
 
-class EnaReportAdmin(admin.ModelAdmin):
+class EnaReportAdmin(AdminActionLogMixin, admin.ModelAdmin):
     date_hierarchy = "created"
 
 
-class JiraMessageAdmin(admin.ModelAdmin):
+class JiraMessageAdmin(AdminActionLogMixin, admin.ModelAdmin):
     fields = ("name", "message")
     # readonly_fields = ('name',)
     ordering = ("name",)
@@ -1062,12 +1175,12 @@ class JiraMessageAdmin(admin.ModelAdmin):
     list_display = ("name", "modified")
 
 
-class JiraQueueMessageAdmin(admin.ModelAdmin):
+class JiraQueueMessageAdmin(AdminActionLogMixin, admin.ModelAdmin):
     list_display = ("submission_id", "type", "modified", "status")
     fields = ("submission_id", "type", "status", "created", "modified", "data")
     readonly_fields = ("created", "modified",)
 
-class AbcdConversionResultAdmin(admin.ModelAdmin):
+class AbcdConversionResultAdmin(AdminActionLogMixin, admin.ModelAdmin):
     date_hierarchy = "created"  # date drill down
     ordering = ("-modified",)  # ordering in list display
     list_display = ("data_id", "submission", "created", "atax_xml_valid")
@@ -1094,7 +1207,7 @@ def download_submission_cloud_upload_file(modeladmin, request, queryset):
 download_submission_cloud_upload_file.short_description = "Download the file of the selected SubmissionCloudUpload."
 
 
-class SubmissionCloudUploadAdmin(ReverseModelAdmin):
+class SubmissionCloudUploadAdmin(AdminActionLogMixin, ReverseModelAdmin):
     list_display = ("__str__", "meta_data", "user", "status")
     list_filter = ("status", "file_upload__status", "user", "meta_data", "attach_to_ticket")
     search_fields = ["submission__broker_submission_id", "submission__additionalreference__reference_key"]
@@ -1115,7 +1228,33 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.file_upload_id:
             obj.file_upload._validation_triggered_by_user_id = request.user.pk
-        super().save_model(request, obj, form, change)
+        with submission_audit_context("Save", "admin"):
+            super().save_model(request, obj, form, change)
+
+    def get_urls(self):
+        from functools import update_wrapper
+
+        from django.urls import path
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            wrapper.model_admin = self
+            return update_wrapper(wrapper, view)
+
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/audit/",
+                wrap(self.submission_cloud_upload_audit_view),
+                name="brokerage_submissioncloudupload_audit",
+            ),
+        ]
+        return custom_urls + urls
+
+    def submission_cloud_upload_audit_view(self, request, object_id, extra_context=None):
+        return render_audit_log(self, request, object_id, extra_context)
 
     def file_upload_link(self, obj):
         return mark_safe('<a href="{}">{}</a>'.format(
@@ -1123,6 +1262,11 @@ class SubmissionCloudUploadAdmin(ReverseModelAdmin):
             "File upload request"
         ))
 
+
+try:
+    admin.site.unregister(AuditLogEntry)
+except admin.sites.NotRegistered:
+    pass
 
 try:
     admin.site.unregister(DTUpload)
@@ -1140,7 +1284,7 @@ except admin.sites.NotRegistered:
     pass
 
 
-class FileUploadRequestAdmin(dt_admin.FileUploadRequestAdmin):
+class FileUploadRequestAdmin(AdminActionLogMixin, dt_admin.FileUploadRequestAdmin):
     list_display = ("__str__", "user")
     search_fields = ["submissioncloudupload__submission__broker_submission_id", "original_filename"]
     list_filter = ("status", ("mirrored_file___mirror_file", admin.EmptyFieldListFilter), "user")

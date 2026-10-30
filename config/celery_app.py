@@ -1,6 +1,7 @@
 import os
 
 from celery import Celery
+from celery.signals import task_postrun, task_prerun
 
 # set the default Django settings module for the "celery" program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
@@ -83,4 +84,30 @@ app.autodiscover_tasks(
         "gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task",
         "gfbio_submissions.brokerage.tasks.add_general_comments_to_issue",
     ]
+)
+
+
+def _push_submission_audit_for_celery_task(sender=None, task=None, **kwargs):
+    from gfbio_submissions.brokerage.audit_context import push_celery_audit_context
+
+    task_obj = task if task is not None else sender
+    push_celery_audit_context(getattr(task_obj, "name", None))
+
+
+def _pop_submission_audit_for_celery_task(**kwargs):
+    from gfbio_submissions.brokerage.audit_context import pop_celery_audit_context
+
+    pop_celery_audit_context()
+
+
+# dispatch_uid: a re-import or autoreload re-executes this module, but the
+# previous receiver stays on the process-global signal. The uid keeps that
+# from stacking a second receiver.
+task_prerun.connect(
+    _push_submission_audit_for_celery_task,
+    dispatch_uid="gfbio_submissions.brokerage.audit.celery_task_prerun",
+)
+task_postrun.connect(
+    _pop_submission_audit_for_celery_task,
+    dispatch_uid="gfbio_submissions.brokerage.audit.celery_task_postrun",
 )

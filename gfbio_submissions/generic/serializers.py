@@ -9,12 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 
-from gfbio_submissions.brokerage.configuration.settings import (
-    ENA,
-    ENA_PANGAEA,
-    GENERIC,
-    GFBIO_HELPDESK_TICKET,
-)
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, GENERIC, GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.utils.email_curators import mail_curators
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
@@ -100,7 +95,31 @@ class JiraHookRequestSerializer(serializers.Serializer):
         days_from_today = self._embargo_days_from_today(embargo_date)
         return 1 <= days_from_today <= 14
 
+    def _jira_actor_label(self):
+        """Mail address from the payload, otherwise the user_id query parameter.
+
+        A missing emailAddress must not go through ``_data_get``: that helper
+        returns the parent object and sends an admin mail.
+        """
+        user = self.validated_data.get("user") if isinstance(self.validated_data, dict) else None
+        email = user.get("emailAddress") if isinstance(user, dict) else None
+        if isinstance(email, str) and email.strip():
+            return email.strip()
+        request = self.context.get("request") if getattr(self, "context", None) else None
+        if request is None:
+            return None
+        user_id = request.GET.get("user_id")
+        if isinstance(user_id, str) and user_id.strip():
+            return user_id.strip()
+        return None
+
     def save(self):
+        from gfbio_submissions.brokerage.audit_context import submission_audit_context
+
+        with submission_audit_context("Jira webhook", "jira", jira_user=self._jira_actor_label()):
+            self._apply_jira_hook_update()
+
+    def _apply_jira_hook_update(self):
         submission_id = self._data_get(self.validated_data, ["issue", "fields", "customfield_10303"])
         try:
             submission = Submission.objects.get(broker_submission_id=UUID(submission_id))
@@ -123,9 +142,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         logger.info(msg="serializers.py | JiraHookRequestSerializer | " "updating user | {0}".format(updating_user))
         if self.has_embargo_date_changelog_item():
             # update ena
-            from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import (
-                update_ena_embargo_task,
-            )
+            from gfbio_submissions.brokerage.tasks.process_tasks.update_ena_embargo import update_ena_embargo_task
 
             update_ena_embargo_task.apply_async(
                 kwargs={
