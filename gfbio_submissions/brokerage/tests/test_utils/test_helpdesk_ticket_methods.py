@@ -190,7 +190,7 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=self._save_submission(ena_data),
             prepare_for_update=True,
         )
-        self.assertEqual("dsub/molecular", ena_update["customfield_10010"])
+        self.assertNotIn("customfield_10010", ena_update)
         self.assertNotIn("reporter", ena_update)
 
         other_data = copy.deepcopy(ena_data)
@@ -212,7 +212,7 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=self._save_submission(self._load_generic_data()),
             prepare_for_update=True,
         )
-        self.assertEqual("sand/molecular-data", payload["customfield_10010"])
+        self.assertNotIn("customfield_10010", payload)
 
     def test_request_type_non_string_data_center(self):
         dsub_config = self._dsub_site_config()

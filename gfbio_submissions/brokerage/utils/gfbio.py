@@ -160,9 +160,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         # if len(assignee) > 0:
         #     mutual_data['assignee'] = {'name': assignee}
         mutual_data["reporter"] = {"name": reporter.get("jira_user_name", site_config.contact)}
-        mutual_data["customfield_10010"] = jira_request_type
-    elif jira_request_target == "molecular":
-        # On update, set the request type only for molecular submissions so an
-        # existing Generic Data type is not reset.
+        # Updates omit the Customer Request Type (DASS-3926) because Jira Service Management
+        # rejects that field on issue update. Changing the request type later stays a Helpdesk UI action.
         mutual_data["customfield_10010"] = jira_request_type
     return mutual_data
