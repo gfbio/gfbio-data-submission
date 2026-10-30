@@ -1,0 +1,12 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:brokerage_submissioncloudupload_audit' object_id=original.pk %}"
+       class="button"
+       style="margin-left: 10px">{% translate "Audit" %}</a>
+  </li>
+  {{ block.super }}
+{% endblock object-tools-items %}

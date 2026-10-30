@@ -1,10 +1,27 @@
 # -*- coding: utf-8 -*-
+from auditlog.registry import auditlog
 from django.db import models
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
-from .submission import Submission
+
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
+from .submission import Submission
+
+
+def _cloud_upload_change_note(message):
+    if isinstance(message, str):
+        return message
+    parts = []
+    if isinstance(message, list):
+        for item in message:
+            if not isinstance(item, dict):
+                continue
+            fields = (item.get("changed") or {}).get("fields") or []
+            parts.extend(str(field) for field in fields)
+    if parts:
+        return "; ".join(parts)
+    return str(message)
 
 
 class SubmissionCloudUpload(TimeStampedModel):
@@ -102,15 +119,57 @@ class SubmissionCloudUpload(TimeStampedModel):
                 )
 
     def log_change(self, message, user_id=None):
-        from django.contrib.admin.models import CHANGE, LogEntry
+        """Store the status note on the audit trail.
 
-        LogEntry.objects.log_action(
-            user_id=user_id if user_id else self.submission.user.pk,
-            content_type_id=40,
-            object_id=self.pk,
-            action_flag=CHANGE,
-            change_message=message,
-            object_repr=self.__str__()
+        A status save in the same moment already has a diff row. The note is
+        attached there. A note without a fresh status diff, such as "status kept",
+        becomes its own audit row. The cloud-upload overview reads this note.
+        """
+        from datetime import timedelta
+
+        from auditlog.models import LogEntry as AuditLogEntry
+        from django.contrib.auth import get_user_model
+        from django.utils import timezone
+
+        from gfbio_submissions.brokerage.audit_context import current_submission_audit_context
+
+        note = _cloud_upload_change_note(message)
+        latest = (
+            AuditLogEntry.objects.get_for_object(self)
+            .filter(action=AuditLogEntry.Action.UPDATE)
+            .order_by("-pk")
+            .first()
+        )
+        if (
+            latest is not None
+            and "status" in latest.changes_dict
+            and not (latest.additional_data or {}).get("detail")
+            and timezone.now() - latest.timestamp < timedelta(seconds=5)
+        ):
+            extra = dict(latest.additional_data or {})
+            extra["detail"] = note
+            latest.additional_data = extra
+            update_fields = ["additional_data"]
+            if latest.actor_id is None and user_id:
+                actor = get_user_model().objects.filter(pk=user_id).first()
+                if actor is not None:
+                    latest.actor = actor
+                    update_fields.append("actor")
+            latest.save(update_fields=update_fields)
+            return
+
+        actor = None
+        actor_pk = user_id or getattr(getattr(self, "submission", None), "user_id", None)
+        if actor_pk:
+            actor = get_user_model().objects.filter(pk=actor_pk).first()
+        extra = dict(current_submission_audit_context() or {})
+        extra["detail"] = note
+        AuditLogEntry.objects.log_create(
+            self,
+            action=AuditLogEntry.Action.UPDATE,
+            changes="{}",
+            actor=actor,
+            additional_data=extra,
         )
 
     @staticmethod
@@ -148,3 +207,21 @@ class SubmissionCloudUpload(TimeStampedModel):
                 status_name = status_choice[1]
                 break
         return status_name
+
+    def get_additional_data(self):
+        from gfbio_submissions.brokerage.audit_context import current_submission_audit_context
+
+        return current_submission_audit_context()
+
+
+auditlog.register(
+    SubmissionCloudUpload,
+    include_fields=[
+        "status",
+        "submission",
+        "user",
+        "attach_to_ticket",
+        "meta_data",
+        "attachment_id",
+    ],
+)
