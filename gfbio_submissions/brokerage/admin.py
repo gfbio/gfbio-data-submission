@@ -763,6 +763,8 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
         "modified",
         "get_ticket"
     )
+    # Hidden so saving the admin form cannot clear a checklist block.
+    exclude = ("checklist_mapping_failed",)
 
     def save_model(self, request, obj, form, change):
         # FIXME: this is not good and needs refactoring asap !

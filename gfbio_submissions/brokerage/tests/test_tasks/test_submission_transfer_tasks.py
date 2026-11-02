@@ -160,7 +160,7 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertEqual(Submission.CLOSED, submission.status)
 
     @responses.activate
-    def test_process_ena_response_task_error_reaches_error_status(self):
+    def test_process_ena_response_task_error_keeps_previous_status(self):
         submission = Submission.objects.order_by("id").first()
         conf = SiteConfiguration.objects.order_by("id").first()
         responses.add(
@@ -169,10 +169,13 @@ class TestSubmissionTransferTasks(TestTasks):
             status=200,
             body=_get_ena_error_xml_response(),
         )
+        status_before = submission.status
         chain(
             prepare_ena_submission_data_task.s(submission_id=submission.pk),
             transfer_data_to_ena_task.s(submission_id=submission.pk),
             process_ena_response_task.s(submission_id=submission.pk),
         )()
         submission.refresh_from_db()
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(status_before, submission.status)
+        logged = RequestLog.objects.filter(submission_id=submission.broker_submission_id)
+        self.assertTrue(any("parsed_ena_response" in (entry.request_details or {}) for entry in logged))

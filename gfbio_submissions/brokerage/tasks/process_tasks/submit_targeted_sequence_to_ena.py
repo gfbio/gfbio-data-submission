@@ -46,8 +46,8 @@ def submit_targeted_sequences_to_ena_task(
     )
     store_manifest_to_filesystem(submission)
     # DASS-3574: resolve the curated centre before invoking webin-cli so an
-    # empty/None centre fails the submission (terminal-safe) and aborts the
-    # task — the value can never reach ENA via the -centername arg.
+    # empty/None centre is logged via fail(), which does not change status, and
+    # the webin-cli call is still aborted — the value can never reach ENA.
     try:
         center_name = resolve_and_validate_center_name(submission)
     except InvalidCenterName as ex:
