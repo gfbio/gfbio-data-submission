@@ -758,13 +758,14 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
         submit_manifest_to_ena,
         combine_csvs_to_abcd,
     ]
+    # checklist_mapping_failed stays visible but is not part of the saved form,
+    # so an admin save cannot clear a checklist block.
     readonly_fields = (
         "created",
         "modified",
-        "get_ticket"
+        "get_ticket",
+        "checklist_mapping_failed",
     )
-    # Hidden so saving the admin form cannot clear a checklist block.
-    exclude = ("checklist_mapping_failed",)
 
     def save_model(self, request, obj, form, change):
         # FIXME: this is not good and needs refactoring asap !
