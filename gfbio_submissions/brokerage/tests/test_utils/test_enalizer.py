@@ -31,7 +31,7 @@ from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...exceptions.transfer_exceptions import InvalidCenterName
+from ...exceptions.transfer_exceptions import ChecklistMappingBlocked, InvalidCenterName
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
 from ...models.submission import IllegalStatusTransition, Submission
@@ -212,10 +212,40 @@ class TestEnalizer(TestCase):
         data = enalizer.prepare_submission_data()
         k, sample_xml = data.get("SAMPLE")
         self.assertNotIn("<TAG>ENA-CHECKLIST</TAG>", sample_xml)
+        previous_status = submission.status
         submission = Submission.objects.get(pk=submission.pk)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(previous_status, submission.status)
+        self.assertTrue(submission.checklist_mapping_failed)
+        self.assertIn("SAMPLE", data)
         # whitespaces are stripped automatically, and value is put to lowercase
         self.assertEqual(1, len(enalizer.samples_with_checklist_errors))
+
+    @responses.activate
+    def test_send_submission_to_ena_checklist_mapping_failed_no_post(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        submission.checklist_mapping_failed = True
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        with self.assertRaises(ChecklistMappingBlocked):
+            send_submission_to_ena(
+                submission=submission,
+                archive_access=conf.ena_server,
+                ena_submission_data={},
+            )
+        self.assertEqual(0, len(responses.calls))
+        submission.refresh_from_db()
+        self.assertEqual(Submission.SUBMITTED, submission.status)
+
+    def test_prepare_without_samples_clears_checklist_mapping_failed(self):
+        submission = Submission.objects.first()
+        submission.checklist_mapping_failed = True
+        submission.save(update_fields=["checklist_mapping_failed"])
+        submission.brokerobject_set.filter(type="sample").delete()
+        enalizer = Enalizer(submission, "test-clear-checklist")
+        enalizer.prepare_submission_data()
+        submission.refresh_from_db()
+        self.assertFalse(submission.checklist_mapping_failed)
 
     def test_additional_no_renamed_checklist_attribute(self):
         submission = Submission.objects.last()
@@ -576,9 +606,9 @@ class TestEnalizer(TestCase):
         self.assertEqual(200, response.status_code)
 
     # DASS-3574 T4: an invalid center_name surfaced while preparing ENA data
-    # must end as a clean ERROR transition (prepare path), and must never reach
-    # ENA via the push path (send path) — without double-faulting on terminals.
-    def test_prepare_ena_data_centerless_sets_error(self):
+    # is logged via fail() and must leave the previous status unchanged. It must
+    # never reach ENA via the push path.
+    def test_prepare_ena_data_centerless_keeps_open_status(self):
         submission = Submission.objects.first()
         submission.center_name = None
         submission.status = Submission.OPEN
@@ -589,7 +619,7 @@ class TestEnalizer(TestCase):
         self.assertNotIsInstance(cm.exception, IllegalStatusTransition)
         self.assertIn("center_name", str(cm.exception))
         submission = Submission.objects.get(pk=submission.pk)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(Submission.OPEN, submission.status)
 
     def test_prepare_ena_data_centerless_closed_no_double_fault(self):
         submission = Submission.objects.first()
@@ -620,7 +650,7 @@ class TestEnalizer(TestCase):
             )
         self.assertEqual(0, len(responses.calls))
         submission = Submission.objects.get(pk=submission.pk)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(Submission.SUBMITTED, submission.status)
 
     def test_prepare_ena_data_add(self):
         submission = Submission.objects.first()
@@ -674,8 +704,8 @@ class TestEnalizer(TestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
 
     # DASS-3574 T5: HOLD/RELEASE XML must carry the submission's curated centre
-    # instead of the hardcoded "GFBIO", and must reject (-> ERROR, no HTTP call)
-    # rather than send an empty/None centre. The broker_name="GFBIO" stays.
+    # instead of the hardcoded "GFBIO". An empty/None centre is logged via fail()
+    # without a status change, and there is no HTTP call. The broker_name="GFBIO" stays.
     @staticmethod
     def _request_body_text(call):
         body = call.request.body
@@ -743,7 +773,7 @@ class TestEnalizer(TestCase):
 
         self.assertEqual(0, len(responses.calls))
         submission = Submission.objects.get(pk=submission.pk)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(Submission.SUBMITTED, submission.status)
 
     @responses.activate
     def test_release_study_on_ena_uses_curated_center(self):
@@ -782,11 +812,11 @@ class TestEnalizer(TestCase):
 
         self.assertEqual(0, len(responses.calls))
         submission = Submission.objects.get(pk=submission.pk)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(Submission.SUBMITTED, submission.status)
 
     # DASS-3574 T6: the VALIDATE/TEST path must resolve the submission's curated
-    # centre (instead of the in-memory "GFBIO" throwaway) so a missing centre is
-    # surfaced at validation time; an invalid centre -> ERROR, no HTTP call.
+    # centre (instead of the in-memory "GFBIO" throwaway). A missing centre is
+    # logged via fail() without a status change, and there is no HTTP call.
     @responses.activate
     def test_validate_against_ena_uses_curated_center(self):
         submission = Submission.objects.first()
@@ -839,4 +869,4 @@ class TestEnalizer(TestCase):
 
         self.assertEqual(0, len(responses.calls))
         submission = Submission.objects.get(pk=submission.pk)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(Submission.SUBMITTED, submission.status)

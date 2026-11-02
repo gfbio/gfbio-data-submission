@@ -599,7 +599,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         ).get()
 
         self.assertFalse(mock_run.called)
-        self.assertEqual(
+        self.assertNotEqual(
             Submission.ERROR,
             Submission.objects.get(pk=submission.pk).status,
         )

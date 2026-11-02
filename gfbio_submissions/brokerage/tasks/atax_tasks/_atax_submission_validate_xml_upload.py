@@ -68,6 +68,7 @@ def atax_submission_validate_xml_upload_task(
         if errors:
             messages = [e.message for e in errors]
             submission_upload.submission.data.update({"validation": messages})
+            submission_upload.submission.save(update_fields=["data"])
             report.task_exception_info = json.dumps({"validation": messages})
 
             report.save()

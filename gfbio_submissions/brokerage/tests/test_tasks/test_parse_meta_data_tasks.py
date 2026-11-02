@@ -316,6 +316,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertEqual(0, submission.brokerobject_set.filter(type="sample").count())
         self.assertEqual(2, submission.brokerobject_set.filter(type="experiment").count())
 
+        status_before_preparation = submission.status
         with patch("gfbio_submissions.brokerage.utils.ena.JiraClient") as jira_client:
             ena_submission_data = prepare_ena_data(submission=submission)
             self.assertTrue(update_ena_submission_data_task.apply_async(kwargs={"submission_id": submission.pk}).get())
@@ -329,5 +330,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertNotIn("refname=", experiment_xml.split("<SAMPLE_DESCRIPTOR", 1)[1].split("/>", 1)[0])
 
         submission.refresh_from_db()
-        self.assertNotEqual(Submission.ERROR, submission.status)
+        # Serializer-created fixtures are SUBMITTED (release=True), not OPEN.
+        self.assertEqual(Submission.SUBMITTED, status_before_preparation)
+        self.assertEqual(status_before_preparation, submission.status)
         self.assertEqual(0, submission.auditabletextdata_set.filter(name="sample.xml").count())

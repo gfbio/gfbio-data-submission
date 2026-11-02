@@ -33,6 +33,16 @@ class TransferInvalidSubmission(TransferError):
     pass
 
 
+class ChecklistMappingBlocked(TransferInvalidSubmission):
+    """Sample XML has an unknown ENA checklist, so metadata must not be posted."""
+
+    def __init__(self, submission_id):
+        self.submission_id = submission_id
+        super().__init__(
+            "ENA checklist mapping failed for submission {0}; metadata was not sent".format(submission_id)
+        )
+
+
 class InvalidCenterName(TransferInvalidSubmission):
     def __init__(self, submission_id, reason):
         self.submission_id = submission_id

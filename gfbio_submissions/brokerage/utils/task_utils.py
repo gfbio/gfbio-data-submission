@@ -331,11 +331,12 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
         return "No submission found with pk {}".format(submission_id)
 
     # DASS-3574: validate the submission's curated centre instead of overriding
-    # it with a throwaway "GFBIO". A missing/empty centre is surfaced here (at
-    # validation time) as a clean ERROR transition (terminal-safe); the value
-    # can never reach ENA. NOTE: this changes validate/test semantics — formerly
-    # a deliberate "GFBIO" throwaway that never accessions. (To restore the old
-    # behaviour for validate-only, this is the single block to revert.)
+    # it with a throwaway "GFBIO". A missing/empty centre is logged via fail(),
+    # which does not change status, and the VALIDATE/TEST request is still
+    # aborted so the value can never reach ENA. NOTE: this changes validate/test
+    # semantics — formerly a deliberate "GFBIO" throwaway that never accessions.
+    # (To restore the old behaviour for validate-only, this is the single block
+    # to revert.)
     try:
         resolve_and_validate_center_name(submission)
     except InvalidCenterName as ex:
