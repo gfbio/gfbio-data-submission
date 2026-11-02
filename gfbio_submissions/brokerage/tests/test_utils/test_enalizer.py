@@ -314,6 +314,23 @@ class TestEnalizer(TestCase):
         self.assertIn("<TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE>", sample_xml)
         self.assertNotIn("Ion Torrent PGM", sample_xml)
         self.assertEqual(1, sample_xml.count("<TAG>sequencing method</TAG>"))
+        
+    def test_sample_xml_uses_temperature_units(self):
+        submission = self._submission_from_csv(
+            "sample_title;taxon_id;sample_accession;sequencing_platform;library_strategy;library_source;"
+            "library_selection;library_layout;forward_read_file_name;forward_read_file_checksum;checksum_method;"
+            "temperature;air temperature;host body temperature;mean annual and seasonal temperature;sample storage temperature;sample transportation temperature\n"
+            "New sample;1234;;Illumina HiSeq 1000;AMPLICON;METAGENOMIC;PCR;single;a.fastq.gz;abc;MD5;1;2;3;4;5;6\n"
+        )
+        xml_data = Enalizer(submission, "test-accession").prepare_submission_data()
+        _name, sample_xml = xml_data["SAMPLE"]
+        
+        self.assertIn("<SAMPLE_ATTRIBUTE><TAG>temperature</TAG><UNITS>&#186;C</UNITS><VALUE>1</VALUE></SAMPLE_ATTRIBUTE>", sample_xml)
+        self.assertIn("<SAMPLE_ATTRIBUTE><TAG>air temperature</TAG><UNITS>&#186;C</UNITS><VALUE>2</VALUE></SAMPLE_ATTRIBUTE>", sample_xml)
+        self.assertIn("<SAMPLE_ATTRIBUTE><TAG>host body temperature</TAG><UNITS>&#186;C</UNITS><VALUE>3</VALUE></SAMPLE_ATTRIBUTE>", sample_xml)
+        self.assertIn("<SAMPLE_ATTRIBUTE><TAG>mean annual and seasonal temperature</TAG><UNITS>&#186;C</UNITS><VALUE>4</VALUE></SAMPLE_ATTRIBUTE>", sample_xml)
+        self.assertIn("<SAMPLE_ATTRIBUTE><TAG>sample storage temperature</TAG><UNITS>&#176;C</UNITS><VALUE>5</VALUE></SAMPLE_ATTRIBUTE>", sample_xml)
+        self.assertIn("<SAMPLE_ATTRIBUTE><TAG>sample transportation temperature</TAG><UNITS>&#176;C</UNITS><VALUE>6</VALUE></SAMPLE_ATTRIBUTE>", sample_xml)
 
     def test_no_sample_xml_when_every_row_uses_an_existing_accession(self):
         submission = self._submission_from_csv(

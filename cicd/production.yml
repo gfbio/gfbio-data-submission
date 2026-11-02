@@ -10,8 +10,8 @@ services:
       context: ../
       dockerfile: ./cicd/Dockerfile
       args:
-        GROUP_ID: 997
-        USER_ID: 998
+        GROUP_ID: 995
+        USER_ID: 996
     image: gfbio_submissions_production_django
     depends_on:
       - postgres
