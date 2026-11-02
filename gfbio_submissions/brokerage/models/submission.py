@@ -94,9 +94,13 @@ class Submission(TimeStampedModel):
     status = models.CharField(choices=STATUSES, max_length=10, default=OPEN)
     release = models.BooleanField(default=False)
     approval_notification_sent = models.BooleanField(default=False)
-    # Set while ENA sample XML has an unknown checklist. send_submission_to_ena
-    # refuses the POST until a later prepare completes without those errors.
-    checklist_mapping_failed = models.BooleanField(default=False)
+    checklist_mapping_failed = models.BooleanField(
+        default=False,
+        help_text="Set when a sample's environmental package value is not in the "
+                  "local checklist mapping. Metadata is not sent to ENA until "
+                  "preparation runs again without those errors. A missing "
+                  "environmental package tag does not set this flag.",
+    )
 
     # TODO: this might be to specific for a general submission model ?
     # TODO: discuss general submission model with subclasses like molecular or similar
