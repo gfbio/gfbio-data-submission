@@ -4,8 +4,10 @@ import datetime
 import json
 from pprint import pprint
 from unittest import skip
+from unittest.mock import patch
 
 import responses
+from django.test import override_settings
 
 from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_release_xml_response,
@@ -21,6 +23,36 @@ from ....models.center_name import CenterName
 from ....models.persistent_identifier import PersistentIdentifier
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
+
+UPDATE_ISSUE_TASK_NAME = "tasks.update_submission_issue_task"
+UPDATE_ISSUE_APPLY_ASYNC = (
+    "gfbio_submissions.brokerage.tasks.jira_tasks.update_submission_issue.update_submission_issue_task.apply_async"
+)
+
+
+def _signature_submission_ids(signature):
+    found = []
+    kwargs = getattr(signature, "kwargs", None) or {}
+    if "submission_id" in kwargs:
+        found.append(kwargs["submission_id"])
+    tasks = getattr(signature, "tasks", None)
+    if not tasks:
+        tasks = kwargs.get("tasks") or []
+    for task in tasks:
+        found.extend(_signature_submission_ids(task))
+    return found
+
+
+def _put_title_payload():
+    return {
+        "target": "ENA",
+        "data": {
+            "requirements": {
+                "title": "A Title 0815",
+                "description": "A Description 2",
+            }
+        },
+    }
 
 
 class TestSubmissionViewPutRequests(TestSubmissionView):
@@ -95,19 +127,20 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             status=204,
         )
 
-        response = self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            {
-                "target": "ENA",
-                "data": {
-                    "requirements": {
-                        "title": "A Title 0815",
-                        "description": "A Description 2",
-                    }
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                {
+                    "target": "ENA",
+                    "data": {
+                        "requirements": {
+                            "title": "A Title 0815",
+                            "description": "A Description 2",
+                        }
+                    },
                 },
-            },
-            format="json",
-        )
+                format="json",
+            )
         self.assertEqual(200, response.status_code)
         self.assertEqual(getorcreate_count_after_post, self._getorcreateuser_call_count())
         self.assertTrue(
@@ -122,6 +155,83 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertGreaterEqual(len(put_calls), 1)
         put_body = json.loads(put_calls[0].request.body)
         self.assertNotIn("reporter", put_body.get("fields", {}))
+
+    @responses.activate
+    def test_put_persists_submission_before_jira_update(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        reports_before = TaskProgressReport.objects.filter(task_name=UPDATE_ISSUE_TASK_NAME).count()
+
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                _put_title_payload(),
+                format="json",
+            )
+
+        self.assertEqual(200, response.status_code)
+        submission.refresh_from_db()
+        self.assertEqual("A Title 0815", submission.data["requirements"]["title"])
+        self.assertEqual(1, len(callbacks))
+        self.assertEqual(
+            reports_before,
+            TaskProgressReport.objects.filter(task_name=UPDATE_ISSUE_TASK_NAME).count(),
+        )
+
+    @responses.activate
+    def test_put_enqueues_issue_update_after_commit(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                _put_title_payload(),
+                format="json",
+            )
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(callbacks))
+        self.assertIn(submission.pk, _signature_submission_ids(callbacks[0].__self__))
+
+        with override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False):
+            with patch(UPDATE_ISSUE_APPLY_ASYNC) as apply_async:
+                callbacks[0]()
+
+        apply_async.assert_called_once()
+        called_kwargs = apply_async.call_args.args[1]
+        self.assertEqual(submission.pk, called_kwargs["submission_id"])
+
+    @responses.activate
+    def test_put_rollback_discards_issue_update_and_submission_change(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        original_title = submission.data["requirements"]["title"]
+        original_create = RequestLog.objects.create
+
+        def create(*args, **kwargs):
+            if kwargs.get("type") == RequestLog.INCOMING and kwargs.get("method") == RequestLog.PUT:
+                raise RuntimeError("request log failed")
+            return original_create(*args, **kwargs)
+
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            with patch.object(RequestLog.objects, "create", side_effect=create):
+                with self.assertRaises(RuntimeError):
+                    self.api_client.put(
+                        "/api/submissions/{0}/".format(submission.broker_submission_id),
+                        _put_title_payload(),
+                        format="json",
+                    )
+
+        self.assertEqual([], callbacks)
+        submission.refresh_from_db()
+        self.assertEqual(original_title, submission.data["requirements"]["title"])
 
     @skip("refactor for future update ticket tests")
     @responses.activate

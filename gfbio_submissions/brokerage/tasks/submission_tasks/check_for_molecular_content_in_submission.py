@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from django.db import transaction
+
 from config.celery_app import app
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
 from gfbio_submissions.brokerage.utils.gfbio import is_ena_data_center
 from gfbio_submissions.brokerage.utils.molecular_content_checker import MolecularContentChecker
 from gfbio_submissions.brokerage.utils.submission_file_opener import create_submission_file_opener
+
 from ...models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
@@ -52,10 +55,16 @@ def check_for_molecular_content_in_submission_task(self, previous_task_result=No
             "data_center changed to ENA, schedule update_submission_issue_task "
             "for submission={}.".format(submission.broker_submission_id)
         )
-        update_submission_issue_task.apply_async(
-            kwargs={"submission_id": submission.pk},
-            countdown=SUBMISSION_DELAY,
-        )
+
+        def enqueue_submission_issue_update():
+            update_submission_issue_task.apply_async(
+                kwargs={"submission_id": submission.pk},
+                countdown=SUBMISSION_DELAY,
+            )
+
+        # Outside an atomic block this runs immediately. Inside the request
+        # transaction it waits for commit and is dropped on rollback.
+        transaction.on_commit(enqueue_submission_issue_update)
 
     logger.info(
         msg="check_for_molecular_content_in_submission_task. "
@@ -67,5 +76,5 @@ def check_for_molecular_content_in_submission_task(self, previous_task_result=No
         "molecular_data_available": molecular_data_available,
         "messages": messages,
         "molecular_data_check_performed": check_performed,
-        "infos": infos
+        "infos": infos,
     }
