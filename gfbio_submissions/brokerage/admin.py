@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
@@ -481,6 +482,35 @@ def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
 combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
 
 
+def _ena_cloud_upload_file_recency(cloud_upload):
+    """Later file-upload modified, then the higher primary key. Matches the zip download order."""
+    file_upload = getattr(cloud_upload, "file_upload", None)
+    if file_upload is not None and file_upload.modified is not None:
+        return (file_upload.modified, cloud_upload.pk)
+    return (cloud_upload.modified, cloud_upload.pk)
+
+
+def _queued_ena_cloud_upload_ids(cloud_uploads, allowed_statuses, allowed_types):
+    """Keep only the newest row per basename, and only when that row is already eligible."""
+    newest_by_basename = {}
+    for upload in sorted(cloud_uploads, key=_ena_cloud_upload_file_recency, reverse=True):
+        original_filename = upload.file_upload.original_filename
+        if not original_filename:
+            continue
+        basename = os.path.basename(original_filename)
+        if not basename or basename in newest_by_basename:
+            continue
+        newest_by_basename[basename] = upload
+
+    queued_ids = []
+    for upload in newest_by_basename.values():
+        original_filename = upload.file_upload.original_filename
+        if upload.status in allowed_statuses and original_filename.lower().endswith(allowed_types):
+            queued_ids.append(upload.pk)
+    queued_ids.sort()
+    return queued_ids
+
+
 def _skip_ena_transfer(modeladmin, request, message, level=messages.WARNING, raise_when_unattended=True):
     if modeladmin:
         modeladmin.message_user(request, message, level=level)
@@ -522,19 +552,12 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, transfer_submission_cloud_uploads_to_ena.short_description):
             continue
-        submission_cloud_upload_ids = [
-            upload.pk
-            for upload in (
-                obj.submissioncloudupload_set.filter(
-                    status__in=allowed_statuses,
-                    file_upload__isnull=False,
-                )
-                .select_related("file_upload")
-                .order_by("pk")
-            )
-            if upload.file_upload.original_filename
-            and upload.file_upload.original_filename.lower().endswith(allowed_types)
-        ]
+        candidates = (
+            obj.submissioncloudupload_set.exclude(status=SubmissionCloudUpload.STATUS_DELETED)
+            .filter(file_upload__isnull=False)
+            .select_related("file_upload")
+        )
+        submission_cloud_upload_ids = _queued_ena_cloud_upload_ids(candidates, allowed_statuses, allowed_types)
         if not submission_cloud_upload_ids:
             skip_admin_action_log(obj)
             continue
