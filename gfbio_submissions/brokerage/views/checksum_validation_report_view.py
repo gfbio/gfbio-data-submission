@@ -1,66 +1,24 @@
 # -*- coding: utf-8 -*-
-from django.http import Http404
-from rest_framework import permissions
+import json
+
+from django.http import HttpResponse
+from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, BasicAuthentication
-from rest_framework.generics import GenericAPIView, RetrieveAPIView
-from rest_framework.response import Response
-from gfbio_submissions.brokerage.models.checksum_validation_report import ChecksumFileResult, ChecksumValidationReport
-from gfbio_submissions.brokerage.models.metadata_validation_report import MetadataValidationReport
-from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
-from gfbio_submissions.brokerage.serializers.checksum_validation_report_serializer import ChecksumValidationReportSerializer
-
-from ..serializers.metadata_validation_report_serializer import MetadataValidationReportSerializer
+from gfbio_submissions.brokerage.utils.checksum_validation_report import get_checksum_validation_report
 
 
-class ChecksumValidationReportView(RetrieveAPIView):
-    authentication_classes = (TokenAuthentication, BasicAuthentication, SessionAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ChecksumValidationReportSerializer
-
-
-    def get(self, request, *args, **kwargs):
+class ChecksumValidationReportView(APIView):
+    authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
+    
+    def get(self, request, broker_submission_id):
         submission_id = self.kwargs.get('broker_submission_id')
-        latest_report = self.get_latest_report_for_submission(submission_id)
 
-        uploads = SubmissionCloudUpload.objects.filter(
-            submission__broker_submission_id=submission_id,
-        ).exclude(
-            status=SubmissionCloudUpload.STATUS_DELETED
-        )
+        checksum_report = get_checksum_validation_report(submission_id)
         
-        checksum_report = ChecksumValidationReport()
-        checksumfileresult_set = []
-        
-        error_count = 0
-        warning_count = 0
-        success_count = 0
+        def report_to_dict(report):
+            dict = report.__dict__.copy()
+            dict['checksumfileresults'] = [result.__dict__ for result in report.checksumfileresults]
+            return dict
 
-        for upload in uploads:
-            if upload.status == SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM:
-                error_count = error_count + 1
-                checksumfileresult_set.append(
-                    ChecksumFileResult(
-                        upload_pk = upload.pk,
-                        file_name = upload.file.original_filename,
-                        file_md5_checksum = upload.file.md5,
-                        status = "ERROR",
-                        message = "The checksum missmatched."
-                    )
-                )
-            elif upload.status in [SubmissionCloudUpload.STATUS_UPLOADED, SubmissionCloudUpload.STATUS_ACTIVE, SubmissionCloudUpload.STATUS_NEW]
-                warning_count = warning_count + 1
-                checksumfileresult_set.append(
-                    ChecksumFileResult(
-                        upload_pk = upload.pk,
-                        file_name = upload.file.original_filename,
-                        file_md5_checksum = upload.file.md5,
-                        status = "PENDING",
-                        message = "The checksum-calculation was not executed now."
-                    )
-                )
-            else:
-                success_count = success_count + 1
-
-        self.check_object_permissions(request, checksum_report)
-        serializer = self.get_serializer(latest_report)
-        return Response(serializer.data)
+        data = json.dumps(report_to_dict(checksum_report))
+        return HttpResponse(data, content_type="application/json")
