@@ -2,6 +2,17 @@
 
 {% load i18n admin_urls %}
 
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    #submission-data-diff pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-width: 100ch;
+    }
+  </style>
+{% endblock %}
+
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
