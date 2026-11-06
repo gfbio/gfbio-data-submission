@@ -162,7 +162,7 @@ urlpatterns = [
         name="metadata_validation_report",
     ),
     re_path(
-        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/checksum-report/$",
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validations/checksum/$",
         view=ChecksumValidationReportView.as_view(),
         name="checksum_validation_report",
     ),

@@ -19,7 +19,7 @@ def get_checksum_validation_report(submission_id):
     for upload in uploads:
         if upload.file_upload is None or upload.file_upload.status == "FAILED":
             warning_count = warning_count + 1
-            checksum_report.checksumfileresults.append(
+            checksum_report.findings.append(
                 ChecksumFileResult(
                     upload_pk = upload.pk,
                     file_name = "Unknown",
@@ -30,18 +30,18 @@ def get_checksum_validation_report(submission_id):
             )
         elif upload.status == SubmissionCloudUpload.STATUS_UPLOADED_WITH_BAD_CHECKSUM:
             error_count = error_count + 1
-            checksum_report.checksumfileresults.append(
+            checksum_report.findings.append(
                 ChecksumFileResult(
                     upload_pk = upload.pk,
                     file_name = upload.file_upload.original_filename,
                     file_md5_checksum = upload.file_upload.md5,
                     status = "ERROR",
-                    message = "The checksum missmatched."
+                    message = "The checksum mismatched."
                 )
             )
         elif upload.status in [SubmissionCloudUpload.STATUS_UPLOADED, SubmissionCloudUpload.STATUS_ACTIVE, SubmissionCloudUpload.STATUS_NEW] or upload.file_upload.status == "PENDING":
             pending_count = pending_count + 1
-            checksum_report.checksumfileresults.append(
+            checksum_report.findings.append(
                 ChecksumFileResult(
                     upload_pk = upload.pk,
                     file_name = upload.file_upload.original_filename,
@@ -52,7 +52,7 @@ def get_checksum_validation_report(submission_id):
             )
         else:
             success_count = success_count + 1
-            checksum_report.checksumfileresults.append(
+            checksum_report.findings.append(
                 ChecksumFileResult(
                     upload_pk = upload.pk,
                     file_name = upload.file_upload.original_filename,
@@ -68,12 +68,20 @@ def get_checksum_validation_report(submission_id):
     checksum_report.pending_count = pending_count
 
     checksum_report.status = "ERROR" if error_count > 0 else "WARNING" if warning_count > 0 else "PENDING" if pending_count > 0 else "SUCCESS"
+    
 
-    checksum_report.message = f"There are {error_count} failed checksum validations. " if error_count > 0 else ""
-    checksum_report.message += f"There are {pending_count} pending checksum validations. " if pending_count > 0 else ""
-    checksum_report.message += f"{success_count} files were validated successfully. " if success_count > 0 and (error_count != 0 or pending_count != 0) else ""
-    checksum_report.message += f"Try upload the failed files again or contact the curator of the problem persists. " if error_count > 0 else ""
-    checksum_report.message += f"Give the pending files some time to be validated or contact the curator if the problem persists. " if pending_count > 0 else ""
-    checksum_report.message += f"All files were validated successfully. " if success_count > 0 and error_count == 0 and pending_count == 0 else ""
+    if warning_count == 0 and error_count == 0 and pending_count == 0:
+        checksum_report.message = f"All files ({success_count}) were validated successfully.\n"
+    else:
+        checksum_report.message = f"{success_count} files were validated successfully.\n"
+        if error_count > 0:
+            checksum_report.message += f"There are {error_count} failed checksum validations.\n"
+            checksum_report.message += f"Try upload the failed files again or contact the curator if the problem persists.\n"
+        if warning_count > 0:
+            checksum_report.message += f"There are {warning_count} warnings for files of the submission.\n"
+            checksum_report.message += f"Reupload them or remove them if they are not needed.\n"
+        if pending_count > 0:
+            checksum_report.message += f"There are {pending_count} pending checksum validations.\n"
+            checksum_report.message += f"Give the pending files some time to be validated or contact the curator if the problem persists.\n"
     
     return checksum_report

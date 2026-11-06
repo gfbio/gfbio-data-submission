@@ -19,11 +19,6 @@ class ChecksumValidationReportView(APIView):
             return HttpResponse(status=403, content="You do not have permission to view this submission's checksum validation report.")
 
         checksum_report = get_checksum_validation_report(broker_submission_id)
-        
-        def report_to_dict(report):
-            dict = report.__dict__.copy()
-            dict['checksumfileresults'] = [result.__dict__ for result in report.checksumfileresults]
-            return dict
 
-        data = json.dumps(report_to_dict(checksum_report))
+        data = json.dumps(checksum_report, default=lambda o: o.__dict__)
         return HttpResponse(data, content_type="application/json")
