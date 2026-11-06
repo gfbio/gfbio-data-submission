@@ -23,6 +23,12 @@ def user_has_special_permissions(user):
     return user.has_perm("brokerage.curate_submissions") or user.is_staff or user.is_superuser
 
 
+def _enqueue_after_commit(signature):
+    # Register the signature only. A rolled-back request drops the hook, so Jira
+    # work never starts unless the submission save commits.
+    transaction.on_commit(signature.apply_async)
+
+
 @extend_schema(tags=["submissions"])
 class SubmissionDetailView(
     mixins.RetrieveModelMixin,
@@ -131,7 +137,7 @@ class SubmissionDetailView(
                     | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                     | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 )
-                update_chain()
+                _enqueue_after_commit(update_chain)
         elif instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED or instance.status == Submission.ERROR or user_has_special_permissions(request.user):
             with submission_audit_context("Save", "frontend"):
                 response = self.update(request, *args, **kwargs)
@@ -163,7 +169,7 @@ class SubmissionDetailView(
                     | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                     | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 )
-            update_chain()
+            _enqueue_after_commit(update_chain)
 
             chain = check_for_molecular_content_in_submission_task.s(submission_id=instance.pk).set(
                 countdown=SUBMISSION_DELAY

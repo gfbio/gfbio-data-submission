@@ -256,20 +256,21 @@ class TestInitialChainTasks(TestCase):
             body="",
             status=200,
         )
-        self.api_client.put(
-            "/api/submissions/{0}/".format(submission.broker_submission_id),
-            data={
-                "target": "ENA",
-                "release": False,
-                "data": {
-                    "requirements": {
-                        "title": "A Title 0815",
-                        "description": "A Description 2",
-                    }
+        with self.captureOnCommitCallbacks(execute=True):
+            self.api_client.put(
+                "/api/submissions/{0}/".format(submission.broker_submission_id),
+                data={
+                    "target": "ENA",
+                    "release": False,
+                    "data": {
+                        "requirements": {
+                            "title": "A Title 0815",
+                            "description": "A Description 2",
+                        }
+                    },
                 },
-            },
-            format="json",
-        )
+                format="json",
+            )
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = [
             "tasks.get_gfbio_helpdesk_username_task",

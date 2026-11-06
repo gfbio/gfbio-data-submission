@@ -295,6 +295,9 @@ class _QuietCelerySignature:
     def __call__(self, *args, **kwargs):
         return None
 
+    def apply_async(self, *args, **kwargs):
+        return None
+
 
 def _quiet_celery_signature(*args, **kwargs):
     return _QuietCelerySignature()

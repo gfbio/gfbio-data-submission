@@ -85,9 +85,11 @@ class TestCheckForMolecularContentSchedulesHelpdeskUpdate(TestCase):
         with patch(CHECKER_PATH, _checker_setting_data_center(new_data_center)), patch(
             APPLY_ASYNC_PATH
         ) as apply_async:
-            result = check_for_molecular_content_in_submission_task.apply(
-                kwargs={"submission_id": submission.pk}
-            ).get()
+            # TestCase never commits, so on_commit waits unless the callback is executed here.
+            with self.captureOnCommitCallbacks(execute=True):
+                result = check_for_molecular_content_in_submission_task.apply(
+                    kwargs={"submission_id": submission.pk}
+                ).get()
         return result, apply_async
 
     def test_schedules_update_only_on_transition_to_ena_with_primary_ticket(self):
