@@ -160,7 +160,9 @@ continue_release_submissions.short_description = "Continue submission of selecte
 def release_submission_study_on_ena(modeladmin, request, queryset):
     for obj in queryset:
         submission = Submission.objects.get(pk=obj.pk)
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(
+            modeladmin, request, obj, release_submission_study_on_ena.short_description
+        ):
             continue
         response, reason = release_study_on_ena(submission=submission)
         if modeladmin:
@@ -273,7 +275,7 @@ def submit_to_ena_test(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_to_ena_test_server import submit_to_ena_test_server_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, submit_to_ena_test.short_description):
             continue
         submit_to_ena_test_server_task.apply_async(
             kwargs={"submission_id": obj.pk, "action": "ADD"},
@@ -325,7 +327,9 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(
+            modeladmin, request, obj, perform_targeted_sequence_submission.short_description
+        ):
             continue
         chain = (
             create_study_broker_objects_only_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
@@ -390,7 +394,7 @@ def submit_manifest_to_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, submit_manifest_to_ena.short_description):
             continue
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
             countdown=SUBMISSION_DELAY
@@ -406,7 +410,9 @@ def validate_manifest_at_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(
+            modeladmin, request, obj, validate_manifest_at_ena.short_description
+        ):
             continue
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=True).set(
             countdown=SUBMISSION_DELAY

@@ -1,6 +1,6 @@
 from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from auditlog.models import LogEntry as AuditLogEntry
 from django.core.cache import cache
@@ -11,11 +11,15 @@ from dt_upload.models import FileUploadRequest, MultiPartUpload
 from gfbio_submissions.brokerage.admin import (
     SubmissionAdmin,
     check_nagoya_protocol_was_agreed_to,
+    perform_targeted_sequence_submission,
     re_create_ena_xml,
+    release_submission_study_on_ena,
     retrigger_cloud_upload_checksums,
+    submit_manifest_to_ena,
     submit_to_ena_test,
     transfer_submission_cloud_uploads_to_ena,
     validate_against_ena,
+    validate_manifest_at_ena,
 )
 from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_HELPDESK_TICKET,
@@ -723,6 +727,24 @@ class TestSubmissionAdmin(TestCase):
         mock_jira.add_comment.assert_called_once()
         comment_text = mock_jira.add_comment.call_args.kwargs["text"]
         self.assertIn("the user didn't agreed to compliance", comment_text)
+
+    @patch("gfbio_submissions.brokerage.admin.check_nagoya_protocol_was_agreed_to", return_value=False)
+    def test_nagoya_check_uses_started_action_short_description(self, mock_check):
+        queryset = Submission.objects.all()
+        actions = (
+            release_submission_study_on_ena,
+            submit_to_ena_test,
+            perform_targeted_sequence_submission,
+            submit_manifest_to_ena,
+            validate_manifest_at_ena,
+        )
+        for action in actions:
+            action(None, None, queryset)
+
+        self.assertEqual(
+            [call(None, None, queryset.first(), action.short_description) for action in actions],
+            mock_check.call_args_list,
+        )
 
 
 class TestSubmissionCloudUploadAdminLatestLog(TestCase):
