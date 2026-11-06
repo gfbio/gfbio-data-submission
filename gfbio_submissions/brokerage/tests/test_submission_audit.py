@@ -4,7 +4,9 @@ import arrow
 from auditlog.models import LogEntry as AuditLogEntry
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.auth.models import Group, Permission
-from django.test import TestCase
+from django.db import connection
+from django.test import SimpleTestCase, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
@@ -15,6 +17,8 @@ from gfbio_submissions.brokerage.models.additional_reference import AdditionalRe
 from gfbio_submissions.brokerage.models.broker_object import BrokerObject
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_cloud_upload import SubmissionCloudUpload
+from gfbio_submissions.brokerage.models.submission_data_diff import SubmissionDataDiff
+from gfbio_submissions.brokerage.submission_data_diff import diff_submission_data, display_diff_path, format_diff_value
 from gfbio_submissions.users.models import User
 
 
@@ -73,6 +77,7 @@ class TestSubmissionAudit(TestCase):
         self.assertIn("status", entry.changes_dict)
         self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
         self.assertNotIn("secret title", entry.changes)
+        self.assertEqual(1, SubmissionDataDiff.objects.filter(log_entry=entry).count())
 
     def test_update_fields_without_data_does_not_mark_data(self):
         submission = _submission(self.staff)
@@ -83,18 +88,23 @@ class TestSubmissionAudit(TestCase):
         entry = _updates(submission).get()
         self.assertIn("status", entry.changes_dict)
         self.assertNotIn("data", entry.changes_dict)
+        self.assertFalse(SubmissionDataDiff.objects.filter(log_entry__object_pk=str(submission.pk)).exists())
         submission.refresh_from_db()
         self.assertEqual({}, submission.data)
 
     def test_data_only_change_keeps_the_channel(self):
+        from auditlog.context import set_actor
+
         from gfbio_submissions.brokerage.audit_context import submission_audit_context
 
         submission = _submission(self.staff)
         with submission_audit_context("Save", "frontend"):
-            submission.data = {"requirements": {"title": "secret title"}}
-            submission.save()
+            with set_actor(self.staff):
+                submission.data = {"requirements": {"title": "secret title"}}
+                submission.save()
 
         entry = _updates(submission).get()
+        self.assertEqual(self.staff.pk, entry.actor_id)
         self.assertEqual("frontend", entry.additional_data["channel"])
         self.assertEqual("Save", entry.additional_data["action"])
         self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
@@ -283,6 +293,276 @@ class TestSubmissionAudit(TestCase):
         history = reverse("admin:brokerage_submission_history", args=[submission.pk])
         self.assertLess(content.index(cloud_uploads), content.index(audit))
         self.assertLess(content.index(audit), content.index(history))
+
+    def test_nested_path_is_stored_outside_the_audit_row_and_overview(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "old title"}}
+        submission.save()
+        submission.data = {"requirements": {"title": "secret title"}}
+        submission.save()
+
+        entry = _updates(submission).order_by("-pk").first()
+        diff = SubmissionDataDiff.objects.get(log_entry=entry).diff
+        self.assertEqual(
+            [{"path": ["requirements", "title"], "old": "old title", "new": "secret title"}],
+            diff["changed"],
+        )
+        self.assertNotIn("secret title", entry.changes)
+        self.assertIsNone(entry.serialized_data)
+        self.assertIsNone(entry.additional_data)
+
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submission_audit", args=[submission.pk]))
+        self.assertContains(response, "data: changed")
+        self.assertNotContains(response, "secret title")
+
+    def test_added_and_removed_dicts_are_not_exploded(self):
+        submission = _submission(self.staff)
+        submission.data = {"kept": 1, "removed_key": {"inner": "leaf"}}
+        submission.save()
+        submission.data = {"kept": 1, "added_key": {"inner": "new"}}
+        submission.save()
+
+        diff = SubmissionDataDiff.objects.get(log_entry=_updates(submission).order_by("-pk").first()).diff
+        self.assertEqual([{"path": ["added_key"], "value": {"inner": "new"}}], diff["added"])
+        self.assertEqual([{"path": ["removed_key"], "value": {"inner": "leaf"}}], diff["removed"])
+        self.assertEqual([], diff["changed"])
+
+    def test_changed_list_is_one_entry_and_order_matters(self):
+        submission = _submission(self.staff)
+        submission.data = {"samples": ["a", "b"]}
+        submission.save()
+        submission.data = {"samples": ["b", "a"]}
+        submission.save()
+
+        diff = SubmissionDataDiff.objects.get(log_entry=_updates(submission).order_by("-pk").first()).diff
+        self.assertEqual([{"path": ["samples"], "old": ["a", "b"], "new": ["b", "a"]}], diff["changed"])
+        self.assertEqual([], diff["added"])
+        self.assertEqual([], diff["removed"])
+
+    def test_dict_versus_list_is_one_changed_path(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "T"}}
+        submission.save()
+        submission.data = {"requirements": ["T"]}
+        submission.save()
+
+        diff = SubmissionDataDiff.objects.get(log_entry=_updates(submission).order_by("-pk").first()).diff
+        self.assertEqual(
+            [{"path": ["requirements"], "old": {"title": "T"}, "new": ["T"]}],
+            diff["changed"],
+        )
+
+    def test_update_fields_data_writes_marker_and_diff(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "secret title"}}
+        submission.save(update_fields=["data"])
+
+        entry = _updates(submission).get()
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertEqual(
+            [{"path": ["requirements"], "value": {"title": "secret title"}}],
+            SubmissionDataDiff.objects.get(log_entry=entry).diff["added"],
+        )
+        self.assertNotIn("secret title", entry.changes)
+
+    def test_create_with_data_writes_no_diff(self):
+        submission = Submission.objects.create(
+            user=self.staff,
+            status=Submission.OPEN,
+            target="ENA",
+            release=False,
+            data={"requirements": {"title": "secret title"}},
+        )
+        self.assertFalse(SubmissionDataDiff.objects.filter(log_entry__object_pk=str(submission.pk)).exists())
+
+    def test_overview_links_view_diff_only_when_a_diff_row_exists(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "first title"}}
+        submission.save()
+        first_entry = _updates(submission).get()
+        SubmissionDataDiff.objects.filter(log_entry=first_entry).delete()
+        submission.data = {"requirements": {"title": "second title"}}
+        submission.save()
+
+        self.client.force_login(self.staff)
+        url = reverse("admin:brokerage_submission_audit", args=[submission.pk])
+        with CaptureQueriesContext(connection) as captured:
+            response = self.client.get(url)
+        self.assertEqual(200, response.status_code)
+        content = response.content.decode()
+        self.assertEqual(2, content.count("data: changed"))
+        self.assertEqual(1, content.count("View diff"))
+        self.assertNotIn("first title", content)
+        self.assertNotIn("second title", content)
+
+        diff_queries = [query["sql"] for query in captured.captured_queries if "submissiondatadiff" in query["sql"]]
+        self.assertEqual(1, len(diff_queries))
+        select_clause = diff_queries[0].split(" FROM ", 1)[0]
+        self.assertIn("log_entry_id", select_clause)
+        self.assertNotIn('"diff"', select_clause)
+
+        self.assertEqual(
+            404,
+            self.client.get(
+                reverse("admin:brokerage_submission_data_diff", args=[submission.pk, first_entry.pk])
+            ).status_code,
+        )
+
+    def test_diff_page_shows_added_removed_and_changed_values(self):
+        submission = Submission.objects.create(
+            user=self.staff,
+            status=Submission.OPEN,
+            target="ENA",
+            release=False,
+            data={
+                "removed_block": {"inner": "removed-value"},
+                "samples": ["first", "second"],
+                "requirements": {"title": "old title"},
+            },
+        )
+        submission.data = {
+            "added_block": {"inner": "added-value"},
+            "samples": ["second", "first"],
+            "requirements": {"title": "new title"},
+        }
+        submission.save()
+        entry = _updates(submission).get()
+
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submission_data_diff", args=[submission.pk, entry.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "<h2>Added</h2>", html=False)
+        self.assertContains(response, "<h2>Removed</h2>", html=False)
+        self.assertContains(response, "<h2>Changed</h2>", html=False)
+        self.assertContains(response, "added-value")
+        self.assertContains(response, "removed-value")
+        self.assertContains(response, "old title")
+        self.assertContains(response, "new title")
+        self.assertContains(response, "<h3>samples</h3>", html=False)
+        self.assertContains(response, "<h3>requirements.title</h3>", html=False)
+        self.assertContains(response, "<p>Old</p>", html=False)
+        self.assertContains(response, "<p>New</p>", html=False)
+        self.assertNotContains(response, "added_block.inner")
+        self.assertNotContains(response, "removed_block.inner")
+        self.assertContains(response, reverse("admin:brokerage_submission_audit", args=[submission.pk]))
+        self.assertContains(response, "Data changes")
+        content = response.content.decode()
+        self.assertLess(content.index("first"), content.index("second"))
+        self.assertLess(content.index("second"), content.rindex("first"))
+
+    def test_diff_page_renders_scalar_values_as_json(self):
+        submission = _submission(self.staff)
+        submission.data = {"count": 0, "count_text": "0", "empty": None, "flag": False, "note": "false"}
+        submission.save()
+        entry = _updates(submission).get()
+
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submission_data_diff", args=[submission.pk, entry.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "<pre>null</pre>", html=False)
+        self.assertContains(response, "<pre>false</pre>", html=False)
+        self.assertContains(response, "<pre>&quot;false&quot;</pre>", html=False)
+        self.assertContains(response, "<pre>0</pre>", html=False)
+        self.assertContains(response, "<pre>&quot;0&quot;</pre>", html=False)
+        self.assertContains(response, "<h2>Added</h2>", html=False)
+        self.assertNotContains(response, "<h2>Removed</h2>")
+        self.assertNotContains(response, "<h2>Changed</h2>")
+
+    def test_diff_view_requires_permission_and_rejects_a_foreign_log_entry(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "secret title"}}
+        submission.save()
+        entry = _updates(submission).get()
+        url = reverse("admin:brokerage_submission_data_diff", args=[submission.pk, entry.pk])
+
+        staff = User.objects.create_user(username="diff-plain-staff", password="secret")
+        staff.is_staff = True
+        staff.save()
+        self.client.force_login(staff)
+        self.assertEqual(403, self.client.get(url).status_code)
+
+        other = _submission(self.staff)
+        other.data = {"requirements": {"title": "other title"}}
+        other.save()
+        other_entry = _updates(other).get()
+        self.client.force_login(self.staff)
+        foreign = reverse("admin:brokerage_submission_data_diff", args=[submission.pk, other_entry.pk])
+        self.assertEqual(404, self.client.get(foreign).status_code)
+        self.assertEqual(
+            404,
+            self.client.get(
+                reverse("admin:brokerage_submission_data_diff", args=[submission.pk, 999999999])
+            ).status_code,
+        )
+
+        status_only = _submission(self.staff)
+        status_only.status = Submission.SUBMITTED
+        status_only.save()
+        status_entry = _updates(status_only).get()
+        missing_diff = reverse("admin:brokerage_submission_data_diff", args=[status_only.pk, status_entry.pk])
+        self.assertEqual(404, self.client.get(missing_diff).status_code)
+
+    def test_empty_diff_writes_only_the_marker(self):
+        submission = _submission(self.staff)
+        empty = {"added": [], "removed": [], "changed": []}
+        with patch(
+            "gfbio_submissions.brokerage.submission_data_audit.diff_submission_data",
+            return_value=empty,
+        ):
+            submission.data = {"requirements": {"title": "secret title"}}
+            submission.save()
+
+        entry = _updates(submission).get()
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertFalse(SubmissionDataDiff.objects.filter(log_entry=entry).exists())
+
+    def test_diff_store_failure_keeps_the_marker_and_the_save(self):
+        submission = _submission(self.staff)
+        submission.data = {"requirements": {"title": "secret title"}}
+        with self.assertLogs("gfbio_submissions.brokerage.submission_data_audit", level="ERROR") as logs:
+            with patch(
+                "gfbio_submissions.brokerage.submission_data_audit.SubmissionDataDiff.objects.get_or_create",
+                side_effect=RuntimeError("db down"),
+            ):
+                submission.save()
+
+        submission.refresh_from_db()
+        self.assertEqual({"requirements": {"title": "secret title"}}, submission.data)
+        entry = _updates(submission).get()
+        self.assertEqual(["changed", "changed"], entry.changes_dict["data"])
+        self.assertFalse(SubmissionDataDiff.objects.filter(log_entry=entry).exists())
+        self.assertTrue(any("Failed to store submission data diff" in message for message in logs.output))
+
+
+class TestSubmissionDataDiffFunction(SimpleTestCase):
+    def test_dotted_key_stays_one_segment(self):
+        diff = diff_submission_data({"a.b": 1}, {"a.b": 2})
+        self.assertEqual([{"path": ["a.b"], "old": 1, "new": 2}], diff["changed"])
+        self.assertEqual("a.b", display_diff_path(["a.b"]))
+        self.assertEqual("requirements.title", display_diff_path(["requirements", "title"]))
+        self.assertEqual("data", display_diff_path([]))
+
+    def test_root_that_is_not_a_dict_is_one_changed_entry(self):
+        diff = diff_submission_data(["a"], {"a": 1})
+        self.assertEqual([{"path": [], "old": ["a"], "new": {"a": 1}}], diff["changed"])
+        self.assertEqual([], diff["added"])
+        self.assertEqual([], diff["removed"])
+
+    def test_equal_dicts_ignore_key_order(self):
+        diff = diff_submission_data({"b": 1, "a": {"z": 1, "y": 2}}, {"a": {"y": 2, "z": 1}, "b": 1})
+        self.assertEqual({"added": [], "removed": [], "changed": []}, diff)
+
+    def test_entries_are_sorted_by_path(self):
+        diff = diff_submission_data({}, {"b": 1, "a": 2})
+        self.assertEqual([["a"], ["b"]], [item["path"] for item in diff["added"]])
+
+    def test_scalar_formatting_keeps_json_types_distinct(self):
+        self.assertEqual("null", format_diff_value(None))
+        self.assertEqual("false", format_diff_value(False))
+        self.assertEqual('"false"', format_diff_value("false"))
+        self.assertEqual("0", format_diff_value(0))
+        self.assertEqual('"0"', format_diff_value("0"))
 
 
 class _QuietCelerySignature:
@@ -720,6 +1000,16 @@ class TestSubmissionCloudUploadAudit(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk]))
         self.assertContains(response, reverse("admin:brokerage_submissioncloudupload_history", args=[upload.pk]))
+
+    def test_audit_page_has_no_data_diff_link(self):
+        upload = _cloud_upload(self.staff)
+        upload.status = SubmissionCloudUpload.STATUS_UPLOADED
+        upload.save()
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("admin:brokerage_submissioncloudupload_audit", args=[upload.pk]))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "In our bucket")
+        self.assertNotContains(response, "View diff")
 
     def test_status_kept_note_is_its_own_audit_row(self):
         upload = _cloud_upload(self.staff)

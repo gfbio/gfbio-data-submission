@@ -34,7 +34,12 @@
                 <td>{{ row.channel }}</td>
                 <td>{{ row.action }}</td>
                 <td>
-                  {% for change in row.changes %}<div>{{ change }}</div>{% endfor %}
+                  {% for change in row.changes %}
+                    <div>
+                      {{ change.text }}
+                      {% if change.url %}<a href="{{ change.url }}">{% translate 'View diff' %}</a>{% endif %}
+                    </div>
+                  {% endfor %}
                 </td>
               </tr>
             {% endfor %}
