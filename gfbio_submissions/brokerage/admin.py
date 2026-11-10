@@ -9,9 +9,11 @@ import requests
 from auditlog.models import LogEntry as AuditLogEntry
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db.models import Case, Count, IntegerField, Value, When
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.encoding import smart_bytes
@@ -58,9 +60,11 @@ from .models.ena_report import EnaReport
 from .models.jira_message import JiraMessage
 from .models.persistent_identifier import PersistentIdentifier
 from .models.submission import Submission
+from .models.submission_data_diff import SubmissionDataDiff
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
 from .submission_data_audit import DATA_CHANGED_LABEL
+from .submission_data_diff import display_diff_path, format_diff_value
 from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
 from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
     create_broker_objects_from_submission_data_task,
@@ -666,9 +670,20 @@ def _cloud_upload_overview_message(entry):
     return "; ".join(parts) if parts else None
 
 
+def _log_entry_ids_with_data_diff(entry_ids):
+    """Primary keys of log rows that have a stored data diff.
+
+    Selects only the foreign key. Following the reverse relation would load the JSON column.
+    """
+    if not entry_ids:
+        return set()
+    return set(SubmissionDataDiff.objects.filter(log_entry_id__in=entry_ids).values_list("log_entry_id", flat=True))
+
+
 def audit_rows_for(obj):
     """Rows for the shared submission and cloud-upload audit page."""
-    entries = AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type")
+    entries = list(AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type"))
+    diff_entry_ids = _log_entry_ids_with_data_diff([entry.pk for entry in entries])
     audit_rows = []
     for entry in entries:
         extra = entry.additional_data or {}
@@ -685,11 +700,14 @@ def audit_rows_for(obj):
             else:
                 old, new = "", values
             if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
-                changes.append(f"{field_name}: changed")
+                url = ""
+                if entry.pk in diff_entry_ids:
+                    url = reverse("admin:brokerage_submission_data_diff", args=[obj.pk, entry.pk])
+                changes.append({"text": f"{field_name}: changed", "url": url})
             else:
-                changes.append(f"{field_name}: {old} → {new}")
+                changes.append({"text": f"{field_name}: {old} → {new}", "url": ""})
         if extra.get("detail"):
-            changes.append(str(extra["detail"]))
+            changes.append({"text": str(extra["detail"]), "url": ""})
         audit_rows.append(
             {
                 "timestamp": entry.timestamp,
@@ -723,6 +741,55 @@ def render_audit_log(model_admin, request, object_id, extra_context=None):
     return TemplateResponse(
         request,
         "admin/brokerage/submission/submission_audit.html",
+        context,
+    )
+
+
+def _diff_rows(items, kind):
+    rows = []
+    for item in items:
+        row = {"path": display_diff_path(item["path"])}
+        if kind == "changed":
+            row["old"] = format_diff_value(item["old"])
+            row["new"] = format_diff_value(item["new"])
+        else:
+            row["value"] = format_diff_value(item["value"])
+        rows.append(row)
+    return rows
+
+
+def render_submission_data_diff(model_admin, request, object_id, log_entry_id, extra_context=None):
+    obj = model_admin.get_object(request, unquote(object_id))
+    if obj is None:
+        return model_admin._get_obj_does_not_exist_redirect(request, model_admin.model._meta, object_id)
+    if not model_admin.has_view_or_change_permission(request, obj):
+        raise PermissionDenied
+
+    content_type = ContentType.objects.get_for_model(Submission)
+    entry = get_object_or_404(
+        AuditLogEntry,
+        pk=log_entry_id,
+        content_type=content_type,
+        object_pk=str(obj.pk),
+    )
+    diff_row = get_object_or_404(SubmissionDataDiff, log_entry_id=entry.pk)
+    payload = diff_row.diff or {}
+    context = {
+        **model_admin.admin_site.each_context(request),
+        "title": _("Data changes: %s") % obj,
+        "subtitle": None,
+        "added": _diff_rows(payload.get("added") or [], "added"),
+        "removed": _diff_rows(payload.get("removed") or [], "removed"),
+        "changed": _diff_rows(payload.get("changed") or [], "changed"),
+        "module_name": str(model_admin.opts.verbose_name_plural),
+        "object": obj,
+        "opts": model_admin.opts,
+        **(extra_context or {}),
+    }
+    request.current_app = model_admin.admin_site.name
+    return TemplateResponse(
+        request,
+        "admin/brokerage/submission/submission_data_diff.html",
         context,
     )
 
@@ -828,6 +895,11 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
                 "<path:object_id>/audit/",
                 wrap(self.submission_audit_view),
                 name="brokerage_submission_audit",
+            ),
+            path(
+                "<path:object_id>/audit/<int:log_entry_id>/data/",
+                wrap(self.submission_data_diff_view),
+                name="brokerage_submission_data_diff",
             ),
         ]
         return custom_urls + urls
@@ -968,6 +1040,9 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
 
     def submission_audit_view(self, request, object_id, extra_context=None):
         return render_audit_log(self, request, object_id, extra_context)
+
+    def submission_data_diff_view(self, request, object_id, log_entry_id, extra_context=None):
+        return render_submission_data_diff(self, request, object_id, log_entry_id, extra_context)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
