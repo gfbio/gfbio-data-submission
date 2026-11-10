@@ -298,6 +298,16 @@ class Submission(TimeStampedModel):
         from gfbio_submissions.brokerage.audit_context import current_submission_audit_context
 
         return current_submission_audit_context()
+    
+    def get_first_time_brokered_to_ENA(self):
+        first_brokered_to_ENA = None
+        if self.brokerobject_set and self.brokerobject_set.filter(type="study").exists():
+            study_broker_object = self.brokerobject_set.filter(type="study").first()
+            if study_broker_object.persistentidentifier_set.filter(pid_type="PRJ").exists():
+                primary_pid = study_broker_object.persistentidentifier_set.filter(pid_type="PRJ").first()
+                if primary_pid.created:
+                    first_brokered_to_ENA = primary_pid.created
+        return first_brokered_to_ENA
 
     class Meta:
         permissions = [

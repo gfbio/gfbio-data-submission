@@ -80,6 +80,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
                     "title": "A Generic Title",
                 }
             },
+            "first_time_brokered_to_ENA": None,
         }
         self.assertEqual(201, response.status_code)
         self.assertIsNotNone(content["modified"])

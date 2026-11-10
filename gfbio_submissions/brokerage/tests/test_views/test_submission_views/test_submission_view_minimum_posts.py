@@ -87,6 +87,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             format="json",
         )
         content = json.loads(response.content.decode("utf-8"))
+        print("content", content)
         expected = {
             "broker_submission_id": content["broker_submission_id"],
             "issue": "",
@@ -106,6 +107,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'user_legal_name': '',
             "status": "OPEN",
             "target": "ENA",
+            "first_time_brokered_to_ENA": None,
         }
         self.assertIsNotNone(content["modified"])
         del content["modified"]
@@ -148,6 +150,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             "user_legal_name": "",
             "status": "OPEN",
             "target": "ENA",
+            "first_time_brokered_to_ENA": None,
         }
         self.assertEqual(201, response.status_code)
         self.assertIsNotNone(content["modified"])
