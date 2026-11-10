@@ -7,6 +7,11 @@ from pathlib import Path
 import environ
 from kombu import Queue
 
+from gfbio_submissions.brokerage.configuration.settings import (
+    CLOUD_UPLOAD_BACKUP_MIRROR_SOFT_TIME_LIMIT,
+    CLOUD_UPLOAD_BACKUP_MIRROR_TIME_LIMIT,
+)
+
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
 VERSION = "1.106.5"
@@ -314,6 +319,14 @@ CELERY_TASK_TIME_LIMIT = 25 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 # TODO: set to whatever value is adequate in your circumstances
 CELERY_TASK_SOFT_TIME_LIMIT = 20 * 60
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-annotations
+# Applies only to upload.tasks.save_to_redundant_storage_clientside_fileupload.
+CELERY_TASK_ANNOTATIONS = {
+    "upload.tasks.save_to_redundant_storage_clientside_fileupload": {
+        "time_limit": CLOUD_UPLOAD_BACKUP_MIRROR_TIME_LIMIT,
+        "soft_time_limit": CLOUD_UPLOAD_BACKUP_MIRROR_SOFT_TIME_LIMIT,
+    },
+}
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#beat-scheduler
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-send-task-events
