@@ -3,7 +3,7 @@ import json
 import os
 import tempfile
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 from wsgiref.util import FileWrapper
 
 import requests
@@ -19,7 +19,6 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.encoding import smart_bytes
 from django.utils.safestring import mark_safe
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_reverse_admin import ReverseModelAdmin
 from dt_upload import admin as dt_admin
