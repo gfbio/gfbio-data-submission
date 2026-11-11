@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, call, patch
 
@@ -27,6 +27,8 @@ from gfbio_submissions.brokerage.configuration.settings import (
     PANGAEA_JIRA_TICKET,
     SUBMISSION_DELAY,
 )
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
 from gfbio_submissions.brokerage.tasks.process_tasks.send_message_to_jira_task import (
     send_pending_checksum_messages_to_jira_task,
 )
@@ -727,6 +729,49 @@ class TestSubmissionAdmin(TestCase):
         mock_jira.add_comment.assert_called_once()
         comment_text = mock_jira.add_comment.call_args.kwargs["text"]
         self.assertIn("the user didn't agreed to compliance", comment_text)
+
+    @patch("gfbio_submissions.brokerage.admin.JiraClient")
+    def test_check_nagoya_protocol_was_agreed_to_was_not_agreed_but_submission_was_brokered_before_the_change(self, mock_jira_cls):
+        resource_cred = ResourceCredential.objects.create(
+            title="Resource Title", url="https://www.example.com", authentication_string="letMeIn",
+        )
+        site_configuration = SiteConfiguration.objects.create(
+            title="Default Conf", ena_server=resource_cred, helpdesk_server=resource_cred, comment="Default configuration",
+        )
+        user = User.objects.create(username="nagoya-test-user", site_configuration=site_configuration)
+        submission = Submission.objects.create(
+            user=user, status="OPEN", target="ENA", release=False,
+            data={
+                "requirements": { }
+            },
+        )
+        submission.additionalreference_set.create(primary=True, reference_key="SAND-1", type=GFBIO_HELPDESK_TICKET)
+        submission.save()
+        
+        bo = BrokerObject.objects.create(user=user, type="study", object_id=submission.pk)
+        bo.save()
+        
+        submission.brokerobject_set.add(bo)
+        submission.save()
+        
+        pid = PersistentIdentifier.objects.create(
+            broker_object=bo,
+            pid_type="PRJ",
+            pid="10.1234/test-doi",
+            status="PRIVATE",
+            created = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        )
+        pid.save()
+
+        mock_jira = MagicMock()
+        mock_jira_cls.return_value = mock_jira
+        
+        modeladmin = MagicMock()
+        result = check_nagoya_protocol_was_agreed_to(modeladmin, None, submission, "Test-Action")
+        
+        self.assertTrue(result)
+        modeladmin.message_user.assert_not_called()
+        mock_jira.add_comment.assert_not_called()
 
     @patch("gfbio_submissions.brokerage.admin.check_nagoya_protocol_was_agreed_to", return_value=False)
     def test_nagoya_check_uses_started_action_short_description(self, mock_check):

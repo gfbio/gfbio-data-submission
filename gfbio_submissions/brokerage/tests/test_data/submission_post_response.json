@@ -60,5 +60,6 @@
     "user_email": "horst@horst.de",
     "user_legal_name": "",
     "status": "SUBMITTED",
-    "target": "ENA"
+    "target": "ENA",
+    "first_time_brokered_to_ENE": null
 }
