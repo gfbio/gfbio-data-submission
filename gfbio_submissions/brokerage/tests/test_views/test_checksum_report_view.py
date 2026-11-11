@@ -99,7 +99,6 @@ class ChecksumValidationReportViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/json')
         content = json.loads(response.content)
-        print(content)
         self.assertEqual("ERROR", content["status"])
         self.assertEqual(0, content["success_count"])
         self.assertEqual(1, content["error_count"])
