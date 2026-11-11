@@ -462,6 +462,16 @@ ENA_CLOUD_UPLOAD_TRANSFER_SOFT_TIME_LIMIT = getattr(
     4 * 60 * 60 - 5 * 60,
 )
 
+# Hard limit (SIGKILL) for upload.tasks.save_to_redundant_storage_clientside_fileupload only.
+CLOUD_UPLOAD_BACKUP_MIRROR_TIME_LIMIT = getattr(settings, "CLOUD_UPLOAD_BACKUP_MIRROR_TIME_LIMIT", 4 * 60 * 60)
+
+# Soft limit must stay below the hard limit so Python cleanup can run.
+CLOUD_UPLOAD_BACKUP_MIRROR_SOFT_TIME_LIMIT = getattr(
+    settings,
+    "CLOUD_UPLOAD_BACKUP_MIRROR_SOFT_TIME_LIMIT",
+    4 * 60 * 60 - 5 * 60,
+)
+
 SUBMISSION_ISSUE_CHECK_DELAY = getattr(
     settings,
     "SUBMISSION_ISSUE_CHECK_DELAY",

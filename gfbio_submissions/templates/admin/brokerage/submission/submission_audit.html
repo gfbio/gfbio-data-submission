@@ -2,6 +2,16 @@
 
 {% load i18n admin_urls %}
 
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    #submission-audit a.audit-diff-link {
+      display: block;
+      margin-top: 0.35em;
+    }
+  </style>
+{% endblock %}
+
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
@@ -34,7 +44,14 @@
                 <td>{{ row.channel }}</td>
                 <td>{{ row.action }}</td>
                 <td>
-                  {% for change in row.changes %}<div>{{ change }}</div>{% endfor %}
+                  {% for change in row.changes %}
+                    <div>
+                      {{ change.text }}
+                      {% if change.url %}
+                        <a class="audit-diff-link" href="{{ change.url }}">{% translate 'View diff' %}</a>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
                 </td>
               </tr>
             {% endfor %}
