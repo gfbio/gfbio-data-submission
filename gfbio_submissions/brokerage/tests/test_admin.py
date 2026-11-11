@@ -1,6 +1,6 @@
 from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from auditlog.models import LogEntry as AuditLogEntry
 from django.core.cache import cache
@@ -11,11 +11,15 @@ from dt_upload.models import FileUploadRequest, MultiPartUpload
 from gfbio_submissions.brokerage.admin import (
     SubmissionAdmin,
     check_nagoya_protocol_was_agreed_to,
+    perform_targeted_sequence_submission,
     re_create_ena_xml,
+    release_submission_study_on_ena,
     retrigger_cloud_upload_checksums,
+    submit_manifest_to_ena,
     submit_to_ena_test,
     transfer_submission_cloud_uploads_to_ena,
     validate_against_ena,
+    validate_manifest_at_ena,
 )
 from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_HELPDESK_TICKET,
@@ -165,10 +169,13 @@ class TestSubmissionAdmin(TestCase):
         submission.additionalreference_set.create(primary=True, reference_key="DSUB-1", type=GFBIO_HELPDESK_TICKET)
         self.assertEqual("multiple primaries", admin.get_ticket(submission))
 
-    def _create_cloud_upload(self, submission, filename, scu_status):
+    def _create_cloud_upload(self, submission, filename, scu_status, file_key_suffix=""):
+        file_key = f"{filename}-key"
+        if file_key_suffix:
+            file_key = f"{file_key}-{file_key_suffix}"
         fur = FileUploadRequest.objects.create(
             original_filename=filename,
-            file_key=f"{filename}-key",
+            file_key=file_key,
             file_type="fastq",
             user=submission.user,
         )
@@ -289,6 +296,161 @@ class TestSubmissionAdmin(TestCase):
             lock_token=lock_token,
         )
         dispatcher_sig.apply_async.assert_called_once_with(countdown=SUBMISSION_DELAY)
+
+    def _set_file_upload_modified_year(self, cloud_upload, year):
+        FileUploadRequest.objects.filter(pk=cloud_upload.file_upload_id).update(
+            modified=cloud_upload.file_upload.modified.replace(year=year)
+        )
+
+    @patch_ena_transfer_action
+    def test_transfer_to_ena_queues_only_newest_upload_per_filename(self, mock_si, mock_ftp):
+        submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
+        other = self._create_cloud_upload(
+            submission, "other.fastq.gz", SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM
+        )
+        older = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+            file_key_suffix="older",
+        )
+        newer = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+            file_key_suffix="newer",
+        )
+        self._set_file_upload_modified_year(older, 2020)
+        dispatcher_sig = MagicMock()
+        mock_si.return_value = dispatcher_sig
+
+        transfer_submission_cloud_uploads_to_ena(
+            None, self._request_for(submission.user), Submission.objects.filter(pk=submission.pk)
+        )
+
+        lock_token = cache.get(f"ena-cloud-upload-transfer:{submission.pk}")
+        self.assertTrue(lock_token)
+        mock_si.assert_called_once_with(
+            submission_id=submission.pk,
+            submission_cloud_upload_ids=[other.pk, newer.pk],
+            user_id=submission.user.id,
+            index=0,
+            lock_token=lock_token,
+        )
+        older.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM, older.status)
+
+    @patch_ena_transfer_action
+    def test_transfer_to_ena_omits_filename_when_newest_upload_is_transferred(self, mock_si, mock_ftp):
+        submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
+        older = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+            file_key_suffix="older",
+        )
+        newer = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+            file_key_suffix="newer",
+        )
+        self._set_file_upload_modified_year(older, 2020)
+
+        transfer_submission_cloud_uploads_to_ena(
+            None, self._request_for(submission.user), Submission.objects.filter(pk=submission.pk)
+        )
+
+        mock_ftp.assert_not_called()
+        mock_si.assert_not_called()
+        older.refresh_from_db()
+        newer.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, older.status)
+        self.assertEqual(SubmissionCloudUpload.STATUS_IS_TRANSFERRED, newer.status)
+
+    @patch(
+        "gfbio_submissions.brokerage.configuration.settings.ENA_POST_TRANSFER_CHECKSUM_ENABLED",
+        True,
+    )
+    @patch_ena_transfer_action
+    def test_transfer_to_ena_queues_newest_transferred_upload_when_checksum_enabled(self, mock_si, mock_ftp):
+        submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
+        older = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+            file_key_suffix="older",
+        )
+        newer = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_IS_TRANSFERRED,
+            file_key_suffix="newer",
+        )
+        self._set_file_upload_modified_year(older, 2020)
+        dispatcher_sig = MagicMock()
+        mock_si.return_value = dispatcher_sig
+
+        transfer_submission_cloud_uploads_to_ena(
+            None, self._request_for(submission.user), Submission.objects.filter(pk=submission.pk)
+        )
+
+        lock_token = cache.get(f"ena-cloud-upload-transfer:{submission.pk}")
+        self.assertTrue(lock_token)
+        mock_si.assert_called_once_with(
+            submission_id=submission.pk,
+            submission_cloud_upload_ids=[newer.pk],
+            user_id=submission.user.id,
+            index=0,
+            lock_token=lock_token,
+        )
+        older.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, older.status)
+
+    @patch_ena_transfer_action
+    def test_transfer_to_ena_queues_earlier_pk_when_its_file_modified_is_later(self, mock_si, mock_ftp):
+        submission = Submission.objects.first()
+        submission.data = {"requirements": {"agree-to-nagoya-protocol": "yes"}}
+        submission.save()
+        older_pk = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_UPLOADED_WITH_CHECKED_CHECKSUM,
+            file_key_suffix="lower-pk",
+        )
+        higher_pk = self._create_cloud_upload(
+            submission,
+            "sample.fastq.gz",
+            SubmissionCloudUpload.STATUS_TRANSFER_FAILED,
+            file_key_suffix="higher-pk",
+        )
+        FileUploadRequest.objects.filter(pk=older_pk.file_upload_id).update(
+            modified=higher_pk.file_upload.modified.replace(year=2099)
+        )
+        dispatcher_sig = MagicMock()
+        mock_si.return_value = dispatcher_sig
+
+        transfer_submission_cloud_uploads_to_ena(
+            None, self._request_for(submission.user), Submission.objects.filter(pk=submission.pk)
+        )
+
+        lock_token = cache.get(f"ena-cloud-upload-transfer:{submission.pk}")
+        self.assertTrue(lock_token)
+        mock_si.assert_called_once_with(
+            submission_id=submission.pk,
+            submission_cloud_upload_ids=[older_pk.pk],
+            user_id=submission.user.id,
+            index=0,
+            lock_token=lock_token,
+        )
+        higher_pk.refresh_from_db()
+        self.assertEqual(SubmissionCloudUpload.STATUS_TRANSFER_FAILED, higher_pk.status)
 
     @patch(
         "gfbio_submissions.brokerage.configuration.settings.ENA_POST_TRANSFER_CHECKSUM_ENABLED",
@@ -565,6 +727,24 @@ class TestSubmissionAdmin(TestCase):
         mock_jira.add_comment.assert_called_once()
         comment_text = mock_jira.add_comment.call_args.kwargs["text"]
         self.assertIn("the user didn't agreed to compliance", comment_text)
+
+    @patch("gfbio_submissions.brokerage.admin.check_nagoya_protocol_was_agreed_to", return_value=False)
+    def test_nagoya_check_uses_started_action_short_description(self, mock_check):
+        queryset = Submission.objects.all()
+        actions = (
+            release_submission_study_on_ena,
+            submit_to_ena_test,
+            perform_targeted_sequence_submission,
+            submit_manifest_to_ena,
+            validate_manifest_at_ena,
+        )
+        for action in actions:
+            action(None, None, queryset)
+
+        self.assertEqual(
+            [call(None, None, queryset.first(), action.short_description) for action in actions],
+            mock_check.call_args_list,
+        )
 
 
 class TestSubmissionCloudUploadAdminLatestLog(TestCase):

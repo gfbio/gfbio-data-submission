@@ -170,7 +170,7 @@ class TestEnaValidationTasks(TestCase):
             SubmissionReport.objects.first().report, "Data with the following taxon ids is not submittable: 1234"
         )
         self.submission_ena.refresh_from_db()
-        self.assertEqual(Submission.ERROR, self.submission_ena.status)
+        self.assertEqual(Submission.OPEN, self.submission_ena.status)
 
     # test check_submittable_taxon_id_task with target atax submission and valid meta file
     def test_check_submittable_taxon_id_task_target_atax_valid(self):
@@ -225,7 +225,7 @@ class TestEnaValidationTasks(TestCase):
             "Data with the following scientific names is not submittable: Platypelis tsaratananaensissis",
         )
         self.submission_atax.refresh_from_db()
-        self.assertEqual(Submission.ERROR, self.submission_atax.status)
+        self.assertEqual(Submission.OPEN, self.submission_atax.status)
 
     # test check_submittable_taxon_id_task with target atax submission and invalid meta file
     def test_check_submittable_taxon_id_task_target_atax_invalid_with_cloud_submission_upload(self):
@@ -254,7 +254,7 @@ class TestEnaValidationTasks(TestCase):
                 "Data with the following scientific names is not submittable: Platypelis tsaratananaensissis",
             )
             self.submission_atax.refresh_from_db()
-            self.assertEqual(Submission.ERROR, self.submission_atax.status)
+            self.assertEqual(Submission.OPEN, self.submission_atax.status)
 
         run_test_with_fake_submission_upload(
             submission=self.submission_atax,

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import json
 import os
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -14,8 +17,10 @@ from ...models.submission import Submission
 from ...models.submission_report import SubmissionReport
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.atax_tasks._atax_submission_validate_xml_upload import atax_submission_validate_xml_upload_task
 from ...tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
 from ...tasks.atax_tasks.validate_merged_atax_data import validate_merged_atax_data_task
+from ...utils.schema_validation import validate_atax_data
 
 
 class TestAtaxSubmissionTasks(TestCase):
@@ -136,3 +141,49 @@ class TestAtaxSubmissionTasks(TestCase):
         self.assertTrue(result.successful())
         res = result.get()
         self.assertEqual(TaskProgressReport.CANCELLED, res)
+
+    def test_invalid_abcd_xml_persists_validation_without_error_status(self):
+        submission = _create_submission_via_serializer(
+            username=self.user.name, create_broker_objects=False, atax=True
+        )
+        status_before = submission.status
+        upload = SubmissionUpload.objects.create(
+            submission=submission,
+            user=self.user,
+            file=SimpleUploadedFile("combination.xml", b"<root>invalid</root>"),
+        )
+        AuditableTextData.objects.create(
+            name="combination",
+            submission=submission,
+            text_data="<root>invalid</root>",
+        )
+
+        def _validate(submission=None, schema_file=None, xml_string=None, **kwargs):
+            try:
+                return validate_atax_data(schema_file_name=schema_file, xml_string=xml_string)
+            except Exception:
+                return False, [SimpleNamespace(message="invalid ABCD XML")]
+
+        validator_path = (
+            "gfbio_submissions.brokerage.tasks.atax_tasks."
+            "_atax_submission_validate_xml_upload.validate_atax_data_is_valid"
+        )
+        with patch(validator_path, create=True, side_effect=_validate):
+            result = atax_submission_validate_xml_upload_task.apply_async(
+                kwargs={"submission_upload_id": upload.pk, "is_combination": True}
+            )
+            self.assertTrue(result.successful())
+            self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+        submission.refresh_from_db()
+        # Serializer sets SUBMITTED when release=True; the task must leave that status.
+        self.assertEqual(Submission.SUBMITTED, status_before)
+        self.assertEqual(status_before, submission.status)
+        validation = submission.data["validation"]
+        self.assertIsInstance(validation, list)
+        self.assertTrue(validation)
+        self.assertTrue(all(isinstance(message, str) and message for message in validation))
+
+        report = TaskProgressReport.objects.filter(submission=submission).exclude(task_exception_info="").get()
+        payload = json.loads(report.task_exception_info)
+        self.assertEqual(validation, payload["validation"])

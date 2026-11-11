@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
@@ -8,9 +9,11 @@ import requests
 from auditlog.models import LogEntry as AuditLogEntry
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db.models import Case, Count, IntegerField, Value, When
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.encoding import smart_bytes
@@ -57,9 +60,11 @@ from .models.ena_report import EnaReport
 from .models.jira_message import JiraMessage
 from .models.persistent_identifier import PersistentIdentifier
 from .models.submission import Submission
+from .models.submission_data_diff import SubmissionDataDiff
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
 from .submission_data_audit import DATA_CHANGED_LABEL
+from .submission_data_diff import display_diff_path, format_diff_value
 from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
 from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
     create_broker_objects_from_submission_data_task,
@@ -159,7 +164,9 @@ continue_release_submissions.short_description = "Continue submission of selecte
 def release_submission_study_on_ena(modeladmin, request, queryset):
     for obj in queryset:
         submission = Submission.objects.get(pk=obj.pk)
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(
+            modeladmin, request, obj, release_submission_study_on_ena.short_description
+        ):
             continue
         response, reason = release_study_on_ena(submission=submission)
         if modeladmin:
@@ -272,7 +279,7 @@ def submit_to_ena_test(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_to_ena_test_server import submit_to_ena_test_server_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, submit_to_ena_test.short_description):
             continue
         submit_to_ena_test_server_task.apply_async(
             kwargs={"submission_id": obj.pk, "action": "ADD"},
@@ -324,7 +331,9 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(
+            modeladmin, request, obj, perform_targeted_sequence_submission.short_description
+        ):
             continue
         chain = (
             create_study_broker_objects_only_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
@@ -389,7 +398,7 @@ def submit_manifest_to_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, submit_manifest_to_ena.short_description):
             continue
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
             countdown=SUBMISSION_DELAY
@@ -405,7 +414,9 @@ def validate_manifest_at_ena(modeladmin, request, queryset):
     from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
-        if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, validate_against_ena.short_description):
+        if not check_nagoya_protocol_was_agreed_to(
+            modeladmin, request, obj, validate_manifest_at_ena.short_description
+        ):
             continue
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=True).set(
             countdown=SUBMISSION_DELAY
@@ -481,6 +492,35 @@ def combine_cloud_uploaded_csvs_to_abcd(modeladmin, request, queryset):
 combine_cloud_uploaded_csvs_to_abcd.short_description = "Combine cloud uploaded CSV-Files to ABCD-File"
 
 
+def _ena_cloud_upload_file_recency(cloud_upload):
+    """Later file-upload modified, then the higher primary key. Matches the zip download order."""
+    file_upload = getattr(cloud_upload, "file_upload", None)
+    if file_upload is not None and file_upload.modified is not None:
+        return (file_upload.modified, cloud_upload.pk)
+    return (cloud_upload.modified, cloud_upload.pk)
+
+
+def _queued_ena_cloud_upload_ids(cloud_uploads, allowed_statuses, allowed_types):
+    """Keep only the newest row per basename, and only when that row is already eligible."""
+    newest_by_basename = {}
+    for upload in sorted(cloud_uploads, key=_ena_cloud_upload_file_recency, reverse=True):
+        original_filename = upload.file_upload.original_filename
+        if not original_filename:
+            continue
+        basename = os.path.basename(original_filename)
+        if not basename or basename in newest_by_basename:
+            continue
+        newest_by_basename[basename] = upload
+
+    queued_ids = []
+    for upload in newest_by_basename.values():
+        original_filename = upload.file_upload.original_filename
+        if upload.status in allowed_statuses and original_filename.lower().endswith(allowed_types):
+            queued_ids.append(upload.pk)
+    queued_ids.sort()
+    return queued_ids
+
+
 def _skip_ena_transfer(modeladmin, request, message, level=messages.WARNING, raise_when_unattended=True):
     if modeladmin:
         modeladmin.message_user(request, message, level=level)
@@ -522,19 +562,12 @@ def transfer_submission_cloud_uploads_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         if not check_nagoya_protocol_was_agreed_to(modeladmin, request, obj, transfer_submission_cloud_uploads_to_ena.short_description):
             continue
-        submission_cloud_upload_ids = [
-            upload.pk
-            for upload in (
-                obj.submissioncloudupload_set.filter(
-                    status__in=allowed_statuses,
-                    file_upload__isnull=False,
-                )
-                .select_related("file_upload")
-                .order_by("pk")
-            )
-            if upload.file_upload.original_filename
-            and upload.file_upload.original_filename.lower().endswith(allowed_types)
-        ]
+        candidates = (
+            obj.submissioncloudupload_set.exclude(status=SubmissionCloudUpload.STATUS_DELETED)
+            .filter(file_upload__isnull=False)
+            .select_related("file_upload")
+        )
+        submission_cloud_upload_ids = _queued_ena_cloud_upload_ids(candidates, allowed_statuses, allowed_types)
         if not submission_cloud_upload_ids:
             skip_admin_action_log(obj)
             continue
@@ -637,9 +670,20 @@ def _cloud_upload_overview_message(entry):
     return "; ".join(parts) if parts else None
 
 
+def _log_entry_ids_with_data_diff(entry_ids):
+    """Primary keys of log rows that have a stored data diff.
+
+    Selects only the foreign key. Following the reverse relation would load the JSON column.
+    """
+    if not entry_ids:
+        return set()
+    return set(SubmissionDataDiff.objects.filter(log_entry_id__in=entry_ids).values_list("log_entry_id", flat=True))
+
+
 def audit_rows_for(obj):
     """Rows for the shared submission and cloud-upload audit page."""
-    entries = AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type")
+    entries = list(AuditLogEntry.objects.get_for_object(obj).select_related("actor", "content_type"))
+    diff_entry_ids = _log_entry_ids_with_data_diff([entry.pk for entry in entries])
     audit_rows = []
     for entry in entries:
         extra = entry.additional_data or {}
@@ -656,11 +700,14 @@ def audit_rows_for(obj):
             else:
                 old, new = "", values
             if old == DATA_CHANGED_LABEL and new == DATA_CHANGED_LABEL:
-                changes.append(f"{field_name}: changed")
+                url = ""
+                if entry.pk in diff_entry_ids:
+                    url = reverse("admin:brokerage_submission_data_diff", args=[obj.pk, entry.pk])
+                changes.append({"text": f"{field_name}: changed", "url": url})
             else:
-                changes.append(f"{field_name}: {old} → {new}")
+                changes.append({"text": f"{field_name}: {old} → {new}", "url": ""})
         if extra.get("detail"):
-            changes.append(str(extra["detail"]))
+            changes.append({"text": str(extra["detail"]), "url": ""})
         audit_rows.append(
             {
                 "timestamp": entry.timestamp,
@@ -694,6 +741,55 @@ def render_audit_log(model_admin, request, object_id, extra_context=None):
     return TemplateResponse(
         request,
         "admin/brokerage/submission/submission_audit.html",
+        context,
+    )
+
+
+def _diff_rows(items, kind):
+    rows = []
+    for item in items:
+        row = {"path": display_diff_path(item["path"])}
+        if kind == "changed":
+            row["old"] = format_diff_value(item["old"])
+            row["new"] = format_diff_value(item["new"])
+        else:
+            row["value"] = format_diff_value(item["value"])
+        rows.append(row)
+    return rows
+
+
+def render_submission_data_diff(model_admin, request, object_id, log_entry_id, extra_context=None):
+    obj = model_admin.get_object(request, unquote(object_id))
+    if obj is None:
+        return model_admin._get_obj_does_not_exist_redirect(request, model_admin.model._meta, object_id)
+    if not model_admin.has_view_or_change_permission(request, obj):
+        raise PermissionDenied
+
+    content_type = ContentType.objects.get_for_model(Submission)
+    entry = get_object_or_404(
+        AuditLogEntry,
+        pk=log_entry_id,
+        content_type=content_type,
+        object_pk=str(obj.pk),
+    )
+    diff_row = get_object_or_404(SubmissionDataDiff, log_entry_id=entry.pk)
+    payload = diff_row.diff or {}
+    context = {
+        **model_admin.admin_site.each_context(request),
+        "title": _("Data changes: %s") % obj,
+        "subtitle": None,
+        "added": _diff_rows(payload.get("added") or [], "added"),
+        "removed": _diff_rows(payload.get("removed") or [], "removed"),
+        "changed": _diff_rows(payload.get("changed") or [], "changed"),
+        "module_name": str(model_admin.opts.verbose_name_plural),
+        "object": obj,
+        "opts": model_admin.opts,
+        **(extra_context or {}),
+    }
+    request.current_app = model_admin.admin_site.name
+    return TemplateResponse(
+        request,
+        "admin/brokerage/submission/submission_data_diff.html",
         context,
     )
 
@@ -758,10 +854,13 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
         submit_manifest_to_ena,
         combine_csvs_to_abcd,
     ]
+    # checklist_mapping_failed stays visible but is not part of the saved form,
+    # so an admin save cannot clear a checklist block.
     readonly_fields = (
         "created",
         "modified",
-        "get_ticket"
+        "get_ticket",
+        "checklist_mapping_failed",
     )
 
     def save_model(self, request, obj, form, change):
@@ -796,6 +895,11 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
                 "<path:object_id>/audit/",
                 wrap(self.submission_audit_view),
                 name="brokerage_submission_audit",
+            ),
+            path(
+                "<path:object_id>/audit/<int:log_entry_id>/data/",
+                wrap(self.submission_data_diff_view),
+                name="brokerage_submission_data_diff",
             ),
         ]
         return custom_urls + urls
@@ -936,6 +1040,9 @@ class SubmissionAdmin(AdminActionLogMixin, admin.ModelAdmin):
 
     def submission_audit_view(self, request, object_id, extra_context=None):
         return render_audit_log(self, request, object_id, extra_context)
+
+    def submission_data_diff_view(self, request, object_id, log_entry_id, extra_context=None):
+        return render_submission_data_diff(self, request, object_id, log_entry_id, extra_context)
 
     def get_actions(self, request):
         actions = super().get_actions(request)

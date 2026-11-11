@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import uuid
 
 from auditlog.registry import auditlog
@@ -16,13 +17,16 @@ from ..managers.submission_manager import SubmissionManager
 from ..submission_data_audit import note_submission_data_change, record_submission_data_change
 from .center_name import CenterName
 
+logger = logging.getLogger(__name__)
+
 
 class IllegalStatusTransition(Exception):
     """Raised when a Submission status transition is not allowed.
 
     The set of legal transitions is declared in
     ``Submission.LEGAL_STATUS_TRANSITIONS`` and enforced by the named
-    transition methods (``submit``, ``close``, ``fail``, ``cancel``).
+    transition methods (``submit``, ``close``, ``cancel``). ``fail`` does not
+    change status.
     """
 
     def __init__(self, source, target):
@@ -55,20 +59,18 @@ class Submission(TimeStampedModel):
     #   OPEN       -> SUBMITTED  (serializer, release=True)
     #   OPEN       -> CLOSED     (pangaea/ena close on a submission that was
     #                             never moved to SUBMITTED explicitly)
-    #   OPEN       -> ERROR      (early task failures)
     #   SUBMITTED  -> CLOSED     (ENA success, pangaea DOI pull)
-    #   SUBMITTED  -> ERROR      (ENA/atax/taxon failures)
-    #   ERROR      -> CLOSED     (success on a re-run/retry after an error)
-    #   ERROR      -> SUBMITTED  (re-submission after an error)
-    #   ERROR      -> ERROR      (repeated failures; status set without a
-    #                             known source state, e.g. Enalizer)
+    #   ERROR      -> CLOSED     (curator/admin or a later successful close)
+    #   ERROR      -> SUBMITTED  (re-submission after an error, direct write)
     #   any state  -> CANCELLED  (admin action / DELETE endpoint)
     #
-    # CLOSED and CANCELLED are terminal: no transition leaves them.
+    # Automatic failures do not enter ERROR. Curators and the admin form can
+    # still assign it directly. CLOSED and CANCELLED are terminal: no
+    # transition leaves them.
     LEGAL_STATUS_TRANSITIONS = {
-        OPEN: {SUBMITTED, CLOSED, ERROR, CANCELLED},
-        SUBMITTED: {CLOSED, ERROR, CANCELLED},
-        ERROR: {SUBMITTED, CLOSED, ERROR, CANCELLED},
+        OPEN: {SUBMITTED, CLOSED, CANCELLED},
+        SUBMITTED: {CLOSED, CANCELLED},
+        ERROR: {SUBMITTED, CLOSED, CANCELLED},
         CLOSED: set(),
         CANCELLED: set(),
     }
@@ -92,6 +94,13 @@ class Submission(TimeStampedModel):
     status = models.CharField(choices=STATUSES, max_length=10, default=OPEN)
     release = models.BooleanField(default=False)
     approval_notification_sent = models.BooleanField(default=False)
+    checklist_mapping_failed = models.BooleanField(
+        default=False,
+        help_text="Set when a sample's environmental package value is not in the "
+                  "local checklist mapping. Metadata is not sent to ENA until "
+                  "preparation runs again without those errors. A missing "
+                  "environmental package tag does not set this flag.",
+    )
 
     # TODO: this might be to specific for a general submission model ?
     # TODO: discuss general submission model with subclasses like molecular or similar
@@ -261,12 +270,22 @@ class Submission(TimeStampedModel):
         self._transition_to(self.CLOSED, save=save)
 
     def fail(self, reason=None, save=True):
-        """Move the submission into the ERROR state.
+        """Record a failure without changing the submission status.
 
-        ``reason`` is accepted for call-site readability; surrounding code
-        remains responsible for persisting reports / Jira comments.
+        Automatic transitions into ERROR are disabled. Curators and the admin
+        form can still assign ERROR directly. ``reason`` is logged; surrounding
+        code remains responsible for persisting reports and Jira comments.
+        ``save`` is accepted so existing call sites stay valid and is ignored:
+        the status is left untouched in memory and in the database, and this
+        method does not raise.
         """
-        self._transition_to(self.ERROR, save=save)
+        logger.warning(
+            "Submission.fail | status left unchanged | submission_pk=%s status=%s reason=%s save=%s",
+            self.pk,
+            self.status,
+            reason,
+            save,
+        )
 
     def cancel(self, save=True):
         """Move the submission into the terminal CANCELLED state."""

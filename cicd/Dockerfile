@@ -39,8 +39,8 @@ RUN apt-get update \
 #  # dig tool to get ip of allowed domains
 #  && apk add bind-tools
 
-ARG USER_ID=998
-ARG GROUP_ID=997
+ARG USER_ID=996
+ARG GROUP_ID=995
 
 RUN addgroup --system --gid $GROUP_ID django \
     && adduser --system --uid $USER_ID --ingroup django django

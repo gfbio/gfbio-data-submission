@@ -39,12 +39,21 @@ class SubmissionTransitionTest(TestCase):
         submission.refresh_from_db()
         self.assertEqual(Submission.SUBMITTED, submission.status)
 
-    def test_fail_with_save_false_changes_state_without_persisting(self):
+    def test_fail_leaves_status_unchanged_in_memory_and_database(self):
         submission = self._submission(status=Submission.SUBMITTED)
         submission.fail(reason="boom", save=False)
-        self.assertEqual(Submission.ERROR, submission.status)
+        self.assertEqual(Submission.SUBMITTED, submission.status)
+        submission.fail(reason="boom", save=True)
+        self.assertEqual(Submission.SUBMITTED, submission.status)
         submission.refresh_from_db()
         self.assertEqual(Submission.SUBMITTED, submission.status)
+
+    def test_fail_from_closed_does_not_raise(self):
+        submission = self._submission(status=Submission.CLOSED)
+        submission.fail(reason="boom")
+        self.assertEqual(Submission.CLOSED, submission.status)
+        submission.refresh_from_db()
+        self.assertEqual(Submission.CLOSED, submission.status)
 
     def test_cancel_from_open_persists(self):
         submission = self._submission(status=Submission.OPEN)

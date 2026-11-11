@@ -22,7 +22,7 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import InvalidCenterName
+from gfbio_submissions.brokerage.exceptions.transfer_exceptions import ChecklistMappingBlocked, InvalidCenterName
 from gfbio_submissions.brokerage.utils.center_name import resolve_and_validate_center_name
 from gfbio_submissions.brokerage.utils.ena_experiment_definitions_utils import find_correct_platform_and_model
 from gfbio_submissions.brokerage.utils.jira import JiraClient
@@ -134,14 +134,13 @@ class Enalizer(object):
                 result[key] = value
         return result
 
-    def set_submission_state_to_error(self):
-        try:
-            submission = Submission.objects.get(pk=self.submission_id)
-            submission.fail()
-        except Submission.DoesNotExist:
-            logger.warning(
-                "ena.py | Enalizer | set_submission_state_to_error | Submission with pk {} does not exist".format(
-                    self.submission_id))
+    def _store_checklist_mapping_failed(self, failed):
+        submission = self.submission
+        if submission.checklist_mapping_failed == failed:
+            return
+        submission.checklist_mapping_failed = failed
+        if submission.pk:
+            submission.save(update_fields=["checklist_mapping_failed"])
 
     def create_submission_xml(self, action="VALIDATE", hold_date=None, outgoing_request_id="add_outgoing_id"):
         logger.info(msg="Enalizer create_submission_xml. action={} hold_date={}".format(action, hold_date))
@@ -333,7 +332,7 @@ class Enalizer(object):
                     atr.tag = "SAMPLE_ATTRIBUTE"
         # remove xml encoding for temperature unit
         bytestring = ET.tostring(root, encoding="utf-8", method="xml")
-        xmlstring = bytestring.decode("utf-8").replace("&amp;#186;C", "&#186;C")
+        xmlstring = bytestring.decode("utf-8").replace("&amp;#186;C", "&#186;C").replace("&amp;#176;C", "&#176;C")
         return xmlstring.encode("utf-8")
 
     @staticmethod
@@ -661,7 +660,7 @@ class Enalizer(object):
                 sample_descriptor_platform_mappings=sample_descriptor_platform_mappings
             )
             if len(self.samples_with_checklist_errors):
-                self.set_submission_state_to_error()
+                self._store_checklist_mapping_failed(True)
                 # TODO: email curators about sample errors
                 send_checklist_mapping_error_notification(self.submission_id, self.samples_with_checklist_errors)
             submission_data["SAMPLE"] = ("sample.xml", smart_str(sample_xml))
@@ -671,6 +670,8 @@ class Enalizer(object):
                 "run.xml",
                 smart_str(self.create_run_xml(broker_submission_id=broker_submission_id)),
             )
+        if not self.samples_with_checklist_errors:
+            self._store_checklist_mapping_failed(False)
         return submission_data
 
     def prepare_submission_xml_for_sending(self, action="VALIDATE", outgoing_request_id=None):
@@ -702,22 +703,13 @@ def store_single_data_item_as_auditable_text_data(submission, data):
 
 
 def _fail_submission_safely(submission, reason):
-    """Transition ``submission`` to ERROR without double-faulting on terminals.
+    """Log ``reason`` via ``fail()`` and leave the submission status unchanged.
 
-    CLOSED/CANCELLED submissions have no legal transition to ERROR, so calling
-    ``fail()`` on them raises ``IllegalStatusTransition`` and masks the real
-    error (e.g. an invalid center_name surfaced on a re-run that loads closed
-    submissions with ``include_closed=True``). Guarding the transition lets the
-    underlying error be surfaced instead of a secondary status-machine crash.
+    ``Submission.fail()`` only logs. It does not change status in memory or in
+    the database and does not raise, including when the submission is already
+    CLOSED or CANCELLED.
     """
-    try:
-        submission.fail(reason=reason)
-    except IllegalStatusTransition:
-        logger.warning(
-            msg="ena.py | _fail_submission_safely | submission in terminal "
-                "state, cannot transition to ERROR | submission_pk={0} "
-                "status={1} reason={2}".format(submission.pk, submission.status, reason)
-        )
+    submission.fail(reason=reason)
 
 
 def prepare_ena_data(submission):
@@ -765,12 +757,15 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data, acti
     outgoing_request_id = uuid.uuid4()
     # TODO: this needs refactoring, maybe static method for submission.xml thus the DB is not hit by constructor
     # DASS-3574: reject an invalid center_name *before* the POST so an empty/None
-    # centre can never reach ENA; fail the submission (terminal-safe) and abort.
+    # centre can never reach ENA. fail() logs the reason and does not change
+    # status, and the POST is still aborted.
     try:
         enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
     except InvalidCenterName as ex:
         _fail_submission_safely(submission, str(ex))
         raise
+    if submission.checklist_mapping_failed:
+        raise ChecklistMappingBlocked(submission.pk)
     ena_submission_data["SUBMISSION"] = enalizer.prepare_submission_xml_for_sending(
         action=action,
         outgoing_request_id=outgoing_request_id,
@@ -856,9 +851,10 @@ def release_study_on_ena(submission):
         )
 
         # DASS-3574: carry the submission's curated centre into the RELEASE XML
-        # instead of the hardcoded "GFBIO"; reject (-> ERROR, no POST) rather
-        # than release with an empty/None centre. quoteattr escapes & " < > for
-        # the hand-built (non-ElementTree) raw-string XML and supplies the quotes.
+        # instead of the hardcoded "GFBIO". fail() logs the reason and does not
+        # change status, and the RELEASE POST is still aborted rather than
+        # release with an empty/None centre. quoteattr escapes & " < > for the
+        # hand-built (non-ElementTree) raw-string XML and supplies the quotes.
         try:
             center_name = resolve_and_validate_center_name(submission)
         except InvalidCenterName as ex:

@@ -60,9 +60,10 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
         )
 
         # DASS-3574: carry the submission's curated centre into the HOLD XML
-        # instead of the hardcoded "GFBIO"; reject (-> ERROR, no POST) rather
-        # than send an empty/None centre. quoteattr escapes & " < > for the
-        # hand-built (non-ElementTree) raw-string XML and supplies the quotes.
+        # instead of the hardcoded "GFBIO". fail() logs the reason and does not
+        # change status, and the HOLD POST is still aborted rather than send an
+        # empty/None centre. quoteattr escapes & " < > for the hand-built
+        # (non-ElementTree) raw-string XML and supplies the quotes.
         try:
             center_name = resolve_and_validate_center_name(submission)
         except InvalidCenterName as ex:
