@@ -2,6 +2,7 @@
 from django.urls import path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularSwaggerView
+from gfbio_submissions.brokerage.views.checksum_validation_report_view import ChecksumValidationReportView
 from gfbio_submissions.brokerage.views.user_view import UserView
 
 from .views.curator_submissions_view import (
@@ -159,6 +160,11 @@ urlpatterns = [
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validation-reports/(?P<pk>[0-9]+)/$",
         view=MetadataValidationReportView.as_view(),
         name="metadata_validation_report",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/validations/checksum/$",
+        view=ChecksumValidationReportView.as_view(),
+        name="checksum_validation_report",
     ),
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/reports/$",
