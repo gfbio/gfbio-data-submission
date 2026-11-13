@@ -144,8 +144,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
                 legal_name += obj.user.last_name
         return legal_name
 
-    @extend_schema_field(OpenApiTypes.DATE)
-    def get_first_time_brokered_to_ENA(self, obj) -> datetime.date:
+    @extend_schema_field(OpenApiTypes.DATETIME)
+    def get_first_time_brokered_to_ENA(self, obj) -> datetime.datetime | None:
         return obj.get_first_time_brokered_to_ENA()
 
     def validate(self, data):
