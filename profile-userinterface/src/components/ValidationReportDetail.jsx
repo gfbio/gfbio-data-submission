@@ -203,9 +203,7 @@ function renderFindingsList(taskReportFindingsGroups, findingsGroupKey) {
                     </div>
                 </div>
                 <div className="col-6 col-lg-9 d-flex align-items-center justify-content-between">
-                    <span>
-                        {finding.message}
-                    </span>
+                    <span dangerouslySetInnerHTML={{__html: finding.message.replaceAll(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')}}></span>
                     <HoverCard width={280} shadow="md">
                         <HoverCard.Target>
                             <i className="fa fa-question-circle-o ms-2"></i>
