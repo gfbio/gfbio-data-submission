@@ -13,5 +13,9 @@ export function formatDateToYYYYMMDD(date) {
 
 export function formatDateTime(date) {
     var d = new Date(date);
+    var timezone = Intl?.DateTimeFormat()?.resolvedOptions()?.timeZone;
+    if (timezone) {
+        return d.toLocaleString("sv-SE", { timeZone: timezone }).replace("T", " ");
+    }
     return d.toISOString().substring(0,19).replace("T", " "); 
 }
