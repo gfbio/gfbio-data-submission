@@ -3,6 +3,7 @@ import json
 import os
 import tempfile
 import zipfile
+from datetime import datetime, timezone
 from wsgiref.util import FileWrapper
 
 import requests
@@ -80,6 +81,10 @@ from .utils.task_utils import _safe_get_site_config, jira_cancel_issue
 
 
 def check_nagoya_protocol_was_agreed_to(modeladmin, request, submission, action_name):
+    first_time_brokered_to_ENA = submission.get_first_time_brokered_to_ENA()
+    if first_time_brokered_to_ENA is not None:
+        if first_time_brokered_to_ENA < datetime(year=2026, month=10, day=14, tzinfo=timezone.utc):
+            return True
     submission_data = submission.data
     if (
         submission_data and "requirements" in submission_data 
@@ -140,6 +145,11 @@ class PersistentIdentifierAdmin(AdminActionLogMixin, admin.ModelAdmin):
         "broker_object",
         "status",
         "hold_date",
+    )
+    
+    readonly_fields = (
+        "created",
+        "modified"
     )
 
 

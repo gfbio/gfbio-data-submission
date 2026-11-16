@@ -48,6 +48,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             },
             "embargo": None,
             "download_url": "",
+            "first_time_brokered_to_ENA": None,
         }
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(Submission.objects.all()))

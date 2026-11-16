@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
 from gfbio_submissions.brokerage.tests.utils import (
     _create_submission_via_serializer,
     _get_ena_data,
@@ -212,3 +213,25 @@ class SubmissionTest(TestCase):
             sub.save()
             self.assertEqual(Submission.CLOSED, sub.status)
             trigger_mock.assert_not_called()
+
+    def test_submission_get_first_time_brokered_to_ENA(self):
+        from datetime import datetime, timezone
+        submission = _create_submission_via_serializer(create_broker_objects=False)
+        self.assertIsNone(submission.get_first_time_brokered_to_ENA())
+
+        bo = BrokerObject.objects.create(user=submission.user, type="study", object_id=submission.pk)
+        bo.save()
+        
+        submission.brokerobject_set.add(bo)
+        submission.save()
+        
+        pid = PersistentIdentifier.objects.create(
+            broker_object=bo,
+            pid_type="PRJ",
+            pid="10.1234/test-doi",
+            status="PRIVATE",
+            created = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        )
+        pid.save()
+
+        self.assertEqual(datetime(2020, 1, 1, tzinfo=timezone.utc), submission.get_first_time_brokered_to_ENA())

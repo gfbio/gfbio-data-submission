@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
+import datetime
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample, extend_schema_field
@@ -124,6 +125,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
     download_url = serializers.URLField(required=False)
     data = serializers.JSONField()
     status = serializers.CharField(read_only=True)
+    first_time_brokered_to_ENA = serializers.SerializerMethodField()
 
     issue = serializers.SerializerMethodField()
 
@@ -141,6 +143,10 @@ class SubmissionSerializer(serializers.ModelSerializer):
             if obj.user.last_name:
                 legal_name += obj.user.last_name
         return legal_name
+
+    @extend_schema_field(OpenApiTypes.DATETIME)
+    def get_first_time_brokered_to_ENA(self, obj) -> datetime.datetime | None:
+        return obj.get_first_time_brokered_to_ENA()
 
     def validate(self, data):
         if data.get("release", False):
@@ -171,4 +177,5 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "embargo",
             "download_url",
             "modified",
+            "first_time_brokered_to_ENA",
         )
