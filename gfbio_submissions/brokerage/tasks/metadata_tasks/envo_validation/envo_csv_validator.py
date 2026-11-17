@@ -14,9 +14,9 @@ class EnvoCsvValidator:
 
     def __init__(self, ontology_requester, validation_task_report):
         self.validation_task_report = validation_task_report
-        self.broad_scale_ontology_matcher = OntologyMatcher(ontology_requester, root_name="biome", root="http://purl.obolibrary.org/obo/ENVO_00000428", ontology="ENVO")
-        self.medium_ontology_matcher = MediumOntologyMatcher(ontology_requester, root_name="enviromental material", root="http://purl.obolibrary.org/obo/ENVO_00010483", ontology="ENVO")
-        self.local_ontology_matcher = MediumOntologyMatcher(ontology_requester)
+        self.broad_scale_ontology_matcher = OntologyMatcher(ontology_requester, root_name="biome", root="http://purl.obolibrary.org/obo/ENVO_00000428", ontology="ENVO", column_name=self.broad_scale_column_name)
+        self.medium_ontology_matcher = MediumOntologyMatcher(ontology_requester, root_name="enviromental material", root="http://purl.obolibrary.org/obo/ENVO_00010483", ontology="ENVO", column_name=self.medium_column_name)
+        self.local_ontology_matcher = MediumOntologyMatcher(ontology_requester, column_name=self.local_column_name)
         self.messages = []
 
 

@@ -122,7 +122,7 @@ class TestValidateEnvoColumnsTask(TestTasks):
     @patch(_ONTOLOGY_REQUESTER)
     def test_envo_validation_with_error(self, mock_requester, mock_opener):
         report = self._create_report()
-        mock_opener.return_value = _FakeOpener(HEADER + "The sample1;123;Belly Button;forest biome [ENVO:01000174];plant matter with typo [ENVO:01001121];microbial community [PCO:1000004]\n")
+        mock_opener.return_value = _FakeOpener(HEADER + "The sample1;123;Belly Button;forest biome [ENVO:01000174];plant matter[ENVO:01001121]with to much text;microbial community [PCO:1000004]\n")
         mock_requester.return_value = MockRequester()
 
         self._run(report)
@@ -130,7 +130,7 @@ class TestValidateEnvoColumnsTask(TestTasks):
         task_report = report.validationtaskreport_set.get()
         self.assertEqual("ERROR", task_report.status)
         self.assertEqual(1, task_report.validationfinding_set.count())
-        self.assertEqual("Can't find matching term for 'plant matter with typo'. Please ensure the term is a decendant of enviromental material [ENVO:00010483].", task_report.validationfinding_set.all()[0].message)
+        self.assertEqual("'plant matter[ENVO:01001121]with to much text' seems to be in an invalid format or it contains invalid characters.", task_report.validationfinding_set.all()[0].message)
 
 
     @patch(_OPENER_PATH)

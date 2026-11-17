@@ -98,6 +98,15 @@ class TestEnvoValidation(TestTasks):
         self.assertEqual(expected_row, task_report.validationfinding_set.all()[0].row)
         self.assertEqual(expected_column_name, task_report.validationfinding_set.all()[0].column_name)
         self.assertEqual("ERROR", task_report.validationfinding_set.all()[0].status)
+    
+    def _assert_single_warning(self, task_report, expected_message, expected_row, expected_column, expected_column_name):
+        self.assertEqual(1, task_report.validationfinding_set.count())
+        self.assertEqual("WARNING", task_report.status)
+        self.assertEqual(expected_message, task_report.validationfinding_set.all()[0].message)
+        self.assertEqual(expected_column, task_report.validationfinding_set.all()[0].column)
+        self.assertEqual(expected_row, task_report.validationfinding_set.all()[0].row)
+        self.assertEqual(expected_column_name, task_report.validationfinding_set.all()[0].column_name)
+        self.assertEqual("WARNING", task_report.validationfinding_set.all()[0].status)
 
 
     def test_envo_validation_successfull(self):
@@ -166,8 +175,9 @@ class TestEnvoValidation(TestTasks):
 
         validator = EnvoCsvValidator(mock_requester, task_report)
         validator.validate(content)
-
-        self._assert_single_error(task_report, "Can't find matching term for 'coffee'. Please ensure the term is a decendant of enviromental material [ENVO:00010483].", 2, 5, "environmental medium")
+        
+        expected_message = "Can't find matching term for 'coffee'. Please check the spelling of the term or choose a different one. Please review the given term 'environmental medium' as seen in the template description (see [here](https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md)). Please ensure the term is a descendant of enviromental material [ENVO:00010483]."
+        self._assert_single_warning(task_report, expected_message, 2, 5, "environmental medium")
 
 
     def test_envo_validation_unknown_value_broad_scale_ctx(self):
@@ -179,7 +189,8 @@ class TestEnvoValidation(TestTasks):
         validator = EnvoCsvValidator(mock_requester, task_report)
         validator.validate(content)
 
-        self._assert_single_error(task_report, "Can't find matching term for 'coffee'. Please ensure the term is a decendant of biome [ENVO:00000428].", 2, 4, "broad-scale environmental context")
+        expected_message = "Can't find matching term for 'coffee'. Please check the spelling of the term or choose a different one. Please review the given term 'broad-scale environmental context' as seen in the template description (see [here](https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md)). Please ensure the term is a descendant of biome [ENVO:00000428]."
+        self._assert_single_warning(task_report, expected_message, 2, 4, "broad-scale environmental context")
 
 
     def test_envo_validation_unknown_value_local(self):
@@ -191,7 +202,8 @@ class TestEnvoValidation(TestTasks):
         validator = EnvoCsvValidator(mock_requester, task_report)
         validator.validate(content)
 
-        self._assert_single_error(task_report, "Can't find matching term for 'coffee'.", 2, 6, "local environmental context")
+        expected_message = "Can't find matching term for 'coffee'. Please check the spelling of the term or choose a different one. Please review the given term 'local environmental context' as seen in the template description (see [here](https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md))."
+        self._assert_single_warning(task_report, expected_message, 2, 6, "local environmental context")
 
 
     def test_envo_validation_bad_format(self):

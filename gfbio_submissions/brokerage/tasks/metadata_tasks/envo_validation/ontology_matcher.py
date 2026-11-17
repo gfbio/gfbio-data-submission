@@ -1,14 +1,13 @@
-import re
-
 from gfbio_submissions.brokerage.tasks.metadata_tasks.envo_validation.utils import get_short_id
 
 
 class OntologyMatcher:
-    def __init__(self, ontology_requester, root_name=None, root=None, ontology=None):
+    def __init__(self, ontology_requester, root_name=None, root=None, ontology=None, column_name=None):
         self.ontology_requester = ontology_requester
         self.root = root
         self.root_name = root_name
         self.ontology = ontology
+        self.column_name = column_name
 
     def get_match(self, provided_name, provided_id):
         ontology = self.ontology
@@ -46,15 +45,20 @@ class OntologyMatcher:
                     "status": "ERROR",
                 }
 
-        msg=f"Can't find matching term for '{provided_name}'."
+        msg= (
+            f"Can't find matching term for '{provided_name}'. "
+            "Please check the spelling of the term or choose a different one. "
+            f"Please review the given term '{self.column_name}' as seen in the template description "
+            "(see [here](https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md))."
+        )
         if self.root:
-            msg += f" Please ensure the term is a decendant of {self.root_name} [{get_short_id(self.root)}]."
-        return None, {"finding_type": "Ontology-Term not a descendant", "msg": msg, "help_text": "Please double-check the spelling of the term.", "status": "ERROR",}
+            msg += f" Please ensure the term is a descendant of {self.root_name} [{get_short_id(self.root)}]."
+        return None, {"finding_type": "Ontology-Term not a descendant", "msg": msg, "help_text": "Please double-check the spelling of the term.", "status": "WARNING",}
 
 
 class MediumOntologyMatcher(OntologyMatcher):
-    def __init__(self, ontology_requester, root_name=None, root=None, ontology=None):
-        super().__init__(ontology_requester, root_name, root, ontology)
+    def __init__(self, ontology_requester, root_name=None, root=None, ontology=None, column_name=None):
+        super().__init__(ontology_requester, root_name, root, ontology, column_name)
 
     def match_collection_to_search_term(self, collection, provided_name):
         primary_result, primary_result_msg = super().match_collection_to_search_term(collection, provided_name)
