@@ -203,7 +203,25 @@ function renderFindingsList(taskReportFindingsGroups, findingsGroupKey) {
                     </div>
                 </div>
                 <div className="col-6 col-lg-9 d-flex align-items-center justify-content-between">
-                    <span dangerouslySetInnerHTML={{__html: finding.message.replaceAll(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')}}></span>
+                    <span>
+                        {
+                            finding.message.split(/(\[.*?\]\(.*?\))/g).map(
+                                mp => {
+                                    var matches = mp.match(/^\[(.*?)\]\((.*?)\)$/)
+                                    if (matches) {
+                                        return (
+                                            <a href={`${matches[2]}`} target="_blank">
+                                                {matches[1]}
+                                            </a>
+                                        );
+                                    }
+                                    return (
+                                        <>{mp}</>
+                                    );
+                                }
+                            )
+                        }
+                    </span>
                     <HoverCard width={280} shadow="md">
                         <HoverCard.Target>
                             <i className="fa fa-question-circle-o ms-2"></i>

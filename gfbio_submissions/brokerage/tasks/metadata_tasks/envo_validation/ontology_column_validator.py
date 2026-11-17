@@ -64,7 +64,7 @@ class OntologyColumnValidator:
                         help_text=finding["help_text"],
                         status=finding["status"]
                     )
-                    if finding["status"] == "ERROR":
+                    if finding["status"] == "ERROR" or not envo_match:
                         continue
                 if provided_id:
                     if provided_id != envo_match["id"]:
