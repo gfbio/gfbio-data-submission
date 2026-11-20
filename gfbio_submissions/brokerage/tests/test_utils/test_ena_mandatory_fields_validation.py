@@ -256,3 +256,22 @@ class TestEnaMandatoryFieldsValidation(TestCase):
         self.assertEqual(1, len(info))
         self.assertIn("No new sample will be created.", info[0]["message"])
         self.assertNotIn("Only one sample", info[0]["message"])
+
+    def test_bad_sequencing_plattform(self):
+        csv_content = (
+            f"{VALID_HEADER}\n"
+            "Sample 1;1234;desc;Illumina HiSeq 20000;AMPLICON;METAGENOMIC;PCR;single;;"
+            "read1.fastq.gz;abc123;;;MD5\n"
+            "Sample 2;12345;desc;AB SOLiD System;AMPLICON;METAGENOMIC;PCR;single;;"
+            "read1.fastq.gz;abc123;;;MD5\n"
+        )
+        findings = self._validate(csv_content)
+        self.assertEqual(2, len(findings))
+        self.assertEqual("ERROR", findings[0]["status"])
+        self.assertEqual("WARNING", findings[1]["status"])
+        self.assertEqual(2, findings[0]["row"])
+        self.assertEqual(3, findings[1]["row"])
+        self.assertEqual("Invalid value for field 'sequencing_platform': Illumina HiSeq 20000.", findings[0]["message"])
+        self.assertEqual("The value 'AB SOLiD System' for field 'sequencing_platform' is deprecated. Maybe use a better one.", findings[1]["message"])
+        self.assertEqual("Invalid Field Value", findings[0]["finding_type"])
+        self.assertEqual("Field Value deprecated", findings[1]["finding_type"])

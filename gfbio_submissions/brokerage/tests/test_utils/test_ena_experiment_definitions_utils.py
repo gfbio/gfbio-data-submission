@@ -15,6 +15,10 @@ class TestEnaExperimentDefinitionsUtils(TestCase):
         self.assertEqual("pacbio_smrt Sequel", find_correct_platform_and_model("Sequel"))
         self.assertEqual("pacbio_smrt Sequel", find_correct_platform_and_model("pacbio Sequel"))
         self.assertEqual("pacbio_smrt unspecified", find_correct_platform_and_model("PacBio"))
+        self.assertEqual("illumina NextSeq 1000", find_correct_platform_and_model("Illumina NextSeq 1000"))
+        self.assertEqual("illumina NextSeq 1000", find_correct_platform_and_model("NextSeq 1000"))
+        self.assertEqual("illumina unspecified", find_correct_platform_and_model("Illumina unspecified"))
+        self.assertEqual("", find_correct_platform_and_model("Illumina bad bad bad"))
         self.assertEqual(
             "oxford_nanopore unspecified",
             find_correct_platform_and_model("Oxford Nanopore"),

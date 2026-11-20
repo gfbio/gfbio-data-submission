@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 
 from gfbio_submissions.brokerage.utils.csv_format import open_csv_reader
-from gfbio_submissions.brokerage.utils.ena_experiment_definitions_utils import get_library_column_validation_rules_from_ena_experiment_definitions
+from gfbio_submissions.brokerage.utils.ena_experiment_definitions_utils import get_library_column_validation_rules_from_ena_experiment_definitions, get_validation_rules_for_sequencing_platform
 
 
 ALWAYS_MANDATORY_FIELDS = [
@@ -259,6 +259,7 @@ def validate_ena_mandatory_fields(csv_file):
                 )
 
     validation_rules = get_library_column_validation_rules_from_ena_experiment_definitions()
+    validation_rules = validation_rules | get_validation_rules_for_sequencing_platform()
 
     sample_title_rows = defaultdict(list)
     data_row_number = 1
@@ -325,18 +326,12 @@ def validate_ena_mandatory_fields(csv_file):
             if field_name not in present_fields:
                 continue
             if _has_value(row.get(field_name)):
-                if rule["rule"] == "in_enum" and row.get(field_name) not in rule["enum"]:
-                    findings.append(
-                        {
-                            "status": "ERROR",
-                            "row": row_number,
-                            "column": _column_index(fieldnames, field_name),
-                            "column_name": field_name,
-                            "finding_type": "Invalid Field Value",
-                            "message": f"Invalid value for field '{field_name}': {row.get(field_name)}.",
-                            "help_text": "Please provide a valid value from the allowed options: " + ", ".join(rule["enum"]),
-                        }
-                    )
+                finding = rule.validate(row.get(field_name))
+                if finding:
+                    finding["row"] = row_number
+                    finding["column"] = _column_index(fieldnames, field_name)
+                    finding["column_name"] = field_name
+                    findings.append(finding)
 
         sample_title = row.get("sample_title")
         if _has_value(sample_title):
