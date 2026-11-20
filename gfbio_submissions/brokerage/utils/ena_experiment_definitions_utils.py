@@ -22,30 +22,40 @@ class EnumValidationRule(ValidationRule):
         return None
 
 
-class MultiListValidationRule(ValidationRule):
-    def __init__(self, field_name, approved_list, deprecated_list):
+class SequencingPlatformValidationRule(ValidationRule):
+    deprecated_sequencing_instruments = [
+        "Complete Genomics",
+        "AB SOLiD 3 Plus System",
+        "AB SOLiD 4 System",
+        "AB SOLiD 4hq System",
+        "AB SOLiD PI System",
+        "AB SOLiD System",
+        "AB SOLiD System 2.0",
+        "AB SOLiD System 3.0",
+    ]
+
+    def __init__(self, field_name):
         self.field_name = field_name
-        self.approved_list = approved_list
-        self.deprecated_list = deprecated_list
         
     def validate(self, value):
-        if value not in self.approved_list:
-            if value in self.deprecated_list:
+        seq_platform_string = find_correct_platform_and_model(value)
+        if not seq_platform_string:
+            return {
+                "status": "ERROR",
+                "finding_type": "Invalid Field Value",
+                "message": f"Invalid value for field '{self.field_name}': {value}.",
+                "help_text": "Please ensure your platform and instrument are in the list of allowed values. Best practice: Provide the value in the form 'platform instrument' eg. 'Illumina NextSeq 1000'. If the instrument is unknown, just provide the name of the platform.",
+            }
+
+        for dep in self.deprecated_sequencing_instruments:
+            if dep in seq_platform_string:
                 return {
                     "status": "WARNING",
                     "finding_type": "Field Value deprecated",
                     "message": f"The value '{value}' for field '{self.field_name}' is deprecated. Maybe use a better one.",
-                    "help_text": "If possible, please choose a valid value from the allowed options: " + ", ".join(self.approved_list),
+                    "help_text": "Please double check and maybe choose an instrument from the list of allowed options referenced in the template description.",
                 }
-            else:
-                return {
-                    "status": "ERROR",
-                    "finding_type": "Invalid Field Value",
-                    "message": f"Invalid value for field '{self.field_name}': {value}.",
-                    "help_text": "Please provide a valid value from the allowed options: " + ", ".join(self.approved_list),
-                }
-        else:
-            return None
+        return None
 
 
 def load_ena_experiment_definitions():
@@ -69,6 +79,12 @@ def get_library_column_validation_rules_from_ena_experiment_definitions():
                 validation_rules[property] = EnumValidationRule(property, description["enum"])
 
     return validation_rules
+
+
+def get_validation_rules_for_sequencing_platform():
+    return {
+        "sequencing_platform": SequencingPlatformValidationRule("sequencing_platform")
+    }
 
 
 def find_correct_platform_and_model(platform_value):
@@ -163,100 +179,3 @@ def find_correct_platform_and_model(platform_value):
     else:
         # unidentifiable value
         return ""
-
-
-def get_validation_rules_for_sequencing_platform():
-    return {
-        "sequencing_platform": MultiListValidationRule("sequencing_platform", sequencing_platforms, deprectated_sequencing_platforms)
-    }
-
-
-sequencing_platforms = [  
-    "454 GS",
-    "454 GS 20",
-    "454 GS FLX",
-    "454 GS FLX Titanium",
-    "454 GS FLX+",
-    "454 GS Junior",
-    "AB 310 Genetic Analyzer",
-    "AB 3130 Genetic Analyzer",
-    "AB 3130xL Genetic Analyzer",
-    "AB 3500 Genetic Analyzer",
-    "AB 3500xL Genetic Analyzer",
-    "AB 3730 Genetic Analyzer",
-    "AB 3730xL Genetic Analyzer",
-    "AB 5500 Genetic Analyzer",
-    "AB 5500xl Genetic Analyzer",
-    "AB 5500xl-W Genetic Analysis System",
-    "BGISEQ-50",
-    "BGISEQ-500",
-    "DNBSEQ-G400",
-    "DNBSEQ-G400 FAST",
-    "DNBSEQ-G50",
-    "DNBSEQ-T7",
-    "Element AVITI",
-    "FASTASeq 300",
-    "Genapsys Sequencer",
-    "GENIUS",
-    "GenoCare 1600",
-    "GenoLab M",
-    "GridION",
-    "GS111",
-    "Helicos HeliScope",
-    "HiSeq X Five",
-    "HiSeq X Ten",
-    "Illumina Genome Analyzer",
-    "Illumina Genome Analyzer II",
-    "Illumina Genome Analyzer IIx",
-    "Illumina HiScanSQ",
-    "Illumina HiSeq 1000",
-    "Illumina HiSeq 1500",
-    "Illumina HiSeq 2000",
-    "Illumina HiSeq 2500",
-    "Illumina HiSeq 3000",
-    "Illumina HiSeq 4000",
-    "Illumina HiSeq X",
-    "Illumina iSeq 100",
-    "Illumina MiniSeq",
-    "Illumina MiSeq",
-    "Illumina NovaSeq 6000",
-    "Illumina NovaSeq X",
-    "Ion GeneStudio S5",
-    "Ion GeneStudio S5 Plus",
-    "Ion GeneStudio S5 Prime",
-    "Ion Torrent Genexus",
-    "Ion Torrent PGM",
-    "Ion Torrent Proton",
-    "Ion Torrent S5",
-    "Ion Torrent S5 XL",
-    "MGISEQ-2000RS",
-    "MinION",
-    "NextSeq 1000",
-    "NextSeq 2000",
-    "NextSeq 500",
-    "NextSeq 550",
-    "Onso",
-    "PacBio RS",
-    "PacBio RS II",
-    "PromethION",
-    "Revio",
-    "Sentosa SQ301",
-    "Sequel",
-    "Sequel II",
-    "Sequel IIe",
-    "Tapestri",
-    "UG 100",
-    "unspecified",
-]
-
-
-deprectated_sequencing_platforms = [
-    "Complete Genomics",
-    "AB SOLiD 3 Plus System",
-    "AB SOLiD 4 System",
-    "AB SOLiD 4hq System",
-    "AB SOLiD PI System",
-    "AB SOLiD System",
-    "AB SOLiD System 2.0",
-    "AB SOLiD System 3.0",
-]

@@ -266,13 +266,11 @@ class TestEnaMandatoryFieldsValidation(TestCase):
             "read1.fastq.gz;abc123;;;MD5\n"
         )
         findings = self._validate(csv_content)
-        print(findings)
         self.assertEqual(2, len(findings))
         self.assertEqual("ERROR", findings[0]["status"])
         self.assertEqual("WARNING", findings[1]["status"])
         self.assertEqual(2, findings[0]["row"])
         self.assertEqual(3, findings[1]["row"])
-        self.assertIn("Illumina HiSeq 2000", findings[1]["help_text"])
         self.assertEqual("Invalid value for field 'sequencing_platform': Illumina HiSeq 20000.", findings[0]["message"])
         self.assertEqual("The value 'AB SOLiD System' for field 'sequencing_platform' is deprecated. Maybe use a better one.", findings[1]["message"])
         self.assertEqual("Invalid Field Value", findings[0]["finding_type"])
